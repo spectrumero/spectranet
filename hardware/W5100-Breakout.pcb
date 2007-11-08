@@ -1,5 +1,5 @@
 # release: pcb 20070208
-# date:    Thu Nov  8 11:05:56 2007
+# date:    Thu Nov  8 11:18:33 2007
 # user:    dylan (Dylan Smith)
 # host:    athena
 
@@ -1913,6 +1913,10 @@ Layer(2 "solder")
 	Polygon("clearpoly")
 	(
 		[123622 65354] [133859 75591] [123622 75591] 
+	)
+	Polygon("")
+	(
+		[133071 29134] [139370 29134] [139370 38583] [133071 38583] 
 	)
 )
 Layer(3 "GND")
