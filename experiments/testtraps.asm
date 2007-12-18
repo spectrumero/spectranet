@@ -117,6 +117,36 @@ F_jtentry
 	pop hl
 	jp pageout
 
+F_calltrap1
+	di
+	push bc
+	push de
+	push hl
+	push af
+	call F_clear
+	ld hl, STR_calltrap1
+	call F_print
+	call F_waitforkey
+	pop af
+	pop hl
+	pop de
+	pop bc
+	jp pageout
+
+F_calltrap2
+	jp pageout_noei
+
+	di
+	push hl
+	push af
+	call F_clear
+	ld hl, STR_calltrap2
+	call F_print
+	call F_waitforkey
+	pop af
+	pop hl
+	jp pageout
+
 ; Simple 'wait for the any key to get pressed' routine.
 ; Based largely on the concepts of the Spectrum's KEY-SCAN routine.
 F_waitforkey
@@ -225,6 +255,8 @@ STR_nmi		defb "Caught NMI.\n", 0
 STR_int		defb "Caught maskable interrupt.\n",0
 STR_jptable	defb "Jump table entry point used.\n", 0
 STR_ourcmd	defb "\nA command for us has been recognised.\n",0
+STR_calltrap1	defb "Calltrap 1 - CALL 0x3FF8 trapped.\n",0
+STR_calltrap2	defb "Calltrap 2 - CALL 0x3FFB trapped.\n",0
 
 	block 0x3B00-$,0xFF	; 0xFF wears the flash chip less
 	include "rclookup.asm"	; row/column lookup table
@@ -278,7 +310,10 @@ STR_ourcmd	defb "\nA command for us has been recognised.\n",0
 	block 0x3D00-$,0xFF
 	include "charset.asm"
 
-	block 0x4000-$,0xFF
+	block 0x3FF8-$,0xFF
+JTABLE1	jp F_calltrap1
+JTABLE2	jp F_calltrap2
+	jr JTABLE1
 
 ; workspace for print routine
 v_column	equ 0xF000	; 1 byte

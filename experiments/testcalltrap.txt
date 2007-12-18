@@ -1,0 +1,27 @@
+To test call instruction trapping:
+
+POKE 30000, 205
+POKE 30001, 248
+POKE 30002, 63
+POKE 30003, 201
+
+This is
+	org 30000
+	call 0x3FF8
+	ret
+
+Addr. 30001 should be one of the following:
+248 = F8
+251 = FB
+254 = FE
+
+to add an infinte loop with framebuffer poke:
+POKE 30003, 62
+POKE 30004, 255
+POKE 30005, 50
+POKE 30006, 0
+POKE 30007, 64
+POKE 30008, 195
+POKE 30009, 56
+POKE 30010, 117
+
