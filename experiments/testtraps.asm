@@ -95,7 +95,7 @@ F_clear
 	ld (hl), 0
 	ldir
 	ld (hl), 56	; attribute for white
-	ld bc, 768
+	ld bc, 767
 	ldir
 	xor a
 	ld (v_column), a
@@ -134,8 +134,6 @@ F_calltrap1
 	jp pageout
 
 F_calltrap2
-	jp pageout_noei
-
 	di
 	push hl
 	push af
@@ -260,54 +258,6 @@ STR_calltrap2	defb "Calltrap 2 - CALL 0x3FFB trapped.\n",0
 
 	block 0x3B00-$,0xFF	; 0xFF wears the flash chip less
 	include "rclookup.asm"	; row/column lookup table
-	block 0x3C00-$,0xFF
-	
-	; The jump table. All executions from 0x3C00-0x3CFF are trapped.
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-	jp F_jtentry
-
-; Character set (aligned on page boundary)
-	block 0x3D00-$,0xFF
 	include "charset.asm"
 
 	block 0x3FF8-$,0xFF
@@ -319,7 +269,8 @@ JTABLE2	jp F_calltrap2
 v_column	equ 0xF000	; 1 byte
 v_row		equ 0xF001	; 2 bytes (row address)
 v_rowcount	equ 0xF003	; 1 byte
-v_workspace	equ 0xF004	; up to a few bytes
+v_pr_wkspc	equ 0xF004	; print routine wkspc
+v_workspace	equ 0xF005	; up to a few bytes
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053

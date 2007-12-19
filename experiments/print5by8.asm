@@ -43,13 +43,12 @@ putc_5by8
       and 3             ; find out how much we need to rotate
       jr z, .norotate   ; no need to rotate, character starts at MSB
       rla               ; multipy by 2
-      ex af, af'        ; save A in shadow register 
+      ld (v_pr_wkspc), a   ; save A
       ld b, 8           ; byte copy count for outer loop
 .fbwriterotated
       push bc           ; save outer loop count
-      ex af, af'
+      ld a, (v_pr_wkspc)
       ld b, a           ; set up rotate loop count
-      ex af, af'
       ld a, (de)        ; get character bitmap
       ld c, a           ; C contains rightmost fragment of bitmap
       xor a             ; set a=0 to accept lefmost fragment of bitmap
