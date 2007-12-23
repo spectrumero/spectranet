@@ -1,5 +1,5 @@
 # release: pcb 20070208
-# date:    Wed Dec 12 21:30:05 2007
+# date:    Sun Dec 23 14:34:15 2007
 # user:    winston (Winston Smith)
 # host:    shocked.alwyn.alioth.net
 
@@ -1032,9 +1032,21 @@ Element["" "Jumper, i.e. single row headers" "" "JUMPER3" 66000 267000 11000 -50
 	ElementLine [-5000 -5000 -5000 25000 2000]
 
 	)
+
+Element["" "Jumper, i.e. single row headers" "" "JUMPER1" 78000 12000 11000 -5000 3 100 ""]
+(
+	Pin[0 0 6000 3000 6600 3800 "1" "1" "square"]
+	ElementLine [5000 5000 5000 -5000 1000]
+	ElementLine [-5000 5000 5000 5000 1000]
+	ElementLine [5000 -5000 -5000 -5000 2000]
+	ElementLine [5000 5000 5000 -5000 2000]
+	ElementLine [-5000 5000 5000 5000 2000]
+	ElementLine [-5000 -5000 -5000 5000 2000]
+
+	)
 Layer(1 "component")
 (
-	Line[33000 12000 118000 12000 1000 2000 "clearline"]
+	Line[34000 282000 117000 282000 1000 2000 "clearline"]
 	Line[33000 22000 119000 22000 1000 2000 "clearline"]
 	Line[119000 22000 120000 23000 1000 2000 "clearline"]
 	Line[33000 32000 118000 32000 1000 2000 "clearline"]
@@ -1069,7 +1081,12 @@ Layer(1 "component")
 	Line[32000 262000 117000 262000 1000 2000 "clearline"]
 	Line[34000 272000 118000 272000 1000 2000 "clearline"]
 	Line[118000 272000 119000 273000 1000 2000 "clearline"]
-	Line[34000 282000 117000 282000 1000 2000 "clearline"]
+	Line[31000 12000 78000 12000 1000 2000 "clearline"]
+	Line[90000 12000 120000 12000 1000 2000 "clearline"]
+	Text[60000 3000 0 111 "A1" ""]
+	Text[97000 2000 0 111 "B1" ""]
+	Text[48000 289000 0 111 "A28" ""]
+	Text[97000 290000 0 111 "B28" ""]
 )
 Layer(2 "solder")
 (
@@ -1213,6 +1230,12 @@ Layer(2 "solder")
 	Line[56000 27000 102000 27000 1000 2000 "clearline"]
 	Line[102000 27000 107000 22000 1000 2000 "clearline"]
 	Line[107000 22000 118000 22000 1000 2000 "clearline"]
+	Line[35000 42000 51000 42000 1000 2000 "clearline"]
+	Line[51000 42000 56000 47000 1000 2000 "clearline"]
+	Line[56000 47000 102000 47000 1000 2000 "clearline"]
+	Line[102000 47000 107000 42000 1000 2000 "clearline"]
+	Line[107000 42000 119000 42000 1000 2000 "clearline"]
+	Line[119000 42000 120000 41000 1000 2000 "clearline"]
 )
 Layer(3 "GND")
 (
