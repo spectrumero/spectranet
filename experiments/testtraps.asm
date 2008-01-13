@@ -70,6 +70,14 @@ do_reset
 	call F_clear		; white screen
 	ld hl, STR_reset	; show a string
 	call F_print
+	call F_testroutine
+
+	; copy jump table to workspace ram
+	ld hl, JTABLE1
+	ld de, 0x3FF8
+	ld bc, 8
+	ldir
+
 	call F_waitforkey	; wait for a key to be pressed
 	ld hl, 0
 	add hl, sp		; point hl at sp to munge stack contents
@@ -243,6 +251,24 @@ F_inttohex8
 	inc	hl
 	ret
 
+; Exercise various parts of the hardware.
+F_testroutine
+	ld hl, STR_testwkspc
+	call F_print
+	ld a, 0xAA
+	ld (0x3000), a
+	ld a, (0x3000)
+	cp 0xAA
+	call nz, .oops
+
+	ld hl, STR_testsdone
+	call F_print
+	ret
+
+.oops	ld hl, STR_oops
+	call F_print
+	ret
+
 ; Include library routines
 	include "print5by8.asm"
 
@@ -255,22 +281,27 @@ STR_jptable	defb "Jump table entry point used.\n", 0
 STR_ourcmd	defb "\nA command for us has been recognised.\n",0
 STR_calltrap1	defb "Calltrap 1 - CALL 0x3FF8 trapped.\n",0
 STR_calltrap2	defb "Calltrap 2 - CALL 0x3FFB trapped.\n",0
+STR_testwkspc	defb "Testing workspace...\n",0
+STR_oops	defb "Test failed.\n",0
+STR_testsdone	defb "Tests complete.\n",0
 
-	block 0x3B00-$,0xFF	; 0xFF wears the flash chip less
-	include "rclookup.asm"	; row/column lookup table
-	include "charset.asm"
-
-	block 0x3FF8-$,0xFF
 JTABLE1	jp F_calltrap1
 JTABLE2	jp F_calltrap2
 	jr JTABLE1
 
+
+	block 0x0B00-$,0xFF	; 0xFF wears the flash chip less
+	include "rclookup.asm"	; row/column lookup table
+	include "charset.asm"
+
+	block 0x3FFF-$,0xFF
+
 ; workspace for print routine
-v_column	equ 0xF000	; 1 byte
-v_row		equ 0xF001	; 2 bytes (row address)
-v_rowcount	equ 0xF003	; 1 byte
-v_pr_wkspc	equ 0xF004	; print routine wkspc
-v_workspace	equ 0xF005	; up to a few bytes
+v_column	equ 0x3F00	; 1 byte
+v_row		equ 0x3F01	; 2 bytes (row address)
+v_rowcount	equ 0x3F03	; 1 byte
+v_pr_wkspc	equ 0x3F04	; print routine wkspc
+v_workspace	equ 0x3F05	; up to a few bytes
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053
