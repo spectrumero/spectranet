@@ -261,6 +261,40 @@ F_testroutine
 	cp 0xAA
 	call nz, .oops
 
+.testpager
+	ld hl, STR_pagetest
+	call F_print
+	ld a, 0x0F	; RAM in both A and B page areas
+	out (0xED), a	; chip selects set
+	
+	ld b, 32	; 128k has 32 x 4k pages
+	ld c, 0xE9	; port E9 = page area A (port %1110 1001)
+.pageloop
+	out (c), b	; select page
+	ld a, b
+	ld (0x1000), a	; set a byte in page area A
+	call F_inttohex8
+	call F_print
+	ld a, ' '
+	call putc_5by8
+	djnz .pageloop
+	ld a, '\n'
+	call putc_5by8
+
+	ld hl, STR_readback
+	call F_print
+	ld b, 32
+.readback
+	out (c), b
+	ld a, (0x1000)
+	call F_inttohex8
+	call F_print
+	ld a, ' '
+	call putc_5by8
+	djnz .readback
+	ld a, '\n'
+	call putc_5by8
+
 	ld hl, STR_testsdone
 	call F_print
 	ret
@@ -284,6 +318,8 @@ STR_calltrap2	defb "Calltrap 2 - CALL 0x3FFB trapped.\n",0
 STR_testwkspc	defb "Testing workspace...\n",0
 STR_oops	defb "Test failed.\n",0
 STR_testsdone	defb "Tests complete.\n",0
+STR_pagetest	defb "Testing pager: ",0
+STR_readback	defb "Readback     : ",0
 
 JTABLE1	jp F_calltrap1
 JTABLE2	jp F_calltrap2
