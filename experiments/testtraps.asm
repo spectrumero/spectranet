@@ -72,6 +72,14 @@ do_reset
 	call F_print
 	call F_testroutine
 
+	ld hl, STR_ethinit
+	call F_print
+	call F_w5100init	; init the ethernet chip
+	ld hl, STR_ethdone
+	call F_print
+
+	call F_w5100check	; read back config
+
 	; copy jump table to workspace ram
 	ld hl, JTABLE1
 	ld de, 0x3FF8
@@ -303,8 +311,36 @@ F_testroutine
 	call F_print
 	ret
 
+; Set paging area A. Page in HL (chip in H, page in L)
+F_setpageA
+	ld a, (v_chipsel)
+	and 0xFC	; zero lower two bits
+	or h		; insert chip select value
+	ld (v_chipsel), a
+	out (CHIPSEL), a
+	ld a, l
+	ld (v_pga), a	; store new page number
+	out (PAGEA), a	; page it in
+	ret
+
+; Set paging area B. As for area A.
+F_setpageB
+	ld a, (v_chipsel)
+	and 0xF3	; zero upper 2 bits of nibble
+	rl h		; move chip select value into correct bits
+	rl h		
+	or h		; insert chip select value
+	ld (v_chipsel), a
+	out (CHIPSEL), a	
+	ld a, l
+	ld (v_pgb), a
+	out (PAGEB), a	; page it in
+	ret
+
 ; Include library routines
 	include "print5by8.asm"
+	include "w5100defines.asm"
+	include "w5100config.asm"
 
 ; Strings
 STR_reset	defb "Reset event trapped...\n", 0
@@ -320,6 +356,8 @@ STR_oops	defb "Test failed.\n",0
 STR_testsdone	defb "Tests complete.\n",0
 STR_pagetest	defb "Testing pager: ",0
 STR_readback	defb "Readback     : ",0
+STR_ethinit	defb "Initializing W5100...",0
+STR_ethdone	defb "Done.\n", 0
 
 JTABLE1	jp F_calltrap1
 JTABLE2	jp F_calltrap2
@@ -332,12 +370,15 @@ JTABLE2	jp F_calltrap2
 
 	block 0x3FFF-$,0xFF
 
-; workspace for print routine
-v_column	equ 0x3F00	; 1 byte
-v_row		equ 0x3F01	; 2 bytes (row address)
-v_rowcount	equ 0x3F03	; 1 byte
-v_pr_wkspc	equ 0x3F04	; print routine wkspc
-v_workspace	equ 0x3F05	; up to a few bytes
+; Workspace defs.
+v_column	equ 0x3F00	; Current column for print routine
+v_row		equ 0x3F01	; Current row address for print routine
+v_rowcount	equ 0x3F03	; Current row number for print routine
+v_pr_wkspc	equ 0x3F04	; Print routine workspace
+v_workspace	equ 0x3F05	; General purpose workspace
+v_pga		equ 0x3F10	; Paging area A page
+v_pgb		equ 0x3F11	; Paging area B page
+v_chipsel	equ 0x3F12	; Chip select values
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053
@@ -346,3 +387,7 @@ ERROR_2		equ 0x0053
 CH_ADD		equ 23645
 X_PTR		equ 23647
 
+; various definitions
+CHIPSEL		equ 0xED
+PAGEA		equ 0xE9
+PAGEB		equ 0xEB
