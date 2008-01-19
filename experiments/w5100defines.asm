@@ -41,6 +41,8 @@
 		define UPORT1	0x102F
 
 		; Socket registers (base address - socket 0)
+		define Sn_BASE	0x04	; amount to subtract from addr. to
+					; derive buffer base
 		define Sn_MAX	0x48	; high byte of highest socket reg.
 		define Sn_MR	0x1400	; Socket 0 mode
 		define Sn_CR	0x1401	; Socket 0 command

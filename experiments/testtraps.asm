@@ -2,6 +2,7 @@
 ; 0x0000, 0x0038, 0x0066 (with event flip flop set), 0x0008 (with RST8EN_L
 ; set), and unconditionally at 0x3C00-0x3CFF.
 
+	include "w5100defines.asm"
 	org 0
 RESET
 	di
@@ -68,6 +69,13 @@ pageout_noei
 
 do_reset
 	call F_clear		; white screen
+
+	ld hl, 0xFFFF		; arbitrary delay
+.delay	dec hl
+	ld a, h
+	or l
+	jr nz, .delay
+
 	ld hl, STR_reset	; show a string
 	call F_print
 	call F_testroutine
@@ -79,6 +87,7 @@ do_reset
 	call F_print
 
 	call F_w5100check	; read back config
+	call F_w5100test	; do a test listen
 
 	; copy jump table to workspace ram
 	ld hl, JTABLE1
@@ -259,6 +268,62 @@ F_inttohex8
 	inc	hl
 	ret
 
+F_regdump
+	push hl
+	push de
+	push bc
+	push af
+
+	ld a, '\n'
+	call putc_5by8
+
+	push hl
+	ld a, h
+	call F_inttohex8
+	call F_print
+	pop hl
+	ld a, l
+	call F_inttohex8
+	call F_print
+	ld a, ','
+	call putc_5by8
+
+	ld a, d
+	call F_inttohex8
+	call F_print
+	ld a, e
+	call F_inttohex8
+	call F_print
+	ld a, ','
+	call putc_5by8
+	
+	ld a, b
+	call F_inttohex8
+	call F_print
+	ld a, c
+	call F_inttohex8
+	call F_print
+	ld a, ','
+	call putc_5by8
+
+	pop af
+	push af
+	call F_inttohex8
+	call F_print
+	pop bc
+	push bc
+	ld a, c
+	call F_inttohex8
+	call F_print
+	ld a, '\n'
+	call putc_5by8
+
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ret	
+
 ; Exercise various parts of the hardware.
 F_testroutine
 	ld hl, STR_testwkspc
@@ -311,6 +376,93 @@ F_testroutine
 	call F_print
 	ret
 
+; A quick test of the W5100. (Do this after init).
+; For socket 0, nothing needs to be added to Sn_
+F_w5100test
+	ld hl, 0x0100	; chip 1, page 0
+	call F_setpageA	; page in W5100
+.openport
+	ld a, S_MR_TCP	; Create a TCP socket.
+	ld (Sn_MR), a	; Set mode.
+	ld a, 23	; Port 23 (note big endian)
+	ld (Sn_PORT1), a
+	xor a
+	ld (Sn_PORT0), a
+	ld a, S_CR_OPEN	; Open the socket.
+	ld (Sn_CR), a
+	ld a, (Sn_SR)	; Check status register.
+	cp S_SR_SOCK_INIT	; Is it?
+	jr z, .listen	; if so listen
+	ld a, S_CR_CLOSE
+	ld (Sn_CR), a	; try again
+	jr .openport
+
+.listen
+	ld hl, STR_open	; Display message.
+	call F_print
+
+	ld a, S_CR_LISTEN
+	ld (Sn_CR), a	; Set command register to listen.
+	ld a, (Sn_SR)	; Check status register
+	cp S_SR_SOCK_LISTEN
+	jr z, .listening
+	ld a, S_CR_CLOSE
+	ld (Sn_CR), a	; try again
+	jr .openport
+
+.listening
+	ld a, (Sn_SR)	; Check status register
+	cp S_SR_SOCK_ESTABLISHED
+	jr nz, .listening	; loop 'till we get a connection
+
+.established
+	ld a, (Sn_RX_RSR0)	; data?
+	ld hl, Sn_RX_RSR1
+	or (hl)			; test for zero
+	jr z, .established	; loop until data is received.
+
+.recv
+	push hl
+	ld hl, 0x8000		; clear out some memory
+	ld (hl), 0
+	ld de, 0x8001
+	ld bc, 0x200
+	ldir
+	pop hl
+	ld de, 0x8000		; destination address
+	ld bc, 0x123		; Maximum length (completely arbitrary)
+	call F_copyrxbuf	; Copy data
+
+	ld hl, STR_rxbytes
+	call F_print
+	ld a, b
+	call F_inttohex8
+	call F_print
+	ld a, c
+	call F_inttohex8
+	call F_print
+	ld a, '\n'
+	call putc_5by8
+
+	ld hl, 0x8000
+	call F_print
+
+.closeloop
+	ld a, (Sn_SR)
+	cp S_SR_SOCK_CLOSE_WAIT	; has the client gone away?
+	jr nz, .established	; no, wait for more data
+
+.waitforclose
+	ld a, (Sn_IR)
+	and S_IR_DISCON
+	jr z, .waitforclose
+	ld hl, STR_closed
+	call F_print
+	ld a, S_CR_CLOSE
+	ld (Sn_CR), a		; close our end
+
+	ret
+
 ; Set paging area A. Page in HL (chip in H, page in L)
 F_setpageA
 	ld a, (v_chipsel)
@@ -339,8 +491,8 @@ F_setpageB
 
 ; Include library routines
 	include "print5by8.asm"
-	include "w5100defines.asm"
 	include "w5100config.asm"
+	include "w5100buffer.asm"
 
 ; Strings
 STR_reset	defb "Reset event trapped...\n", 0
@@ -358,6 +510,9 @@ STR_pagetest	defb "Testing pager: ",0
 STR_readback	defb "Readback     : ",0
 STR_ethinit	defb "Initializing W5100...",0
 STR_ethdone	defb "Done.\n", 0
+STR_open	defb "\nListening on port 23\n",0
+STR_rxbytes	defb "Received bytes = ",0
+STR_closed	defb "\nSocket closed.\n",0
 
 JTABLE1	jp F_calltrap1
 JTABLE2	jp F_calltrap2
@@ -379,6 +534,9 @@ v_workspace	equ 0x3F05	; General purpose workspace
 v_pga		equ 0x3F10	; Paging area A page
 v_pgb		equ 0x3F11	; Paging area B page
 v_chipsel	equ 0x3F12	; Chip select values
+v_sockptr	equ 0x3F13	; Pointer to socket register (2 bytes)
+v_copylen	equ 0x3F15	; Length to copy
+v_copied	equ 0x3F17	; Wrapped copied so far
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053

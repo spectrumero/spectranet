@@ -3,12 +3,8 @@
 F_w5100init
 	; Page in the W5100
 	; Chip selects put RAM in area B, W5100 in area A
-	ld a, %00001101
-	out (0xED), a
-
-	; W5100 page 0 in area A
-	xor a
-	out (0xE9), a
+	ld hl, 0x0100		; registers are in page 0 of the W5100
+	call F_setpageA		; page it into area A
 
 	; Perform a software reset by setting the reset flag in the MR.
 	ld a, MR_RST
@@ -23,6 +19,15 @@ F_w5100init
 	ld de, GAR0		; first byte of config. data area
 	ld bc, SIPR3-MR
 	ldir
+
+	; set up the socket buffers: 2k per socket buffer.
+	ld a, 0x55
+	ld (TMSR), a
+	ld (RMSR), a
+	
+	; set the IMR
+	ld a, %11101111
+	ld (IMR), a
 
 	ret
 
