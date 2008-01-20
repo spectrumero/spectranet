@@ -322,7 +322,20 @@ F_regdump
 	pop bc
 	pop de
 	pop hl
-	ret	
+	ret
+
+; hl = start address, b = byte count
+F_hexdump
+	push hl
+	ld a, (hl)
+	call F_inttohex8
+	call F_print
+	ld a, ' '
+	call putc_5by8
+	pop hl
+	inc hl
+	djnz F_hexdump
+	ret
 
 ; Exercise various parts of the hardware.
 F_testroutine
@@ -415,12 +428,11 @@ F_w5100test
 	cp S_SR_SOCK_ESTABLISHED
 	jr nz, .listening	; loop 'till we get a connection
 
-.established
+.rxdata
 	ld a, (Sn_RX_RSR0)	; data?
 	ld hl, Sn_RX_RSR1
 	or (hl)			; test for zero
-	jr z, .established	; loop until data is received.
-
+	jr z, .rxdata		; loop until data is received.
 .recv
 	push hl
 	ld hl, 0x8000		; clear out some memory
@@ -433,24 +445,20 @@ F_w5100test
 	ld bc, 0x123		; Maximum length (completely arbitrary)
 	call F_copyrxbuf	; Copy data
 
-	ld hl, STR_rxbytes
-	call F_print
-	ld a, b
-	call F_inttohex8
-	call F_print
-	ld a, c
-	call F_inttohex8
-	call F_print
-	ld a, '\n'
-	call putc_5by8
-
 	ld hl, 0x8000
-	call F_print
+	ld b, 10
+	call F_hexdump
+
+;.send
+;	ld hl, Sn_SR	
+;	ld de, STR_open
+;;	ld bc, STR_rxbytes-STR_open
+;	call F_copytxbuf
 
 .closeloop
 	ld a, (Sn_SR)
 	cp S_SR_SOCK_CLOSE_WAIT	; has the client gone away?
-	jr nz, .established	; no, wait for more data
+	jr nz, .rxdata		; no, wait for more data
 
 .waitforclose
 	ld a, (Sn_IR)

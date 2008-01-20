@@ -53,5 +53,5 @@ F_w5100check
 CFG_gateway	defb 172,16,0,1
 CFG_subnet	defb 255,255,255,0
 CFG_hwaddr	defb 0xAA,0x17,0x0E,0x00,0x3B,0xA6
-CFG_ipaddr	defb 172,16,0,10
+CFG_ipaddr	defb 172,16,0,200
 STR_cfg		defb "Config: ",0
