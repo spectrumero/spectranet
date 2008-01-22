@@ -87,7 +87,7 @@ do_reset
 	call F_print
 
 	call F_w5100check	; read back config
-	call F_w5100test	; do a test listen
+	;call F_w5100test	; do a test listen
 
 	; copy jump table to workspace ram
 	ld hl, JTABLE1
@@ -218,17 +218,15 @@ F_syntax
 	jr nz, .notmine
 	inc hl
 	ld a, (hl)
-	cp '.'		; Still our command?
+	cp 'f'		; Still our command?
 	jr nz, .notmine
 	inc hl
 	ld a, (hl)
 	cp 0x0D		; end?
 	jr nz, .colon
 .mine
-	ld (CH_ADD), hl	; point CH_ADD at its new position
-	ld hl, STR_ourcmd
-	call F_print
-	xor a		; set zero flag
+	; load the flash programmer
+	call F_startflashprog
 	ret
 
 .colon	cp ':'
@@ -497,6 +495,15 @@ F_setpageB
 	out (PAGEB), a	; page it in
 	ret
 
+F_startflashprog
+	ld hl, 0x0003	; chip 0 page 3
+	call F_setpageB
+	ld hl, 0x2000	; start of page area B
+	ld de, 0xF000	; flash programmer org addr.
+	ld bc, ENDFLASH-STARTFLASH	; size
+	ldir
+	jp 0xF000
+
 ; Include library routines
 	include "print5by8.asm"
 	include "w5100config.asm"
@@ -531,7 +538,10 @@ JTABLE2	jp F_calltrap2
 	include "rclookup.asm"	; row/column lookup table
 	include "charset.asm"
 
-	block 0x3FFF-$,0xFF
+	block 0x3000-$,0xFF
+STARTFLASH
+	incbin "../flash/flashprog.out"
+ENDFLASH	defb 0
 
 ; Workspace defs.
 v_column	equ 0x3F00	; Current column for print routine

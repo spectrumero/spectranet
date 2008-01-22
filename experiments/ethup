@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+use IO::Socket::INET;
+use strict;
+
+my $file=shift;
+my $addr=shift;
+
+if(!$addr)
+{
+	print("Usage: ethup <file> <address>\n");
+	exit;
+}
+
+if($addr < 0 || $addr > 65535)
+{
+	print("Address must be 16 bit.\n");
+	exit;
+}
+
+my @info=stat($file) or die("Unable to stat $file: $!");
+my $size=$info[7];
+if($size == 0 | $size > 65535)
+{
+	print("File is an impossible size ($size)\n");
+	exit;
+}
+
+my $sock=IO::Socket::INET->new(PeerAddr => '172.16.0.200',
+				PeerPort => '23',
+				Proto => 'tcp')
+	or die("Opening socket: $!");
+
+binmode($sock);
+
+open FHND, "< $file" or die("Unable to open $file: $!");
+binmode FHND;
+
+# ensure the size and address data goes in little endian form.
+my $bufdata=pack("CCCC", int($addr % 256), int($addr / 256),
+			 int($size % 256), int($size / 256));
+
+print $sock $bufdata;
+while(my $data=<FHND>)
+{
+	print $sock $data;
+}
+close $sock;
+close FHND;
+
