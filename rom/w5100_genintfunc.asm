@@ -19,18 +19,28 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
-; General definitions. These are not hardware specific (generally).
-
-; File descriptor flags.
-FD_CLOSED	equ 0x80
-CLOSEDBIT	equ 7
-FD_VIRTUAL	equ 0x40
-VIRTBIT		equ 6
-NOTSOCKMASK	equ 0xE0	; all hw sockets must be < 0x1F
-
-; Error return codes
-EBUGGERED	equ -1
-ENFILE		equ -2
-EBADF		equ -3
-
+;
+;
+; General internal functions for the socket library.
+;
+;
+; F_gethwsock:
+; Get the hardware socket for a file descriptor. If no hardware socket
+; is associated with the fd, set the carry flag and return with the error
+; code in A. Otherwise, return the hardware socket register area MSB in
+; H.
+F_gethwsock
+	ex af, af'
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	ex af, af'
+	ld h, v_fd1hwsock / 256	; set (hl) to point at the fd map
+	ld l, a
+	ld a, (hl)
+	ld h, a			; point hl at putative hardware socket
+	and NOTSOCKMASK		; is this not a hardware socket?
+	ret z			; OK - return with hw sock register in C
+.nohwsock
+	ld a, EBADF
+	scf
+	ret

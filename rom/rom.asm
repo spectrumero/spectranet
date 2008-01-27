@@ -22,11 +22,11 @@
 
 ; The Spectranet ROM.
 ;--------------------
-; Out of the included files, the order of two of them are critical.
-; zeropage.asm must be the first file. This sets the org, and must start
-; at 0x0000. sysvars.asm must be the last, since this changes the org to
-; 0x3F00. (This doesn't get burned into ROM, rather it just defines areas
-; in the upper fixed page, which is always RAM (chip 3 page 0).
+; The following files must be included in order, the others don't matter
+; which order:
+;   zeropage.asm - sets ORG to 0x0000 and provides restart entry points.
+;   jumptable.asm - sets ORG to 0x3E00
+;   sysvars.asm - sets ORG to 0x3F00
 ;
 ; Until w5100_defines is changed to be equ instead of defines, this should
 ; be included before any of the network library code.
@@ -36,9 +36,13 @@
 	include "pager.asm"		; Memory paging routines
 	include "w5100_defines.asm"	; Definitions for network hardware
 	include "sockdefs.asm"		; Definitions for socket library
+	include "w5100_genintfunc.asm"	; general internal functions
 	include "w5100_buffer.asm"	; Transmit and receive buffers
 	include "w5100_sockalloc.asm"	; socket, accept, close
+	include "w5100_sockctrl.asm"	; bind, connect
+	include "w5100_rxtx.asm"	; send, recv, sendto, recvfrom
 
 	; Memory map for upper fixed page (chip 3 page 0)
-	include "sysvars.asm"		; System variables
+	include "jumptable.asm"		; Jump table (sets org)
+	include "sysvars.asm"		; System variables (sets org)
 	include "sysdefs.asm"		; General definitions
