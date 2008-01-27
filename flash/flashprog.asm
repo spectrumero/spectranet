@@ -68,12 +68,17 @@
 	ld hl, STR_dest
 	call F_print
 	ld hl, (v_reqaddr)
-	ld (v_calladdr), hl	; preserve in the calladdr variable
 	call F_printhex
 	ld hl, STR_len
 	call F_print
 	ld hl, (v_reqsize)
 	call F_printhex
+	ld hl, v_reqaddr	; duplicate requested addr/length params
+	ld de, v_calladdr
+	ldi
+	ldi
+	ldi
+	ldi
 .recvdata
 	call F_pollsocket	; on exit h = msb of register pointer
 	ld de, (v_reqaddr)	; address to copy to
@@ -113,8 +118,71 @@
 	jp (hl)
 
 .flash	di
+	ld a, 1			; page in our memory
+	out (PAGERPORT), a
+	ld hl, STR_erasing
+	call F_print
+
+	; Erase sector 0 of the flash chip.
+	call F_FlashEraseSectorZero
+	jr c, .erasefailed
+
+	; Now map in page 1 and 2 of ROM, so the first three pages
+	; are in a contiguous block.
+	ld hl, 1	; chip 0 page 1
+	call F_setpageA
+	ld hl, 2	; chip 0 page 2
+	call F_setpageB
+	ld hl, STR_writing
+	call F_print
+
+	; now write a 16k block from the start address on up.
+	ld hl, (v_calladdr)	; get the start address
+	ld de, 0		; start from the bottom
+	ld bc, 0x3000		; 12k of data to write in this first chunk
+.writeloop
+	ld a, (hl)
+	call F_FlashWriteByte
+	jr c, .writefailed
+	inc hl
+	inc de
+	dec bc
+	ld a, b
+	or c
+	jr nz, .writeloop
+	push hl			; now map in the remaining page
+	ld hl, 3
+	call F_setpageB
+	pop hl			; hl will be pointing at the right byte
+	ld de, 0x2000		; start of page B
+	ld bc, 0x1000		; 4k of data left to go
+.writeloop2
+	ld a, (hl)
+	call F_FlashWriteByte
+	jr c, .writefailed
+	inc hl
+	inc de
+	dec bc
+	ld a, b
+	or c
+	jr nz, .writeloop2
+
+	ld hl, STR_donewriting
+	call F_print
 	halt
 
+.erasefailed
+	ld hl, STR_erasedied
+	call F_print
+	halt
+.writefailed
+	push hl
+	ld hl, STR_writedied
+	call F_print
+	pop hl
+	call F_printhex
+	halt
+	
 J_giveup
 	ld hl, STR_givenup
 	call F_print
@@ -211,15 +279,15 @@ F_setpageB
 ; into an option.
 F_pollkeys
 .poll      
-	call #28e      ; Spectrum ROM key poll routine
-	ld a, e        ; result is in E, move to A to test
-	cp #ff         ; No key pressed
+	call 0x28E      ; Spectrum ROM key poll routine
+	ld a, e		; result is in E, move to A to test
+	cp 0xFF		; No key pressed
 	jr z, .poll
-	push de        ; save for later
+	push de		; save for later
 .pollkeyup
-	call #28e
+	call 0x28E
 	ld a, e
-	cp #ff
+	cp 0xFF
 	jr nz, .pollkeyup
 	pop de
 	ld hl, LK_keys ; Look up the key that was pressed
@@ -233,6 +301,7 @@ F_pollkeys
 ; have.
 	include "../experiments/print5by8.asm"
 	include "w5100config.asm"
+	include "flashwrite.asm"
 	include "../experiments/w5100buffer.asm"
 	include "../experiments/charset.asm"
 	block 0xF800-$,0xFF
@@ -243,7 +312,12 @@ STR_open	defb "Done\n",0
 STR_dest	defb "Receiving data:\n     destination = ",0
 STR_len		defb "\n     length      = ",0
 STR_givenup	defb "\nFailed (giving up)",0
-STR_recvdone	defb "\nTransfer complete\nPress J to jump, F to flash",0
+STR_recvdone	defb "\nTransfer complete\nPress J to jump, F to flash\n",0
+STR_erasing	defb "Erasing flash sector 0\n",0
+STR_writing	defb "Writing data...\n",0
+STR_donewriting defb "Complete.\n",0
+STR_erasedied	defb "Erase failed\n",0
+STR_writedied	defb "Write failed: src addr = ",0
 
 v_pr_wkspc	defw 0
 v_column	defb 0
@@ -258,6 +332,7 @@ v_copied	defw 0
 v_reqaddr	defw 0		; sent over the net
 v_reqsize	defw 0		; sent over the net
 v_calladdr	defw 0		; address to call on completion
+v_length	defw 0		; length of data sent to us
 STR_hex		defb 0,0,0,0,0	; 5 bytes to include the NUL
 
 ; various definitions
