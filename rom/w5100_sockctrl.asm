@@ -89,5 +89,3 @@ F_listen
 F_connect
 	ret
 
-F_poll
-	ret

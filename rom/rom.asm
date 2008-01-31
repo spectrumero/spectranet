@@ -33,6 +33,7 @@
 
 	; Routines for ROM page 0 (chip 0 page 0, lower fixed page)
 	include "zeropage.asm"		; Restarts
+	include "reset.asm"		; Initialization routines
 	include "pager.asm"		; Memory paging routines
 	include "w5100_defines.asm"	; Definitions for network hardware
 	include "sockdefs.asm"		; Definitions for socket library
@@ -40,7 +41,7 @@
 	include "w5100_buffer.asm"	; Transmit and receive buffers
 	include "w5100_sockalloc.asm"	; socket, accept, close
 	include "w5100_sockctrl.asm"	; bind, connect
-	include "w5100_rxtx.asm"	; send, recv, sendto, recvfrom
+	include "w5100_rxtx.asm"	; send, recv, sendto, recvfrom, poll
 
 	; Memory map for upper fixed page (chip 3 page 0)
 	include "jumptable.asm"		; Jump table (sets org)

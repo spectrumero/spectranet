@@ -50,6 +50,12 @@ UPPER_ENTRYPT_SIZE	equ 0x08
 ; own extras. (See the BBC Microcomputer where indirect jump tables were
 ; used and allowed this sort of thing to take place).
 ;
+; Functions that take HL as a parameter can use the entry point at 0x3FFE
+; instead, and set IX to the jump table address - not surprisingly, the
+; instruction at 0x3FFE is jp (ix). Operations with the ix register are
+; a little slower, so while this entry point works fine - if hl isn't
+; needed as a parameter it's best to use 0x3FFF.
+;
 ; This jump table is copied to 0x3E00 on reset (the fixed upper 4k page,
 ; which is RAM).
 JUMPTABLE_COPYFROM
@@ -65,6 +71,7 @@ RECV	jp F_recv
 SENDTO	jp F_sendto
 RECVFROM	jp F_recvfrom
 POLL	jp F_poll
+POLLALL	jp F_pollall
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - 0x3E00

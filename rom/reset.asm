@@ -20,18 +20,20 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; General definitions. These are not hardware specific (generally).
-
-; File descriptor flags.
-FD_CLOSED	equ 0x80
-CLOSEDBIT	equ 7
-FD_VIRTUAL	equ 0x40
-VIRTBIT		equ 6
-NOTSOCKMASK	equ 0xE0	; all hw sockets must be < 0x1F
-SOCKMASK	equ 0x1F
-
-; Error return codes
-EBUGGERED	equ -1
-ENFILE		equ -2
-EBADF		equ -3
+; Initialization routines that are run on reset.
+;
+; The first thing that's done is to page in the configuration area into
+; paging area B. This is nominally in the last page of the flash chip
+; (page 0x20, chip 0). From this we can figure out what we're supposed
+; to do next.
+;
+J_reset
+	ld hl, CONFIGPAGE
+	call F_setpageB
+	
+	call F_w5100init	; Initialize the ethernet hardware
+	
+	ld hl, 0		; We're done so put 0x0000 
+	push hl			; on the stack, and
+	jp UNPAGE		; unpage (a ret instruction)
 

@@ -39,7 +39,7 @@ F_gethwsock
 	ld a, (hl)
 	ld h, a			; point hl at putative hardware socket
 	and NOTSOCKMASK		; is this not a hardware socket?
-	ret z			; OK - return with hw sock register in C
+	ret z			; OK - return with hw sock register in H
 .nohwsock
 	ld a, EBADF
 	scf
