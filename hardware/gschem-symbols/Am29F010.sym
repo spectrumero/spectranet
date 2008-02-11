@@ -7,7 +7,7 @@ pintype=in
 T 555 10195 5 10 1 1 0 0 1
 pinlabel=/RD
 T 405 10245 5 10 1 1 0 6 1
-pinnumber=1
+pinnumber=32
 T 0 10200 5 10 0 0 180 0 1
 pinseq=1
 }
@@ -18,7 +18,7 @@ pintype=in
 T 555 9695 5 10 1 1 0 0 1
 pinlabel=/WR
 T 405 9745 5 10 1 1 0 6 1
-pinnumber=2
+pinnumber=7
 T 0 9700 5 10 0 0 0 0 1
 pinseq=2
 }
@@ -29,7 +29,7 @@ pintype=in
 T 555 9195 5 10 1 1 0 0 1
 pinlabel=/CS
 T 405 9245 5 10 1 1 0 6 1
-pinnumber=3
+pinnumber=30
 T 0 9200 5 10 0 0 0 0 1
 pinseq=3
 }
@@ -40,7 +40,7 @@ pintype=in
 T 555 8195 5 10 1 1 0 0 1
 pinlabel=A0
 T 405 8245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=20
 T 0 8200 5 10 0 0 0 0 1
 pinseq=4
 }
@@ -51,7 +51,7 @@ pintype=in
 T 555 7695 5 10 1 1 0 0 1
 pinlabel=A1
 T 405 7745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=19
 T 0 7700 5 10 0 0 0 0 1
 pinseq=5
 }
@@ -62,7 +62,7 @@ pintype=in
 T 555 7195 5 10 1 1 0 0 1
 pinlabel=A2
 T 405 7245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=18
 T 0 7200 5 10 0 0 0 0 1
 pinseq=6
 }
@@ -73,7 +73,7 @@ pintype=in
 T 555 6695 5 10 1 1 0 0 1
 pinlabel=A3
 T 405 6745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=17
 T 0 6700 5 10 0 0 0 0 1
 pinseq=7
 }
@@ -84,7 +84,7 @@ pintype=in
 T 555 6195 5 10 1 1 0 0 1
 pinlabel=A4
 T 405 6245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=16
 T 0 6200 5 10 0 0 0 0 1
 pinseq=8
 }
@@ -95,7 +95,7 @@ pintype=in
 T 555 5695 5 10 1 1 0 0 1
 pinlabel=A5
 T 405 5745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=15
 T 0 5700 5 10 0 0 0 0 1
 pinseq=9
 }
@@ -106,7 +106,7 @@ pintype=in
 T 555 5195 5 10 1 1 0 0 1
 pinlabel=A6
 T 405 5245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=14
 T 0 5200 5 10 0 0 0 0 1
 pinseq=10
 }
@@ -117,7 +117,7 @@ pintype=in
 T 555 4695 5 10 1 1 0 0 1
 pinlabel=A7
 T 405 4745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=13
 T 0 4700 5 10 0 0 0 0 1
 pinseq=11
 }
@@ -128,7 +128,7 @@ pintype=in
 T 555 4195 5 10 1 1 0 0 1
 pinlabel=A8
 T 405 4245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=3
 T 0 4200 5 10 0 0 0 0 1
 pinseq=12
 }
@@ -139,7 +139,7 @@ pintype=in
 T 555 3695 5 10 1 1 0 0 1
 pinlabel=A9
 T 405 3745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=2
 T 0 3700 5 10 0 0 0 0 1
 pinseq=13
 }
@@ -150,7 +150,7 @@ pintype=in
 T 555 3195 5 10 1 1 0 0 1
 pinlabel=A10
 T 405 3245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=31
 T 0 3200 5 10 0 0 0 0 1
 pinseq=14
 }
@@ -161,7 +161,7 @@ pintype=in
 T 555 2695 5 10 1 1 0 0 1
 pinlabel=A11
 T 405 2745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=1
 T 0 2700 5 10 0 0 0 0 1
 pinseq=15
 }
@@ -172,7 +172,7 @@ pintype=in
 T 555 2195 5 10 1 1 0 0 1
 pinlabel=A12
 T 405 2245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=12
 T 0 2200 5 10 0 0 0 0 1
 pinseq=16
 }
@@ -184,7 +184,7 @@ pintype=in
 T 555 1695 5 10 1 1 0 0 1
 pinlabel=A13
 T 405 1745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=4
 T 0 1700 5 10 0 0 0 0 1
 pinseq=17
 }
@@ -195,7 +195,7 @@ pintype=in
 T 555 1195 5 10 1 1 0 0 1
 pinlabel=A14
 T 405 1245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=5
 T 0 1200 5 10 0 0 0 0 1
 pinseq=18
 }
@@ -206,7 +206,7 @@ pintype=in
 T 555 695 5 10 1 1 0 0 1
 pinlabel=A15
 T 405 745 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=11
 T 0 700 5 10 0 0 0 0 1
 pinseq=19
 }
@@ -217,7 +217,7 @@ pintype=in
 T 555 195 5 10 1 1 0 0 1
 pinlabel=A16
 T 405 245 5 10 1 1 0 6 1
-pinnumber=0
+pinnumber=10
 T 0 200 5 10 0 0 0 0 1
 pinseq=20
 }
@@ -230,9 +230,9 @@ P 3800 10200 3300 10200 1 0 0
 T 3800 10200 5 10 0 0 180 0 1
 pintype=pwr
 T 3245 10195 5 10 1 1 0 6 1
-pinlabel=Vdd
+pinlabel=Vcc
 T 3395 10245 5 10 1 1 0 0 1
-pinnumber=32
+pinnumber=8
 T 3800 10200 5 10 0 0 180 0 1
 pinseq=29
 }
@@ -241,9 +241,9 @@ P 3800 9200 3300 9200 1 0 0
 T 3800 9200 5 10 0 0 180 0 1
 pintype=pwr
 T 3245 9195 5 10 1 1 0 6 1
-pinlabel=GND
+pinlabel=Vss
 T 3395 9245 5 10 1 1 0 0 1
-pinnumber=16
+pinnumber=24
 T 3800 9200 5 10 0 0 180 0 1
 pinseq=30
 }
@@ -254,7 +254,7 @@ pintype=io
 T 3245 195 5 10 1 1 0 6 1
 pinlabel=D7
 T 3395 245 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=29
 T 3800 200 5 10 0 0 180 0 1
 pinseq=28
 }
@@ -265,7 +265,7 @@ pintype=io
 T 3245 695 5 10 1 1 0 6 1
 pinlabel=D6
 T 3395 745 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=28
 T 3900 700 5 10 0 0 0 0 1
 pinseq=27
 }
@@ -276,7 +276,7 @@ pintype=io
 T 3245 1195 5 10 1 1 0 6 1
 pinlabel=D5
 T 3395 1245 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=27
 T 3900 1200 5 10 0 0 0 0 1
 pinseq=26
 }
@@ -287,7 +287,7 @@ pintype=io
 T 3245 1695 5 10 1 1 0 6 1
 pinlabel=D4
 T 3395 1745 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=26
 T 3800 1700 5 10 0 0 0 0 1
 pinseq=25
 }
@@ -298,7 +298,7 @@ pintype=io
 T 3245 2195 5 10 1 1 0 6 1
 pinlabel=D3
 T 3395 2245 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=25
 T 3900 2200 5 10 0 0 0 0 1
 pinseq=24
 }
@@ -309,7 +309,7 @@ pintype=io
 T 3245 2695 5 10 1 1 0 6 1
 pinlabel=D2
 T 3395 2745 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=23
 T 3900 2700 5 10 0 0 0 0 1
 pinseq=23
 }
@@ -320,7 +320,7 @@ pintype=io
 T 3245 3195 5 10 1 1 0 6 1
 pinlabel=D1
 T 3395 3245 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=22
 T 3800 3200 5 10 0 0 0 0 1
 pinseq=22
 }
@@ -331,7 +331,7 @@ pintype=io
 T 3245 3695 5 10 1 1 0 6 1
 pinlabel=D0
 T 3395 3745 5 10 1 1 0 0 1
-pinnumber=0
+pinnumber=21
 T 3900 3700 5 10 0 0 0 0 1
 pinseq=21
 }
