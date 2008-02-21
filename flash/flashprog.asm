@@ -27,10 +27,11 @@
 	; of how to program for the Spectranet, this is a terrible example.
 	; Don't follow it! It's done like this to be able to bootstrap
 	; the board with a new flash program with very little other
-	; support. Real programs should use the socket library.	
+	; support. Real programs should use the socket library.
+.open	
 	ld hl, 0x0100		; W5100 register page
 	call F_setpageA	
-	ld a, S_MR_TCP		; Create a TCP socket.
+	ld a, S_MR_TCP|S_MR_NDMC ; Create a TCP socket, no delayed ACK
 	ld (Sn_MR), a		; as socket 0
 	ld a, 23		; port 23
 	ld (Sn_PORT1), a	; lsb of port address
@@ -95,6 +96,11 @@
 	ld (v_reqsize), hl	; save bytes remaining
 	jr .recvdata
 .recvdone
+	ld hl, Sn_CR		; command register
+	ld (hl), S_CR_CLOSE	; close the socket
+	ld a, (v_calladdr+1)	; check to see if this is a SCREEN$
+	cp 0x40			; MSB is 0x40 for SCREEN$
+	jp z, .open		; get another
 	ld hl, STR_recvdone
 	call F_print
 
