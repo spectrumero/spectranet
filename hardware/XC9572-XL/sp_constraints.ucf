@@ -25,7 +25,7 @@ net IORQ_L loc=p78;
 net RESET_L loc=p79;
 net NMI_L loc=p81;
 net RST8EN loc=p82;
-net HLDROMCS loc=p85;
+net HLDROMCS_ODL loc=p85;
 net A15OUT loc=p86;
 
 net D(0) loc=p89;
