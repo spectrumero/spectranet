@@ -37,6 +37,7 @@
 	include "pager.asm"		; Memory paging routines
 	include "w5100_defines.asm"	; Definitions for network hardware
 	include "sockdefs.asm"		; Definitions for socket library
+	include "flashconf.asm"		; Configuration information
 	include "w5100_genintfunc.asm"	; general internal functions
 	include "w5100_buffer.asm"	; Transmit and receive buffers
 	include "w5100_sockalloc.asm"	; socket, accept, close

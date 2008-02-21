@@ -78,6 +78,7 @@ do_reset
 
 	ld hl, STR_reset	; show a string
 	call F_print
+
 	call F_testroutine
 
 	ld hl, STR_ethinit
@@ -94,7 +95,7 @@ do_reset
 	ld de, 0x3FF8
 	ld bc, 8
 	ldir
-
+.waitforkey
 	call F_waitforkey	; wait for a key to be pressed
 	ld hl, 0
 	add hl, sp		; point hl at sp to munge stack contents
@@ -349,14 +350,17 @@ F_testroutine
 	ld hl, STR_pagetest
 	call F_print
 	ld a, 0x0F	; RAM in both A and B page areas
-	out (0xED), a	; chip selects set
+	ld bc, 0x80ED	; port 0x80ED - (bit 15 high for 128k machines)
+	out (c), a	; chip selects set
 	
 	ld b, 32	; 128k has 32 x 4k pages
 	ld c, 0xE9	; port E9 = page area A (port %1110 1001)
 .pageloop
-	out (c), b	; select page
 	ld a, b
+	ld b, 0x80
+	out (c), a	; select page
 	ld (0x1000), a	; set a byte in page area A
+	ld b, a		; restore b
 	call F_inttohex8
 	call F_print
 	ld a, ' '
@@ -369,7 +373,10 @@ F_testroutine
 	call F_print
 	ld b, 32
 .readback
-	out (c), b
+	ld a, b
+	ld b, 0x80
+	out (c), a
+	ld b, a
 	ld a, (0x1000)
 	call F_inttohex8
 	call F_print
@@ -471,28 +478,38 @@ F_w5100test
 
 ; Set paging area A. Page in HL (chip in H, page in L)
 F_setpageA
+	push bc
+	ld b, 0x80	; upper bits of port address
 	ld a, (v_chipsel)
 	and 0xFC	; zero lower two bits
 	or h		; insert chip select value
 	ld (v_chipsel), a
-	out (CHIPSEL), a
+	ld c, CHIPSEL
+	out (c), a
 	ld a, l
 	ld (v_pga), a	; store new page number
-	out (PAGEA), a	; page it in
+	ld c, PAGEA
+	out (c), a	; page it in
+	pop bc
 	ret
 
 ; Set paging area B. As for area A.
 F_setpageB
+	push bc
+	ld b, 0x80	; upper bits of port address
 	ld a, (v_chipsel)
 	and 0xF3	; zero upper 2 bits of nibble
 	rl h		; move chip select value into correct bits
 	rl h		
 	or h		; insert chip select value
 	ld (v_chipsel), a
-	out (CHIPSEL), a	
+	ld c, CHIPSEL
+	out (c), a	
 	ld a, l
 	ld (v_pgb), a
-	out (PAGEB), a	; page it in
+	ld c, PAGEB
+	out (c), a	; page it in
+	pop bc
 	ret
 
 F_startflashprog

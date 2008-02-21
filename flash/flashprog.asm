@@ -125,7 +125,8 @@
 
 .flash	di
 	ld a, 1			; page in our memory
-	out (PAGERPORT), a
+	ld bc, 0x8000 | PAGERPORT
+	out (c), a
 	ld hl, STR_erasing
 	call F_print
 
@@ -257,28 +258,38 @@ F_clear
 
 ; Set paging area A. Page in HL (chip in H, page in L)
 F_setpageA
+	push bc
+	ld b, 0x80
 	ld a, (v_chipsel)
 	and 0xFC	; zero lower two bits
 	or h		; insert chip select value
 	ld (v_chipsel), a
-	out (CHIPSEL), a
+	ld c, CHIPSEL
+	out (c), a
 	ld a, l
 	ld (v_pga), a	; store new page number
-	out (PAGEA), a	; page it in
+	ld c, PAGEA
+	out (c), a	; page it in
+	pop bc
 	ret
 
 ; Set paging area B. As for area A.
 F_setpageB
+	push bc
+	ld b, 0x80
 	ld a, (v_chipsel)
 	and 0xF3	; zero upper 2 bits of nibble
 	rl h		; move chip select value into correct bits
 	rl h		
 	or h		; insert chip select value
 	ld (v_chipsel), a
-	out (CHIPSEL), a	
+	ld c, CHIPSEL
+	out (c), a	
 	ld a, l
 	ld (v_pgb), a
-	out (PAGEB), a	; page it in
+	ld c, PAGEB
+	out (c), a	; page it in
+	pop bc
 	ret
 
 ; Use the Speccy rom plus a lookup table to turn a keypress (0-z)

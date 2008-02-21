@@ -40,9 +40,12 @@ my $bufdata=pack("CCCC", int($addr % 256), int($addr / 256),
 			 int($size % 256), int($size / 256));
 
 print $sock $bufdata;
+my $blk=0;
 while(my $data=<FHND>)
 {
+	print("Block $blk\n");
 	print $sock $data;
+	$blk++;
 }
 close $sock;
 close FHND;
