@@ -34,4 +34,5 @@ SOCKMASK	equ 0x1F
 EBUGGERED	equ -1
 ENFILE		equ -2
 EBADF		equ -3
+ECONNRESET	equ -4
 

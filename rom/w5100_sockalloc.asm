@@ -61,7 +61,7 @@ F_socket
 	ex de, hl
 .findfd
 	bit 7, (hl)		; is bit 7 (not allocated) set?
-	jr z, .allocfd
+	jr nz, .allocfd
 	inc l			; next fd
 	jr .findfd
 .allocfd
@@ -169,7 +169,7 @@ F_accept
 	ld hl, v_fd1hwsock
 .findfd
 	bit 7, (hl)		; is bit 7 (not allocated) set?
-	jr z, .allocfd
+	jr nz, .allocfd
 	inc l			; next fd
 	jr .findfd
 .allocfd

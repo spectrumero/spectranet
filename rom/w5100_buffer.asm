@@ -44,10 +44,21 @@
 F_copyrxbuf
 	; Set de to the number of bytes that have been received.
 	push de
+
+	; note that if the interrupt register has been checked,
+	; RX_RSR should logically be nonzero, but there seems to be
+	; a race condition in the W5100 where we can get here after
+	; checking the RX interrupt flag but RSR is still zero.
+	; The datasheet doesn't of course guarantee that the socket
+	; is actually ready to read even if the interrupt is set :-)
+.testzero
 	ld l, Sn_RX_RSR0 % 256	; (hl) = RSR's MSB
 	ld d, (hl)
 	inc l
 	ld e, (hl)
+	ld a, d
+	or e
+	jr z, .testzero
 
 	; check whether it exceeds the buffer. If so just use value of
 	; BC as number of bytes to copy. If not, use the RSR as number

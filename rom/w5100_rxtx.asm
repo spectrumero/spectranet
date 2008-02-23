@@ -32,6 +32,11 @@
 ; On return,  BC = number of bytes sent
 ; Carry flag is set on error and A contains error code.
 F_send
+	push af
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	pop af
+
 	call F_gethwsock	; H is socket reg. MSB address
 	ret c			; error finding socket if carry set
 	ld a, b			; MSB of send buffer size
@@ -53,14 +58,27 @@ F_send
 ;              DE = address of memory to fill with data
 ;              BC = number of bytes to get
 F_recv
+	push af
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	pop af
+
 	call F_gethwsock	; H is socket reg MSB
 	ret c			; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register
-.waitforrecv
-	bit S_IR_RECV, (hl)	; see if the recv bit is set
-	jr z, .waitforrecv	; not yet, wait.
 
-	set S_IR_RECV, (hl)	; clear recv interrupt bit
+.waitforrecv
+	ld a, (hl)
+	bit BIT_IR_RECV, a	; see if the recv bit is set
+	jr nz, .rxdata		; Data is ready
+	bit BIT_IR_DISCON, a	; check for RST condition
+	jr z, .waitforrecv	; no, so keep waiting
+	ld a, ECONNRESET	; connection reset by peer
+	scf
+	ret
+
+.rxdata
+	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
 	ret
 
