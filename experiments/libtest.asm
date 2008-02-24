@@ -11,7 +11,7 @@
 	; initialize socket file descriptors
 	ld hl, v_fd1hwsock
 	ld de, v_fd2hwsock
-	ld a, 0xFF
+	ld a, FD_CLOSED
 	ld (hl), a
 	ldi
 	ldi
@@ -61,6 +61,15 @@
 	jp c, .oops
 	call F_displayrc
 
+.poll
+	ld hl, STR_polling
+	call F_print
+	call F_dumpfds
+.pollloop
+	call F_pollall
+	jr z, .pollloop
+	call F_displayrc
+
 	; Accept
 	ld hl, STR_accept
 	call F_print
@@ -79,6 +88,20 @@
 
 	ld hl, BUF_rxbuf
 	call F_print
+
+	; Try to send something back
+	ld a, (VAR_accfd)
+	ld de, STR_romfunctest
+	ld bc, STR_socket-STR_romfunctest
+	call F_send
+
+	; Close
+	ld hl, STR_closing
+	call F_print
+	ld a, (VAR_accfd)
+	call F_sockclose
+	jr c, .oops
+	jp .poll
 
 	; stop
 	jp .stop
@@ -256,6 +279,32 @@ F_displayrc
 	pop af
 	ret
 
+F_dumpfds
+	push hl
+	push de
+	push bc
+	push af
+	ld hl, v_fd1hwsock
+	ld b, 5
+.loop
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, ' '
+	call putc_5by8
+	pop hl
+	inc l
+	djnz .loop
+	ld a, '\n'
+	call putc_5by8
+
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ret
+	
 VAR_fd		defb 0
 VAR_accfd	defb 0
 STR_romfunctest defb "ROM function test routine\n",0
@@ -267,6 +316,9 @@ STR_accept	defb "accept: ",0
 STR_recv	defb "recv: ",0
 STR_stopped	defb "\nProgram stopped.\n",0
 STR_debug	defb "Debug: ",0
+STR_closing	defb "Closing sockets.\n",0
+STR_closelisten	defb "...closing listen socket\n",0
+STR_polling	defb "polling...",0
 
 BUF_rxbuf	defb 0
 

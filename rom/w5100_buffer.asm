@@ -302,7 +302,7 @@ F_getbaseaddr
 	add hl, de		; hl = physical address
 	ret
 .oddsock
-	add 0x08		; odd sockets are 0x18xx addresses	
+	add 0x07		; odd sockets are 0x18xx addresses	
 	ld h, a
 	add hl, de
 	ret

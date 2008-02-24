@@ -161,10 +161,9 @@ F_pollall
 .poll
 	ld h, a			; (hl) = socket register
 	ld l, Sn_IR % 256	; interrupt register
-	bit S_IR_CON, (hl)	; Interrupt for a new connection?
-	jr nz, .ready		; ready for action
-	bit S_IR_RECV, (hl)	; Interrupt for received data?
-	jr nz, .ready		; ready for action
+	ld a, (hl)
+	and S_IR_CON|S_IR_RECV
+	jr nz, .ready
 	inc e			; next file descriptor
 	djnz .sockloop
 .noneready

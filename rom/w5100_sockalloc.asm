@@ -85,8 +85,10 @@ F_socket
 ;
 ; Carry flag is set if an error occurs reopening a virtual socket.
 F_sockclose
+	push af
 	ld hl, W5100_REGISTER_PAGE
 	call F_setpageA
+	pop af
 
 	ld h, v_fd1hwsock / 256	; high order of file descriptor map
 	ld l, a			; (hl) = file descriptor map
@@ -189,8 +191,19 @@ F_accept
 	ld e, l			; (de) = port register of new hw socket
 	ldi			; copy port across to bind new hw socket
 	ldi
+	ex de, hl		; new socket pointed to by hl
+	ld l, Sn_CR % 256	; hl = command register ptr
+	ld (hl), S_CR_LISTEN	; tell new socket to listen
+	ld l, Sn_SR % 256	; hl = status register ptr
+	ld a, (hl)
+	cp S_SR_SOCK_LISTEN	; check for listening state
+	jr nz, .listenfail
 	pop hl			; get fd back to return to caller
 	ld a, l			; set fd number in A
+	ret
+.listenfail
+	ld a, EBUGGERED		; set error code and return with carry set
+	scf
 	ret
 
 .virtualize
@@ -225,6 +238,8 @@ F_hwallocsock
 ; Parameters: C = socket type (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW etc)
 ; 	      HL = pointer to socket register area
 F_hwopensock
+	ld l, Sn_IR % 256	; (hl) = interrupt register
+	ld (hl), 0x1F		; clear all interrupt flags
 	ld l, Sn_MR % 256	; (hl) = socket mode register
 	ld (hl), c		; set type of socket
 	ld l, Sn_CR % 256	; (hl) = command register
