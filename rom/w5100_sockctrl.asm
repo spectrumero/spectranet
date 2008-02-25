@@ -85,7 +85,53 @@ F_listen
 	ret
 
 ;-------------------------------------------------------------------------
-; TODO: connect
+; F_connect:
+; Connect to a remote host.
+;
+; Parameters: A = socket fd
+;            DE = pointer to 4 byte buffer containing destination IP
+;            BC = port number
+; On error, the carry flag is set and A contains the error number.
+; On success, returns zero in A
 F_connect
+	push af
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	pop af
+
+	call F_gethwsock	; H = socket register bank MSB
+	ld l, Sn_DPORT0 % 256	; destination port register
+	ld (hl), b		; high order of port
+	inc l
+	ld (hl), c		; low order of port
+	ld l, Sn_DIPR0 % 256	; destination IP address register
+	ex de, hl		; passed buffer value now in hl
+	ldi
+	ldi
+	ldi
+	ldi
+	ex de, hl
+	ld l, Sn_CR % 256	; command register
+	ld (hl), S_CR_CONNECT	; instruction to connect to remote host
+
+	ld l, Sn_IR % 256	; interrupt register
+.waitforconn
+	ld a, (hl)
+	bit BIT_IR_CON, a
+	jr nz, .connected
+	and a			; if not, is it zero (no flags set?)
+	jr z, .waitforconn
+	and S_IR_DISCON		; connection refused?
+	jr nz, .refused
+	ld a, ETIMEDOUT		; connection timed out
+	scf
+	ret	
+.refused
+	ld a, ECONNREFUSED
+	scf
+	ret
+.connected
+	set BIT_IR_CON, (hl)	; reset interrupt bit
+	xor a			; connection OK
 	ret
 

@@ -36,6 +36,10 @@
 	ld hl, STR_romfunctest
 	call F_print
 
+	; Test client (connect function)
+	jp F_client
+
+
 	; Open a new socket of type SOCK_STREAM (i.e. TCP)
 	ld hl, STR_socket
 	call F_print
@@ -50,7 +54,7 @@
 	ld a, (VAR_fd)
 	ld de, 2000
 	call F_bind
-	jp c, .oops
+	jp c, oops
 	call F_displayrc
 
 	; Listen
@@ -58,7 +62,7 @@
 	call F_print
 	ld a, (VAR_fd)
 	call F_listen
-	jp c, .oops
+	jp c, oops
 	call F_displayrc
 
 .poll
@@ -100,24 +104,62 @@
 	call F_print
 	ld a, (VAR_accfd)
 	call F_sockclose
-	jr c, .oops
+	jr c, oops
 	jp .poll
 
 	; stop
-	jp .stop
+	jp stop
 
-.oops
+oops
 	push af
 	ld hl, STR_oops
 	call F_print
 	pop af
 	call F_displayrc
-.stop
+stop
 	ld hl, STR_stopped
 	call F_print
-.stophalt
+stophalt
 	halt
-	jp .stophalt
+	jp stophalt
+
+	; test client code
+F_client
+	; Open a new socket of type SOCK_STREAM (i.e. TCP)
+	ld hl, STR_socket
+	call F_print
+	ld c, SOCK_STREAM
+	call F_socket
+	ld (VAR_clifd), a		; save the file descriptor
+	call F_displayrc
+
+	; Connect to remote host
+	ld hl, STR_connecting
+	call F_print
+	ld a, (VAR_clifd)
+	ld de, DEST_IP
+	ld bc, 2000
+	call F_connect
+	jp c, oops
+	call F_displayrc
+
+	; Send something
+	ld hl, STR_sending
+	call F_print
+	ld a, (VAR_clifd)
+	ld de, STR_romfunctest
+	ld bc, STR_socket-STR_romfunctest
+	call F_send
+
+	; Close
+	ld hl, STR_closing
+	call F_print
+	ld a, (VAR_clifd)
+	call F_sockclose
+	jp c, oops
+
+	; stop
+	jp stop
 
 	include "../rom/pager.asm"
 	include "../rom/sockdefs.asm"
@@ -307,6 +349,8 @@ F_dumpfds
 	
 VAR_fd		defb 0
 VAR_accfd	defb 0
+VAR_clifd	defb 0
+DEST_IP		defb 172,16,0,2
 STR_romfunctest defb "ROM function test routine\n",0
 STR_socket	defb "Opening socket: ",0
 STR_oops	defb "Operation failed with rc = ",0
@@ -319,6 +363,8 @@ STR_debug	defb "Debug: ",0
 STR_closing	defb "Closing sockets.\n",0
 STR_closelisten	defb "...closing listen socket\n",0
 STR_polling	defb "polling...",0
+STR_sending	defb "Sending\n",0
+STR_connecting	defb "connect: ",0
 
 BUF_rxbuf	defb 0
 
