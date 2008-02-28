@@ -15,24 +15,14 @@ RESET
 	; to its proper position
 rst_8
 	di
-	push af
-	call F_syntax
-	jr nz, .errexit
-	pop af
-	pop hl		; rewind stack 1 "too far"
-	jp pageout	; the ret should land us back in the interpreter
-	
-.errexit
-	pop af
-	push hl		; make space for our exit address in the Speccy ROM
-	ld hl, 0	; stack pointer must be munged to call ERROR_2
-	add hl, sp	; routine in the Spectrum's ROM
-	ld (hl), ERROR_2 % 256
-	inc hl
-	ld (hl), ERROR_2 / 256
-	ld hl, (CH_ADD)	; this is what the Speccy's RST 8 routine does
-	ld (X_PTR), hl
-	jp pageout
+	jp do_rst8
+
+	block 0x10-$,0xFF
+callbas
+	ld (v_hlsave), hl
+	ld (v_desave), de
+	pop hl
+	jp do_callbas
 
 	; no stack munging needed to be done here, it was our interrupt
 	; so we're not going to run the Spectrum ROM ISR.
@@ -103,6 +93,53 @@ do_reset
 	inc hl
 	ld (hl), 0		; to zero so 'ret' does a reset
 	jp pageout_noei		; and page out - Speccy ROM will now boot.
+
+do_rst8
+	ld (v_hlsave), hl	; save hl without disturbing stack
+	pop hl			; get stack value - entry code
+	push hl
+	push af
+	ld a, h			; check for zero - Spectrum ROM routine return
+	or l
+	jr z, .returnfromzxrom	; returning from a Spectrum ROM call
+	call F_syntax
+	jr nz, .errexit
+	pop af
+	pop hl		; rewind stack 1 "too far"
+	jp pageout	; the ret should land us back in the interpreter
+	
+.errexit
+	pop af
+	push hl		; make space for our exit address in the Speccy ROM
+	ld hl, 0	; stack pointer must be munged to call ERROR_2
+	add hl, sp	; routine in the Spectrum's ROM
+	ld (hl), ERROR_2 % 256
+	inc hl
+	ld (hl), ERROR_2 / 256
+	ld hl, (CH_ADD)	; this is what the Speccy's RST 8 routine does
+	ld (X_PTR), hl
+	jp pageout
+
+.returnfromzxrom
+	pop af		; restore af
+	pop hl		; unwind past entry code
+	ld hl, (v_hlsave)	; restore hl
+	ret		; go back to the calling routine.
+	
+do_callbas
+	ld e, (hl)		; Get the subroutine address into DE
+	inc hl
+	ld d, (hl)
+	inc hl			; hl now is the return address
+	ex (sp), hl		; update the return address in the stack
+	ld hl, 0		; entry code to RST 8
+	push hl
+	ld hl, 8		; return address for Spectrum ROM to return
+	push hl
+	push de			; the actual address in ROM we want to call
+	ld hl, (v_hlsave)	; restore HL
+	ld de, (v_desave)	; restore de
+	jp pageout		; page out
 
 ; Print utility routine.
 F_print
@@ -572,6 +609,8 @@ v_chipsel	equ 0x3F12	; Chip select values
 v_sockptr	equ 0x3F13	; Pointer to socket register (2 bytes)
 v_copylen	equ 0x3F15	; Length to copy
 v_copied	equ 0x3F17	; Wrapped copied so far
+v_hlsave	equ 0x3F19	; save hl for callbas
+v_desave	equ 0x3F1B
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053
