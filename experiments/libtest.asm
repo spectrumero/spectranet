@@ -37,7 +37,8 @@
 	call F_print
 
 	; Test client (connect function)
-	jp F_client
+	;jp F_client
+	jp F_udp
 
 
 	; Open a new socket of type SOCK_STREAM (i.e. TCP)
@@ -161,6 +162,50 @@ F_client
 	; stop
 	jp stop
 
+; Test UDP
+F_udp
+	; Open a new socket of type SOCK_DGRAM (UDP)
+	ld hl, STR_socket
+	call F_print
+	ld c, SOCK_DGRAM
+	call F_socket
+	ld (VAR_fd), a		; save the file descriptor
+	call F_displayrc
+
+	; Bind the new socket to a port.
+	ld hl, STR_bind
+	call F_print
+	ld a, (VAR_fd)
+	ld de, 2000
+	call F_bind
+	jp c, oops
+	call F_displayrc
+.loop
+	ld hl, STR_recvfrom
+	call F_print
+	ld hl, BUF_conninfo
+	ld de, BUF_rxbuf
+	ld bc, 0x100
+	ld a, (VAR_fd)
+	call F_recvfrom
+	jp c, oops
+	call F_regdump
+	ld ix, BUF_conninfo
+	call F_dumpsockinfo
+	ld hl, BUF_rxbuf
+	call F_print
+
+	; try to send something back
+	ld hl, BUF_conninfo
+	ld de, STR_romfunctest
+	ld bc, STR_socket-STR_romfunctest
+	ld a, (VAR_fd)
+	call F_sendto
+	jp c, oops
+	call F_regdump
+	jr .loop
+	ret
+
 	include "../rom/pager.asm"
 	include "../rom/sockdefs.asm"
 	include "../rom/w5100_genintfunc.asm"
@@ -168,6 +213,7 @@ F_client
 	include "../rom/w5100_sockalloc.asm"
 	include "../rom/w5100_sockctrl.asm"
 	include "../rom/w5100_rxtx.asm"
+	include "../rom/w5100_sockinfo.asm"
 
 	include "print5by8.asm"
 	block 0x9000-$,0x00
@@ -346,6 +392,46 @@ F_dumpfds
 	pop de
 	pop hl
 	ret
+
+; ix points to sockinfo data
+F_dumpsockinfo
+	ld a, (ix+0)
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	ld a, (ix+1)
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	ld a, (ix+2)
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	ld a, (ix+3)
+	call F_inttohex8
+	call F_print
+	ld a, ':'
+	call putc_5by8
+	ld a, (ix+5)
+	call F_inttohex8
+	call F_print
+	ld a, (ix+4)
+	call F_inttohex8
+	call F_print
+	ld a, ':'
+	call putc_5by8
+	ld a, (ix+7)
+	call F_inttohex8
+	call F_print
+	ld a, (ix+6)
+	call F_inttohex8
+	call F_print
+	ld a, '\n'
+	call putc_5by8
+	ret
 	
 VAR_fd		defb 0
 VAR_accfd	defb 0
@@ -365,7 +451,11 @@ STR_closelisten	defb "...closing listen socket\n",0
 STR_polling	defb "polling...",0
 STR_sending	defb "Sending\n",0
 STR_connecting	defb "connect: ",0
+STR_recvfrom	defb "recvfrom: ",0
 
+BUF_txinfo	defb 172,16,0,2,0xD0,0x07,0x13,0x80
+
+BUF_conninfo	defb 0,0,0,0,0,0,0,0
 BUF_rxbuf	defb 0
 
 	include "../rom/sysvars.asm"

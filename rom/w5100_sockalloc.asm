@@ -245,13 +245,22 @@ F_hwopensock
 	ld l, Sn_CR % 256	; (hl) = command register
 	ld (hl), S_CR_OPEN	; hardware command: open socket	
 	ld l, Sn_SR % 256	; (hl) = status register
-	ld a, (hl)
+	ld a, SOCK_DGRAM	; is this a UDP socket?
+	cp c
+	jr z, .checkudpstat	; do status check for UDP socket.
+	ld a, (hl)		; TCP socket (SOCK_STREAM)
 	cp S_SR_SOCK_INIT	; did it initialize ok?
 	ret z
 
 	; Bad things happened. Clean up and return an error.
+.failed
 	ld l, Sn_CR % 256	; (hl) = command register so...
 	ld (hl), S_CR_CLOSE	; clean up.
 	scf
 	ret
-
+.checkudpstat
+	ld a, (hl)
+	cp S_SR_SOCK_UDP	; Successfully initialized?
+	ret z
+	jr .failed
+	

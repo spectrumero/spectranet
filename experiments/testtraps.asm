@@ -58,6 +58,7 @@ pageout_noei
 	ret
 
 do_reset
+	call F_resetwkspc
 	call F_clear		; white screen
 
 	ld hl, 0xFFFF		; arbitrary delay
@@ -104,9 +105,20 @@ do_rst8
 	jr z, .returnfromzxrom	; returning from a Spectrum ROM call
 	call F_syntax
 	jr nz, .errexit
-	pop af
-	pop hl		; rewind stack 1 "too far"
-	jp pageout	; the ret should land us back in the interpreter
+
+	ld sp, (ERR_SP)		; Reset the interpreter
+	ld hl, ERR_NR
+	ld (hl), 0xFF
+	ld hl, (FLAGS)
+	bit 7, (hl)		; check what the interpreter was doing
+	jr z, .stmtnext		; Syntax checking
+	ld hl, 0x1B7D		; Return address is STMT-R-1
+	push hl
+	jp pageout
+.stmtnext
+	ld hl, 0x1BF4		; Return address is STMT-NEXT
+	push hl
+	jp pageout
 	
 .errexit
 	pop af
@@ -131,7 +143,7 @@ do_callbas
 	inc hl
 	ld d, (hl)
 	inc hl			; hl now is the return address
-	ex (sp), hl		; update the return address in the stack
+	push hl			; put the return address back on the stack
 	ld hl, 0		; entry code to RST 8
 	push hl
 	ld hl, 8		; return address for Spectrum ROM to return
@@ -165,6 +177,15 @@ F_clear
 	ld (v_rowcount), a
 	ld hl, 16384
 	ld (v_row), hl
+	ret
+
+F_resetwkspc
+	xor a
+	ld hl, 0x3000
+	ld de, 0x3001
+	ld bc, 0xFFF
+	ld (hl),a
+	ldir
 	ret
 
 ; simple routine to show a successful call to the jump table.
@@ -223,32 +244,9 @@ F_waitforkey
 
 ; Check our rather basic BASIC extension. This allows us to do a "CAT n".
 F_syntax
-	ld hl, STR_rst8
-	call F_print
-
-	push de		; preserve de
-	ld de, (CH_ADD)	; examine the interpreter buffer
-	dec de		; look back 1 char
-.dumploop
-	ld a, (de)
-	cp 0x0D		; end of string?
-	inc de		; advance pointer without touching flags
-	jr z, .interpret
-	bit 7, a	; high bit set?
-	jr z, .putchar
-	call F_inttohex8 ; convert to hex, hl points at resulting string
-	call F_print
-	ld a, ' '	; add a space
-	call putc_5by8
-	jr .dumploop
-.putchar
-	call putc_5by8	; display the character in the buffer
-	jr .dumploop
-
 	; A rather rinkity dink interpreter to test handling
 	; of a BASIC extension.
 .interpret
-	pop de
 	ld hl, (CH_ADD)
 	dec hl
 	ld a, (hl)
@@ -257,23 +255,41 @@ F_syntax
 	inc hl
 	ld a, (hl)
 	cp 'f'		; Still our command?
-	jr nz, .notmine
-	inc hl
-	ld a, (hl)
-	cp 0x0D		; end?
-	jr nz, .colon
-.mine
+	jr z, .flash
+	cp 's'		; setup external interpreter?
+	jr z, .setupext
+	jr .notmine
+.flash
+	; workaround till I find out what I'm doing wrong when
+	; returning to the BASIC interpreter.
+	ld a, (v_runalready)
+	xor 1
+	ld (v_runalready), a
+	
 	; load the flash programmer
-	call F_startflashprog
+	inc hl
+	ld (CH_ADD), hl
+	call nz, F_startflashprog	; only call if xor 1 was nonzero
+	xor a
 	ret
-
-.colon	cp ':'
-	jr z, .mine
+.setupext
+	inc hl
+	ld (CH_ADD), hl
+	ld hl, STR_setup
+	call F_print
+	ld hl, 0x8000
+	ld (v_interpaddr), hl
+	xor a
+	ret
 .notmine
-	ld a, '\n'	; add a CR so the display does something
-	call putc_5by8	; sensible.
+	ld hl, (v_interpaddr)
+	ld a, h
+	or l
+	jr nz, .jumpexternal
 	or 1		; reset zero flag
 	ret
+.jumpexternal
+	jp (hl)
 
 ; F_inttohex8 - convert 8 bit number in A. On return hl=ptr to string
 F_inttohex8
@@ -582,6 +598,7 @@ STR_ethdone	defb "Done.\n", 0
 STR_open	defb "\nListening on port 23\n",0
 STR_rxbytes	defb "Received bytes = ",0
 STR_closed	defb "\nSocket closed.\n",0
+STR_setup	defb "External interpreter set to 0x8000\n",0
 
 JTABLE1	jp F_calltrap1
 JTABLE2	jp F_calltrap2
@@ -611,9 +628,14 @@ v_copylen	equ 0x3F15	; Length to copy
 v_copied	equ 0x3F17	; Wrapped copied so far
 v_hlsave	equ 0x3F19	; save hl for callbas
 v_desave	equ 0x3F1B
+v_interpaddr	equ 0x3F1D	; extra interpreter to call
+v_runalready	equ 0x3F1F	; 'run already' flag
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053
+ERR_SP		equ 23613
+ERR_NR		equ 23610
+FLAGS		equ 23611
 
 ; Spectrum system variables
 CH_ADD		equ 23645

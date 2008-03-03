@@ -56,6 +56,7 @@ MAX_FDS		equ 5		; maximum number of file descriptors
 ; General purpose small workspace reserved for ROM routines (for short strings,
 ; numbers etc.)
 v_workspace	defb 0,0,0,0,0,0,0,0
+v_bufptr	defw 0		; buffer pointer
 
 ; Jump table entries. First two are three bytes long (JP xxxx). Last can
 ; only fit a JR xx.

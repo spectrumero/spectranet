@@ -116,12 +116,20 @@
 	jr z, .jump
 	cp 'f'
 	jr z, .flash
+	cp 'r'
+	jr z, .return
 	jr .getkeyloop
 
 	; Jump to the start address of the block of data we just got.
 .jump
 	ld hl, (v_calladdr)
 	jp (hl)
+
+.return
+	ld bc, 0x8000|PAGERPORT	; page in our memory
+	ld a, 1
+	out (c), a
+	ret
 
 .flash	di
 	ld a, 1			; page in our memory
@@ -329,7 +337,7 @@ STR_open	defb "Done\n",0
 STR_dest	defb "Receiving data:\n     destination = ",0
 STR_len		defb "\n     length      = ",0
 STR_givenup	defb "\nFailed (giving up)",0
-STR_recvdone	defb "\nTransfer complete\nPress J to jump, F to flash\n",0
+STR_recvdone	defb "\nTransfer complete\nPress J to jump, F to flash, R to return\n",0
 STR_erasing	defb "Erasing flash sector 0\n",0
 STR_writing	defb "Writing data...\n",0
 STR_donewriting defb "Complete.\n",0

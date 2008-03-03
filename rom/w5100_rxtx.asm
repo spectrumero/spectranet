@@ -82,9 +82,110 @@ F_recv
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
 	ret
 
-; TODO: sendto/recvfrom
-F_sendto
+;=========================================================================
+; Sendto:
+; send data to a non-stream socket (i.e. SOCK_DGRAM, a UDP socket). 
+;
+; Parameters:  A = file descriptor
+;             HL = address of 8 byte socket info structure
+;             DE = address of buffer to send
+;             BC = size of buffer to send
+F_sendto	
+	push af
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	pop af
+	ld (v_bufptr), hl	; save socket info buffer pointer
+
+	call F_gethwsock	; H is socket reg. MSB address
+	ret c			; error finding socket if carry set
+	push de			; save data buffer
+	push bc			; save buffer length
+	ld de, (v_bufptr)	; get sock info ptr
+	call F_setsockinfo
+	pop bc			; retrieve buffer length	
+	pop de			; retrieve data buffer
+	ld a, b			; MSB of send buffer size
+	cp 0x08			; greater than 2K if compare result is pos.
+	jp p, .multisend	; TODO: send buffers >2k
+	call F_copytxbuf
+	ret
+.multisend			; see TODO above!
+	ld bc, 0x7FF		; send as much as possible for now.
+	call F_copytxbuf
+	ret
+
+;=========================================================================
+; Recvfrom - receive data from a socket. Usually used for a SOCK_DGRAM
+; socket, i.e. UDP.
+;
+; Parameters:  A = file descriptor
+;             HL = address of buffer to fill with connection information
+;             DE = address of buffer to fill with return data
+;             BC = maximum bytes to get
+;
+; On error, the carry flag is set and the return code is returned in A.
+; On successful return, BC contains the number of bytes transferred.
 F_recvfrom
+	ld (v_bufptr), hl	; save the connection buffer ptr
+	push af
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	pop af
+
+	call F_gethwsock	; H is socket reg MSB
+	ret c			; carry is set if the fd is not valid
+	ld l, Sn_IR % 256	; get the interrupt register
+
+.waitforrecv
+	ld a, (hl)
+	bit BIT_IR_RECV, a	; see if the recv bit is set
+	jr nz, .rxdata		; Data is ready
+	bit BIT_IR_DISCON, a	; check for RST condition
+	jr z, .waitforrecv	; no, so keep waiting
+	ld a, ECONNRESET	; connection reset by peer
+	scf
+	ret
+
+.rxdata
+	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
+	ld l, Sn_MR % 256	; inspect mode register
+	ld a, (hl)
+	cp SOCK_DGRAM		; Is this a SOCK_DGRAM (UDP) socket?
+	jr z, .rxudp	
+	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
+	ld de, (v_bufptr)	; retrieve the buffer pointer
+	call F_sockinfo		; get socket information
+	ret
+
+	; UDP data comes with an 8 byte header stuck to the front.
+	; To avoid having to shift the entire receive data buffer around,
+	; first we pull off this 8 byte header and put it into the
+	; socket info buffer. Then we receive the data proper.
+	; The structure of the socket info buffer is documented in
+	; w5100_sockinfo.asm.
+.rxudp
+	push bc			; save the max length requested
+	push de			; save the data buffer address
+	ld bc, 8		; length of the header
+	ld de, (v_bufptr)	; retrieve the header buffer pointer
+	call F_copyrxbuf	; fetch the header
+	pop de			; retrieve the data buffer address
+	pop bc			; retrieve the length argument
+	call F_copyrxbuf	; get the data
+	push hl			; save the W5100 register pointer
+	ld ix, (v_bufptr)	; now convert the big endian port to
+	ld h, (ix+4)		; little endian. Byte 4 is the high order
+	ld l, (ix+5)		; and 5 is the low order byte.
+	ld (ix+4), l
+	ld (ix+5), h
+	pop hl			; get the register pointer back
+	ld l, Sn_PORT0 % 256	; point it at the source port register
+	ld a, (hl)
+	ld (ix+7), a		; high order of the source port
+	inc l
+	ld a, (hl)
+	ld (ix+6), a		; low order of the source port
 	ret
 
 ;--------------------------------------------------------------------------
