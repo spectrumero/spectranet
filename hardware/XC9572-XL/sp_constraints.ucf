@@ -27,6 +27,9 @@ net NMI_L loc=p81;
 net RST8EN loc=p82;
 net HLDROMCS_ODL loc=p85;
 net A15OUT loc=p86;
+net TRAPENABLE_L loc=p23;
+net INT_L loc=p25;
+net NMIOUT_L loc=p27;
 
 net D(0) loc=p89;
 net D(1) loc=p90;
