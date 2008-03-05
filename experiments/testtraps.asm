@@ -43,6 +43,7 @@ nmi
 	push af
 	ld hl, STR_nmi
 	call F_print
+	call F_waitforkey
 	pop af
 	pop hl
 	jp pageout

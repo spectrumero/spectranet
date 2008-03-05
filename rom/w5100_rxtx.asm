@@ -91,11 +91,11 @@ F_recv
 ;             DE = address of buffer to send
 ;             BC = size of buffer to send
 F_sendto	
+	ld (v_bufptr), hl	; save socket info buffer pointer
 	push af
 	ld hl, W5100_REGISTER_PAGE
 	call F_setpageA
 	pop af
-	ld (v_bufptr), hl	; save socket info buffer pointer
 
 	call F_gethwsock	; H is socket reg. MSB address
 	ret c			; error finding socket if carry set

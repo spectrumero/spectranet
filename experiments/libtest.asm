@@ -189,13 +189,18 @@ F_udp
 	ld a, (VAR_fd)
 	call F_recvfrom
 	jp c, oops
-	call F_regdump
-	ld ix, BUF_conninfo
-	call F_dumpsockinfo
 	ld hl, BUF_rxbuf
 	call F_print
 
 	; try to send something back
+	ld hl, STR_sendto
+	call F_print
+
+	; zero out source port, we don't want to set it
+	ld ix, BUF_conninfo
+	xor a
+	ld (ix+6), a
+	ld (ix+7), a
 	ld hl, BUF_conninfo
 	ld de, STR_romfunctest
 	ld bc, STR_socket-STR_romfunctest
@@ -203,7 +208,13 @@ F_udp
 	call F_sendto
 	jp c, oops
 	call F_regdump
-	jr .loop
+	
+	ld hl, W5100_REGISTER_PAGE
+	call F_setpageA
+	ld hl, 0x1401
+	call F_dumpw5100
+
+	call F_waitforkey	
 	ret
 
 	include "../rom/pager.asm"
@@ -432,10 +443,77 @@ F_dumpsockinfo
 	ld a, '\n'
 	call putc_5by8
 	ret
+
+; h = register page
+F_dumpw5100
+	ld l, Sn_DIPR0 % 256	; hl = dest. IP
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	pop hl
+	inc l
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	pop hl
+	inc l
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	pop hl
+	inc l
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, ':'
+	call putc_5by8
+	pop hl
+	ld l, Sn_DPORT0 % 256	; dest port
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	pop hl
+	inc l
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, ':'
+	call putc_5by8
+	pop hl
+	ld l, Sn_PORT0 % 256	; source port
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	pop hl
+	inc l
+	ld a, (hl)
+	push hl
+	call F_inttohex8
+	call F_print
+	ld a, '\n'
+	call putc_5by8
+	pop hl
+	ret
+	
+	
 	
 VAR_fd		defb 0
 VAR_accfd	defb 0
 VAR_clifd	defb 0
+VAR_ws		defw 0
 DEST_IP		defb 172,16,0,2
 STR_romfunctest defb "ROM function test routine\n",0
 STR_socket	defb "Opening socket: ",0
@@ -452,8 +530,9 @@ STR_polling	defb "polling...",0
 STR_sending	defb "Sending\n",0
 STR_connecting	defb "connect: ",0
 STR_recvfrom	defb "recvfrom: ",0
+STR_sendto	defb "sendto...\n",0
 
-BUF_txinfo	defb 172,16,0,2,0xD0,0x07,0x13,0x80
+BUF_txinfo	defb 172,16,0,2,0xD0,0x07,0x00,0x00
 
 BUF_conninfo	defb 0,0,0,0,0,0,0,0
 BUF_rxbuf	defb 0

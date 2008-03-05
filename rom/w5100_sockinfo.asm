@@ -75,22 +75,27 @@ F_setsockinfo
 	ldi
 	ldi
 	ldi
-	ld e, Sn_DPORT0 % 256	; destination port
+	ld e, Sn_DPORT1 % 256	; destination port
+	ld a, (hl)
+	ld (de), a
+	dec e
 	inc hl
 	ld a, (hl)
 	ld (de), a
-	dec hl
-	inc e
+	inc hl
+
+	; only set source port if source port is set.
 	ld a, (hl)
-	ld (de), a
-;	inc hl
-;	ld e, Sn_PORT1 % 256	; source port
-;	ld a, (hl)
-;	ld (de), a
-;	inc hl
-;	dec e
-;	ld a, (hl)
-;	ld (de), a
-	ex de, hl
+	inc hl
+	or (hl)
+	ex de, hl		; restore registers to expected order
+	ret z			; nothing more to do
+	ld l, Sn_PORT1 % 256	; hl points at source port
+	ld a, (de)		; source port MSB
+	ld (hl), a		; set MSB
+	inc l
+	dec de
+	ld a, (de)
+	ld (hl), a		; set LSB
 	ret
 
