@@ -20,6 +20,16 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+; A 512 byte block is reserved for network messages that are used in the
+; normal course of communicating with the world, for example, UDP packets
+; sent to a DNS server or received from a DNS server.
+		org 0x3C00
+buf_message
+
+; A general purpose block at 0x3E00 is reserved for network functions.
+; It is used as a 256-byte buffer for functions such as DNS query strings.
+		org 0x3E00
+buf_workspace
 
 ; The system variables live in chip 4 page 0 which is permanently mapped
 ; to 0x3000-0x3FFF. Specifically, they live in the upper part of this memory,
@@ -57,6 +67,20 @@ MAX_FDS		equ 5		; maximum number of file descriptors
 ; numbers etc.)
 v_workspace	defb 0,0,0,0,0,0,0,0
 v_bufptr	defw 0		; buffer pointer
+
+; DNS system variables
+v_seed		defw 0		; 16 bit random number seed
+v_dnsserial	defw 0		; Serial number of current DNS query
+v_dnsfd		defb 0		; file descriptor of DNS socket
+v_fieldptr	defw 0		; field pointer for DNS strings
+v_ansprocessed	defb 0		; answers processed so far
+v_nameserver1	defb 0,0,0,0	; nameserver 1
+v_nameserver2	defb 0,0,0,0	; nameserver 2
+v_nameserver3	defb 0,0,0,0	; nameserver 3
+v_dnssockinfo	defb 0,0,0,0,0,0,0,0	; DNS socket info
+v_cur_resolver	defw 0		; pointer to IP address of current resolver
+v_queryresult	defw 0		; address of query result buffer
+v_querylength	defw 0		; query length in bytes
 
 ; Jump table entries. First two are three bytes long (JP xxxx). Last can
 ; only fit a JR xx.

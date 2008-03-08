@@ -20,25 +20,30 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; General definitions. These are not hardware specific (generally).
+; Definitions for querying DNS
+;
+; Most of the fields for a standard DNS 'A' record lookup will not change
+; so the fields are defined here so they get flashed into the ROM.
+; See RFC 1035 for full descriptions of the fields.
 
-; File descriptor flags.
-FD_CLOSED	equ 0x80
-CLOSEDBIT	equ 7
-FD_VIRTUAL	equ 0x40
-VIRTBIT		equ 6
-NOTSOCKMASK	equ 0xE0	; all hw sockets must be < 0x1F
-SOCKMASK	equ 0x1F
+query		defb 0x01,0x00	; 16 bit flags field - std. recursive query
+qdcount		defb 0x00,0x01	; we only ever ask one question at a time
+ancount		defw 0x0000	; No answers in a query
+nscount		defw 0x0000	; No NS RRs in a query
+arcount		defw 0x0000	; No additional records
+queryend
 
-; Error return codes - base socket library
-EBUGGERED	equ -1
-ENFILE		equ -2
-EBADF		equ -3
-ECONNRESET	equ -4
-ETIMEDOUT	equ -5
-ECONNREFUSED	equ -6
+; Definitions
+dns_headerlen	equ 12		; 12 bytes long
+dns_Arecord	equ 1		; A record indicator in query/answer
+dns_port	equ 53		; port 53/udp
 
-; Error return codes - DNS
-HOST_NOT_FOUND	equ -7
-NO_RECOVERY	equ -8
-NO_ADDRESS	equ -9
+; Offsets to the fields of the DNS message header
+dns_serial	equ 0		; Two byte serial number
+dns_bitfield1	equ 2		; First 8 bits of the flags bitfield
+dns_bitfield2	equ 3		; Last 8 bits of the flags bitfield
+dns_qdcount	equ 4		; Number of questions (2 bytes, big endian)
+dns_ancount	equ 6		; Number of resource records
+dns_nscount	equ 8		; Number of NS records
+dns_arcount	equ 10		; Number of additional records
+
