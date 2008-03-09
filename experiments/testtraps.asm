@@ -624,13 +624,15 @@ v_workspace	equ 0x3F05	; General purpose workspace
 v_pga		equ 0x3F10	; Paging area A page
 v_pgb		equ 0x3F11	; Paging area B page
 v_chipsel	equ 0x3F12	; Chip select values
-v_sockptr	equ 0x3F13	; Pointer to socket register (2 bytes)
-v_copylen	equ 0x3F15	; Length to copy
-v_copied	equ 0x3F17	; Wrapped copied so far
-v_hlsave	equ 0x3F19	; save hl for callbas
-v_desave	equ 0x3F1B
-v_interpaddr	equ 0x3F1D	; extra interpreter to call
-v_runalready	equ 0x3F1F	; 'run already' flag
+
+; Put these elsewhere so they don't collide with ROM testing
+v_sockptr	equ 0x3000	; Pointer to socket register (2 bytes)
+v_copylen	equ 0x3002	; Length to copy
+v_copied	equ 0x3004	; Wrapped copied so far
+v_hlsave	equ 0x3006	; save hl for callbas
+v_desave	equ 0x3008
+v_interpaddr	equ 0x300A	; extra interpreter to call
+v_runalready	equ 0x300C	; 'run already' flag
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053

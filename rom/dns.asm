@@ -39,6 +39,7 @@ F_dnsAquery
 	; set up the query string to resolve in the workspace area
 	ld de, buf_workspace+12	; write it after the header
 	call F_dnsstring	; string to convert in hl
+
 	xor a
 	ld b, 1			; query type A and IN is both 0x01
 	ld (hl), a		; MSB of query type (A)
@@ -48,7 +49,7 @@ F_dnsAquery
 	ld (hl), a		; MSB of class (IN)
 	inc hl
 	ld (hl), b		; LSB of class (IN)
-	ld de, buf_workspace	; find out the length
+	ld de, buf_workspace-1	; find out the length
 	sbc hl, de		; of the query block
 	ld (v_querylength), hl	; and save it in sysvars
 	
@@ -60,7 +61,7 @@ F_dnsAquery
 
 	ld hl, query		; start address of standard query data
 	ld de, buf_workspace+2	; destination
-	ld bc, queryend-query+1	; bytes to copy
+	ld bc, queryend-query	; bytes to copy
 	ldir			; build the query header
 
 	ld hl, dns_port		; set query UDP port

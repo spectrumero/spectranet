@@ -98,6 +98,11 @@ F_sockclose
 	ret nz			; virtual socket, no hardware sock to close
 
 	ld h, a			; h = MSB of socket register pointer
+	ld l, Sn_MR % 256	; check for non-stream socket
+	ld a, (hl)
+	and S_MR_TCP		; if it's not TCP jump forward
+	jr z, .close		; straight to closing the hardware resource
+
 	ld l, Sn_CR % 256	; (hl) = socket's command register
 	ld (hl), S_CR_DISCON	; disconnect remote host
 	ld l, Sn_IR % 256	; (hl) = interrupt register
@@ -106,6 +111,7 @@ F_sockclose
 	and S_IR_DISCON
 	jr z, .waitfordiscon
 	ld (hl), S_IR_DISCON	; reset interrupt register
+.close
 	ld l, Sn_CR % 256	; (hl) = command register
 	ld (hl), S_CR_CLOSE	; close the socket.
 	ex de, hl		; store socket register pointer in DE

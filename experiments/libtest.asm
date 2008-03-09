@@ -38,8 +38,8 @@
 
 	; Test client (connect function)
 	;jp F_client
-	jp F_udp
-
+	;jp F_udp
+	jp F_dnslookup
 
 	; Open a new socket of type SOCK_STREAM (i.e. TCP)
 	ld hl, STR_socket
@@ -172,18 +172,27 @@ F_udp
 	ld (VAR_fd), a		; save the file descriptor
 	call F_displayrc
 
-	; Bind the new socket to a port.
-	ld hl, STR_bind
-	call F_print
-	ld a, (VAR_fd)
-	ld de, 2000
-	call F_bind
-	jp c, oops
-	call F_displayrc
 .loop
+	; try to send something back
+	ld hl, STR_sendto
+	call F_print
+
+	; port 2000 on the remote
+	ld ix, BUF_txinfo
+	xor a
+	ld (ix+6), a
+	ld (ix+7), a
+	ld hl, BUF_txinfo
+	ld de, STR_romfunctest
+	ld bc, STR_socket-STR_romfunctest
+	ld a, (VAR_fd)
+	call F_sendto
+	jp c, oops
+	call F_regdump
+
 	ld hl, STR_recvfrom
 	call F_print
-	ld hl, BUF_conninfo
+	ld hl, BUF_txinfo
 	ld de, BUF_rxbuf
 	ld bc, 0x100
 	ld a, (VAR_fd)
@@ -191,31 +200,64 @@ F_udp
 	jp c, oops
 	ld hl, BUF_rxbuf
 	call F_print
-
-	; try to send something back
-	ld hl, STR_sendto
-	call F_print
-
-	; zero out source port, we don't want to set it
-	ld ix, BUF_conninfo
-	xor a
-	ld (ix+6), a
-	ld (ix+7), a
-	ld hl, BUF_conninfo
-	ld de, STR_romfunctest
-	ld bc, STR_socket-STR_romfunctest
-	ld a, (VAR_fd)
-	call F_sendto
-	jp c, oops
-	call F_regdump
 	
 	ld hl, W5100_REGISTER_PAGE
 	call F_setpageA
 	ld hl, 0x1401
 	call F_dumpw5100
+	jr .loop
 
 	call F_waitforkey	
 	ret
+
+; dns test
+F_dnslookup
+	ld hl, DNS_IP
+	ld de, v_nameserver1
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ld hl, STR_dns
+	call F_print
+	ld hl, STR_host
+	call F_print
+	ld a, '\n'
+	call putc_5by8
+
+	ld hl, STR_host
+	ld de, BUF_ip
+	call F_dnsAquery
+	jp c, oops
+
+	ld hl, STR_dnsresult
+	call F_print
+
+	; Dump hex version of the result.
+	ld a, (BUF_ip)
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	ld a, (BUF_ip+1)
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	ld a, (BUF_ip+2)
+	call F_inttohex8
+	call F_print
+	ld a, '.'
+	call putc_5by8
+	ld a, (BUF_ip+3)
+	call F_inttohex8
+	call F_print
+	ld a, '\n'
+	call putc_5by8
+
+	call F_waitforkey
+	jp 0x007B
 
 	include "../rom/pager.asm"
 	include "../rom/sockdefs.asm"
@@ -225,6 +267,9 @@ F_udp
 	include "../rom/w5100_sockctrl.asm"
 	include "../rom/w5100_rxtx.asm"
 	include "../rom/w5100_sockinfo.asm"
+	include "../rom/dns.asm"
+	include "../rom/dnsdefs.asm"
+	include "../rom/utility.asm"
 
 	include "print5by8.asm"
 	block 0x9000-$,0x00
@@ -508,7 +553,35 @@ F_dumpw5100
 	pop hl
 	ret
 	
-	
+; hl = start address, bc = bytes to dump
+F_dumpmem
+	push de
+	push af
+.loop
+	ld a, (hl)
+	push hl
+	push bc
+	call F_inttohex8
+	call F_print
+	ld a, ' '
+	call putc_5by8
+	pop bc
+	pop hl
+
+	inc hl
+	dec bc
+	ld a, b
+	or c
+	jr nz, .loop
+
+	ld a, '\n'
+	call putc_5by8
+
+	pop af
+	pop de
+	ret
+
+		
 	
 VAR_fd		defb 0
 VAR_accfd	defb 0
@@ -531,10 +604,14 @@ STR_sending	defb "Sending\n",0
 STR_connecting	defb "connect: ",0
 STR_recvfrom	defb "recvfrom: ",0
 STR_sendto	defb "sendto...\n",0
-
+STR_host	defb "spectrum.alioth.net",0
+STR_dns		defb "Testing DNS\n\nLooking up: ",0
+STR_dnsresult	defb "Result: ",0
+DNS_IP		defb 83,218,26,5
 BUF_txinfo	defb 172,16,0,2,0xD0,0x07,0x00,0x00
 
 BUF_conninfo	defb 0,0,0,0,0,0,0,0
+BUF_ip		defb 0,0,0,0
 BUF_rxbuf	defb 0
 
 	include "../rom/sysvars.asm"
