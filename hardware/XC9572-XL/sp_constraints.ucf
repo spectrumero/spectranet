@@ -1,55 +1,62 @@
+net CS1 loc=p1;
+
+net A(15) loc=p3;
+net A(14) loc=p8;
+net A(13) loc=p9;
+net A(12) loc=p10;
+net A(11) loc=p11;
+net A(10) loc=p12;
+net A(9) loc=p13;
+net A(8) loc=p14;
+net A(7) loc=p15;
+net A(6) loc=p16;
+net A(5) loc=p17;
+net A(4) loc=p18;
+
+net INT_OUT loc=p20;
 net CLK loc=p22;
 
-net A(0) loc=p52;
-net A(1) loc=p53;
-net A(2) loc=p54;
-net A(3) loc=p55;
-net A(4) loc=p56;
-net A(5) loc=p58;
-net A(6) loc=p59;
-net A(7) loc=p60;
-net A(8) loc=p61;
-net A(9) loc=p64;
-net A(10) loc=p65;
-net A(11) loc=p66;
-net A(12) loc=p67;
-net A(13) loc=p68;
-net A(14) loc=p70;
-net A(15) loc=p71;
+net A(3) loc=p27;
+net A(2) loc=p28;
+net A(1) loc=p29;
+net A(0) loc=p30;
 
-net M1_L loc=p72;
-net MREQ_L loc=p74;
-net WR_L loc=p76;
-net RD_L loc=p77;
-net IORQ_L loc=p78;
-net RESET_L loc=p79;
-net NMI_L loc=p81;
-net RST8EN loc=p82;
-net HLDROMCS_ODL loc=p85;
-net A15OUT loc=p86;
-net TRAPENABLE_L loc=p23;
-net INT_L loc=p25;
-net NMIOUT_L loc=p27;
+net D(0) loc=p33;
+net D(1) loc=p35;
+net D(2) loc=p36;
+net D(3) loc=p40;
+net D(4) loc=p41;
+net D(5) loc=p42;
+net D(6) loc=p49;
+net D(7) loc=p50;
 
-net D(0) loc=p89;
-net D(1) loc=p90;
-net D(2) loc=p91;
-net D(3) loc=p92;
-net D(4) loc=p93;
-net D(5) loc=p94;
-net D(6) loc=p95;
-net D(7) loc=p96;
+net NMIOUT_L loc=p54;
+net HLDROMCS_ODL loc=p55;
+net MREQ_L loc=p59;
+net IORQ_L loc=p60;
+net RD_L loc=p61;
+net WR_L loc=p63;
+net RESET_L loc=p64;
+net M1_L loc=p65;
 
-net CS0 loc=p1;
-net CS1 loc=p3;
-net CS2 loc=p4;
-net CS3 loc=p6;
+net CS0 loc=p70;
+net CS2 loc=p71;
+net CS3 loc=p72;
 
-net PA12 loc=p8;
-net PA13 loc=p9;
-net PA14 loc=p10;
-net PA15 loc=p12;
-net PA16 loc=p13;
-net PA17 loc=p14;
-net PA18 loc=p15;
-net PA19 loc=p16;
+net PA12 loc=p76;
+net PA13 loc=p77;
+net PA14 loc=p78;
+net PA15 loc=p79;
+net PA16 loc=p81;
+net PA17 loc=p82;
+net PA18 loc=p85;
+net PA19 loc=p86;
+
+net RST8EN loc=p90;
+net TRAPENABLE_L loc=p91;
+net NMI_L loc=p92;
+
+net ROMCS_SENSE loc=p93;
+net A15OUT loc=p96;
+net INT_L loc=p97;
+
