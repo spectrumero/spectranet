@@ -1,0 +1,4 @@
+# project file for gsch2pcb
+schematics spectranet.sch
+output-name spectranet
+
