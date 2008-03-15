@@ -1,25 +1,25 @@
 net CS1 loc=p1;
 
-net A(15) loc=p3;
-net A(14) loc=p8;
-net A(13) loc=p9;
-net A(12) loc=p10;
-net A(11) loc=p11;
-net A(10) loc=p12;
-net A(9) loc=p13;
-net A(8) loc=p14;
-net A(7) loc=p15;
-net A(6) loc=p16;
-net A(5) loc=p17;
-net A(4) loc=p18;
+net A(0) loc=p3;
+net A(1) loc=p8;
+net A(2) loc=p9;
+net A(3) loc=p10;
+net A(4) loc=p11;
+net A(5) loc=p12;
+net A(6) loc=p13;
+net A(7) loc=p14;
+net A(8) loc=p15;
+net A(9) loc=p16;
+net A(10) loc=p17;
+net A(11) loc=p18;
 
 net INT_OUT loc=p20;
 net CLK loc=p22;
 
-net A(3) loc=p27;
-net A(2) loc=p28;
-net A(1) loc=p29;
-net A(0) loc=p30;
+net A(12) loc=p27;
+net A(13) loc=p28;
+net A(14) loc=p29;
+net A(15) loc=p30;
 
 net D(0) loc=p33;
 net D(1) loc=p35;

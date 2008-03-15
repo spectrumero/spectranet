@@ -6,7 +6,7 @@ pintype=in
 T 555 12995 5 10 1 1 0 0 1
 pinlabel=A0
 T 405 13045 5 10 1 1 0 6 1
-pinnumber=30
+pinnumber=3
 T 0 13000 5 10 0 0 0 0 1
 pinseq=1
 }
@@ -17,7 +17,7 @@ pintype=in
 T 555 12495 5 10 1 1 0 0 1
 pinlabel=A1
 T 405 12545 5 10 1 1 0 6 1
-pinnumber=29
+pinnumber=8
 T 0 12500 5 10 0 0 0 0 1
 pinseq=2
 }
@@ -28,7 +28,7 @@ pintype=in
 T 555 11995 5 10 1 1 0 0 1
 pinlabel=A2
 T 405 12045 5 10 1 1 0 6 1
-pinnumber=28
+pinnumber=9
 T 0 12000 5 10 0 0 0 0 1
 pinseq=3
 }
@@ -39,7 +39,7 @@ pintype=in
 T 555 11495 5 10 1 1 0 0 1
 pinlabel=A3
 T 405 11545 5 10 1 1 0 6 1
-pinnumber=27
+pinnumber=10
 T 0 11500 5 10 0 0 0 0 1
 pinseq=4
 }
@@ -50,7 +50,7 @@ pintype=in
 T 555 10995 5 10 1 1 0 0 1
 pinlabel=A4
 T 405 11045 5 10 1 1 0 6 1
-pinnumber=18
+pinnumber=11
 T 0 11000 5 10 0 0 0 0 1
 pinseq=5
 }
@@ -61,7 +61,7 @@ pintype=in
 T 555 10495 5 10 1 1 0 0 1
 pinlabel=A5
 T 405 10545 5 10 1 1 0 6 1
-pinnumber=17
+pinnumber=12
 T 0 10500 5 10 0 0 0 0 1
 pinseq=6
 }
@@ -72,7 +72,7 @@ pintype=in
 T 555 9995 5 10 1 1 0 0 1
 pinlabel=A6
 T 405 10045 5 10 1 1 0 6 1
-pinnumber=16
+pinnumber=13
 T 0 10000 5 10 0 0 0 0 1
 pinseq=7
 }
@@ -83,7 +83,7 @@ pintype=in
 T 555 9495 5 10 1 1 0 0 1
 pinlabel=A7
 T 405 9545 5 10 1 1 0 6 1
-pinnumber=15
+pinnumber=14
 T 0 9500 5 10 0 0 0 0 1
 pinseq=8
 }
@@ -94,7 +94,7 @@ pintype=in
 T 555 8995 5 10 1 1 0 0 1
 pinlabel=A8
 T 405 9045 5 10 1 1 0 6 1
-pinnumber=14
+pinnumber=15
 T 0 9000 5 10 0 0 0 0 1
 pinseq=9
 }
@@ -105,7 +105,7 @@ pintype=in
 T 555 8495 5 10 1 1 0 0 1
 pinlabel=A9
 T 405 8545 5 10 1 1 0 6 1
-pinnumber=13
+pinnumber=16
 T 0 8500 5 10 0 0 0 0 1
 pinseq=10
 }
@@ -116,7 +116,7 @@ pintype=in
 T 555 7995 5 10 1 1 0 0 1
 pinlabel=A10
 T 405 8045 5 10 1 1 0 6 1
-pinnumber=12
+pinnumber=17
 T 0 8000 5 10 0 0 0 0 1
 pinseq=11
 }
@@ -127,7 +127,7 @@ pintype=in
 T 555 7495 5 10 1 1 0 0 1
 pinlabel=A11
 T 405 7545 5 10 1 1 0 6 1
-pinnumber=11
+pinnumber=18
 T 0 7500 5 10 0 0 0 0 1
 pinseq=12
 }
@@ -138,7 +138,7 @@ pintype=in
 T 555 6995 5 10 1 1 0 0 1
 pinlabel=A12
 T 405 7045 5 10 1 1 0 6 1
-pinnumber=10
+pinnumber=27
 T 0 7000 5 10 0 0 0 0 1
 pinseq=13
 }
@@ -149,7 +149,7 @@ pintype=in
 T 555 6495 5 10 1 1 0 0 1
 pinlabel=A13
 T 405 6545 5 10 1 1 0 6 1
-pinnumber=9
+pinnumber=28
 T 0 6500 5 10 0 0 0 0 1
 pinseq=14
 }
@@ -160,7 +160,7 @@ pintype=in
 T 555 5995 5 10 1 1 0 0 1
 pinlabel=A14
 T 405 6045 5 10 1 1 0 6 1
-pinnumber=8
+pinnumber=29
 T 0 6000 5 10 0 0 0 0 1
 pinseq=15
 }
@@ -171,7 +171,7 @@ pintype=in
 T 555 5495 5 10 1 1 0 0 1
 pinlabel=A15
 T 405 5545 5 10 1 1 0 6 1
-pinnumber=3
+pinnumber=30
 T 0 5500 5 10 0 0 0 0 1
 pinseq=16
 }
