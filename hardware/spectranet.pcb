@@ -1,11 +1,11 @@
 # release: pcb 20070208
-# date:    Mon Mar 24 19:08:10 2008
+# date:    Fri Mar 28 20:39:41 2008
 # user:    winston (Winston Smith)
 # host:    shocked.alwyn.alioth.net
 
 PCB["Spectranet" 393701 236220]
 
-Grid[196.000000 0 0 1]
+Grid[196.850388 0 0 1]
 Cursor[0 0 0.000000]
 PolyArea[200000000.000000]
 Thermal[0.500000]
@@ -1031,9 +1031,9 @@ Via[343098 51960 3600 2000 0 2000 "" "thermal(2X)"]
 Via[308465 182283 3600 2000 0 2000 "" ""]
 Via[304724 112205 3600 2000 0 2000 "" ""]
 Via[299213 195866 3600 2000 0 2000 "" ""]
-Via[238189 183465 3600 2000 0 2000 "" ""]
-Via[324409 45286 3600 2000 0 2000 "" ""]
 Via[323596 50372 3600 2000 0 2000 "" "thermal(2X)"]
+Via[324409 45286 3600 2000 0 2000 "" ""]
+Via[239765 196458 3600 2000 0 2000 "" ""]
 
 Element["" "TSOP32A" "U3" "unknown" 307292 63293 39896 -8740 3 100 ""]
 (
@@ -1969,6 +1969,27 @@ Element["" "crystal" "XTAL1" "25_MHz" 131636 49859 26012 -2765 0 100 ""]
 	)
 
 Element["" "0603" "R13" "1k" 336336 48216 -4130 -8442 0 100 ""]
+(
+	Pad[-2559 -492 -2559 492 2952 2000 3552 "1" "1" "square"]
+	Pad[2559 -492 2559 492 2952 2000 3552 "2" "2" "square"]
+
+	)
+
+Element["" "Standard SMT resistor, capacitor etc" "R14" "0603" 233268 177756 -13977 -3150 0 100 ""]
+(
+	Pad[-2559 -492 -2559 492 2952 2000 3552 "1" "1" "square"]
+	Pad[2559 -492 2559 492 2952 2000 3552 "2" "2" "square"]
+
+	)
+
+Element["" "Standard SMT resistor, capacitor etc" "R15" "0603" 233268 183465 -13977 -3544 0 100 ""]
+(
+	Pad[-2559 -492 -2559 492 2952 2000 3552 "1" "1" "square"]
+	Pad[2559 -492 2559 492 2952 2000 3552 "2" "2" "square"]
+
+	)
+
+Element["" "Standard SMT resistor, capacitor etc" "R16" "0603" 232283 188977 -13386 -2954 0 100 ""]
 (
 	Pad[-2559 -492 -2559 492 2952 2000 3552 "1" "1" "square"]
 	Pad[2559 -492 2559 492 2952 2000 3552 "2" "2" "square"]
@@ -3125,8 +3146,8 @@ Layer(1 "component")
 	Line[309843 51575 310827 50591 790 2000 "clearline"]
 	Line[310827 50591 315157 50591 790 2000 "clearline"]
 	Line[300984 54724 318701 54724 790 2000 "clearline"]
-	Line[295866 187205 241929 187205 790 2000 "clearline"]
-	Line[241929 187205 238189 183465 790 2000 "clearline"]
+	Line[326928 52920 326928 47628 790 2000 "clearline"]
+	Line[325164 54684 326928 52920 790 2000 "clearline"]
 	Line[241732 71654 242913 72835 790 2000 "clearline"]
 	Line[242913 72835 242913 78740 790 2000 "clearline"]
 	Line[240551 71654 241732 71654 790 2000 "clearline"]
@@ -3136,7 +3157,7 @@ Layer(1 "component")
 	Line[343000 49588 343000 51940 790 2000 "clearline"]
 	Line[320068 45276 324576 45276 790 2000 "clearline"]
 	Line[318304 54684 324184 54684 790 2000 "clearline"]
-	Line[299213 190552 295866 187205 790 2000 "clearline"]
+	Line[326928 47628 324576 45276 790 2000 "clearline"]
 	Line[299213 195866 299213 190552 790 2000 "clearline"]
 	Line[304134 188976 304134 190945 790 2000 "clearline"]
 	Line[304134 190945 305315 192126 790 2000 "clearline"]
@@ -3161,9 +3182,30 @@ Layer(1 "component")
 	Line[299213 195866 304331 195866 790 2000 "clearline"]
 	Line[323596 50372 319872 50372 790 2000 "clearline"]
 	Line[323792 54684 325164 54684 790 2000 "clearline"]
-	Line[325164 54684 326928 52920 790 2000 "clearline"]
-	Line[326928 52920 326928 47628 790 2000 "clearline"]
-	Line[326928 47628 324576 45276 790 2000 "clearline"]
+	Line[297442 188780 299213 190551 790 2000 "clearline"]
+	Line[243504 188780 297442 188780 790 2000 "clearline"]
+	Line[243701 188780 242126 188780 790 2000 "clearline"]
+	Line[242126 188780 239764 191142 790 2000 "clearline"]
+	Line[239764 191142 239764 196654 790 2000 "clearline"]
+	Line[235827 177559 239567 177559 790 2000 "clearline"]
+	Line[239567 177559 240551 176575 790 2000 "clearline"]
+	Line[240551 176575 246260 176575 790 2000 "clearline"]
+	Line[235827 183268 239370 183268 790 2000 "clearline"]
+	Line[239370 183268 241732 180906 790 2000 "clearline"]
+	Line[241732 180906 252404 180906 790 2000 "clearline"]
+	Line[252404 180906 256530 176780 790 2000 "clearline"]
+	Line[234843 187795 237598 187795 790 2000 "clearline"]
+	Line[237598 187795 242913 182480 790 2000 "clearline"]
+	Line[242913 182480 271063 182480 790 2000 "clearline"]
+	Line[271063 182480 276575 176968 790 2000 "clearline"]
+	Line[296654 176968 289370 184252 790 2000 "clearline"]
+	Line[289370 184252 243897 184252 790 2000 "clearline"]
+	Line[243897 184252 237795 190354 790 2000 "clearline"]
+	Line[237795 190354 237795 192323 790 2000 "clearline"]
+	Line[237795 192323 236811 193307 790 2000 "clearline"]
+	Line[236811 193307 232087 193307 790 2000 "clearline"]
+	Line[232087 193307 230512 191732 790 2000 "clearline"]
+	Line[230512 191732 230512 177165 790 2000 "clearline"]
 )
 Layer(2 "solder")
 (
@@ -3768,6 +3810,8 @@ Layer(2 "solder")
 	Line[248819 135236 248819 96063 790 2000 "clearline"]
 	Line[248819 96063 237008 84252 790 2000 "clearline"]
 	Line[237008 84252 237008 62008 790 2000 "clearline"]
+	Line[238189 182677 238189 194882 790 2000 "clearline"]
+	Line[238189 194882 239765 196458 790 2000 "clearline"]
 )
 Layer(3 "GND")
 (
@@ -4389,11 +4433,11 @@ Layer(10 "silk")
 	Text[263424 170128 1 100 "TDO" ""]
 	Text[294000 165032 0 100 "3.3v" ""]
 	Text[271068 165032 0 100 "TCK" ""]
-	Text[225596 174048 0 100 "JTAG" ""]
-	Text[217756 189728 0 100 "Close J3 for" ""]
-	Text[217560 196392 0 100 "+3 / +2a" ""]
-	Text[5880 213836 0 100 "ALIOTH SPECTRANET" ""]
 	Text[5880 225988 0 100 "PROTOTYPE 1 - SVN R" ""]
+	Text[211260 196618 0 100 "Close J3 for" ""]
+	Text[219135 202101 0 100 "+3 / +2a" ""]
+	Text[5880 213836 0 100 "ALIOTH SPECTRANET" ""]
+	Text[226580 169126 0 100 "JTAG" ""]
 )
 NetList()
 (
@@ -4423,6 +4467,9 @@ NetList()
 		Connect("LED4-1")
 		Connect("LED5-1")
 		Connect("LED6-1")
+		Connect("R14-1")
+		Connect("R15-1")
+		Connect("R16-1")
 		Connect("U1-5")
 		Connect("U1-26")
 		Connect("U1-38")
@@ -4913,11 +4960,13 @@ NetList()
 	Net("tck" "(unknown)")
 	(
 		Connect("CN2-3")
+		Connect("R16-2")
 		Connect("U1-48")
 	)
 	Net("tdi" "(unknown)")
 	(
 		Connect("CN2-5")
+		Connect("R15-2")
 		Connect("U1-45")
 	)
 	Net("tdo" "(unknown)")
@@ -4928,6 +4977,7 @@ NetList()
 	Net("tms" "(unknown)")
 	(
 		Connect("CN2-6")
+		Connect("R14-2")
 		Connect("U1-47")
 	)
 	Net("trap_enable" "(unknown)")
