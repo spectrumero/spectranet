@@ -61,12 +61,17 @@ v_fd2hwsock	defb 0
 v_fd3hwsock	defb 0
 v_fd4hwsock	defb 0
 v_fd5hwsock	defb 0
-MAX_FDS		equ 5		; maximum number of file descriptors
+v_fd6hwsock	defb 0		; reserved in case of a W5300 board
+v_fd7hwsock	defb 0
+v_fd8hwsock	defb 0
+v_fd9hwsock	defb 0
+MAX_FDS		equ 5		; maximum number of file descriptors (W5100)
 
 ; General purpose small workspace reserved for ROM routines (for short strings,
 ; numbers etc.)
 v_workspace	defb 0,0,0,0,0,0,0,0
 v_bufptr	defw 0		; buffer pointer
+v_stringptr	defw 0		; temp storage for a string pointer
 
 ; DNS system variables
 v_seed		defw 0		; 16 bit random number seed

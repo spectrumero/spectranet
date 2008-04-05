@@ -21,7 +21,30 @@
 ;THE SOFTWARE.
 ;
 ; Functions for querying DNS.
+;
+
+;========================================================================
+; F_gethostbyname
+; Subset of the Unix 'gethostbyname' call. It returns only a list of
+; addresses (currently, either zero or one entries long). The parameter
+; can either be an IP address in dotted decimal format, or a hostname.
+; No lookup is performed if an IP address is detected; the address is
+; simply converted to a 4-byte big endian representation of the address.
+; Carry flag is set on error, and A contains the return code when an
+; error occurs.
 ; 
+; Parameters: HL = pointer to null-terminated string containing address
+;             DE = pointer to a buffer in which to return the result
+F_gethostbyname
+	push hl
+	push de
+	call F_ipstring2long	; Was a dotted decimal IP address passed?
+	pop de
+	pop hl
+	ld a, 0			; ensure status is 0 (flags unchanged)
+	ret nc			; was an IP - so it's now in the buffer.
+	call F_dnsAquery	; no - so try a DNS lookup instead.
+	ret
 
 ;========================================================================
 ; F_dnsAquery

@@ -228,31 +228,19 @@ F_dnslookup
 
 	ld hl, STR_host
 	ld de, BUF_ip
-	call F_dnsAquery
+	call F_gethostbyname
 	jp c, oops
 
 	ld hl, STR_dnsresult
 	call F_print
 
-	; Dump hex version of the result.
-	ld a, (BUF_ip)
-	call F_inttohex8
+	; Show IP
+	ld hl, BUF_ip
+	ld de, BUF_rxbuf	; just a convenient place to store stuff
+	call F_long2ipstring
+	ld hl, BUF_rxbuf	; and display it
 	call F_print
-	ld a, '.'
-	call putc_5by8
-	ld a, (BUF_ip+1)
-	call F_inttohex8
-	call F_print
-	ld a, '.'
-	call putc_5by8
-	ld a, (BUF_ip+2)
-	call F_inttohex8
-	call F_print
-	ld a, '.'
-	call putc_5by8
-	ld a, (BUF_ip+3)
-	call F_inttohex8
-	call F_print
+
 	ld a, '\n'
 	call putc_5by8
 
@@ -604,7 +592,7 @@ STR_sending	defb "Sending\n",0
 STR_connecting	defb "connect: ",0
 STR_recvfrom	defb "recvfrom: ",0
 STR_sendto	defb "sendto...\n",0
-STR_host	defb "spectrum.alioth.net",0
+STR_host	defb "172.16.0.1",0
 STR_dns		defb "Testing DNS\n\nLooking up: ",0
 STR_dnsresult	defb "Result: ",0
 DNS_IP		defb 83,218,26,5
