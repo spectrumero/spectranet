@@ -20,20 +20,13 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Initialization routines that are run on reset.
-;
-; The first thing that's done is to page in the configuration area into
-; paging area B. This is nominally in the last page of the flash chip
-; (page 0x20, chip 0). From this we can figure out what we're supposed
-; to do next.
-;
-J_reset
-	ld hl, CONFIGPAGE
-	call F_setpageB
-	
-	;call F_w5100init	; Initialize the ethernet hardware
-	
-	ld hl, 0		; We're done so put 0x0000 
-	push hl			; on the stack, and
-	jp UNPAGE		; unpage (a ret instruction)
+; Various entry points into the ZX Spectrum main ROM.
+; The equ strings are essentially as found in "The Complete Spectrum ROM
+; Disassembly", but prepended with 'ZX' so that when browsing the code 
+; it's immediately obvious where they come from.
+
+; Keyboard routines.
+ZX_KEY_SCAN	equ 0x028E	; Finds keyboard 'scan code'
+ZX_K_TEST	equ 0x031E	; Tests what key is being pressed
+ZX_K_DECODE	equ 0x0333	; Decodes K_TEST's output into a character
 

@@ -87,6 +87,10 @@ v_cur_resolver	defw 0		; pointer to IP address of current resolver
 v_queryresult	defw 0		; address of query result buffer
 v_querylength	defw 0		; query length in bytes
 
+; ZX state storage
+v_bankm		defb 0		; saved state of BANKM
+v_bank678	defb 0		; saved state of BANK678
+
 ; Jump table entries. First two are three bytes long (JP xxxx). Last can
 ; only fit a JR xx.
 		block 0x3FF8-$,0xff

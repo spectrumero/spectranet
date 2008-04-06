@@ -88,7 +88,15 @@ do_reset
 	ld bc, 8
 	ldir
 .waitforkey
-	call F_waitforkey	; wait for a key to be pressed
+	call F_waitforkey
+	cp 1			; 'A'
+	jp z, F_anexperiment
+	cp 2
+	jp z, F_startflashprog	; 'S' - start flash programmer
+	call F_inttohex8
+	call F_print
+;	cp 'F'			; want to run the flash util?
+;	jp z, F_startflashprog	; start the flash programmer if 'f' pressed
 	ld hl, 0
 	add hl, sp		; point hl at sp to munge stack contents
 	ld (hl), 0		; set current stack contents
@@ -575,10 +583,37 @@ F_startflashprog
 	ldir
 	jp 0xF000
 
+F_anexperiment
+	call F_zxinit
+	call F_pagezxbasic
+.keytestloop
+	call F_getkey
+	cp 32
+	jp m, .showhex
+	call putc_5by8
+	call F_keyup
+	jr .keytestloop
+.showhex
+	push af
+	ld a, '['
+	call putc_5by8
+	pop af
+	call F_inttohex8
+	call F_print
+	ld a, ']'
+	call putc_5by8
+	jr .keytestloop
+	
+
+
 ; Include library routines
 	include "print5by8.asm"
 	include "w5100config.asm"
 	include "w5100buffer.asm"
+	include "../rom/ui_input.asm"
+	include "../rom/zxromcalls.asm"
+	include "../rom/zxsysvars.asm"
+	include "../rom/zxpaging.asm"
 
 ; Strings
 STR_reset	defb "Reset event trapped...\n", 0
@@ -633,6 +668,8 @@ v_hlsave	equ 0x3006	; save hl for callbas
 v_desave	equ 0x3008
 v_interpaddr	equ 0x300A	; extra interpreter to call
 v_runalready	equ 0x300C	; 'run already' flag
+v_bankm		equ 0x300D
+v_bank678	equ 0x300E
 
 ; Spectrum ROM entry points
 ERROR_2		equ 0x0053
@@ -648,3 +685,4 @@ X_PTR		equ 23647
 CHIPSEL		equ 0xED
 PAGEA		equ 0xE9
 PAGEB		equ 0xEB
+CALLBAS		equ 0x10
