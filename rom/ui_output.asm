@@ -230,6 +230,17 @@ F_erasechar
 	ret		; done
 
 ;--------------------------------------------------------------------------
+; F_backspace: Perform a backspace (move current character position 1
+; back and delete the right most character).
+F_backspace
+	ld a, (v_column)
+	and a		; Are we at column 0?
+	ret z		; nothing more to do (possible TODO - go back a line)
+	dec a		; move column pointer one space back
+	ld (v_column), a ; and store it
+	jp F_erasechar	; then erase the character that's there.
+	
+;--------------------------------------------------------------------------
 ; F_clear: Clears the screen to spectranet UI colours.
 F_clear
 	ld hl, 16384

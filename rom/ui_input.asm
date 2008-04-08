@@ -75,3 +75,61 @@ F_keyup
 	jr c, .loop		; carry set = key being pressed
 	ret
 
+;===========================================================================
+; F_inputstring:
+; Get a string from the keyboard, and null terminate.
+; Parameters: DE = pointer to memory to store the string.
+;              C = size of buffer (string length + 1, for the null terminator)
+F_inputstring
+	ld b, c			; save length in b
+	ld (v_stringptr), de	; save the pointer
+	ld (v_stringlen), bc	; save the string lengths
+.inputloop
+	ld a, '_'		; cursor - possible TODO - flashing cursor?
+	call F_putc_5by8	; display it
+.keyloop
+	call F_keyup		; wait for keyup before doing anything
+	call F_getkey		; wait for a key to be pressed.
+	cp KEY_ENTER		; enter pressed?
+	jr z, .enter		; handle enter
+	cp KEY_BACKSPACE	; backspace pressed?
+	jr z, .backspace	; handle it
+	cp ' '			; space - lowest printable character
+	jp m, .keyloop		; do nothing for non-printable char
+	ex af, af'
+	ld a, (v_stringlen)	; get remaining buffer size back
+	cp 1			; and if only one byte is left,
+	jr z, .keyloop		; don't accept more input.
+	call F_backspace	; backspace over the cursor
+	ex af, af'		; get keypress back
+	ld hl, (v_stringptr)	; get current string pointer
+	ld (hl), a		; save entered key
+	inc hl			; update pointer
+	ld (v_stringptr), hl	; save pointer
+	call F_putc_5by8	; and print the char
+	ld a, (v_stringlen)	; get the remaining byte count
+	dec a			; decrement it
+	ld (v_stringlen), a	; save remaining length	
+	jr .inputloop		; and wait for the next key.	
+.backspace
+	ld bc, (v_stringlen)	; is the cursor at the start
+	ld a, c			; of the string?
+	cp b			
+	jr z, .keyloop		; yes - so just wait for another key.
+
+	; To update the screen, the cursor and the character behind
+	; it must be removed, hence two calls to F_backspace.
+	inc a			; increase the remaining byte count
+	ld (v_stringlen), a	; and save it
+	ld hl, (v_stringptr)	; get the string pointer
+	dec hl			; rewind the string pointer
+	ld (v_stringptr), hl	; save it
+	call F_backspace	; remove cursor
+	call F_backspace	; remove last character
+	jr .inputloop
+.enter
+	call F_backspace	; erase the cursor
+	ld hl, (v_stringptr)	; get the string pointer
+	ld (hl), 0		; put the null terminator on the string
+	ret
+

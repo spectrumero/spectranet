@@ -72,6 +72,7 @@ MAX_FDS		equ 5		; maximum number of file descriptors (W5100)
 v_workspace	defb 0,0,0,0,0,0,0,0
 v_bufptr	defw 0		; buffer pointer
 v_stringptr	defw 0		; temp storage for a string pointer
+v_stringlen	defw 0		; temp storage for string lengths
 
 ; DNS system variables
 v_seed		defw 0		; 16 bit random number seed
