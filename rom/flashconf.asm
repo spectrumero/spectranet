@@ -33,7 +33,7 @@
 ;
 ; It is assumed that the configuration area will get put in paging area B.
 
-CONFIGPAGE	equ 0x0020	; chip 0 page 0x20
+CONFIGPAGE	equ 0x001F	; chip 0 page 0x1F (the last page)
 
 ; TCP/IP settings. These are in the same order as the W5100's hardware
 ; registers so they can just be LDIR'd in.

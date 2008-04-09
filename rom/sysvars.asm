@@ -23,12 +23,12 @@
 ; A 512 byte block is reserved for network messages that are used in the
 ; normal course of communicating with the world, for example, UDP packets
 ; sent to a DNS server or received from a DNS server.
-		org 0x3C00
+		org 0x3B00
 buf_message
 
-; A general purpose block at 0x3E00 is reserved for network functions.
+; A general purpose block at 0x3D00 is reserved for network functions.
 ; It is used as a 256-byte buffer for functions such as DNS query strings.
-		org 0x3E00
+		org 0x3D00
 buf_workspace
 
 ; The system variables live in chip 4 page 0 which is permanently mapped
