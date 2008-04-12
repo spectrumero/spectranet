@@ -29,6 +29,7 @@
 ; the resulting sym file and binary object included by the ROM assembly.
 ;
 	org 0x3B00	; use the temporary buffer space
+fwdest
 
 ;---------------------------------------------------------------------------
 ; F_FlashEraseSector
@@ -140,47 +141,6 @@ F_FlashWriteByte
 	scf		; error = set carry flag
 	ret
 
-;-------------------------------------------------------------------------
-; F_copyconfig
-; This copies the last 16k sector of flash to the last 4 pages of RAM.
-; This allows the configuration to be edited. (The next step is to erase
-; the last 16k sector, then copy back the updated configuration plus the
-; existing content in the remainder of the last sector of flash).
-F_copyconfig
-	ld hl, 0x031C	; chip 3 page 0x1C - RAM
-	call F_setpageA	; page it into page area A
-	ld hl, 0x001C	; chip 0 page 0x1C - flash
-	call F_setpageB	; page it into page area B
-	ld hl, 0x2000	; and copy
-	ld de, 0x1000
-	ld bc, 0x1000
-	ldir
-	ld hl, 0x031D	; chip 3 page 0x1D - RAM
-	call F_setpageA	; page it into page area A
-	ld hl, 0x001D	; chip 0 page 0x1D - flash
-	call F_setpageB	; page it into page area B
-	ld hl, 0x2000	; and copy
-	ld de, 0x1000
-	ld bc, 0x1000
-	ldir
-	ld hl, 0x031E	; chip 3 page 0x1E - RAM
-	call F_setpageA	; page it into page area A
-	ld hl, 0x001E	; chip 0 page 0x1E - flash
-	call F_setpageB	; page it into page area B
-	ld hl, 0x2000	; and copy
-	ld de, 0x1000
-	ld bc, 0x1000
-	ldir
-	ld hl, 0x031F	; chip 3 page 0x1F - RAM
-	call F_setpageA	; page it into page area A
-	ld hl, 0x001F	; chip 0 page 0x1F - flash
-	call F_setpageB	; page it into page area B
-	ld hl, 0x2000	; and copy
-	ld de, 0x1000
-	ld bc, 0x1000
-	ldir
-	ret
-
 ;---------------------------------------------------------------------------
 ; F_writeconfig
 ; Erases the last flash sector and copies the last four 4k pages from
@@ -191,12 +151,12 @@ F_writeconfig
 	ld hl, 0x031C	; RAM page 0x1C
 	call F_setpageA	; Page into area A
 	ld hl, 0x001C	; flash page 0x1C
-	call F_setpageB	; Page into area B
+	call F_pushpageB	; page into B, saving page B settings
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	ret c		; on error, bale out
+	jr c, .bale	; on error, bale out
 	ld hl, 0x031D	; RAM page 0x1D
 	call F_setpageA	; Page into area A
 	ld hl, 0x001D	; flash page 0x1D
@@ -205,7 +165,7 @@ F_writeconfig
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	ret c		; on error, bale out
+	jr c, .bale	; on error, bale out
 	ld hl, 0x031E	; RAM page 0x1E
 	call F_setpageA	; Page into area A
 	ld hl, 0x001E	; flash page 0x1E
@@ -214,7 +174,7 @@ F_writeconfig
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	ret c		; on error, bale out
+	jr c, .bale	; on error, bale out
 	ld hl, 0x031F	; RAM page 0x1F
 	call F_setpageA	; Page into area A
 	ld hl, 0x001F	; flash page 0x1F
@@ -223,6 +183,13 @@ F_writeconfig
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
+	jr c, .bale
+.leave
+	call F_poppageB	; restore page B
+	ret
+.bale
+	call F_poppageB	; restore page B
+	scf		; indicate error condition
 	ret
 
 	include "pager.asm"	; we need our own copy of the pager code

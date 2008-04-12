@@ -58,3 +58,40 @@ F_setpageB
 	out (c), a	; page it in
 	ret
 
+;--------------------------------------------------------------------------
+; F_pushpageB
+; Page in the page requested in HL, saving the last value on the stack.
+; F_poppageB reverses the action.
+F_pushpageB
+	ld a, (v_chipsel)
+	ld d, a
+	ld a, (v_pgb)
+	ld e, a
+	call F_setpageB	; set the page in hardware
+	pop hl		; get return address
+	push de		; replace with saved page
+	push hl		; restore return address
+	ret
+
+;--------------------------------------------------------------------------
+; F_poppageB
+; Get page area B values off the stack and restore the hardware to the
+; state saved on the stack.
+F_poppageB
+	pop de		; get return address
+	pop hl		; get paging settings
+	push de		; restore return address
+	ld a, l
+	ld (v_pgb), a
+	ld a, h
+	and 0xFC	; mask out page A chip selects
+	ld h, a		; save it
+	ld a, (v_chipsel)
+	and 0xF3	; mask out page B chip selects
+	or h		; and merge with page B
+	ld bc, 0x8000|CHIPSEL
+	out (c), a	; restore hardware
+	ld c, PAGEB
+	out (c), a
+	ret
+

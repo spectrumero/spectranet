@@ -207,3 +207,37 @@ F_itoa8
 	inc hl
 	ret
 
+;-------------------------------------------------------------------------
+; F_crc16:
+; Calculate a 16 bit CRC on an arbitrary region of memory.
+; This was adapted from http://map.tni.nl/sources/external/z80bits.html
+; Parameters: DE = start address for CRC calculation
+;             BC = end number of bytes to check 
+; 16 bit CRC is returned in HL.
+; Note: byte counter is modified compared to orginal code.
+F_crc16
+	ld hl, 0xFFFF
+.read
+	push bc		; save byte counter
+   	ld a,(de)
+	inc de
+	xor h
+	ld h,a
+	ld b,8
+.crcbyte
+   	add hl,hl
+	jr nc, .next
+	ld a,h
+	xor 0x10
+	ld h,a
+	ld a,l
+	xor 0x21
+	ld l,a
+.next
+   	djnz .crcbyte
+	pop bc		; get back the byte counter
+	dec bc
+	ld a, b		; and see if it's got to zero
+	or c
+	jr nz, .read
+	ret

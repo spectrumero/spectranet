@@ -34,6 +34,7 @@
 ; It is assumed that the configuration area will get put in paging area B.
 
 CONFIGPAGE	equ 0x001F	; chip 0 page 0x1F (the last page)
+CONF_RAM	equ 0x1F00	; config area, when copied to RAM
 
 ; TCP/IP settings. These are in the same order as the W5100's hardware
 ; registers so they can just be LDIR'd in.
@@ -46,4 +47,10 @@ IP_ADDRESS	equ 0x2F0E	; IP address
 INITFLAGS	equ 0x2F0F
 INIT_STATICIP	equ 1		; Static IP address configured
 INIT_DISBLTRAP	equ 2		; Disable RST 8 traps on startup
+
+; 16 bit cyclic redundancy check, in case a botched flash write (say,
+; power loss during flashing, or an uninitialized chip) so the user
+; can get notification if all is not well.
+CONFIGCRC	equ 0x2FFE
+CONFIGCRC_RAM	equ 0x1FFE
 
