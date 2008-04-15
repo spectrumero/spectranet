@@ -20,26 +20,36 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; General definitions. These are not hardware specific (generally).
+; Simple menu system routines.
 
-; File descriptor flags.
-FD_CLOSED	equ 0x80
-CLOSEDBIT	equ 7
-FD_VIRTUAL	equ 0x40
-VIRTBIT		equ 6
-NOTSOCKMASK	equ 0xE0	; all hw sockets must be < 0x1F
-SOCKMASK	equ 0x1F
-
-; Error return codes - base socket library
-EBUGGERED	equ 0xFF
-ENFILE		equ 0xFE
-EBADF		equ 0xFD
-ECONNRESET	equ 0xFC
-ETIMEDOUT	equ 0xFB
-ECONNREFUSED	equ 0xFA
-
-; Error return codes - DNS
-HOST_NOT_FOUND	equ 0xF9
-NO_RECOVERY	equ 0xF8
-NO_ADDRESS	equ 0xF7
+;--------------------------------------------------------------------------
+; F_genmenu
+; Generates a menu screen.
+; Parameters: HL = pointer to menu structure, that should be a null terminated
+; list of pointers to strings that define the choices.
+F_genmenu
+	ld b, 'A'	; first option is 'A'
+.loop
+	ld e, (hl)	; get pointer into DE
+	inc hl
+	ld d, (hl)
+	inc hl
+	ld a, d
+	or e		; check to see whether we've just got the last one
+	ret z
+	ld a, '['
+	call F_putc_5by8	; print [
+	ld a, b
+	call F_putc_5by8	; print the option
+	ld a, ']'
+	call F_putc_5by8	; print ]
+	ld a, ' '
+	call F_putc_5by8	; and one space separator
+	ex de, hl		; get string pointer into hl
+	call F_print		; print the menu option
+	ex de, hl		; move the menu pointer back
+	ld a, '\n'		; print a CR
+	call F_putc_5by8
+	inc b			; update option character
+	jr .loop
 

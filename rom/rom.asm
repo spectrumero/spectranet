@@ -45,7 +45,7 @@
 	include "w5100_rxtx.asm"	; send, recv, sendto, recvfrom, poll
 	include "w5100_sockinfo.asm"	; internal socket info marshalling
 	include "zxpaging.asm"		; Control 128k ROM paging
-	include "config.asm"		; config editor helper routines
+	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
 	include "ui_charset.asm"	; character set

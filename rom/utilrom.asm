@@ -20,26 +20,19 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; General definitions. These are not hardware specific (generally).
+; The Utility ROM
 
-; File descriptor flags.
-FD_CLOSED	equ 0x80
-CLOSEDBIT	equ 7
-FD_VIRTUAL	equ 0x40
-VIRTBIT		equ 6
-NOTSOCKMASK	equ 0xE0	; all hw sockets must be < 0x1F
-SOCKMASK	equ 0x1F
+; These routines live in page 1 of flash, and run when page 1 is paged
+; into paging area B (0x2000-0x2FFF)
 
-; Error return codes - base socket library
-EBUGGERED	equ 0xFF
-ENFILE		equ 0xFE
-EBADF		equ 0xFD
-ECONNRESET	equ 0xFC
-ETIMEDOUT	equ 0xFB
-ECONNREFUSED	equ 0xFA
+	org 0x2000
+	include "rom.sym"		; main ROM symbols
+	include "configwrite.sym"	; symbols for flashwrite.out
 
-; Error return codes - DNS
-HOST_NOT_FOUND	equ 0xF9
-NO_RECOVERY	equ 0xF8
-NO_ADDRESS	equ 0xF7
+	include "ui_config.asm"		; configuration user interface
+	include "ui_menu.asm"		; simple menu generator
+
+fwstart
+	incbin "flashwrite.out"		; this gets LDIR'd to RAM
+fwend
 

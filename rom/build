@@ -1,0 +1,13 @@
+#!/bin/sh
+
+echo "Assembling ROM"
+sjasmplus rom.asm --sym=rom.sym --lst=rom.lst
+echo 
+echo "Assembling flash writer"
+sjasmplus flashwrite.asm --sym=flashwrite.sym --lst=flashwrite.lst
+./extractsym.pl flashwrite.sym F_FlashEraseSector F_FlashWriteBlock F_writeconfig >configwrite.sym
+echo
+echo "Assembling utility ROM"
+sjasmplus utilrom.asm --sym=utilrom.sym --lst=utilrom.lst
+echo
+

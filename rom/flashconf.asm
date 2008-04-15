@@ -31,26 +31,28 @@
 ; copied back in. However, this does keep the chip count (and therefore
 ; PCB size down) if we don't need to battery back RAM or have an EEPROM.
 ;
-; It is assumed that the configuration area will get put in paging area B.
+; These values are all offsets from the bottom of the paged in page.
 
 CONFIGPAGE	equ 0x001F	; chip 0 page 0x1F (the last page)
 CONF_RAM	equ 0x1F00	; config area, when copied to RAM
 
 ; TCP/IP settings. These are in the same order as the W5100's hardware
 ; registers so they can just be LDIR'd in.
-IP_GATEWAY	equ 0x2F00	; Gateway address (4 bytes)
-IP_SUBNET	equ 0x2F04	; Subnet mask (4 bytes)
-HW_ADDRESS	equ 0x2F08	; Hardware address (MAC address: 6 bytes)
-IP_ADDRESS	equ 0x2F0E	; IP address
+IP_GATEWAY	equ 0x0F00	; Gateway address (4 bytes)
+IP_SUBNET	equ 0x0F04	; Subnet mask (4 bytes)
+HW_ADDRESS	equ 0x0F08	; Hardware address (MAC address: 6 bytes)
+IP_ADDRESS	equ 0x0F0E	; IP address
 
 ; A bit field of initialization flags, and the definition.
-INITFLAGS	equ 0x2F0F
+INITFLAGS	equ 0x0F0F
 INIT_STATICIP	equ 1		; Static IP address configured
 INIT_DISBLTRAP	equ 2		; Disable RST 8 traps on startup
+
+; Hostname - a null terminated string, maximum 15 characters.
+HOSTNAME	equ 0x0F10
 
 ; 16 bit cyclic redundancy check, in case a botched flash write (say,
 ; power loss during flashing, or an uninitialized chip) so the user
 ; can get notification if all is not well.
-CONFIGCRC	equ 0x2FFE
-CONFIGCRC_RAM	equ 0x1FFE
+CONFIGCRC	equ 0x0FFE
 
