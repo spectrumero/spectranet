@@ -39,7 +39,15 @@ ETIMEDOUT	equ 0xFB
 ECONNREFUSED	equ 0xFA
 
 ; Error return codes - DNS
-HOST_NOT_FOUND	equ 0xF9
-NO_RECOVERY	equ 0xF8
-NO_ADDRESS	equ 0xF7
+HOST_NOT_FOUND	equ 0xEF
+NO_RECOVERY	equ 0xEE
+NO_ADDRESS	equ 0xED
+
+; Error return codes - DHCP
+DHCP_NAK	equ 0xCF
+DHCP_OPTNOTFOUND equ 0xCE
+DHCP_TIMEOUT	equ 0xCD
+DHCP_BAD_XID	equ 0xCC
+
+
 

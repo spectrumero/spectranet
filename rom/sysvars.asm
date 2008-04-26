@@ -83,10 +83,20 @@ v_ansprocessed	defb 0		; answers processed so far
 v_nameserver1	defb 0,0,0,0	; nameserver 1
 v_nameserver2	defb 0,0,0,0	; nameserver 2
 v_nameserver3	defb 0,0,0,0	; nameserver 3
+v_nsend
 v_dnssockinfo	defb 0,0,0,0,0,0,0,0	; DNS socket info
 v_cur_resolver	defw 0		; pointer to IP address of current resolver
 v_queryresult	defw 0		; address of query result buffer
 v_querylength	defw 0		; query length in bytes
+
+; DHCP system variables
+v_dhcpfd	defb 0		; file descriptor of DHCP socket
+v_dhcpsockinfo	defb 0,0,0,0,0,0,0,0	; DHCP socket info
+v_dhcpxid	defb 0,0,0,0	; XID
+v_dhcpserver	defb 0,0,0,0	; Server that replied
+v_dhcpreqaddr	defb 0,0,0,0	; Our requested address
+v_dhcplease	defb 0,0,0,0	; lease in seconds
+v_nspointer	defw 0		; nameserver address pointer
 
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM

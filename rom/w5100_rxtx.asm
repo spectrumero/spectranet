@@ -274,3 +274,21 @@ F_pollall
 	ld a, e			; ready fd in e
 	ret
 
+;-------------------------------------------------------------------------
+; F_pollfd
+; Poll a single file descriptor.
+; Again, not a BSD socket function. However, in many instances all you
+; need to do is poll a single socket, and this will be the most efficient
+; way to do it.
+; Parameters: A = socket file descriptor
+; Zero flag is set if not ready.
+; Carry is set on error.
+F_pollfd
+	call F_gethwsock	; H is socket reg MSB
+	ret c			; carry is set if the fd is not valid
+
+	ld l, Sn_IR % 256	; interrupt register
+	ld a, (hl)		; read its value
+	and S_IR_CON|S_IR_RECV	; Connection or data received = ready
+	ret			; zero flag will be set if ready
+
