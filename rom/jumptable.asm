@@ -59,19 +59,42 @@ UPPER_ENTRYPT_SIZE	equ 0x08
 ; This jump table is copied to 0x3E00 on reset (the fixed upper 4k page,
 ; which is RAM).
 JUMPTABLE_COPYFROM
-	org 0x3E00
-SOCKET	jp F_socket
-CLOSE	jp F_sockclose
-LISTEN	jp F_listen
-ACCEPT	jp F_accept
-BIND	jp F_bind
-CONNECT	jp F_connect
-SEND	jp F_send
-RECV	jp F_recv
-SENDTO	jp F_sendto
-RECVFROM	jp F_recvfrom
-POLL	jp F_poll
-POLLALL	jp F_pollall
+	jp F_socket
+	jp F_sockclose
+	jp F_listen
+	jp F_accept
+	jp F_bind
+	jp F_connect
+	jp F_send
+	jp F_recv
+	jp F_sendto
+	jp F_recvfrom
+	jp F_poll
+	jp F_pollall
+	jp F_pollfd
+	jp F_gethostbyname
+	jp F_putc_5by8
+	jp F_print
+	jp F_clear
 JUMPTABLE_END
 
-JUMPTABLE_SIZE		equ JUMPTABLE_END - 0x3E00
+JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM
+
+SOCKET	equ	0x3E00
+CLOSE	equ	0x3E03
+LISTEN	equ	0x3E06
+ACCEPT	equ	0x3E09
+BIND	equ	0x3E0C
+CONNECT	equ	0x3E0F
+SEND	equ	0x3E12
+RECV	equ	0x3E15
+SENDTO	equ	0x3E18
+RECVFROM equ	0x3E1B
+POLL	equ	0x3E1E
+POLLALL	equ	0x3E21
+POLLFD	equ	0x3E24
+GETHOSTBYNAME	equ 0x3E27
+PUTCHAR	equ	0x3E2A
+PRINT	equ	0x3E2D
+CLEAR	equ	0x3E30
+

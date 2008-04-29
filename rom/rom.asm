@@ -44,11 +44,14 @@
 	include "w5100_sockctrl.asm"	; bind, connect
 	include "w5100_rxtx.asm"	; send, recv, sendto, recvfrom, poll
 	include "w5100_sockinfo.asm"	; internal socket info marshalling
+	include "dns.asm"		; gethostbyname
+	include "dnsdefs.asm"		; defines for DNS
 	include "zxpaging.asm"		; Control 128k ROM paging
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
 	include "ui_charset.asm"	; character set
+	include "jumptable.asm"		; Jump table
 
 	; This sits at the end of ROM page 0, this should always come
 	; after the 'main rom' routines in this file, but before the
@@ -56,7 +59,6 @@
 	include "ui_lookup.asm"		; lookup table for 42 col output
 
 	; Memory map for upper fixed page (chip 3 page 0)
-	include "jumptable.asm"		; Jump table (sets org)
 	include "sysvars.asm"		; System variables (sets org)
 	include "sysdefs.asm"		; General definitions
 

@@ -29,6 +29,7 @@
 	include "rom.sym"		; main ROM symbols
 	include "configwrite.sym"	; symbols for flashwrite.out
 
+	include "dhcpclient.asm"	; DHCP client
 	include "ui_config.asm"		; configuration user interface
 	include "ui_menu.asm"		; simple menu generator
 

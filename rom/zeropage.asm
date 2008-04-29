@@ -38,6 +38,8 @@
 
 	org 0x0000
 RESET
+	di		; This should be done already for a real reset.
+	jp J_reset
 
 	block 0x08-$,0xFF
 TRAPBAS
