@@ -33,9 +33,10 @@
 
 	; Routines for ROM page 0 (chip 0 page 0, lower fixed page)
 	include "zeropage.asm"		; Restarts
-	include "reset.asm"		; Initialization routines
-	include "pager.asm"		; Memory paging routines
 	include "w5100_defines.asm"	; Definitions for network hardware
+	include "reset.asm"		; Initialization routines
+	include "trapdispatch.asm"	; Trap dispatcher
+	include "pager.asm"		; Memory paging routines
 	include "sockdefs.asm"		; Definitions for socket library
 	include "flashconf.asm"		; Configuration information
 	include "w5100_genintfunc.asm"	; general internal functions

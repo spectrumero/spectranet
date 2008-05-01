@@ -95,3 +95,19 @@ F_poppageB
 	out (c), a
 	ret
 
+;--------------------------------------------------------------------------
+; J_hldispatch and J_ixdispatch:
+; Dispatches a page-in from the call table, and unpages when it's done
+J_hldispatch
+	ld (v_hlsave), hl	; save HL without disturbing the stack
+	ld hl, UNPAGE		; unpage address
+	push hl			; this is now the return address
+	ld hl, (v_hlsave)	; restore hl
+	jp (hl)			; jump to routine.
+J_ixdispatch
+	ld (v_hlsave), hl	; save HL without disturbing the stack
+	ld hl, UNPAGE
+	push hl			; this is now the return address
+	ld hl, (v_hlsave)	; restore hl
+	jp (ix)			; jump to routine.
+

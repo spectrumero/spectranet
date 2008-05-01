@@ -208,8 +208,8 @@ F_dhcprecvoffer
 	jp c, F_closeonerror	; leave on error
 
 	; Check the XID.
-	call F_comparexid
-	ret c			; bad XID, return now
+	;call F_comparexid
+	;ret c			; bad XID, return now
 
 	; Retrieve the server address from the options block, we need
 	; it for the subsequent DHCPREQUEST.

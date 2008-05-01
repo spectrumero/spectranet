@@ -32,7 +32,7 @@ CTRLREG		equ 0xEF	; CPLD control register (rw)
 ; Initialization stack - until the Spectrum has initialized its main
 ; ROM we don't really know what we have, but there's definitely some
 ; RAM here.
-INITSTACK	equ 0x7FFF
+INITSTACK	equ 0xFFFF
 
 ; Vectors in flash rom pages
 ROM_INIT_VECTOR	equ 0x2000

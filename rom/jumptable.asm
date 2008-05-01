@@ -24,10 +24,10 @@
 ; CALL instructions to 0x3FF8 and higher cause a ROM page-in. A small
 ; amount of code can live here to dispatch these calls elsewhere.
 UPPER_ENTRYPT
-	defb 0,0,0	; 0x3FF8
-	defb 0,0,0	; 0x3FFB
-	jp (ix)		; 0x3FFE
-	jp (hl)		; 0x3FFF
+	defb 0		; unused at present
+	ret		; A way of paging in without using an OUT
+	jp J_hldispatch	; HLCALL - 0x3FFA
+	jp J_ixdispatch	; IXCALL - 0x3FFD
 UPPER_ENTRYPT_SIZE	equ 0x08
 
 ; The jump table

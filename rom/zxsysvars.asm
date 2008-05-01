@@ -10,3 +10,6 @@ ZX_IO_BANKM	equ 0x7FFD
 ZX_IO_BANK678	equ 0x1FFD
 ZX_IO_ULA	equ 0xFE
 
+; Standard system variables
+ZX_CH_ADD	equ 23645
+

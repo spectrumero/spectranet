@@ -28,7 +28,13 @@
 ; to do next.
 ;
 J_reset
-	ld sp, INITSTACK	; temporary stack when booting
+	ld hl, 0xFFFF		; arbitrary delay
+.delay	dec hl
+	ld a, h
+	or l
+	jr nz, .delay
+
+	;ld sp, INITSTACK	; temporary stack when booting
 	ld hl, 0x3000		; Clear down the fixed RAM page.
 	ld de, 0x3001
 	ld bc, 0xFFF
@@ -36,11 +42,12 @@ J_reset
 	ldir
 
 	; Initialize some system variables that matter.
-	ld hl, 0x4000
-	ld (v_row), hl		; print routine's row address
 	call F_clear		; clear the screen
 	ld hl, STR_bootmsg	
 	call F_print		; show the boot message
+
+	; Initialize any ZX bits that need to be done.
+	call F_zxinit
 
 	; Initialize the jump table by copying it to our RAM.
 	ld hl, JUMPTABLE_COPYFROM
@@ -63,9 +70,17 @@ J_reset
 	call F_crc16
 	ld (v_seed), hl		; save the CRC in the seed.
 
-	call F_initroms		; Initialize any ROM modules we may have
+;	call F_initroms		; Initialize any ROM modules we may have
+
+	; TODO: The proper routine to read the configuration, and set
+	; the MAC address.
+	call F_tempsetup
+	
+	ld hl, STR_unpaging	
+	call F_print
+
 	ld hl, 0		; We're done so put 0x0000 
-	push hl			; on the stack, and
+	push hl
 	jp UNPAGE		; unpage (a ret instruction)
 
 ;------------------------------------------------------------------------
@@ -78,6 +93,8 @@ J_reset
 ; page somewhere in the flash chip and get initialized.
 F_initroms
 	ld hl, 1	; start from page 1 - page 0 is the fixed page.
+	ld de, vectors	; pointer to the valid vector table
+	ld (v_workspace), de	; save it
 .initloop
 	ld a, 0x20	; last ROM?
 	cp l
@@ -87,11 +104,20 @@ F_initroms
 	pop hl
 	inc hl
 	jr nz, .initloop	; No valid ROM signature
+	
+	; Put an entry in the vector table to indicate the ROM page has
+	; a valid vector table.
+	ld de, (v_workspace)	; get vector pointer
+	ld a, l
+	ld (de), a		; save ROM page number in the vector table
+	inc de			; point to next entry in the table
+	ld (v_workspace), de	; and save.
+
 	push hl
 	ld hl, (ROM_INIT_VECTOR) ; get initialization vector from ROM
-	ld a, 0x20		; MSB of paging area B
+	ld a, 0xFF
 	cp h			; does the vector point somewhere useful?
-	jr nz, .returnaddr	; no - skip calling it
+	jr z, .returnaddr	; no - skip calling it
 	ld de, .returnaddr	; get return address
 	push de			; stack it to simulate CALL
 	jp (hl)			; and call it
@@ -99,6 +125,41 @@ F_initroms
 	pop hl
 	jr .initloop
 
-STR_bootmsg
-	defb "Spectranet (beta)\n",0
+; This is a temporary W5100 setup routine, to do the bare minimum basic
+; setup.
+F_tempsetup
+	; Page in the W5100
+	; Chip selects put RAM in area B, W5100 in area A
+	ld hl, 0x0100		; registers are in page 0 of the W5100
+	call F_setpageA		; page it into area A
 
+	; Perform a software reset by setting the reset flag in the MR.
+	ld a, MR_RST
+	ld (MR), a
+
+	; Set memory mapped mode, all options off.
+	xor a
+	ld (MR), a
+
+	; set the MAC address
+	ld hl, CFG_HWADDR
+	ld de, SHAR0		
+	ld bc, 6
+	ldir
+
+	; set up the socket buffers: 2k per socket buffer.
+	ld a, 0x55
+	ld (TMSR), a
+	ld (RMSR), a
+	
+	; set the IMR
+	ld a, %11101111
+	ld (IMR), a
+
+	ret
+CFG_HWADDR 	defb 0xAA,0x17,0x0E,0x00,0x3B,0xA6
+
+STR_bootmsg
+	defb "Alioth Spectranet (beta)\n",0
+STR_unpaging
+	defb "Unpaging\n",0

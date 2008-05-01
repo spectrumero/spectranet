@@ -43,15 +43,21 @@ RESET
 
 	block 0x08-$,0xFF
 TRAPBAS
-
+	jp do_rst8
 	block 0x10-$,0xFF
 CALLBAS
+	ld (v_hlsave), hl
+	ld (v_desave), de
+	pop hl
+	jp do_callbas
 
 	block 0x38-$,0xFF
 INTERRUPT
+	reti		; TODO - do something!
 
 	block 0x66-$,0xFF
 NMI
+	retn
 
 	block 0x7C-$,0xFF
 	; When unpaging, put the address where you want to end up on

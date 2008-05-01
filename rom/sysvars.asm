@@ -102,10 +102,13 @@ v_nspointer	defw 0		; nameserver address pointer
 v_bankm		defb 0		; saved state of BANKM
 v_bank678	defb 0		; saved state of BANK678
 
-; Jump table entries. First two are three bytes long (JP xxxx). Last can
-; only fit a JR xx.
-		block 0x3FF8-$,0xff
-jtable1		defb 0,0,0
-jtable2		defb 0,0,0
-jtable3		defb 0,0
+; Temporary register storage
+v_hlsave	defw 0
+v_desave	defw 0
+v_bcsave	defw 0
 
+; ROM table - list of ROM pages with a valid vector table (max 31)
+vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+; Reserve memory above 0x3FF8 for the jump table.
+		block 0x3FF8-$,0xff
