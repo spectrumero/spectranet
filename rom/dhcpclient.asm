@@ -38,11 +38,12 @@
 ;     the hardware is set up with the data returned.
 ; The DHCP client requests an IP address, subnet mask and default gateway,
 ; and any DNS servers.
+
 F_dhcp
 	ld hl, STR_dhcpinit
-	call F_print
+	call PRINT42
 	ld hl, STR_dhcpdiscover
-	call F_print
+	call PRINT42
 
 	call F_dhcpdiscover
 	jr c, .borked
@@ -50,37 +51,37 @@ F_dhcp
 	call F_dhcprecvoffer
 	jr c, .borked
 	ld hl, STR_dhcpoffer
-	call F_print
+	call PRINT42
 
 	ld hl, STR_dhcprequest
-	call F_print
+	call PRINT42
 	call F_dhcpsendrequest
 	jr c, .borked
 
 	call F_dhcprecvack
 	jr c, .borked
 	ld hl, STR_dhcpack
-	call F_print	
+	call PRINT42
 
 	; Display the IP address that we got back.
 	ld hl, STR_ipaddr
-	call F_print
+	call PRINT42
 	ld hl, v_dhcpreqaddr
 	ld de, buf_workspace
-	call F_long2ipstring
+	call LONG2IPSTRING
 	ld hl, buf_workspace
-	call F_print
+	call PRINT42
 	ret
 
 .borked
 	push af
 	ld hl, STR_failed
-	call F_print
+	call PRINT42
 	pop af
 	ld hl, v_workspace
-	call F_itoa8
+	call ITOA8
 	ld hl, v_workspace
-	call F_print
+	call PRINT42
 	ret
 
 STR_dhcpinit	defb "Press BREAK to interrupt.\n",0
@@ -112,10 +113,10 @@ F_dhcpdiscover
 	ld (hl), dhcp_hlenval	; dhcp htype length
 
 	; Create a session identifier
-	call F_rand16
+	call RAND16
 	ld (buf_message+dhcp_xid), hl
 	ld (v_dhcpxid), hl
-	call F_rand16
+	call RAND16
 	ld (buf_message+dhcp_xid+2), hl
 	ld (v_dhcpxid+2), hl
 
@@ -127,7 +128,7 @@ F_dhcpdiscover
 
 	; Page in the register area of the W5100
 	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
+	call SETPAGEA
 	ld hl, SHAR0		; point at first byte of hardware address
 	ldi			; copy the hardware address
 	ldi
@@ -161,7 +162,7 @@ F_dhcpdiscover
 .send
 	; Send the assembled DHCP message.	
 	ld c, SOCK_DGRAM	; Datagram (UDP) socket
-	call F_socket
+	call SOCKET
 	ret c			; error on carry
 	ld (v_dhcpfd), a	; save the socket fd
 
@@ -182,7 +183,7 @@ F_dhcpdiscover
 	ld hl, v_dhcpsockinfo
 	ld de, buf_message
 	ld bc, dhcp_msglen
-	call F_sendto
+	call SENDTO
 	jp c, F_closeonerror
 	ret
 
@@ -194,7 +195,7 @@ F_dhcprecvoffer
 	; bind to port 68 for the incoming message
 	ld a, (v_dhcpfd)
 	ld de, 68		; port 68
-	call F_bind
+	call BIND
 	ret c
 
 	call F_waitfordhcpmsg	; poll for message
@@ -204,7 +205,7 @@ F_dhcprecvoffer
 	ld de, buf_message
 	ld bc, dhcp_msglen
 	ld a, (v_dhcpfd)
-	call F_recvfrom
+	call RECVFROM
 	jp c, F_closeonerror	; leave on error
 
 	; Check the XID.
@@ -276,7 +277,7 @@ F_dhcpsendrequest
 
 	; Page in the register area of the W5100
 	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
+	call SETPAGEA
 	ld hl, SHAR0		; point at first byte of hardware address
 	ldi			; copy the hardware address
 	ldi
@@ -345,7 +346,7 @@ F_dhcpsendrequest
 	ld hl, v_dhcpsockinfo
 	ld de, buf_message
 	ld bc, dhcp_msglen
-	call F_sendto
+	call SENDTO
 	jp c, F_closeonerror	; leave on error
 	ret
 
@@ -356,7 +357,7 @@ F_dhcprecvack
 	; bind to port 68 for the incoming message
 	ld a, (v_dhcpfd)
 	ld de, 68		; port 68
-	call F_bind
+	call BIND
 	ret c
 
 	; Receive the ACK (or possibly NAK) message
@@ -365,11 +366,11 @@ F_dhcprecvack
 	ld de, buf_message
 	ld bc, dhcp_msglen
 	ld a, (v_dhcpfd)
-	call F_recvfrom
+	call RECVFROM
 	jp c, F_closeonerror
 
 	ld a, (v_dhcpfd)
-	call F_sockclose
+	call CLOSE
 
 	; Check the XID.
 	call F_comparexid
@@ -387,7 +388,7 @@ F_dhcprecvack
 	; Page in the register area of the W5100 so we can set 
 	; the interface up with its proper address.
 	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
+	call SETPAGEA
 
 	ld hl, buf_message+dhcp_yiaddr
 	ld de, SIPR0		; hardware register for IP
@@ -506,7 +507,7 @@ F_waitfordhcpmsg
 .loop
 	push bc
 	ld a, (v_dhcpfd)
-	call F_pollfd		; data ready for this file descriptor?
+	call POLLFD		; data ready for this file descriptor?
 	pop bc
 	jp c, F_closeonerror	; an error in pollfd
 	ret nz			; data is ready
@@ -523,7 +524,7 @@ F_waitfordhcpmsg
 F_closeonerror
 	push af
 	ld a, (v_dhcpfd)
-	call F_sockclose
+	call CLOSE
 	pop af
 	scf
 	ret

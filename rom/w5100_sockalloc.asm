@@ -103,6 +103,11 @@ F_sockclose
 	and S_MR_TCP		; if it's not TCP jump forward
 	jr z, .close		; straight to closing the hardware resource
 
+	ld l, Sn_SR % 256	; check the status register
+	ld a, (hl)
+	cp S_SR_SOCK_INIT	; nothing has been done yet
+	jr z, .close		; so skip disconnect part.
+
 	ld l, Sn_CR % 256	; (hl) = socket's command register
 	ld (hl), S_CR_DISCON	; disconnect remote host
 	ld l, Sn_IR % 256	; (hl) = interrupt register

@@ -76,25 +76,15 @@ JUMPTABLE_COPYFROM
 	jp F_putc_5by8
 	jp F_print
 	jp F_clear
+	jp F_setpageA
+	jp F_setpageB
+	jp F_long2ipstring
+	jp F_ipstring2long
+	jp F_itoa8
+	jp F_rand16
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM
 
-SOCKET	equ	0x3E00
-CLOSE	equ	0x3E03
-LISTEN	equ	0x3E06
-ACCEPT	equ	0x3E09
-BIND	equ	0x3E0C
-CONNECT	equ	0x3E0F
-SEND	equ	0x3E12
-RECV	equ	0x3E15
-SENDTO	equ	0x3E18
-RECVFROM equ	0x3E1B
-POLL	equ	0x3E1E
-POLLALL	equ	0x3E21
-POLLFD	equ	0x3E24
-GETHOSTBYNAME	equ 0x3E27
-PUTCHAR	equ	0x3E2A
-PRINT	equ	0x3E2D
-CLEAR	equ	0x3E30
+	include "spectranet.asm"	; A list of public symbols
 

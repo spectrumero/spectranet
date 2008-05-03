@@ -42,6 +42,12 @@ J_reset
 	ldir
 
 	; Initialize some system variables that matter.
+	ld hl, v_fd1hwsock	; set all sockets to closed
+	ld de, v_fd1hwsock+1
+	ld bc, MAX_FDS
+	ld (hl), 0x80		; MSB set = closed socket
+	ldir
+
 	call F_clear		; clear the screen
 	ld hl, STR_bootmsg	
 	call F_print		; show the boot message

@@ -17,6 +17,11 @@
 
 	org 0xF000		; start with RAND USR 61440
 	di
+
+        ld a, 1         ; page in spectranet memory
+        ld bc, 0x80EF
+        out (c), a
+
 	call F_clear		; clear screen, setup print routine
 	call F_w5100init	; initialize ethernet
 	ld hl, STR_send
