@@ -6,4 +6,10 @@ bind.asm
 bind_callee.asm
 connect.asm
 connect_callee.asm
+send.asm
+send_callee.asm
+recv.asm
+recv_callee.asm
+listen.asm
+listen_callee.asm
 

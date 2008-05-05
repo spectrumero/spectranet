@@ -1,8 +1,7 @@
 ; int connect(int sockfd, const struct sockaddr *my_addr, socklen_t addrlen);
 ; Connect to a remote address
 ; This is simplified compared to the full BSD implementation; the Spectranet
-; only uses the port address (and sockaddr_in is the only type of struct
-; sockaddr that's actually defined).
+; only is aware of inet sockets (so this only handles struct sockaddr_in)
 
 XLIB connect_callee
 XDEF ASMDISP_CONNECT_CALLEE
