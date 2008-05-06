@@ -4,8 +4,7 @@
 XLIB socket_callee
 XDEF ASMDISP_SOCKET_CALLEE
 
-XREF SOCKET
-XREF HLCALL
+	include "spectranet.asm"
 
 .socket_callee
 	pop hl		; return addr
@@ -14,10 +13,8 @@ XREF HLCALL
 	ex (sp), hl	; restore the return address, hl = domain
 
 .asmentry
-;	ld hl, SOCKET	; jump table address
-;	call HLCALL	; open the socket
-	ld hl, 0x3E00
-	call 0x3FFA
+	ld hl, SOCKET	; jump table address
+	call HLCALL	; open the socket
 	
 	ld h, 0
 	ld l, a		; socket in hl

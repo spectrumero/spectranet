@@ -99,3 +99,26 @@ F_setsockinfo
 	ld (hl), a		; set LSB
 	ret
 
+;---------------------------------------------------------------------------
+; F_fillsockaddr
+; Fills a struct sockaddr_in with the remote socket info
+; Parameters: Socket in A
+;             Pointer to sockaddr_in in DE
+F_remoteaddress
+	call F_gethwsock
+	ret c			; invalid socket
+
+	inc de			; increment past int sin_family
+	inc de
+	ld l, Sn_DPORT1 % 256	; destination port LSB
+	ldi
+	ld l, Sn_DPORT0 % 256	; destination port MSB
+	ldi
+
+	ld l, Sn_DIPR0 % 256	; remote IP address register
+	ldi			; copy in network order
+	ldi	
+	ldi
+	ldi
+	ret
+		

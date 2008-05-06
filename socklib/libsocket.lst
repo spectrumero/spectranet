@@ -1,4 +1,3 @@
-spectranet.asm
 socket.asm
 socket_callee.asm
 sockclose.asm
@@ -12,4 +11,6 @@ recv.asm
 recv_callee.asm
 listen.asm
 listen_callee.asm
+accept.asm
+accept_callee.asm
 

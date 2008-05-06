@@ -4,17 +4,15 @@
 
 XLIB listen_callee
 XDEF ASMDISP_LISTEN_CALLEE
-
+	include "spectranet.asm"
 .listen_callee
 	pop hl		; return addr
 	pop de		; int backlog
 	ex (sp), hl	; swap socket/return address
 	ld a, l		; socket in A
 .asmentry
-;	ld hl, LISTEN
-;	call HLCALL
-	ld hl, 0x3E06
-	call 0x3FFA
+	ld hl, LISTEN
+	call HLCALL
 	jr c, err
 	ld hl, 0
 	ret

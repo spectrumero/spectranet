@@ -10,7 +10,6 @@ while(my $line=<FHND>)
 	{
 		chomp $line;
 		my($sym, $equ, $val)=split(/\s{1,}/, $line, 3);
-		print OHND "XDEF $sym\n";
 		print OHND "DEFC $sym = $val\n";
 	}
 }

@@ -82,6 +82,7 @@ JUMPTABLE_COPYFROM
 	jp F_ipstring2long
 	jp F_itoa8
 	jp F_rand16
+	jp F_remoteaddress
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM

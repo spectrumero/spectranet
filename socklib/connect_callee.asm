@@ -5,7 +5,7 @@
 
 XLIB connect_callee
 XDEF ASMDISP_CONNECT_CALLEE
-
+	include "spectranet.asm"
 .connect_callee
 	pop hl		; return addr
 	pop bc		; addrlen
@@ -21,10 +21,8 @@ XDEF ASMDISP_CONNECT_CALLEE
 	ld b, (hl)	; sin_port MSB
 	inc hl
 	ex de, hl	; de now points at address
-;	ld hl, CONNECT
-;	call HLCALL
-	ld hl, 0x3E0F
-	call 0x3FFA
+	ld hl, CONNECT
+	call HLCALL
 	jr c, err
 	ld hl, 0	; return 0
 	ret

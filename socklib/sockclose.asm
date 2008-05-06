@@ -2,15 +2,11 @@
 XLIB sockclose
 LIB libsocket
 
-XREF CLOSE
-XREF HLCALL
-
+	include "spectranet.asm"
 .sockclose
 	ld a, l		; file descriptor in lsb of hl
-;	ld hl, CLOSE
-;	call HLCALL
-	ld hl, 0x3E03
-	call 0x3FFA
+	ld hl, CLOSE
+	call HLCALL
 	jr c, err_close
 	ld hl, 0	; return code 0
 	ret

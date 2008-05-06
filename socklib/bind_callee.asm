@@ -6,7 +6,7 @@
 
 XLIB bind_callee
 XDEF ASMDISP_BIND_CALLEE
-
+	include "spectranet.asm"
 .bind_callee
 	pop hl		; return addr
 	pop bc		; addrlen
@@ -16,10 +16,8 @@ XDEF ASMDISP_BIND_CALLEE
 .asmentry
 	ld e, (ix+2)	; sin_port LSB
 	ld d, (ix+3)	; sin_port MSB
-;	ld hl, BIND	; library fn to call
-;	call HLCALL
-	ld hl, 0x3E0C
-	call 0x3FFA
+	ld hl, BIND	; library fn to call
+	call HLCALL
 	jr c, err
 	ld hl, 0	; return code 0
 	ret
