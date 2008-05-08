@@ -89,7 +89,7 @@ F_setsockinfo
 	inc hl
 	or (hl)
 	ex de, hl		; restore registers to expected order
-	ret z			; nothing more to do
+	jr z, .checkset		; need to set random source port?
 	ld l, Sn_PORT1 % 256	; hl points at source port
 	ld a, (de)		; source port MSB
 	ld (hl), a		; set MSB
@@ -97,6 +97,23 @@ F_setsockinfo
 	dec de
 	ld a, (de)
 	ld (hl), a		; set LSB
+	ret
+.checkset
+	ld l, Sn_PORT0 % 256	; port MSB
+	ld a, (hl)
+	inc l			; port LSB
+	or (hl)			; is it zero?
+	ret nz			; no - nothing to do
+	ex de, hl		; yes - set the local port
+	ld hl, v_localport
+	ld e, Sn_PORT1 % 256	; set local port LSB
+	ldi
+	ld e, Sn_PORT0 % 256	; set local port MSB
+	ldi
+	ld hl, (v_localport)	; update the local port number
+	inc hl
+	ld (v_localport), hl
+	ex de, hl
 	ret
 
 ;---------------------------------------------------------------------------

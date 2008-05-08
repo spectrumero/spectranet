@@ -110,6 +110,15 @@ F_connect
 	ldi
 	ldi
 	ldi
+	ld hl, v_localport
+	ld e, Sn_PORT1 % 256	; set local port LSB
+	ldi
+	ld e, Sn_PORT0 % 256	; set local port MSB
+	ldi
+	ld hl, (v_localport)	; update the local port number
+	inc hl
+	ld (v_localport), hl
+	
 	ex de, hl
 	ld l, Sn_CR % 256	; command register
 	ld (hl), S_CR_CONNECT	; instruction to connect to remote host

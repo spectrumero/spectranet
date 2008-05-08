@@ -107,6 +107,9 @@ v_hlsave	defw 0
 v_desave	defw 0
 v_bcsave	defw 0
 
+; Miscellaneous TCP variables
+v_localport	defw 0		; Storage for current local port for connect
+
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 

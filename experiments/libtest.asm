@@ -592,7 +592,7 @@ STR_sending	defb "Sending\n",0
 STR_connecting	defb "connect: ",0
 STR_recvfrom	defb "recvfrom: ",0
 STR_sendto	defb "sendto...\n",0
-STR_host	defb "172.16.0.1",0
+STR_host	defb "spectrum.alioth.net",0
 STR_dns		defb "Testing DNS\n\nLooking up: ",0
 STR_dnsresult	defb "Result: ",0
 DNS_IP		defb 83,218,26,5
@@ -602,6 +602,6 @@ BUF_conninfo	defb 0,0,0,0,0,0,0,0
 BUF_ip		defb 0,0,0,0
 BUF_rxbuf	defb 0
 
+UNPAGE		equ 0x7c
 	include "../rom/sysvars.asm"
 	include "../rom/sysdefs.asm"
-

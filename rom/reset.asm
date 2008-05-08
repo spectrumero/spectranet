@@ -28,12 +28,7 @@
 ; to do next.
 ;
 J_reset
-	ld hl, 0xFFFF		; arbitrary delay
-.delay	dec hl
-	ld a, h
-	or l
-	jr nz, .delay
-
+	; Clear upper page.
 	;ld sp, INITSTACK	; temporary stack when booting
 	ld hl, 0x3000		; Clear down the fixed RAM page.
 	ld de, 0x3001
@@ -41,16 +36,32 @@ J_reset
 	ld (hl), 0
 	ldir
 
-	; Initialize some system variables that matter.
+	call F_clear		; clear the screen
+	ld hl, STR_bootmsg	
+	call F_print		; show the boot message
+
+	; Initialize some system variables that need it.
+
+	; This is a rather poor way of generating a random number seed,
+	; but it's the best we can do given Spectrum hardware. On power
+	; up or after each reset, the machine's memory will be in a slightly
+	; random state, so we'll CRC it to generate a seed.
+	ld de, 23552		; start from the sysvars area
+	ld bc, 0x1000
+	call F_crc16
+	ld (v_seed), hl		; save the CRC in the seed.
+
+	; Set all sockets to the closed state.
 	ld hl, v_fd1hwsock	; set all sockets to closed
 	ld de, v_fd1hwsock+1
 	ld bc, MAX_FDS
 	ld (hl), 0x80		; MSB set = closed socket
 	ldir
 
-	call F_clear		; clear the screen
-	ld hl, STR_bootmsg	
-	call F_print		; show the boot message
+	; Set an initial local port number for connect()
+	call F_rand16
+	set 6, h		; make sure we start with a highish number
+	ld (v_localport), hl	; set initial local port address
 
 	; Initialize any ZX bits that need to be done.
 	call F_zxinit
@@ -67,14 +78,6 @@ J_reset
 	ld bc, UPPER_ENTRYPT_SIZE
 	ldir
 
-	; This is a rather poor way of generating a random number seed,
-	; but it's the best we can do given Spectrum hardware. On power
-	; up or after each reset, the machine's memory will be in a slightly
-	; random state, so we'll CRC it to generate a seed.
-	ld de, 23552		; start from the sysvars area
-	ld bc, 0x1000
-	call F_crc16
-	ld (v_seed), hl		; save the CRC in the seed.
 
 ;	call F_initroms		; Initialize any ROM modules we may have
 
@@ -162,8 +165,17 @@ F_tempsetup
 	ld a, %11101111
 	ld (IMR), a
 
+	; set a dns server
+	ld hl, CFG_DNS
+	ld de, v_nameserver1
+	ldi
+	ldi
+	ldi
+	ldi
+
 	ret
 CFG_HWADDR 	defb 0xAA,0x17,0x0E,0x00,0x3B,0xA6
+CFG_DNS		defb 83,218,26,5
 
 STR_bootmsg
 	defb "Alioth Spectranet (beta)\n",0
