@@ -37,6 +37,7 @@ queryend
 dns_headerlen	equ 12		; 12 bytes long
 dns_Arecord	equ 1		; A record indicator in query/answer
 dns_port	equ 53		; port 53/udp
+dns_polltime	equ 16384	; How long to poll for DNS response
 
 ; Offsets to the fields of the DNS message header
 dns_serial	equ 0		; Two byte serial number
@@ -46,4 +47,5 @@ dns_qdcount	equ 4		; Number of questions (2 bytes, big endian)
 dns_ancount	equ 6		; Number of resource records
 dns_nscount	equ 8		; Number of NS records
 dns_arcount	equ 10		; Number of additional records
+
 

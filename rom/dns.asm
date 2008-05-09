@@ -105,13 +105,27 @@ F_dnsAquery
 	ldi
 	ldi
 
+	ld a, 3			; number of retries
+	ld (v_dnsretries), a
+.sendquery
+	ld a, (v_dnsfd)
 	ld hl, v_dnssockinfo	; reset hl to the sockinfo structure
 	ld de, buf_workspace	; point de at the workspace
 	ld bc, (v_querylength)	; bc = length of query
 	call F_sendto		; send the block of data
 	jr c, .errorcleanup	; recover if there's an error
 
-	; TODO: only wait for a specific time for the response to come back
+	; Wait for only a finite amount of time before giving up
+	call F_waitfordnsmsg
+	jr nc, .getresponse
+	ld a, (v_dnsretries)
+	dec a
+	ld (v_dnsretries), a
+	jr nz, .sendquery
+	ld a, DNS_TIMEOUT
+	jr .errorcleanup	; retries exhausted
+	
+.getresponse
 	ld a, (v_dnsfd)
 	ld hl, v_dnssockinfo	; reset hl to the socket info structure
 	ld de, buf_message	; set de to the message buffer
@@ -276,5 +290,21 @@ F_getdnsarec
 	jr .decodeanswer	; decode the next answer
 .baleout
 	scf			; set carry flag to indicate error
+	ret
+
+;------------------------------------------------------------------------
+; F_waitfordnsmsg
+; Polls for a response from the DNS server to implement a timeout.
+F_waitfordnsmsg
+	ld bc, dns_polltime
+.loop
+	ld a, (v_dnsfd)
+	call F_pollfd
+	ret nz			; data ready
+	dec bc
+	ld a, b
+	or c
+	jr nz, .loop
+	scf			; indicate timeout
 	ret
 

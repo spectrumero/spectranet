@@ -88,6 +88,7 @@ v_dnssockinfo	defb 0,0,0,0,0,0,0,0	; DNS socket info
 v_cur_resolver	defw 0		; pointer to IP address of current resolver
 v_queryresult	defw 0		; address of query result buffer
 v_querylength	defw 0		; query length in bytes
+v_dnsretries	defb 0		; remaining retries from this server
 
 ; DHCP system variables
 v_dhcpfd	defb 0		; file descriptor of DHCP socket

@@ -35,7 +35,7 @@ void testclient()
 	}
 
 	serv_addr.sin_port=80;
-	serv_addr.sin_addr.s_addr=0xA3D1E6D5;
+	serv_addr.sin_addr.s_addr=he->h_addr;
 	printf("Connect...\n");
 	rc=connect(sockfd, &serv_addr, sizeof(sockaddr_in));
 
