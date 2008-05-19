@@ -18,6 +18,7 @@ main()
 		printf("====================\n\n");
 
 		printf("1...Client test\n");
+		printf("2...Non multiplexed server\n");
 		printf("9...Exit\n");
 
 		printf("\nChoice: ");
@@ -27,6 +28,9 @@ main()
 		{
 			case '1':
 				testclient();
+				break;
+			case '2':
+				testnonmuxedserver();
 				break;
 			case '9':
 				return;

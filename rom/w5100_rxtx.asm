@@ -199,9 +199,10 @@ F_recvfrom
 ;             B  = number of file descriptors to poll
 ;
 ; If an fd is found that is ready (data can be read, or a connection can
-; be accepted), the first fd to be found ready is returned in A. If
-; no sockets are ready, A is 0 and the zero flag is set. On error, the
-; carry flag is set and A is set to the error.
+; be accepted), the first fd to be found ready is returned in A and the
+; flags that caused the condition in B. If no sockets are ready, A is 0 
+; and the zero flag is set. On error, the carry flag is set and A is set 
+; to the error.
 F_poll
 	ld hl, W5100_REGISTER_PAGE
 	call F_setpageA
@@ -220,16 +221,16 @@ F_poll
 .poll
 	ld h, a			; (hl) = socket register
 	ld l, Sn_IR % 256	; interrupt register
-	bit S_IR_CON, (hl)	; Interrupt for a new connection?
-	jr nz, .ready		; ready for action
-	bit S_IR_RECV, (hl)	; Interrupt for received data?
-	jr nz, .ready		; ready for action
+	ld a, (hl)
+	and S_IR_CON|S_IR_RECV|S_IR_DISCON
+	jr nz, .ready		; an event has occurred
 	inc de			; next file descriptor
 	djnz .sockloop		
 .noneready
 	xor a			; loop finished, no sockets were ready
 	ret
 .ready
+	ld b, a			; save flags
 	ld a, c			; retrieve fd
 	ret
 
@@ -246,32 +247,47 @@ F_poll
 ; would be quite easy to provide an #ifdef'd pollall() function.
 ;
 ; No parameters. The first file descriptor found to be ready will be returned
-; in A. If none are ready, A=0 and the zero flag is set.
+; in A. If none are ready, A=0 and the zero flag is set. If an fd is ready,
+; it is returned in A, and C contains the flags that triggered the condition.
 F_pollall
 	ld hl, W5100_REGISTER_PAGE
 	call F_setpageA
-	ld de, v_fd1hwsock
+	ld d, v_fd1hwsock / 256
+	ld a, (v_lastpolled)	; get addr. of socket to start at
+	inc a			; and start from the next one
+	cp MAX_FD_NUMBER+1	; but wrap if this puts us off the end
+	jr nz, .setaddr
+	ld a, v_fd1hwsock % 256	; wrap
+.setaddr
+	ld e, a			; (de) points at socket to poll
 	ld b, MAX_FDS
 .sockloop
 	ld a, (de)		; get hardware socket register ptr
 	and SOCKMASK		; check it's a real socket
 	jr nz, .poll
-	inc e
+.nextsock
+	inc e			; next socket
+	ld a, MAX_FD_NUMBER+1
+	cp e			; wrap around to first fd?
+	jr nz, .continue	; no
+	ld e, v_fd1hwsock % 256	; wrap back to first file descriptor
+.continue
 	djnz .sockloop
 	jr .noneready
 .poll
 	ld h, a			; (hl) = socket register
 	ld l, Sn_IR % 256	; interrupt register
 	ld a, (hl)
-	and S_IR_CON|S_IR_RECV
+	and S_IR_CON|S_IR_RECV|S_IR_DISCON
 	jr nz, .ready
-	inc e			; next file descriptor
-	djnz .sockloop
+	jr .nextsock		; advance to next socket fd
 .noneready
 	xor a			; A=0, zero flag set
 	ret
 .ready
+	ld c, a			; copy flags into C
 	ld a, e			; ready fd in e
+	ld (v_lastpolled), a	; save last polled sockfd
 	ret
 
 ;-------------------------------------------------------------------------
@@ -282,6 +298,7 @@ F_pollall
 ; way to do it.
 ; Parameters: A = socket file descriptor
 ; Zero flag is set if not ready.
+; For a ready fd, the reason for readiness is returned in C
 ; Carry is set on error.
 F_pollfd
 	call F_gethwsock	; H is socket reg MSB
@@ -289,6 +306,7 @@ F_pollfd
 
 	ld l, Sn_IR % 256	; interrupt register
 	ld a, (hl)		; read its value
-	and S_IR_CON|S_IR_RECV	; Connection or data received = ready
-	ret			; zero flag will be set if ready
+	and S_IR_CON|S_IR_RECV|S_IR_DISCON
+	ld c, a			; copy flags into C
+	ret
 

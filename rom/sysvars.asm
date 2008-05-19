@@ -66,6 +66,8 @@ v_fd7hwsock	defb 0
 v_fd8hwsock	defb 0
 v_fd9hwsock	defb 0
 MAX_FDS		equ 5		; maximum number of file descriptors (W5100)
+MAX_FD_NUMBER	equ v_fd5hwsock % 256
+v_lastpolled	defb 0		; fd to start polling from
 
 ; General purpose small workspace reserved for ROM routines (for short strings,
 ; numbers etc.)

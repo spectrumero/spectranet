@@ -108,6 +108,9 @@ F_sockclose
 	cp S_SR_SOCK_INIT	; nothing has been done yet
 	jr z, .close		; so skip disconnect part.
 
+	cp S_SR_SOCK_LISTEN	; still nothing has been done
+	jr z, .close		; so skip disconnect part.
+
 	ld l, Sn_CR % 256	; (hl) = socket's command register
 	ld (hl), S_CR_DISCON	; disconnect remote host
 	ld l, Sn_IR % 256	; (hl) = interrupt register

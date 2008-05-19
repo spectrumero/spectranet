@@ -45,6 +45,7 @@ extern int __LIB__	connect(int sockfd, struct sockaddr *serv_addr, socklen_t add
 extern int __LIB__	send(int sockfd, void *buf, int len, int flags);
 extern int __LIB__	recv(int sockfd, void *buf, int len, int flags);
 extern int __LIB__	accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+extern int __LIB__	listen(int sockfd, int backlog);
 
 /* CALLEE linkage calls */
 extern int __LIB__ __CALLEE__	socket_callee(int domain, int type, int proto);
@@ -53,6 +54,7 @@ extern int __LIB__ __CALLEE__	connect_callee(int sockfd, struct sockaddr *serv_a
 extern int __LIB__ __CALLEE__	send_callee(int sockfd, void *buf, int len, int flags);
 extern int __LIB__ __CALLEE__	recv_callee(int sockfd, void *buf, int len, int flags);
 extern int __LIB__ __CALLEE__	accept_callee(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+extern int __LIB__ __CALLEE__	listen_callee(int sockfd, int backlog);
 
 /* Make CALLEE default */
 #define socket(a,b,c)		socket_callee(a,b,c)
@@ -61,6 +63,7 @@ extern int __LIB__ __CALLEE__	accept_callee(int sockfd, struct sockaddr *addr, s
 #define send(a,b,c,d)		send_callee(a,b,c,d)
 #define recv(a,b,c,d)		recv_callee(a,b,c,d)
 #define accept(a,b,c)		accept_callee(a,b,c)
+#define listen(a,b)		listen_callee(a,b)
 
 /* htons is a no-op, since all the calls convert machine byte order to
  * network byte order. The macro is provided for compatibility */

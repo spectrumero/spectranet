@@ -39,7 +39,7 @@
 	; Test client (connect function)
 	;jp F_client
 	;jp F_udp
-	jp F_dnslookup
+	;jp F_dnslookup
 
 	; Open a new socket of type SOCK_STREAM (i.e. TCP)
 	ld hl, STR_socket
@@ -67,13 +67,13 @@
 	call F_displayrc
 
 .poll
-	ld hl, STR_polling
-	call F_print
-	call F_dumpfds
-.pollloop
-	call F_pollall
-	jr z, .pollloop
-	call F_displayrc
+;	ld hl, STR_polling
+;	call F_print
+;	call F_dumpfds
+;.pollloop
+;	call F_pollall
+;	jr z, .pollloop
+;	call F_displayrc
 
 	; Accept
 	ld hl, STR_accept
