@@ -40,7 +40,11 @@ struct pollfd
 /* functions */
 /* pollfd polls a single file descriptor and returns the event in the same
  * way that revent is set for the multiple socket poll functions */
-extern unsigned char __LIB__ __FASTCALL__ pollfd(int sockfd);
+extern unsigned char __LIB__ __FASTCALL__ poll_fd(int sockfd);
 
-/* pollall polls all open sockets
+/* pollall polls all open sockets. When it finds one that needs action,
+ * it fills the passed pollfd structure, and also returns the file descriptor.
+ * If none are ready, it returns zero and the pollfd struct is unmodified */
+extern int __LIB__ __FASTCALL__ pollall(struct pollfd *p); 
+
 #endif

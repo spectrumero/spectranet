@@ -8,7 +8,7 @@ RM = rm -f
 CC = zcc
 TESTOUT = testsocks.bin
 CFLAGS = +zx -vn -I./include -O2 -preserve
-COBJS = testsocks.o testclient.o nonmuxserver.o
+COBJS = testsocks.o testclient.o nonmuxserver.o muxserver.o
 CLIBS = -lndos -llibsocket
 
 

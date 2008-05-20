@@ -58,6 +58,10 @@ J_reset
 	ld (hl), 0x80		; MSB set = closed socket
 	ldir
 
+	; Set pollall() 'last file descriptor' to the first fd
+	ld a, v_fd1hwsock % 256
+	ld (v_lastpolled), a
+
 	; Set an initial local port number for connect()
 	call F_rand16
 	set 6, h		; make sure we start with a highish number

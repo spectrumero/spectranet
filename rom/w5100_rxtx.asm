@@ -254,8 +254,7 @@ F_pollall
 	call F_setpageA
 	ld d, v_fd1hwsock / 256
 	ld a, (v_lastpolled)	; get addr. of socket to start at
-	inc a			; and start from the next one
-	cp MAX_FD_NUMBER+1	; but wrap if this puts us off the end
+	cp MAX_FD_NUMBER+1	; wrap if this puts us off the end
 	jr nz, .setaddr
 	ld a, v_fd1hwsock % 256	; wrap
 .setaddr
@@ -287,7 +286,9 @@ F_pollall
 .ready
 	ld c, a			; copy flags into C
 	ld a, e			; ready fd in e
-	ld (v_lastpolled), a	; save last polled sockfd
+	inc a
+	ld (v_lastpolled), a	; save last polled sockfd+1
+	dec a			; restore A to proper value
 	ret
 
 ;-------------------------------------------------------------------------
