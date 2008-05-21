@@ -142,10 +142,30 @@ F_sockclose
 	; gone virtual, it must be opened.
 .realloc
 	ex de, hl		; socket register pointer back to HL
+	ld a, (v_virtualmr)	; get socket type for the socket we're doing
+	ld c, a			; socket type in C
 	call F_hwopensock	; open socket pointed to by (hl)
 	ret c			; an error has occurred if carry is set.
-	ex de, hl		; fd address now in hl
+	ex de, hl		; fd address now in hl, sock register in de
+	push hl			; save fd
+	ld hl, v_virtualport	; v_virtualport is in network byte order
+	ld e, Sn_PORT0 % 256	; de = port register
+	ldi
+	ldi
+	ex de, hl		; sock in hl, de=don't care
+	ld l, Sn_CR % 256	; get command register
+	ld (hl), S_CR_LISTEN	; listen
+	ld l, Sn_SR % 256	; get status register
+	ld a, (hl)
+	cp S_SR_SOCK_LISTEN	; should be listening
+	ex de, hl		; move sock register addr to de
+	pop hl			; retrieve fd
+	jr nz, .reallocerr
 	ld (hl), d		; store socket register ptr MSB in fd map
+	ret
+.reallocerr
+	ld a, EBUGGERED
+	scf
 	ret
 
 ;--------------------------------------------------------------------------
@@ -223,7 +243,14 @@ F_accept
 .virtualize
 	ex de, hl		; get original fd address
 	ld (hl), FD_VIRTUAL	; mark as virtual
-	pop hl
+	ld h, b			; get MSB of socket register into H for HL
+	ld l, Sn_MR % 256	; mode register
+	ld de, v_virtualmr	; point de at MR storage
+	ldi			; save MR
+	ld l, Sn_PORT0 % 256	; port number
+	ldi			; save in network byte order in v_virtualport
+	ldi			
+	pop hl			; get fd back	
 	ld a, l			; new fd number in A
 	ret
 
@@ -277,4 +304,4 @@ F_hwopensock
 	cp S_SR_SOCK_UDP	; Successfully initialized?
 	ret z
 	jr .failed
-	
+

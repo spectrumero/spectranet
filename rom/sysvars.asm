@@ -68,6 +68,8 @@ v_fd9hwsock	defb 0
 MAX_FDS		equ 5		; maximum number of file descriptors (W5100)
 MAX_FD_NUMBER	equ v_fd5hwsock % 256
 v_lastpolled	defb 0		; fd to start polling from
+v_virtualmr	defb 0		; virtualized socket mode register value
+v_virtualport	defw 0		; port for virtualized socket
 
 ; General purpose small workspace reserved for ROM routines (for short strings,
 ; numbers etc.)
