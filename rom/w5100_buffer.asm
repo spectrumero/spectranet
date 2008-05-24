@@ -65,11 +65,11 @@ F_copyrxbuf
 	; of bytes to copy.
 	ld a, b			; MSB of length of our buffer
 	cp d			; MSB of RSR
-	jp m, .findoffset	; RSR > buffer
+	jr c, .findoffset	; RSR > buffer
 	jr nz, .setlen		; RSR < buffer, set actual length to RSR
 	ld a, c			; LSB of RSR
 	cp e			; LSB of length of our buffer
-	jp m, .findoffset	; RSR > buffer len
+	jr c, .findoffset	; RSR > buffer len
 
 	; BC now should equal actual size to copy
 .setlen

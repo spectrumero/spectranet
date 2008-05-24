@@ -299,7 +299,9 @@ F_waitfordnsmsg
 	ld bc, dns_polltime
 .loop
 	ld a, (v_dnsfd)
+	push bc
 	call F_pollfd
+	pop bc
 	ret nz			; data ready
 	dec bc
 	ld a, b

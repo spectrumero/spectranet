@@ -141,6 +141,13 @@ F_sockclose
 	; To reallocate a hardware socket to a file descriptor that's
 	; gone virtual, it must be opened.
 .realloc
+;	call debugblue		; debug
+	; The hardware needs a delay before a socket is re-opened.
+	; TODO: write to Wiznet and see if there's a better way of doing this.
+	ld b, 255
+.waitloop
+	djnz .waitloop
+
 	ex de, hl		; socket register pointer back to HL
 	ld a, (v_virtualmr)	; get socket type for the socket we're doing
 	ld c, a			; socket type in C

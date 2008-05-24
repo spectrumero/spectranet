@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <strings.h>
+#include <sockpoll.h>
 #include "testsocks.h"
 
 void client_bale(int rc);
@@ -15,6 +16,9 @@ void testclient()
 	struct hostent *he;
 	char buf[128];
 	char rxbuf[2000];
+	int count;
+
+	memset(rxbuf, 0, sizeof(rxbuf));
 
 	printf("Testing client functions\n");
 
@@ -55,13 +59,28 @@ void testclient()
 	}
 
 	printf("recv...\n");
-	rc=recv(sockfd, rxbuf, sizeof(rxbuf), 0);
-	if(rc < 0)
-	{
-		client_bale(rc);
-		return;
+
+	while(1)
+	{	
+		rc=recv(sockfd, rxbuf, sizeof(rxbuf), 0);
+		if(rc < 0)
+		{
+			client_bale(rc);
+			return;
+		}
+		printf("Bytes received = %d\n", rc);
+		printf(rxbuf);
+
+		for(count=0; count < 255; count++)
+		{
+			rc=poll_fd(sockfd);
+			if(rc > 0)
+				break;
+		}
+	
+		if(count == 255)
+			break;
 	}
-	printf(rxbuf);
 
 	printf("close\n");
 	sockclose(sockfd);
