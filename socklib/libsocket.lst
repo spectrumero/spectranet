@@ -7,8 +7,10 @@ connect.asm
 connect_callee.asm
 send.asm
 send_callee.asm
+sendto_callee.asm
 recv.asm
 recv_callee.asm
+recvfrom_callee.asm
 listen.asm
 listen_callee.asm
 accept.asm
