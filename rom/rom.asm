@@ -51,6 +51,7 @@
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
+	include "debug.asm"
 	include "ui_charset.asm"	; character set
 	include "jumptable.asm"		; Jump table
 

@@ -83,12 +83,12 @@ J_reset
 	ldir
 
 
-;	call F_initroms		; Initialize any ROM modules we may have
 
 	; TODO: The proper routine to read the configuration, and set
 	; the MAC address.
 	call F_tempsetup
 	
+	call F_initroms		; Initialize any ROM modules we may have
 	ld hl, STR_unpaging	
 	call F_print
 
@@ -109,7 +109,7 @@ F_initroms
 	ld de, vectors	; pointer to the valid vector table
 	ld (v_workspace), de	; save it
 .initloop
-	ld a, 0x20	; last ROM?
+	ld a, 0x1F	; last ROM?
 	cp l
 	ret z		; finished
 	push hl

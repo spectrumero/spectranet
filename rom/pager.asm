@@ -56,6 +56,7 @@ F_setpageB
 	ld (v_pgb), a
 	ld c, PAGEB
 	out (c), a	; page it in
+	pop bc
 	ret
 
 ;--------------------------------------------------------------------------

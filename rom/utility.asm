@@ -246,21 +246,12 @@ F_crc16
 ; F_checkromsig
 ; Checks a ROM page signature for a valid vector table. Returns with the
 ; Z flag set if the signature is valid, NZ if not.
-; The signature consists of a 16 byte (8 entry) vector table followed by
-; a 16 bit CRC. The presence of a valid signature is determined by
-; running a CRC with the first 16 bytes of a ROM page and comparing it with
-; the putative CRC.
 ; Parameters: HL = page to test
 F_checkromsig
 	call F_setpageB
-	ld de, 0x2000	; start at the base of paging area B
-	ld bc, 16	; for 16 bytes
-	call F_crc16	; result in hl
-	ld a, (de)	; first byte of putative CRC
-	cp l
-	ret nz		; not a match
-	inc de
-	ld a, (de)
-	cp h		; Z flag will be set if it matches
+	ld hl, 0x2000
+	ld a, (0x2001)
+	xor (hl)
+	cp 0xFF
 	ret
 

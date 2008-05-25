@@ -183,14 +183,14 @@ F_copytxbuf
 .waitformsb
 	ld a, b			; MSB of argment
 	cp (hl)			; compare with FSR
-	jp m, .getoffset	; definitely enough free space
+	jr c, .getoffset	; definitely enough free space
 	jr nz, .waitformsb	; Buffer MSB > FSR MSB
 				; Buffer MSB = FSR MSB, check LSB value
 	inc l			; (hl) = LSB of hw register
 .waitforlsb
 	ld a, (hl)		; get LSB of FSR
 	cp c			; and compare with LSB of passed value
-	jp m, .waitforlsb	; if C > (hl) wait until it's not.
+	jr c, .waitforlsb	; if C > (hl) wait until it's not.
 
 .getoffset
 	ld (v_sockptr), hl	; save the socket register pointer

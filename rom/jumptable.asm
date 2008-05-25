@@ -83,6 +83,7 @@ JUMPTABLE_COPYFROM
 	jp F_itoa8
 	jp F_rand16
 	jp F_remoteaddress
+	jp F_regdump
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM

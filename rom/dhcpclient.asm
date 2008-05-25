@@ -40,16 +40,36 @@
 ; and any DNS servers.
 
 F_dhcp
+	ld bc, 0xFFFF		; delay for long enough for hw to init
+.delay
+	nop
+	nop
+	nop
+	dec bc
+	ld a, b
+	or c
+	jr nz, .delay
+
 	ld hl, STR_dhcpinit
 	call PRINT42
 	ld hl, STR_dhcpdiscover
 	call PRINT42
 
+	ld a, 8			; num of retries
+.retrydiscover
+	push af
+
 	call F_dhcpdiscover
 	jr c, .borked
 
 	call F_dhcprecvoffer
-	jr c, .borked
+	jr nc, .offer
+	pop af
+	dec a
+	and a			; run out of retries?
+	jr nz, .retrydiscover
+
+.offer
 	ld hl, STR_dhcpoffer
 	call PRINT42
 

@@ -76,7 +76,7 @@ void testmuxedserver()
 					muxed_bale(rc);
 					return;
 				}
-				printf("%s\n", recvbuf);
+				printf("bytes = %d data = %s\n", rc, recvbuf);
 
 				sprintf(sendbuf, "You are fd %d\n", polled);
 				rc=send(polled, sendbuf, strlen(sendbuf), 0);

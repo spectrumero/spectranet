@@ -23,6 +23,7 @@ XDEF ASMDISP_SENDTO_CALLEE
 	; to avoid this.
 	inc hl			; advance past int sin_family
 	inc hl
+	push bc
 	ld de, _sendtoremoteport
 	ldi			; sin_port
 	ldi
@@ -31,6 +32,7 @@ XDEF ASMDISP_SENDTO_CALLEE
 	ldi
 	ldi
 	ldi
+	pop bc
 	ld hl, 0
 	ld (_sendtolocport), hl
 	pop de

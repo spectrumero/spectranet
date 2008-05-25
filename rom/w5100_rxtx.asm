@@ -170,6 +170,8 @@ F_recvfrom
 	ld bc, 8		; length of the header
 	ld de, (v_bufptr)	; retrieve the header buffer pointer
 	call F_copyrxbuf	; fetch the header
+	ld l, Sn_IR % 256	; the IR needs resetting again
+	set BIT_IR_RECV, (hl)	; since the W5100 sees it still has data
 	pop de			; retrieve the data buffer address
 	pop bc			; retrieve the length argument
 	call F_copyrxbuf	; get the data

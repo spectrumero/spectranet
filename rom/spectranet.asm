@@ -54,4 +54,5 @@ IPSTRING2LONG	equ 0x3E3C	; Convert an IP to a 4 byte big endian long
 ITOA8		equ 0x3E3F	; Convert a byte to ascii
 RAND16		equ 0x3E42	; 16 bit PRNG
 REMOTEADDRESS	equ 0x3E45	; Fill struct sockaddr_in
+REGDUMP		equ 0x3E48	; debugging
 

@@ -17,23 +17,24 @@ XDEF ASMDISP_RECVFROM_CALLEE
 	ld d, (ix+9)		; msb
 	ld c, (ix+6)		; lsb of size_t len
 	ld b, (ix+7) 		; msb
+	ld l, (ix+2)		; lsb of struct sockaddr *
+	ld h, (ix+3)
+	push hl
 	ld hl, _recvfromremoteip
-	push ix
 	push hl
 	ld ix, RECVFROM
 	call IXCALL
 	pop hl
-	pop ix
 	jr c, recvfrom_err
 
 	; Copy sockinfo buffer into a struct sockaddr_in.
 	; Possible TODO: change sockaddr_in to match the layout of
 	; the sockinfo buffer.
-	ld d, (ix+3)		; struct sockaddr *from
-	ld e, (ix+2)
+	pop de			; struct sockaddr *
 	ld a, d			; test for NULL
 	or e
 	jr z, nofill
+	push bc
 	ld hl, _recvfromremoteport
 	inc de
 	inc de			; go past sin_family
@@ -44,7 +45,8 @@ XDEF ASMDISP_RECVFROM_CALLEE
 	ldi
 	ldi
 	ldi
-.nofilL
+	pop bc
+.nofill
 	ld h, b			; bytes received in BC
 	ld l, c
 	ret
