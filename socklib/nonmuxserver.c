@@ -13,8 +13,10 @@ void testnonmuxedserver()
 	int connfd, sockfd, rc, addrsz;
 	struct sockaddr_in my_addr;
 	struct sockaddr_in their_addr;
+	unsigned char *addrch;
 	char sendbuf[128];
 	char recvbuf[128];
+	memset(recvbuf,0,sizeof(recvbuf));
 
 	sockfd=socket(AF_INET, SOCK_STREAM, 0);
 	if(sockfd < 0)
@@ -45,13 +47,18 @@ void testnonmuxedserver()
 	}
 	
 	printf("Waiting for connection...\n");
-	connfd=accept(sockfd, NULL, NULL);
+	connfd=accept(sockfd, &their_addr, &addrsz);
 	if(connfd < 0)
 	{
 		nonmux_bale(connfd);
 		return;
 	}
-	printf("Got connection, fd=%d - Receiving a message\n", connfd);
+
+	addrch=(unsigned char *)&their_addr.sin_addr.s_addr;
+	printf("Got connection:\nfd  =%d\nAddr=%d.%d.%d.%d\nPort=%ld\nReceiving a message\n", 
+		connfd, 
+		addrch[0], addrch[1], addrch[2], addrch[3],
+		(unsigned long)their_addr.sin_port);
 
 	rc=recv(connfd, recvbuf, sizeof(recvbuf), 0);
 	if(rc < 0)

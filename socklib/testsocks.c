@@ -9,12 +9,7 @@ main()
 
 	while(1)
 	{
-#asm
-	ld hl, 0x3E30
-	call 0x3FFA
-#endasm
-
-		printf("Socket library test.\n");
+		printf("\x0CSocket library test.\n");
 		printf("====================\n\n");
 
 		printf("1...Client test\n");

@@ -286,6 +286,11 @@ F_hwallocsock
 ; Parameters: C = socket type (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW etc)
 ; 	      HL = pointer to socket register area
 F_hwopensock
+	ld a, SOCK_STREAM	; for SOCK_STREAM ensure delayed ACK is off
+	cp c
+	jr nz, .continue
+	set 5, c		; set 'use no delayed ACK'
+.continue
 	ld l, Sn_IR % 256	; (hl) = interrupt register
 	ld (hl), 0x1F		; clear all interrupt flags
 	ld l, Sn_MR % 256	; (hl) = socket mode register
