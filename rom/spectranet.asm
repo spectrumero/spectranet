@@ -54,5 +54,10 @@ IPSTRING2LONG	equ 0x3E3C	; Convert an IP to a 4 byte big endian long
 ITOA8		equ 0x3E3F	; Convert a byte to ascii
 RAND16		equ 0x3E42	; 16 bit PRNG
 REMOTEADDRESS	equ 0x3E45	; Fill struct sockaddr_in
-REGDUMP		equ 0x3E48	; debugging
+IFCONFIG_INET	equ 0x3E48	; Set IPv4 address
+IFCONFIG_NETMASK equ 0x3E4B	; Set netmask
+IFCONFIG_GW	equ 0x3E4E	; Set gateway
+SETHWADDR	equ 0x3E51	; Set the MAC address
+GETHWADDR	equ 0x3E54	; Read the MAC address
+DECONFIG	equ 0x3E57	; Deconfigure inet, netmask and gateway
 

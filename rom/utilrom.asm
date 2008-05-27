@@ -26,26 +26,9 @@
 ; into paging area B (0x2000-0x2FFF)
 
 	org 0x2000
+	include "spectranet.asm"
 
-; temporary
-	define SHAR0	0x1009	; Our ethernet address, first of 6
-	define SHAR1	0x100A
-	define SHAR2	0x100B
-	define SHAR3	0x100C
-	define SHAR4	0x100D
-	define SHAR5	0x100E
-	define GAR0	0x1001	; Gateway addr first octet
-	define GAR1	0x1002
-	define GAR2	0x1003
-	define GAR3	0x1004
-	define SIPR0	0x100F	; First octet of our IP address
-	define SIPR1	0x1010
-	define SIPR2	0x1011
-	define SIPR3	0x1012
-	define SUBR0	0x1005	; Subnet mask, first octet
-	define SUBR1	0x1006
-	define SUBR2	0x1007
-	define SUBR3	0x1008
+; temporary!
 	define SOCK_DGRAM 2
 
 	org 0x2000
@@ -59,11 +42,12 @@
 	defw 0xFFFF
 	defw 0xFFFF
 
-	include "rom.sym"		; main ROM symbols
 ;	include "configwrite.sym"	; symbols for flashwrite.out
 
 	include "dhcpclient.asm"	; DHCP client
 	include "dhcpdefs.asm"
+	include "sockdefs.asm"
+	include "sysvars.asm"
 ;	include "ui_config.asm"		; configuration user interface
 ;	include "ui_menu.asm"		; simple menu generator
 

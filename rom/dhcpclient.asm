@@ -146,39 +146,15 @@ F_dhcpdiscover
 	ld bc, DHCPDISCOVER_BLOCKEND-DHCPDISCOVER_BLOCK
 	ldir
 
-	; Page in the register area of the W5100
-	ld hl, W5100_REGISTER_PAGE
-	call SETPAGEA
-	ld hl, SHAR0		; point at first byte of hardware address
-	ldi			; copy the hardware address
-	ldi
-	ldi
-	ldi
-	ldi
-	ldi
+	; Copy the hardware address to the memory pointed by de
+	call GETHWADDR
 
 	; Copy the hardware address into the header, too.
-	ld hl, SHAR0
 	ld de, buf_message+dhcp_chaddr
-	ldi
-	ldi
-	ldi
-	ldi
-	ldi
-	ldi
+	call GETHWADDR
 
 	; Re-initialize other hardware registers to zero
-	ld hl, GAR0
-	ld de, GAR1
-	ld bc, 7
-	ld (hl), 0
-	ldir
-	ld hl, GAR0
-	ld de, SIPR0
-	ldi
-	ldi
-	ldi
-	ldi
+	call DECONFIG
 .send
 	; Send the assembled DHCP message.	
 	ld c, SOCK_DGRAM	; Datagram (UDP) socket
@@ -295,16 +271,8 @@ F_dhcpsendrequest
 	ld hl, buf_message+dhcp_options+6
 	ld (hl), dhcp_request
 
-	; Page in the register area of the W5100
-	ld hl, W5100_REGISTER_PAGE
-	call SETPAGEA
-	ld hl, SHAR0		; point at first byte of hardware address
-	ldi			; copy the hardware address
-	ldi
-	ldi
-	ldi
-	ldi
-	ldi
+	; Get the hardware address into the buffer at de
+	call GETHWADDR
 
 	; Add options for server address and client IP
 	ex de, hl			; move pointer back to hl
@@ -339,14 +307,8 @@ F_dhcpsendrequest
 	ldi
 
 	; Copy the hardware address into the header, too.
-	ld hl, SHAR0
 	ld de, buf_message+dhcp_chaddr
-	ldi
-	ldi
-	ldi
-	ldi
-	ldi
-	ldi
+	call GETHWADDR
 
 .send
 	; The DHCP request should come from port 68 and go to port 67	
@@ -405,17 +367,9 @@ F_dhcprecvack
 	ldi
 	ldi
 
-	; Page in the register area of the W5100 so we can set 
-	; the interface up with its proper address.
-	ld hl, W5100_REGISTER_PAGE
-	call SETPAGEA
-
+	; Set the hardware up with the IPv4 address
 	ld hl, buf_message+dhcp_yiaddr
-	ld de, SIPR0		; hardware register for IP
-	ldi
-	ldi
-	ldi
-	ldi
+	call IFCONFIG_INET
 
 	; Now get our options.
 	ld hl, v_nameserver1	; initialize nameserver copy
@@ -440,12 +394,10 @@ F_dhcprecvack
 	add hl, bc		; move hl to next option
 	jr .optloop
 .copygw
-	ld de, GAR0		; address of gateway in hw registers
-	jr .docopy
+	call IFCONFIG_GW	; set the gateway address
+	jr .optloop
 .copynetmask
-	ld de, SUBR0		; subnet mask pointer
-.docopy
-	ldir
+	call IFCONFIG_NETMASK	; set the netmask
 	jr .optloop
 .copydns
 	ld de, (v_nspointer)

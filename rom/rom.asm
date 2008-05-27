@@ -39,6 +39,7 @@
 	include "pager.asm"		; Memory paging routines
 	include "sockdefs.asm"		; Definitions for socket library
 	include "flashconf.asm"		; Configuration information
+	include "w5100_ifconfig.asm"	; Interface configuration routines
 	include "w5100_genintfunc.asm"	; general internal functions
 	include "w5100_buffer.asm"	; Transmit and receive buffers
 	include "w5100_sockalloc.asm"	; socket, accept, close
@@ -51,7 +52,6 @@
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
-	include "debug.asm"
 	include "ui_charset.asm"	; character set
 	include "jumptable.asm"		; Jump table
 

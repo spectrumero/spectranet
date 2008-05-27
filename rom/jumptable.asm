@@ -83,7 +83,12 @@ JUMPTABLE_COPYFROM
 	jp F_itoa8
 	jp F_rand16
 	jp F_remoteaddress
-	jp F_regdump
+	jp F_ifconfig_inet
+	jp F_ifconfig_netmask
+	jp F_ifconfig_gw
+	jp F_sethwaddr
+	jp F_gethwaddr
+	jp F_deconfig
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM
