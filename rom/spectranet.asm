@@ -60,4 +60,11 @@ IFCONFIG_GW	equ 0x3E4E	; Set gateway
 SETHWADDR	equ 0x3E51	; Set the MAC address
 GETHWADDR	equ 0x3E54	; Read the MAC address
 DECONFIG	equ 0x3E57	; Deconfigure inet, netmask and gateway
+MAC2STRING	equ 0x3E5A	; Convert 6 byte MAC address to a string
+STRING2MAC	equ 0x3E5D	; Convert a hex string to a 6 byte MAC address
+ITOH8		equ 0x3E60	; Convert accumulator to hex string
+HTOI8		equ 0x3E63	; Convert hex string to byte in A
+GETKEY		equ 0x3E66	; Get a key from the keyboard, and put it in A
+KEYUP		equ 0x3E69	; Wait for key release
+INPUTSTRING	equ 0x3E6C	; Read a string into buffer at DE
 

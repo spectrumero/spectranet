@@ -89,6 +89,13 @@ JUMPTABLE_COPYFROM
 	jp F_sethwaddr
 	jp F_gethwaddr
 	jp F_deconfig
+	jp F_mac2string
+	jp F_string2mac
+	jp F_itoh8
+	jp F_htoi8
+	jp F_getkey
+	jp F_keyup
+	jp F_inputstring
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM

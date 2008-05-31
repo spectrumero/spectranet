@@ -34,22 +34,57 @@ F_genmenu
 	inc hl
 	ld d, (hl)
 	inc hl
+	inc hl		; go past the call address
+	inc hl
 	ld a, d
 	or e		; check to see whether we've just got the last one
 	ret z
 	ld a, '['
-	call F_putc_5by8	; print [
+	call PUTCHAR42	; print [
 	ld a, b
-	call F_putc_5by8	; print the option
+	call PUTCHAR42	; print the option
 	ld a, ']'
-	call F_putc_5by8	; print ]
+	call PUTCHAR42	; print ]
 	ld a, ' '
-	call F_putc_5by8	; and one space separator
+	call PUTCHAR42	; and one space separator
 	ex de, hl		; get string pointer into hl
-	call F_print		; print the menu option
+	call PRINT42		; print the menu option
 	ex de, hl		; move the menu pointer back
 	ld a, '\n'		; print a CR
-	call F_putc_5by8
+	call PUTCHAR42
 	inc b			; update option character
 	jr .loop
+
+;-------------------------------------------------------------------------
+; F_getmenuopt:
+; Wait for the user to press a key, then call the appropriate routine.
+F_getmenuopt
+	push hl
+	call GETKEY		; wait for key to be pressed
+	pop hl
+	sub 'a'			; ASCII a = 0
+	jr c, F_getmenuopt	; key pressed was < 'a'
+.loop
+	push af
+	ld a, (hl)
+	inc hl
+	or (hl)			; Null terminator?
+	jr z, .outofrange
+	inc hl			; hl points at call entry
+	pop af
+	and a			; A=0?
+	jr z, .callopt
+	dec a
+	inc hl			; advance past string pointer
+	inc hl
+	jr .loop
+.outofrange
+	pop af			; fix stack
+	jr F_getmenuopt		; try again
+.callopt
+	ld e, (hl)		; get call address into DE
+	inc hl
+	ld d, (hl)
+	ex de, hl
+	jp (hl)			; jump to the routine
 

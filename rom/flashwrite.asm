@@ -21,15 +21,8 @@
 ;THE SOFTWARE.
 ;---------------------------------------------------------------------------
 ; Flash erase and write routines.
-; Note that these routines should be copied to RAM before being called.
-; They can't run from flash because they would interrupt the process
-; of writing the flash while running. (Or worse still overwrite themselves)
-;
-; These routines should be assembled independently of the ROM code, and
-; the resulting sym file and binary object included by the ROM assembly.
-;
-	org 0x3B00	; use the temporary buffer space
-fwdest
+; Note that these routines can't actually be run from flash! They should
+; be assembled to RAM instead.
 
 ;---------------------------------------------------------------------------
 ; F_FlashEraseSector
@@ -149,23 +142,23 @@ F_FlashWriteByte
 ; The carry flag is set on error.
 F_writeconfig
 	ld hl, 0x031C	; RAM page 0x1C
-	call F_setpageA	; Page into area A
+	call F_setpageA ; Page into area A
 	ld hl, 0x001C	; flash page 0x1C
-	call F_pushpageB	; page into B, saving page B settings
+	call F_setpageB
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	jr c, .bale	; on error, bale out
+	ret c
 	ld hl, 0x031D	; RAM page 0x1D
-	call F_setpageA	; Page into area A
+	call F_setpageA ; page into area A
 	ld hl, 0x001D	; flash page 0x1D
 	call F_setpageB	; Page into area B
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	jr c, .bale	; on error, bale out
+	ret c
 	ld hl, 0x031E	; RAM page 0x1E
 	call F_setpageA	; Page into area A
 	ld hl, 0x001E	; flash page 0x1E
@@ -174,7 +167,7 @@ F_writeconfig
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	jr c, .bale	; on error, bale out
+	ret c
 	ld hl, 0x031F	; RAM page 0x1F
 	call F_setpageA	; Page into area A
 	ld hl, 0x001F	; flash page 0x1F
@@ -183,26 +176,10 @@ F_writeconfig
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	jr c, .bale
 .leave
-	call F_poppageB	; restore page B
-	ret
-.bale
-	call F_poppageB	; restore page B
-	scf		; indicate error condition
 	ret
 
 	include "pager.asm"	; we need our own copy of the pager code
-
-	; This is just a safety measure to make sure we won't run off
-	; the end of the temporary buffer space and all over the jump
-	; table.
-	block 0x3DFF-$,0xFF
-
-; Define system variables that we need
-v_pga		equ 0x3F05
-v_pgb		equ 0x3F06
-v_chipsel 	equ 0x3F07
-	
-	include "sysdefs.asm"	; defines
+	include "sysdefs.asm"
+UNPAGE	equ 0x007C
 

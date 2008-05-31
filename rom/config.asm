@@ -25,7 +25,7 @@
 ; writer.
 	include "flashwrite.sym"
 fwstart
-	incbin "flaswrite.out"
+	incbin "flashwrite.out"
 fwend
 
 ;-------------------------------------------------------------------------

@@ -109,6 +109,43 @@ F_long2ipstring
 	ret
 
 ;-----------------------------------------------------------------------
+; F_mac2string
+; Converts the MAC address pointed to by hl to a string
+; Parameters: hl - address of MAC address
+;             de - pointer to string buffer
+F_mac2string
+	ex de, hl
+	ld b, 5		; MAC is 6 bytes long, handle first 5
+.loop
+	ld a, (de)
+	call F_itoh8
+	ld (hl), ':'	; replace NULL with :
+	inc hl
+	inc de
+	djnz .loop
+	ld a, (de)
+	call F_itoh8	; last byte, so we have a NULL rather than :
+	ret
+
+;-----------------------------------------------------------------------
+; F_string2mac
+; Converts an ASCII string to a 6 byte MAC address.
+; Carry flag is set if the string isn't a MAC address.
+; Parameters: hl - address of MAC string
+;             de - address of 6 byte MAC address buffer
+F_string2mac
+	ld b, 6
+.loop
+	call F_htoi8
+	ret c		; non hex digit encounter
+	ld (de), a
+	inc de
+	inc hl
+	inc hl		; go past the separator
+	djnz .loop
+	ret
+
+;-----------------------------------------------------------------------
 ; F_atoi8: Simple ascii-to-int 8 bit. hl=ptr to string. Positive values!
 ; Carry flag set on error. Returns value in c. Either a '.' or a null
 ; terminates the string. (The . being a delimiter in an IP address)
@@ -206,6 +243,74 @@ F_itoa8
 	ld (hl), c
 	inc hl
 	ret
+
+;-------------------------------------------------------------------------
+; F_itoh8
+; Converts an 8 bit number in A to a hex string.
+; Parameters: HL - buffer to fill
+; This routine is a minor modification of the one at 
+; http://map.tni.nl/sources/external/z80bits.html
+F_itoh8
+	push af
+	push bc
+	ld b, a
+	call .Num1
+	ld a, b
+	call .Num2
+	xor a
+	ld (hl), a	; add null
+	pop bc
+	pop af
+	ret
+
+.Num1	rra
+	rra
+	rra
+	rra
+.Num2	or 0xF0
+	daa
+	add a,0xA0
+	adc a,0x40
+
+	ld (hl),a
+	inc hl
+	ret
+
+;---------------------------------------------------------------------------
+; F_htoi8
+; Converts the ascii at (hl) and (hl+1) to an int, returned in A.
+; carry flag set on error
+; Modifies hl, c and a.
+F_htoi8
+	ld a, (hl)
+	sub '0'
+	cp 0x0A		; greater than digit 9?
+	jr c, .next
+	sub 'A'-'0'-10	; A-F part
+	cp 0x10		; out of range?
+	jr nc, .err
+.next
+	or a		; clear carry
+	rla		; shift into upper nibble
+	rla
+	rla
+	rla
+	ld c, a		; save.
+	inc hl
+	ld a, (hl)	; next digit
+	sub '0'
+	cp 0x0A
+	jr c, .next1
+	sub 'A'-'0'-10	; A-F
+	cp 0x10
+	jr nc, .err
+.next1
+	or c		; merge in high nibble
+	ret
+.err
+	ccf		; carry flag = error
+	ret
+	
 
 ;-------------------------------------------------------------------------
 ; F_crc16:

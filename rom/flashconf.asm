@@ -44,12 +44,12 @@ HW_ADDRESS	equ 0x0F08	; Hardware address (MAC address: 6 bytes)
 IP_ADDRESS	equ 0x0F0E	; IP address
 
 ; A bit field of initialization flags, and the definition.
-INITFLAGS	equ 0x0F0F
+INITFLAGS	equ 0x0F12
 INIT_STATICIP	equ 1		; Static IP address configured
 INIT_DISBLTRAP	equ 2		; Disable RST 8 traps on startup
 
-; Hostname - a null terminated string, maximum 15 characters.
-HOSTNAME	equ 0x0F10
+; Hostname - a null terminated string, maximum 15 characters (16 bytes).
+HOSTNAME	equ 0x0F13
 
 ; 16 bit cyclic redundancy check, in case a botched flash write (say,
 ; power loss during flashing, or an uninitialized chip) so the user
