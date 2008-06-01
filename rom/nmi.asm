@@ -20,49 +20,12 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; ZEROPAGE ENTRY POINTS
-; This file should be included first in "rom.asm"; it sets the org.
-;
-; RST 0xNN instructions - This is where all the restarts live:
-; 00	Reset
-; 08	Entry point for BASIC traps
-; 10	CALLBAS restart for BASIC extensions
-; 18
-; 20
-; 28
-; 30
-; 38	Maskable interrupt service routine
-; 
-; NMI entry point at 0x0066
-; Unpage entry point at 0x007C
+; The NMI handler.
 
-	org 0x0000
-RESET
-	di		; This should be done already for a real reset.
-	jp J_reset
-
-	block 0x08-$,0xFF
-TRAPBAS
-	jp do_rst8
-	block 0x10-$,0xFF
-CALLBAS
-	ld (v_hlsave), hl
-	ld (v_desave), de
-	pop hl
-	jp do_callbas
-
-	block 0x38-$,0xFF
-INTERRUPT
-	reti		; TODO - do something!
-
-	block 0x66-$,0xFF
-NMI
-	call F_nmimenu
-	retn
-
-	block 0x7C-$,0xFF
-	; When unpaging, put the address where you want to end up on
-	; the stack, and the RET instruction will set the PC to this address.
-UNPAGE
+;---------------------------------------------------------------------------
+; F_nmimenu
+; Called when an NMI is intercepted. Displays a menu of options.
+; The menu is defined in the sysvars area.
+F_nmimenu
 	ret
 

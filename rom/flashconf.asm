@@ -51,6 +51,10 @@ INIT_DISBLTRAP	equ 2		; Disable RST 8 traps on startup
 ; Hostname - a null terminated string, maximum 15 characters (16 bytes).
 HOSTNAME	equ 0x0F13
 
+; DNS servers, primary and secondary.
+PRI_DNS		equ 0x0F24	; IP address of primary DNS server
+SEC_DNS		equ 0x0F28	; IP address of secondary DNS server
+
 ; 16 bit cyclic redundancy check, in case a botched flash write (say,
 ; power loss during flashing, or an uninitialized chip) so the user
 ; can get notification if all is not well.

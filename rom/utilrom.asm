@@ -34,7 +34,7 @@
 	org 0x2000
 	defb 0xAA
 	defb 0x55
-	defw F_dhcp			; RESET vector
+	defw F_inetinit			; RESET vector
 	defw 0xFFFF
 	defw 0xFFFF
 	defw 0xFFFF
@@ -42,12 +42,12 @@
 	defw 0xFFFF
 	defw 0xFFFF
 
-;	include "configwrite.sym"	; symbols for flashwrite.out
-
+	include "inetinit.asm"		; Initializes inet settings
 	include "dhcpclient.asm"	; DHCP client
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"
-	include "sysvars.asm"
+	include "sysvars.sym"
+	include "flashconf.asm"		; defines for configuration memory
 ;	include "ui_config.asm"		; configuration user interface
 ;	include "ui_menu.asm"		; simple menu generator
 

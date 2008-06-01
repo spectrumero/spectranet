@@ -82,11 +82,9 @@ J_reset
 	ld bc, UPPER_ENTRYPT_SIZE
 	ldir
 
-
-
-	; TODO: The proper routine to read the configuration, and set
-	; the MAC address.
-	call F_tempsetup
+	; Initialize the W5100 - set the MAC address and initialize
+	; hardware registers.
+	call F_w5100init
 	
 	call F_initroms		; Initialize any ROM modules we may have
 	ld hl, STR_unpaging	
@@ -138,48 +136,32 @@ F_initroms
 	pop hl
 	jr .initloop
 
-; This is a temporary W5100 setup routine, to do the bare minimum basic
-; setup.
-F_tempsetup
-	; Page in the W5100
-	; Chip selects put RAM in area B, W5100 in area A
+;-------------------------------------------------------------------------
+; F_w5100init
+; Initialize the W5100 - MAC address and hardware registers.
+F_w5100init
+	; Set up memory pages to configure the hardware
 	ld hl, 0x0100		; registers are in page 0 of the W5100
 	call F_setpageA		; page it into area A
+	ld hl, 0x001F		; configuration page (flash)
+	call F_setpageB		; paged into area B
 
-	; Perform a software reset by setting the reset flag in the MR.
-	ld a, MR_RST
+	ld a, MR_RST		; Perform a software reset on the W5100
+	ld (MR), a
+	xor a			; memory mapped mode, all options off
 	ld (MR), a
 
-	; Set memory mapped mode, all options off.
-	xor a
-	ld (MR), a
-
-	; set the MAC address
-	ld hl, CFG_HWADDR
-	ld de, SHAR0		
-	ld bc, 6
+	ld hl, 0x2000+HW_ADDRESS
+	ld de, SHAR0		; hardware address register
+	ld bc, 6		; which is 6 bytes long.
 	ldir
 
-	; set up the socket buffers: 2k per socket buffer.
-	ld a, 0x55
+	ld a, 0x55		; initialize W5100 buffers - 2K each
 	ld (TMSR), a
 	ld (RMSR), a
-	
-	; set the IMR
-	ld a, %11101111
+	ld a, %11101111		; set the IMR
 	ld (IMR), a
-
-	; set a dns server
-	ld hl, CFG_DNS
-	ld de, v_nameserver1
-	ldi
-	ldi
-	ldi
-	ldi
-
 	ret
-CFG_HWADDR 	defb 0xAA,0x17,0x0E,0x00,0x3B,0xA6
-CFG_DNS		defb 83,218,26,5
 
 STR_bootmsg
 	defb "Alioth Spectranet (beta)\n",0

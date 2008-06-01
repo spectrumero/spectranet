@@ -49,33 +49,47 @@ F_showcurrent
 	ld hl, STR_yes
 	call PRINT42
 .continue
-	; print the IP address label, the address, and a carriage return.
-	ld hl, STR_currip
-	call PRINT42	
-	ld hl, 0x1000 + IP_ADDRESS	
-	call F_getipconfig
-	call PRINT42	
+
+	; Print IPv4 settings.
+	ld hl, TABLE_config
+.showconfig
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	inc hl
+	ld a, d			; End of table encountered?
+	or e
+	jr z, .printhwaddr	; yes; null terminator.
+	push hl			; save current pointer
+	ex de, hl
+	call PRINT42		; print the string that was pointed to.
+	pop hl
+	ld a, (0x1000 + INITFLAGS) ; should we print an address?
+	bit INIT_STATICIP, a	; non zero = static IP configuration
+	jr z, .bydhcp
+	ld e, (hl)		; get low order of configuration address
+	inc hl
+	ld d, (hl)		; high order of configuration address
+	inc hl
+	push hl			; save current pointer
+	ex de, hl		; address to translate in hl
+	ld de, buf_workspace
+	call LONG2IPSTRING	; convert it to a string
+	ld hl, buf_workspace	; and print it.
+.printresult
+	call PRINT42
 	ld a, '\n'
 	call PUTCHAR42
+	pop hl
+	jr .showconfig		; continue with next entry
+.bydhcp
+	inc hl			; point hl at next entry
+	inc hl
+	push hl			; save it
+	ld hl, STR_bydhcp
+	jr .printresult
 
-	; print the current netmask
-	ld hl, STR_currmask
-	call PRINT42
-	ld hl, 0x1000 + IP_SUBNET
-	call F_getipconfig
-	call PRINT42
-	ld a, '\n'
-	call PUTCHAR42
-
-	; print the current gateway
-	ld hl, STR_currgw
-	call PRINT42
-	ld hl, 0x1000 + IP_GATEWAY
-	call F_getipconfig
-	call PRINT42
-	ld a, '\n'
-	call PUTCHAR42
-
+.printhwaddr
 	; print the current hardware (MAC) address
 	ld hl, STR_currhwaddr
 	call PRINT42
@@ -99,19 +113,6 @@ F_showcurrent
 	call PRINT42
 	ld a, '\n'
 	call PUTCHAR42
-
-	ret
-
-F_getipconfig
-	ld a, (0x1000 + INITFLAGS)
-	bit INIT_STATICIP, a
-	jr z, .dhcp
-	ld de, buf_workspace
-	call LONG2IPSTRING
-	ld hl, buf_workspace
-	ret
-.dhcp
-	ld hl, STR_bydhcp
 	ret
 
 ;-----------------------------------------------------------------------
@@ -181,6 +182,28 @@ F_setgateway
 	call F_getipstr
 	jr c, .askloop
 	ld de, 0x1000 + IP_GATEWAY
+	jr copyquad
+
+F_setpridns
+	ld hl, STR_abort
+	call PRINT42
+.askloop
+	ld hl, STR_askpridns
+	call PRINT42
+	call F_getipstr
+	jr c, .askloop
+	ld de, 0x1000 + PRI_DNS
+	jr copyquad
+
+F_setsecdns
+	ld hl, STR_abort
+	call PRINT42
+.askloop
+	ld hl, STR_asksecdns
+	call PRINT42
+	call F_getipstr
+	jr c, .askloop
+	ld de, 0x1000 + SEC_DNS
 	jr copyquad
 
 ;-------------------------------------------------------------------------
@@ -291,17 +314,29 @@ MENU_config
 		defw	STR_ipaddr, F_setipaddr
 		defw	STR_netmask, F_setnetmask
 		defw	STR_gateway, F_setgateway
+		defw	STR_pridns, F_setpridns
+		defw	STR_secdns, F_setsecdns
 		defw	STR_hwaddr, F_sethwaddr
 		defw	STR_hostname, F_sethostname
 		defw	STR_save, F_saveconfig
 		defw	STR_cancel, F_cancelconfig
 		defw	0,0
+TABLE_config	
+		defw	STR_currip, 0x1000+IP_ADDRESS
+		defw	STR_currmask, 0x1000+IP_SUBNET
+		defw	STR_currgw, 0x1000+IP_GATEWAY
+		defw	STR_currpridns, 0x1000+PRI_DNS
+		defw	STR_currsecdns, 0x1000+SEC_DNS
+		defw	0
+
 STR_choose	defb "\n\nChoose a configuration option:\n",0
 STR_dhcp	defb "Enable/disable DHCP",0
 STR_ipaddr	defb "Change IP address",0
 STR_netmask	defb "Change netmask", 0
 STR_gateway	defb "Change default gateway", 0
 STR_hostname	defb "Change hostname", 0
+STR_pridns	defb "Change primary DNS",0
+STR_secdns	defb "Change secondary DNS",0
 STR_hwaddr	defb "Change hardware address", 0
 STR_save	defb "Save changes and exit",0
 STR_cancel	defb "Cancel changes and exit",0
@@ -313,6 +348,8 @@ STR_currmask	defb "Netmask          : ",0
 STR_currgw	defb "Default gateway  : ",0
 STR_currhwaddr	defb "Hardware address : ",0
 STR_currhost	defb "Hostname         : ",0
+STR_currpridns	defb "Primary DNS      : ",0
+STR_currsecdns	defb "Secondary DNS    : ",0
 STR_no		defb "No\n",0
 STR_yes		defb "Yes\n",0
 STR_bydhcp	defb "Set by DHCP",0
@@ -326,6 +363,8 @@ STR_asknetmask	defb "\nNetmask: ",0
 STR_askgw	defb "\nGateway: ",0
 STR_askhw	defb "\nHardware address: ",0
 STR_askhostname	defb "\nHostname: ",0
+STR_askpridns	defb "\nPrimary DNS: ",0
+STR_asksecdns	defb "\nSecondary DNS: ",0
 
 STR_saving	defb "\nSaving configuration...",0
 STR_done	defb "Done\n",0

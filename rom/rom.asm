@@ -52,6 +52,7 @@
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
+	include "nmi.asm"		; NMI routines
 	include "ui_charset.asm"	; character set
 	include "jumptable.asm"		; Jump table
 
@@ -61,7 +62,7 @@
 	include "ui_lookup.asm"		; lookup table for 42 col output
 
 	; Memory map for upper fixed page (chip 3 page 0)
-	include "sysvars.asm"		; System variables (sets org)
+	include "sysvars.sym"		; System variables (from earlier asm)
 	include "sysdefs.asm"		; General definitions
 
 	; Various definitions.

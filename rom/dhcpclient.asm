@@ -91,6 +91,8 @@ F_dhcp
 	call LONG2IPSTRING
 	ld hl, buf_workspace
 	call PRINT42
+	ld a, '\n'
+	call PUTCHAR42
 	ret
 
 .borked
