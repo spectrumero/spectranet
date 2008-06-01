@@ -8,6 +8,10 @@ echo "Assembling ROM"
 sjasmplus rom.asm --sym=rom.sym --lst=rom.lst
 echo
 
+echo "Assembling configuration utility"
+sjasmplus configutil.asm --sym=configutil.sym --lst=configutil.lst
+echo
+
 echo "Assembling utility ROM"
 sjasmplus utilrom.asm --sym=utilrom.sym --lst=utilrom.lst
 echo

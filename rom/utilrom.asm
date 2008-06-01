@@ -35,19 +35,23 @@
 	defb 0xAA
 	defb 0x55
 	defw F_inetinit			; RESET vector
-	defw 0xFFFF
-	defw 0xFFFF
-	defw 0xFFFF
+	defw 0xFFFF			; RST8 vector
+	defw 0xFFFF			; INT vector
+	defw F_nmihandler		; NMI vector
 	defw 0xFFFF
 	defw 0xFFFF
 	defw 0xFFFF
 
 	include "inetinit.asm"		; Initializes inet settings
 	include "dhcpclient.asm"	; DHCP client
+	include "utilnmi.asm"		; NMI handler
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"
 	include "sysvars.sym"
 	include "flashconf.asm"		; defines for configuration memory
+CONFIGUTIL_START
+	incbin "configutil.out"		; Configuration utility image
+CONFIGUTIL_END
 ;	include "ui_config.asm"		; configuration user interface
 ;	include "ui_menu.asm"		; simple menu generator
 

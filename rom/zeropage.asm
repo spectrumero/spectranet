@@ -57,12 +57,35 @@ INTERRUPT
 
 	block 0x66-$,0xFF
 NMI
-	call F_nmimenu
-	retn
+	; stack everything that will be changed.
+	; TODO: Create more flexible NMI handler that checks through all
+	; ROM vectors.
+	push hl
+	push de
+	push bc
+	push af
+	ld hl, 0x02		; Utility ROM
+	call F_setpageB
+	jr NMI2
 
 	block 0x7C-$,0xFF
 	; When unpaging, put the address where you want to end up on
 	; the stack, and the RET instruction will set the PC to this address.
 UNPAGE
 	ret
+NMI2
+	ld hl, (NMI_VECTOR)	; Test NMI_VECTOR
+	ld a, 0xFF
+	cp h			; FF = unset
+	jr z, .nmidone
+	ld de, .nmidone		; get return address
+	push de			; save it, so subsequent RET comes back
+	jp (hl)			; jump to the NMI vector
+.nmidone
+	pop af
+	pop bc
+	pop de
+	ld hl, UNPAGE		; munge the stack so that RETN goes via unpage
+	ex (sp), hl
+	retn
 
