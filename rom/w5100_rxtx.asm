@@ -32,11 +32,6 @@
 ; On return,  BC = number of bytes sent
 ; Carry flag is set on error and A contains error code.
 F_send
-	push af
-	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
-	pop af
-
 	call F_gethwsock	; H is socket reg. MSB address
 	ret c			; error finding socket if carry set
 	ld a, b			; MSB of send buffer size
@@ -58,11 +53,6 @@ F_send
 ;              DE = address of memory to fill with data
 ;              BC = number of bytes to get
 F_recv
-	push af
-	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
-	pop af
-
 	call F_gethwsock	; H is socket reg MSB
 	ret c			; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register
@@ -92,11 +82,6 @@ F_recv
 ;             BC = size of buffer to send
 F_sendto	
 	ld (v_bufptr), hl	; save socket info buffer pointer
-	push af
-	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
-	pop af
-
 	call F_gethwsock	; H is socket reg. MSB address
 	ret c			; error finding socket if carry set
 	push de			; save data buffer
@@ -128,11 +113,6 @@ F_sendto
 ; On successful return, BC contains the number of bytes transferred.
 F_recvfrom
 	ld (v_bufptr), hl	; save the connection buffer ptr
-	push af
-	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
-	pop af
-
 	call F_gethwsock	; H is socket reg MSB
 	ret c			; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register

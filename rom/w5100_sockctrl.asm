@@ -94,11 +94,6 @@ F_listen
 ; On error, the carry flag is set and A contains the error number.
 ; On success, returns zero in A
 F_connect
-	push af
-	ld hl, W5100_REGISTER_PAGE
-	call F_setpageA
-	pop af
-
 	call F_gethwsock	; H = socket register bank MSB
 	ld l, Sn_DPORT0 % 256	; destination port register
 	ld (hl), b		; high order of port
