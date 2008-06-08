@@ -28,13 +28,13 @@
 #include <string.h>
 #include "irc.h"
 
-void setStatusLine(char *nick, char *chan)
+void setStatusLine(char *nickname, char *channel)
 {
 	char tmpnick[15];
 	char tmpchan[32];
 
-	strncpy(tmpnick, nick, 14);
-	strncpy(tmpchan, chan, 31);
+	strncpy(tmpnick, nickname, 14);
+	strncpy(tmpchan, channel, 31);
 
 	/* set cursor position to print the status line */
 	/* paper blue, ink white, bright 1 */

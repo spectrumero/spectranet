@@ -25,8 +25,10 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <input.h>
+#include <im2.h>
 #include "irc.h"
 
 char inputbuf[256];	/* static buffer to store user input */
@@ -34,14 +36,17 @@ int inputidx;		/* static input index */
 int charpos;		/* current character position */
 
 /* keyboard variable declarations for in_GetKey() */
-uchar in_KeyDebounce=30;
-uchar in_KeyStartRepeat=50;
-uchar in_KeyRepeatPeriod=50;
+uchar in_KeyDebounce=2;
+uchar in_KeyStartRepeat=20;
+uchar in_KeyRepeatPeriod=5;
 uint in_KbdState;
+uchar lastk=0;
+uchar input_ready=0;
 
 /* resetinput - resets the input routines */
 void resetinput()
 {
+	input_ready=0;
 	clearInputArea();
 
 	/* initial cursor */
@@ -88,6 +93,10 @@ void handleKey(uchar key)
 				charpos=63;
 			}
 			break;
+		case '\n':	/* enter */
+			if(inputidx > 0)
+				input_ready=1;
+			break;
 		default:	/* normal key */
 			if(inputidx >= sizeof(inputbuf))
 				break;	/* no more room in buffer */
@@ -109,15 +118,20 @@ void handleKey(uchar key)
 	}
 }
 
-void checkKey()
+char *checkKey()
 {
-	uchar k;
-	while(1)
+	int k;
+	if(lastk)
 	{
-		k=in_GetKey();
+		k=lastk;
+		lastk=0;	/* handled */
 		if(k) handleKey(k);
-		if(k == 'x') return;
+		if(k == '\n' && input_ready)
+		{
+			return inputbuf;
+		}
 	}
+	return NULL;
 }
 
 /* Clears line 24 of the screen, which is our input area. */
@@ -142,5 +156,41 @@ void clearInputArea()
 	djnz loop
 #endasm
 	charpos=0;
+}
+
+M_BEGIN_ISR(isr)
+{
+	lastk=in_GetKey();
+}
+M_END_ISR
+
+
+/* Initialization routine that should be called when the client starts */
+void inputinit()
+{
+	/* IM2 keyboard polling routine setup - this from the
+ 	   example in the z88dk wiki documentation */
+	#asm
+	di
+	#endasm
+
+	im2_Init(0xd300);
+	memset(0xd300, 0xd4, 257);
+	bpoke(0xd4d4, 195);
+	wpoke(0xd4d5, isr);
+
+	#asm
+	ei
+	#endasm
+}
+
+/* De-initialize IM2 etc. to return to BASIC. */
+void inputexit()
+{
+	#asm
+	di
+	im 1
+	ei
+	#endasm
 }
 

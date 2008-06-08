@@ -68,8 +68,85 @@ void mainclear()
 #endasm
 }
 
+/* This function should be allowed to do all the printing, so scrolling
+ * can happen at the right place. TODO: word wrap, slow scroll */
 void mainprint(char *str)
 {
-	
+	char *ptr=str;
+
+	/* find new ypos after the string has printed */
+	ypos+=(strlen(str)/64)+1;
+	if(ypos > 21)
+	{
+		quickscroll();
+	}
+	putchar(0x16);
+	putchar(32+ypos);
+	putchar(0x20);
+	while(*ptr)
+	{
+		/* make sure that we don't display weird characters
+		   that the irc server is wont to send - 0x70 = printable
+                   character mask */
+		if(*ptr & 0x70)
+		{
+			putchar(*ptr);
+		}
+		ptr++;
+	}	
 }
 
+void quickscroll()
+{
+#asm
+	ld hl, 0x4800		; scroll first 2/3rds
+	ld de, 0x4000
+	ld bc, 0x0800
+	ldir
+
+	; scroll last 6 lines up to previous 3rd
+	ld hl, 0x5000	; top of last third
+	ld de, 0x4800
+	ld b, 8
+.scrollloop
+	push bc
+	push hl	
+	push de
+	ld bc, 192	; 6 lines worth
+	ldir
+	pop de
+	pop hl
+	pop bc
+	inc h
+	inc d
+	djnz scrollloop
+	ld hl, 0x5000	; clear the bottom 3rd
+	ld de, 0x5001
+	ld c, 191
+	call lineclear
+	ld hl, 0x48C0	; last two lines of 2nd 3rd
+	ld de, 0x48C1
+	ld c, 63
+	call lineclear
+	jr cleardone
+.lineclear
+	ld b, 8
+.clearloop
+	push bc
+	push hl	
+	push de
+	ld b, 0		; num of bytes to clear in C
+	ld (hl), 0
+	ldir
+	pop de
+	pop hl
+	pop bc
+	inc h
+	inc d
+	djnz clearloop
+	ret
+.cleardone
+#endasm
+
+	ypos=14;	/* new line to print from */
+}
