@@ -32,76 +32,55 @@
 
 void parseIrcMessage(char *msg)
 {
-	char *ptr=msg;
-	while(*ptr != ' ')
-	{
-		if(!*ptr)
-			return;	/* never had enough tokens */
-		ptr++;
-	}
-	ptr++;
+	struct ircmsg im;
 
-	/* Find out what kind of message */
-	if(*ptr >= '0' && *ptr <= '9')
+	/* parse msgs in format :something cmd params :message */
+	if(*msg == ':')
 	{
-		parseNumResponse(ptr);
+		im.prefix=strtok(msg+1, " ");
+		im.command=strtok(NULL, " ");
+		im.params=strtok(NULL, " ");
+		im.msg=strtok(NULL, "\x0d");
+
+		if(*(im.command) >= '0' && *(im.command) <= '9')
+		{
+			parseNumResponse(&im);
+			return;
+		}
+		parseOtherResponse(&im);
 	}
 	else
 	{
-		parseOtherResponse(ptr);
+		mainprint(msg);
 	}
 }
 
 /* Parse a numeric message, i.e. one that has a 3-digit response code */
-void parseNumResponse(char *msg)
+void parseNumResponse(struct ircmsg *im)
 {
-	unsigned int msgcode;
-	char *code;
-	char *svrnick;
-	char *rest=msgcode;
-	
-	/* find last : before strtok sticks nulls everywhere */
-	rest++;
-	while(*rest != ':' && *rest)
-	{
-		rest++;
-	}
-	rest++;
-	code=strtok(msg, " ");
-	svrnick=strtok(NULL, " ");
-	
-	/* Is there at least a code? */
-	if(!code)
-		return;
-
-	msgcode=atoi(code);
-
 	/* If our nick isn't registered we tend to first find out
 	   from a random server message */
 	if(!nick[0])
 	{
-		strcpy(nick, svrnick);
+		strcpy(nick, im->params);
 		setStatusLine(nick, chan);
 	}
-	mainprint(rest);
+	if(im->msg && strlen(im->msg) > 2)
+	{
+		mainprint((im->msg+1));
+	}
 }
 
 /* Parse other messages, such as NOTICE etc. */
-void parseOtherResponse(char *msg)
+void parseOtherResponse(struct ircmsg *im)
 {
-	char *ptr=msg;
-	while(*ptr != ' ')
-	{
-		if(!*ptr)
-			return;		/* oops, nothing to do */
-		ptr++;
-	}
-	*ptr=0;
-	ptr++;	/* points to the start of the message body */
 
 	/* This is a very simple and inefficient parser, but this client
 	   as yet doesn't understand much more. A table-based one may 
 	   be better if this client is expanded */
-	mainprint(ptr);
+	if(im->msg && strlen(im->msg) > 2)
+	{
+		mainprint((im->msg)+1);
+	}
 }
 

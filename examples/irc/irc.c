@@ -35,14 +35,13 @@ char nick[24];		/* user's nickname */
 char server[32];	/* server to use */
 char chan[32];		/* channel joined */
 char tempbuf[128];	/* some storage */
-char workspace[1024];	/* irc workspace buffer */
 int ircfd=0;		/* socket file descriptor */
 
 void setupConnection();	/* get init. connection parameters */
 char *kbinput();	/* get keyboard input only */
 void connToServer();	/* Connect to the selected server */
 void inputLoop();	/* The main connected input loop */
-void extractIrcMessages(char *buf);
+void extractIrcMessages(char *buf, unsigned int size);
 	
 main()
 {
@@ -189,8 +188,8 @@ void connToServer()
  * and dispatches the result to its appropriate function */
 void inputLoop()
 {
+	char netinput[NETBUFSZ]; /* network input buffer */
 	int rc;
-	char netinput[1024];	/* network input buffer */
 	char *kb;		/* pointer to keyboard buffer */
 	resetinput();
 
@@ -202,15 +201,15 @@ void inputLoop()
 			rc=poll_fd(ircfd);
 			if(rc & POLLIN)
 			{
-				memset(netinput, 0, sizeof(netinput));
-				rc=recv(ircfd, netinput, sizeof(netinput)-1,
+				memset(netinput, 0, NETBUFSZ);
+				rc=recv(ircfd, netinput, NETBUFSZ-1,
 					0);
 				if(rc < 0)
 				{
 					mainprint("--- ERROR: recv failed!");
 					return;
 				}
-				extractIrcMessages(netinput);
+				extractIrcMessages(netinput, rc);
 			}
 		}
 
@@ -219,6 +218,11 @@ void inputLoop()
 		if(kb)
 		{
 			/*parseUserInput(kb);*/
+			if(!strcmp(kb, "exit"))
+			{
+				sockclose(ircfd);
+				return;
+			}
 			resetinput();
 		}
 	}
@@ -226,59 +230,25 @@ void inputLoop()
 
 /* Extracts IRC messages (since there may be several in a receive buffer) and assembles
  * fragmented messages, then sends them to the parser */
-void extractIrcMessages(char *buf)
+void extractIrcMessages(char *buf, unsigned int rxsz)
 {
-	char *bufptr=buf, *currmsg=buf;
+	char *msg, *ptr;
+	unsigned int count=0;
 
-	/* deal with any half-received messages first */
-	if(workspace[0])
+	msg=buf;
+	ptr=buf;
+
+	/* tokenize the incoming message by the terminating \n */
+	while(*ptr && count < rxsz)
 	{
-		while(*bufptr != '\r')
+		if(*ptr == 0x0A)
 		{
-			if(!*bufptr)
-			{
-				/* another incomplete message! */
-				if(strlen(workspace) + strlen(currmsg) > sizeof(workspace)-2)
-				{
-					mainprint("--- ERROR! Oversize message!");
-
-					/* just drop it */
-					workspace[0]=0;
-					return;
-				}
-				strcpy(workspace, currmsg);
-				return;
-			}
-			bufptr++;
+			*ptr=0;
+			parseIrcMessage(msg);
+			msg=ptr+1;
 		}
-		*bufptr++=0;
-		*bufptr++=0;
-		currmsg=bufptr;
-		parseIrcMessage(workspace);
+		*ptr++;
+		count++;
 	}
-
-	do
-	{
-		/* all messages are terminated by \r\n */
-		while(*bufptr != '\r')
-		{
-			if(!*bufptr)
-			{
-				/* an incomplete message - save it for later and 
-				   stop */
-				strcpy(workspace, currmsg);
-				return;
-			}
-			bufptr++;
-		}
-
-		/* insert a NULL */
-		*bufptr++=0;			/* remove \r */
-		*bufptr++=0;			/* and the \n */
-		parseIrcMessage(currmsg);	/* parse it */
-		currmsg=bufptr;
-	} while(*bufptr);
-	
-	workspace[0]=0;		/* ensure workspace is reset */
 }
 

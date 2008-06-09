@@ -30,8 +30,10 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <spectrum.h>
 #include "irc.h"
 
+uchar xpos;
 uchar ypos;
 
 /* mainclear clears the main window and resets the cursor position to the
@@ -39,6 +41,7 @@ uchar ypos;
 void mainclear()
 {
 	ypos=0;
+	xpos=0;
 
 	/* clear the first 4k with a simple ldir, then clear the last
 	   all-but-two lines */
@@ -73,27 +76,42 @@ void mainclear()
 void mainprint(char *str)
 {
 	char *ptr=str;
+	removeUnprintables(str);
 
-	/* find new ypos after the string has printed */
-	ypos+=(strlen(str)/64)+1;
-	if(ypos > 21)
-	{
-		quickscroll();
-	}
-	putchar(0x16);
-	putchar(32+ypos);
-	putchar(0x20);
+	if(ypos > 21) quickscroll();
+	xpos=0;
 	while(*ptr)
 	{
-		/* make sure that we don't display weird characters
-		   that the irc server is wont to send - 0x70 = printable
-                   character mask */
-		if(*ptr & 0x70)
+		/* a sledgehammer to crack a nut, but it seems to be the
+		   only way of keeping errant CRs out of the picture */
+		fputc_cons(0x16);
+		fputc_cons(32+ypos);
+		fputc_cons(0x20+xpos);
+		fputc_cons(*ptr);
+		ptr++;
+		xpos++;
+		if(xpos > 63)
 		{
-			putchar(*ptr);
+			xpos=0;
+			ypos++;
+			if(ypos > 21) quickscroll();
+		}
+	}
+	ypos++;	/* newline */
+}
+
+void removeUnprintables(char *str)
+{
+	char *ptr=str;
+
+	while(*ptr)
+	{
+		if(*ptr < 32 || *ptr > 127)
+		{
+			*ptr='?';
 		}
 		ptr++;
-	}	
+	}
 }
 
 void quickscroll()
