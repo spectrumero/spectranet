@@ -78,8 +78,6 @@ void mainprint(char *str)
 	char *ptr=str;
 	removeUnprintables(str);
 
-	if(ypos > 21) quickscroll();
-	xpos=0;
 	while(*ptr)
 	{
 		/* a sledgehammer to crack a nut, but it seems to be the
@@ -98,6 +96,27 @@ void mainprint(char *str)
 		}
 	}
 	ypos++;	/* newline */
+	xpos=0;
+	if(ypos > 21) quickscroll();
+}
+
+/* print a nickname with prettification */
+void nickprint(char *nick, int mine)
+{
+	fputc_cons(0x16);
+	fputc_cons(32+ypos);
+	fputc_cons(0x20+xpos);
+
+	if(mine)
+	{
+		printk("\x10\x32<%s>\x10\x30 ", nick);
+	}
+	else
+	{
+		printk("\x10\x31<%s>\x10\x30 ", nick);
+	}
+
+	xpos+=strlen(nick)+3;
 }
 
 void removeUnprintables(char *str)

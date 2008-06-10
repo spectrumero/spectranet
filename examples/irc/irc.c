@@ -217,9 +217,9 @@ void inputLoop()
 		kb=checkKey();
 		if(kb)
 		{
-			/*parseUserInput(kb);*/
-			if(!strcmp(kb, "exit"))
+			if(!parseUserCmd(kb))
 			{
+				/* user is done if this returns 0 */
 				sockclose(ircfd);
 				return;
 			}
@@ -249,6 +249,20 @@ void extractIrcMessages(char *buf, unsigned int rxsz)
 		}
 		*ptr++;
 		count++;
+	}
+}
+
+/* sendIrcMsg properly formats (well, puts 0x0D,0x0A on the end of) 
+ * a message, and sends it. The caller must pass a buffer big enough
+ * to do this. */
+void sendIrcMsg(char *msg)
+{
+	int rc;
+	strcat(msg, "\x0D\x0A");
+	rc=send(ircfd, msg, strlen(msg), 0);
+	if(rc < 0)
+	{
+		mainprint("*** ERROR: send() failed!");
 	}
 }
 

@@ -33,14 +33,19 @@
 void parseIrcMessage(char *msg)
 {
 	struct ircmsg im;
+	struct irccmd ic;
 
 	/* parse msgs in format :something cmd params :message */
 	if(*msg == ':')
 	{
 		im.prefix=strtok(msg+1, " ");
 		im.command=strtok(NULL, " ");
-		im.params=strtok(NULL, " ");
+		im.param=strtok(NULL, " ");
 		im.msg=strtok(NULL, "\x0d");
+
+		/* if param is the last member, an 0x0D tends to be left
+		   on the end */
+		chomp(im.param);
 
 		if(*(im.command) >= '0' && *(im.command) <= '9')
 		{
@@ -51,7 +56,9 @@ void parseIrcMessage(char *msg)
 	}
 	else
 	{
-		mainprint(msg);
+		ic.command=strtok(msg, " ");
+		ic.param=strtok(NULL, "\x0d");
+		parseServerCmd(&ic);
 	}
 }
 
@@ -62,7 +69,7 @@ void parseNumResponse(struct ircmsg *im)
 	   from a random server message */
 	if(!nick[0])
 	{
-		strcpy(nick, im->params);
+		strcpy(nick, im->param);
 		setStatusLine(nick, chan);
 	}
 	if(im->msg && strlen(im->msg) > 2)
@@ -74,13 +81,66 @@ void parseNumResponse(struct ircmsg *im)
 /* Parse other messages, such as NOTICE etc. */
 void parseOtherResponse(struct ircmsg *im)
 {
+	char *str;
+
+	if(!im->param) return;	/* nothing to do! */
 
 	/* This is a very simple and inefficient parser, but this client
 	   as yet doesn't understand much more. A table-based one may 
 	   be better if this client is expanded */
+	if(!strcmp(im->command, "PRIVMSG"))
+	{
+		/* extract the sender's nick */
+		str=strtok(im->prefix, "!");
+		nickprint(str, 0);
+		mainprint(im->msg+1);
+		return;
+	}
+		
+	if(!strcmp(im->command, "JOIN"))
+	{
+		strcpy(chan, (im->param)+1);
+		setStatusLine(nick, chan);
+		return;
+	}
+
+	/* display anything not handled */
 	if(im->msg && strlen(im->msg) > 2)
 	{
 		mainprint((im->msg)+1);
 	}
 }
 
+/* Parse commands the server sends to us */
+void parseServerCmd(struct irccmd *ic)
+{
+	char replybuf[64];
+	if(!ic->command)
+		return;		/* nothing to do */
+
+	/* Another quick and dirty parser */
+	if(!strcmp(ic->command, "PING"))
+	{
+		sprintf(replybuf, "PONG %s", nick);
+		sendIrcMsg(replybuf);
+		return;
+	}
+
+	/* if we don't know how to handle it, just print it */
+	mainprint(ic->command);
+	if(ic->param) mainprint(ic->param);
+}
+
+/* chomp: do pretty much what the perl chomp function does */
+void chomp(char *str)
+{
+	if(str)
+	{
+		while(*str)
+		{	
+			if(*str == 0x0D) *str=0;
+			str++;
+		}
+	}
+}
+	
