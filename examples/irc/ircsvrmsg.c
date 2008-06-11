@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include "irc.h"
 
+char svrwkspc[64];	/* general purpose workspace for server msgs */
+
 void parseIrcMessage(char *msg)
 {
 	struct ircmsg im;
@@ -90,10 +92,19 @@ void parseOtherResponse(struct ircmsg *im)
 	   be better if this client is expanded */
 	if(!strcmp(im->command, "PRIVMSG"))
 	{
-		/* extract the sender's nick */
-		str=strtok(im->prefix, "!");
-		nickprint(str, 0);
-		mainprint(im->msg+1);
+		/* CTCP? */
+		if(*(im->msg+1) == 0x01)
+		{
+			parseCtcp(im);	
+		}
+		/* no */
+		else
+		{	
+			/* extract the sender's nick */
+			str=strtok(im->prefix, "!");
+			nickprint(str, 0);
+			mainprint(im->msg+1);
+		}
 		return;
 	}
 		
@@ -131,6 +142,31 @@ void parseServerCmd(struct irccmd *ic)
 	if(ic->param) mainprint(ic->param);
 }
 
+/* parseCtcp: handle CTCP messages */
+void parseCtcp(struct ircmsg *im)
+{
+	char *req;
+	char *ctcpmsg;
+	
+	/* find the requester */
+	req=strtok(im->prefix, "!");
+	ctcpmsg=strtok(im->msg+2, "\x01");
+
+	if(!strcmp(ctcpmsg, "VERSION"))
+	{
+		sprintf(svrwkspc, "CTCP request from %s: VERSION",
+			req);
+		mainprint(svrwkspc);
+		sprintf(svrwkspc, "NOTICE %s :\x01ZX-IRC (Sinclair ZX Spectrum, 3.5 MHz)\x01", req);
+		sendIrcMsg(svrwkspc);
+	}
+	else
+	{
+		sprintf(svrwkspc, "Unknown CTCP command %s from %s",
+			ctcpmsg, req);
+	}
+}	
+	
 /* chomp: do pretty much what the perl chomp function does */
 void chomp(char *str)
 {

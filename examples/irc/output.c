@@ -109,11 +109,11 @@ void nickprint(char *nick, int mine)
 
 	if(mine)
 	{
-		printk("\x10\x32<%s>\x10\x30 ", nick);
+		printk("\x10\x32<%s> \x10\x30", nick);
 	}
 	else
 	{
-		printk("\x10\x31<%s>\x10\x30 ", nick);
+		printk("\x10\x31<%s> \x10\x30", nick);
 	}
 
 	xpos+=strlen(nick)+3;
@@ -183,6 +183,15 @@ void quickscroll()
 	djnz clearloop
 	ret
 .cleardone
+	ld hl, 0x5900	; start of attributes we want to move
+	ld de, 0x5800	; start of attributes
+	ld bc, 448	; 448 bytes, everything but the last 2 lines
+	ldir
+	ld hl, 0x5A00	; start of attributes to be reset to white
+	ld de, 0x5A01
+	ld bc, 191	; clear up 192 bytes
+	ld (hl), 56	; white attribute
+	ldir
 #endasm
 
 	ypos=14;	/* new line to print from */
