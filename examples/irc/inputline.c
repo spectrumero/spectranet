@@ -31,12 +31,12 @@
 #include <im2.h>
 #include "irc.h"
 
-char inputbuf[256];	/* static buffer to store user input */
+char inputbuf[INPUTSZ];	/* static buffer to store user input */
 int inputidx;		/* static input index */
 int charpos;		/* current character position */
 
 /* keyboard variable declarations for in_GetKey() */
-uchar in_KeyDebounce=2;
+uchar in_KeyDebounce=1;
 uchar in_KeyStartRepeat=20;
 uchar in_KeyRepeatPeriod=5;
 uint in_KbdState;

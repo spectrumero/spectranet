@@ -39,7 +39,7 @@ void setStatusLine(char *nickname, char *channel)
 	/* set cursor position to print the status line */
 	/* paper blue, ink white, bright 1 */
 	printk("\x16\x36\x20\x10\x37\x11\x31\x13\x01 ");
-	printk("                                                             ");
+	printk("                                                               ");
 	printk("\x16\x36\x21[%s]\x16\x36\x3F[%s]", nick, chan);
 	printk("\x10\x30\x11\x37\x13");
 	putchar(0);

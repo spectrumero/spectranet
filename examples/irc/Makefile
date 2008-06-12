@@ -3,7 +3,7 @@ CC = zcc
 RM = rm -f
 OUT = irc.bin
 CFLAGS = +zx -vn -O2 -preserve
-OBJS = irc.o inputline.o statusline.o output.o ircsvrmsg.o usercmd.o
+OBJS = irc.o inputline.o statusline.o output.o ircsvrmsg.o usercmd.o strlcat.o strlcpy.o
 LIBS = -lndos -llibsocket -lim2
 
 all:	$(OBJS)

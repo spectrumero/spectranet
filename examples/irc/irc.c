@@ -55,12 +55,6 @@ main()
 	inputinit();
 	mainclear();
 
-//	for(i=0; i<11; i++)
-//	{
-//		sprintf(dbg, "%d: Mary had a little lamb, the doctors were astounded. And everywhere that mary went, Gynaecologists surrounded", i);
-//		mainprint(dbg);
-//	}
-
 	/* Set up initial connection params */
 	setupConnection();
 
@@ -69,14 +63,6 @@ main()
 	{
 		inputLoop();
 	}
-//	while(1)
-//	{
-//		kbentry=kbinput();
-//		if(kbentry && !strcmp(kbentry, "x"))
-//		{
-//			break;
-//		}
-//	}
 
 	inputexit();
 }
@@ -255,10 +241,10 @@ void extractIrcMessages(char *buf, unsigned int rxsz)
 /* sendIrcMsg properly formats (well, puts 0x0D,0x0A on the end of) 
  * a message, and sends it. The caller must pass a buffer big enough
  * to do this. */
-void sendIrcMsg(char *msg)
+void sendIrcMsg(char *msg, int bufsz)
 {
 	int rc;
-	strcat(msg, "\x0D\x0A");
+	strlcat(msg, "\x0D\x0A", bufsz);
 	rc=send(ircfd, msg, strlen(msg), 0);
 	if(rc < 0)
 	{

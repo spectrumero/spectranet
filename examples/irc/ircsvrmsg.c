@@ -30,7 +30,8 @@
 #include <stdio.h>
 #include "irc.h"
 
-char svrwkspc[64];	/* general purpose workspace for server msgs */
+char svrwkspc[128];	/* general purpose workspace for server msgs */
+char replybuf[128];
 
 void parseIrcMessage(char *msg)
 {
@@ -71,7 +72,7 @@ void parseNumResponse(struct ircmsg *im)
 	   from a random server message */
 	if(!nick[0])
 	{
-		strcpy(nick, im->param);
+		strlcpy(nick, im->param, NICKSZ);
 		setStatusLine(nick, chan);
 	}
 	if(im->msg && strlen(im->msg) > 2)
@@ -110,7 +111,7 @@ void parseOtherResponse(struct ircmsg *im)
 		
 	if(!strcmp(im->command, "JOIN"))
 	{
-		strcpy(chan, (im->param)+1);
+		strlcpy(chan, (im->param)+1, CHANSZ);
 		setStatusLine(nick, chan);
 		return;
 	}
@@ -125,15 +126,17 @@ void parseOtherResponse(struct ircmsg *im)
 /* Parse commands the server sends to us */
 void parseServerCmd(struct irccmd *ic)
 {
-	char replybuf[64];
 	if(!ic->command)
 		return;		/* nothing to do */
 
 	/* Another quick and dirty parser */
 	if(!strcmp(ic->command, "PING"))
 	{
-		sprintf(replybuf, "PONG %s", nick);
-		sendIrcMsg(replybuf);
+		/* note, no snprintf in z88dk yet, so this is the
+		   safe way to assemble the string */
+		strcpy(replybuf, "PONG ");
+		strlcat(replybuf, nick, sizeof(replybuf));
+		sendIrcMsg(replybuf, sizeof(replybuf));
 		return;
 	}
 
@@ -154,16 +157,21 @@ void parseCtcp(struct ircmsg *im)
 
 	if(!strcmp(ctcpmsg, "VERSION"))
 	{
-		sprintf(svrwkspc, "CTCP request from %s: VERSION",
-			req);
+		strcpy(svrwkspc, "Received CTCP VERSION request from ");
+		strlcat(svrwkspc, req, sizeof(svrwkspc));
 		mainprint(svrwkspc);
-		sprintf(svrwkspc, "NOTICE %s :\x01ZX-IRC (Sinclair ZX Spectrum, 3.5 MHz)\x01", req);
-		sendIrcMsg(svrwkspc);
+		strcpy(svrwkspc, "NOTICE ");
+		strlcat(svrwkspc, req, sizeof(svrwkspc));
+		strlcat(svrwkspc, " :\x01VERSION ZX-IRC (Sinclair ZX Spectrum, 3.5MHz)\x01", sizeof(svrwkspc));
+		sendIrcMsg(svrwkspc, sizeof(svrwkspc));
 	}
 	else
 	{
-		sprintf(svrwkspc, "Unknown CTCP command %s from %s",
-			ctcpmsg, req);
+		strcpy(svrwkspc, "Unknown CTCP command: ");
+		strlcat(svrwkspc, ctcpmsg, sizeof(svrwkspc));
+		strlcat(svrwkspc, " from ", sizeof(svrwkspc));
+		strlcat(svrwkspc, req, sizeof(svrwkspc));
+		mainprint(svrwkspc);
 	}
 }	
 	
