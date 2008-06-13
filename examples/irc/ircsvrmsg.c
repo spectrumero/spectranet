@@ -85,6 +85,7 @@ void parseNumResponse(struct ircmsg *im)
 void parseOtherResponse(struct ircmsg *im)
 {
 	char *str;
+	int nicktype=NICKTYPE_THEIRS;
 
 	if(!im->param) return;	/* nothing to do! */
 
@@ -103,7 +104,14 @@ void parseOtherResponse(struct ircmsg *im)
 		{	
 			/* extract the sender's nick */
 			str=strtok(im->prefix, "!");
-			nickprint(str, 0);
+
+			/* PM or channel msg? */
+			if(!strncmp(nick, im->param, NICKSZ))
+			{
+				nicktype=NICKTYPE_PM;
+			}
+			
+			nickprint(str, nicktype);
 			mainprint(im->msg+1);
 		}
 		return;
@@ -155,6 +163,7 @@ void parseCtcp(struct ircmsg *im)
 	req=strtok(im->prefix, "!");
 	ctcpmsg=strtok(im->msg+2, "\x01");
 
+	/* Single word responses first */
 	if(!strcmp(ctcpmsg, "VERSION"))
 	{
 		strcpy(svrwkspc, "Received CTCP VERSION request from ");
@@ -164,15 +173,29 @@ void parseCtcp(struct ircmsg *im)
 		strlcat(svrwkspc, req, sizeof(svrwkspc));
 		strlcat(svrwkspc, " :\x01VERSION ZX-IRC (Sinclair ZX Spectrum, 3.5MHz)\x01", sizeof(svrwkspc));
 		sendIrcMsg(svrwkspc, sizeof(svrwkspc));
+		return;
 	}
-	else
+
+	/* Didn't match a single word - split it up further */	
+	if(!strncmp(ctcpmsg, "ACTION", 6))
 	{
-		strcpy(svrwkspc, "Unknown CTCP command: ");
-		strlcat(svrwkspc, ctcpmsg, sizeof(svrwkspc));
-		strlcat(svrwkspc, " from ", sizeof(svrwkspc));
-		strlcat(svrwkspc, req, sizeof(svrwkspc));
+		/* Nickname 'req' does some action */
+		strlcpy(svrwkspc, req, sizeof(svrwkspc));
+		strlcat(svrwkspc, ctcpmsg+6, sizeof(svrwkspc));
+		
+		/* make the whole message blue */
+		printk("\x10\x31");
 		mainprint(svrwkspc);
+		printk("\x10\x30");
+		return;
 	}
+
+	/* CTCP we don't understand */
+	strcpy(svrwkspc, "Unknown CTCP command: ");
+	strlcat(svrwkspc, ctcpmsg, sizeof(svrwkspc));
+	strlcat(svrwkspc, " from ", sizeof(svrwkspc));
+	strlcat(svrwkspc, req, sizeof(svrwkspc));
+	mainprint(svrwkspc);
 }	
 	
 /* chomp: do pretty much what the perl chomp function does */

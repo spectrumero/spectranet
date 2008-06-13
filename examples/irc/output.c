@@ -101,22 +101,19 @@ void mainprint(char *str)
 }
 
 /* print a nickname with prettification */
-void nickprint(char *nick, int mine)
+void nickprint(char *nickstr, int nickcolour)
 {
 	fputc_cons(0x16);
 	fputc_cons(32+ypos);
 	fputc_cons(0x20+xpos);
 
-	if(mine)
-	{
-		printk("\x10\x32<%s> \x10\x30", nick);
-	}
-	else
-	{
-		printk("\x10\x31<%s> \x10\x30", nick);
-	}
+	nickcolour+=0x30;
 
-	xpos+=strlen(nick)+3;
+	fputc_cons(0x10);
+	fputc_cons(nickcolour);
+	printk("<%s> \x10\x30", nickstr);
+
+	xpos+=strlen(nickstr)+3;
 }
 
 void removeUnprintables(char *str)
