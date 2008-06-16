@@ -31,9 +31,9 @@
 #define __MAIN__C
 #include "irc.h"
 
-char nick[24];		/* user's nickname */
-char server[32];	/* server to use */
-char chan[32];		/* channel joined */
+char nick[NICKSZ];	/* user's nickname */
+char server[SVRSIZE];	/* server to use */
+char chan[CHANSZ];	/* channel joined */
 char tempbuf[128];	/* some storage */
 int ircfd=0;		/* socket file descriptor */
 

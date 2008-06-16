@@ -23,7 +23,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
+#define __INPUTLINE__C_
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +31,9 @@
 #include <im2.h>
 #include "irc.h"
 
+char kbuf[KBUFSZ];	/* Circular keyboard buffer */
+int bufoffset;		/* buffer offset */
+int readoffset;		/* where we've got to reading the buffer */
 char inputbuf[INPUTSZ];	/* static buffer to store user input */
 int inputidx;		/* static input index */
 int charpos;		/* current character position */
@@ -40,7 +43,6 @@ uchar in_KeyDebounce=1;
 uchar in_KeyStartRepeat=20;
 uchar in_KeyRepeatPeriod=5;
 uint in_KbdState;
-uchar lastk=0;
 uchar input_ready=0;
 
 /* resetinput - resets the input routines */
@@ -120,17 +122,29 @@ void handleKey(uchar key)
 
 char *checkKey()
 {
-	int k;
-	if(lastk)
+	uchar k;
+#asm
+	di
+#endasm
+	if(readoffset != bufoffset)
 	{
-		k=lastk;
-		lastk=0;	/* handled */
-		if(k) handleKey(k);
+		k=*(kbuf+readoffset);
+#asm
+		ei
+#endasm
+		readoffset++;
+		if(readoffset == KBUFSZ)
+			readoffset=0;
+
+		handleKey(k);
 		if(k == '\n' && input_ready)
 		{
 			return inputbuf;
 		}
 	}
+#asm
+	ei
+#endasm
 	return NULL;
 }
 
@@ -158,9 +172,21 @@ void clearInputArea()
 	charpos=0;
 }
 
+/* The ISR handles filling the keyboard buffer, which is a circular
+ * buffer. The keyboard handler in the 'main thread' should pick characters
+ * off this buffer till it catches up */
 M_BEGIN_ISR(isr)
 {
-	lastk=in_GetKey();
+	uchar k=in_GetKey();
+
+	if(k)
+	{
+		*(kbuf+bufoffset)=k;
+
+		bufoffset++;
+		if(bufoffset == KBUFSZ)
+			bufoffset=0;
+	}
 }
 M_END_ISR
 
@@ -178,6 +204,11 @@ void inputinit()
 	memset(0xd300, 0xd4, 257);
 	bpoke(0xd4d4, 195);
 	wpoke(0xd4d5, isr);
+
+	/* initialize the keyboard buffer */
+	memset(kbuf, 0, sizeof(kbuf));
+	bufoffset=0;
+	readoffset=0;
 
 	#asm
 	ei
