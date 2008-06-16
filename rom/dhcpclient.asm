@@ -42,9 +42,12 @@
 F_dhcp
 	ld bc, 0xFFFF		; delay for long enough for hw to init
 .delay
-	nop
-	nop
-	nop
+	push hl			; waste a load of time
+	push bc
+	push de
+	pop de
+	pop bc
+	pop hl
 	dec bc
 	ld a, b
 	or c
@@ -55,21 +58,34 @@ F_dhcp
 	ld hl, STR_dhcpdiscover
 	call PRINT42
 
-	ld a, 8			; num of retries
+	ld b, 8			; num of retries
 .retrydiscover
-	push af
+	push bc
 
 	call F_dhcpdiscover
 	jr c, .borked
 
 	call F_dhcprecvoffer
 	jr nc, .offer
+	cp DHCP_INTERRUPTED	; BREAK pressed?
+	jr z, .break
+	ld a, '.'
+	call PUTCHAR42
+	pop bc
+	djnz .retrydiscover
+
+	push af			; ran out of retries
+	ld a, '\n'		; so put a CR
+	call PUTCHAR42
 	pop af
-	dec a
-	and a			; run out of retries?
-	jr nz, .retrydiscover
+	jr .borked		; then report the error
+
+.break	
+	pop bc			; fix stack
+	jr .borked
 
 .offer
+	pop bc			; fix stack
 	ld hl, STR_dhcpoffer
 	call PRINT42
 
@@ -104,15 +120,33 @@ F_dhcp
 	call ITOA8
 	ld hl, v_workspace
 	call PRINT42
+	ld a, '\n'
+	call PUTCHAR42
+
+	; pause - TODO: something a bit better (perhaps a keypress?)
+	ld bc, 0xFFFF
+.bdelay
+	dec bc
+	push hl
+	push de
+	push bc
+	pop bc
+	pop de
+	pop hl
+	ld a, b
+	or c
+	jr nz, .bdelay
+	
 	ret
 
 STR_dhcpinit	defb "Press BREAK to interrupt.\n",0
-STR_dhcpdiscover	defb "DHCPDISCOVER\n",0
-STR_dhcpoffer		defb "DHCPOFFER\n",0
+STR_dhcpdiscover	defb "DHCPDISCOVER",0
+STR_dhcpoffer		defb "\nDHCPOFFER\n",0
 STR_dhcprequest		defb "DHCPREQUEST\n",0
 STR_dhcpack		defb "DHCPACK\n",0
 STR_failed		defb "DHCP failed with return code ",0
 STR_ipaddr		defb "Allocated IP address ",0
+STR_interrupted		defb "\nBREAK pressed\n",0
 
 ;-------------------------------------------------------------------------
 ; F_dhcpdiscover
@@ -479,6 +513,9 @@ F_comparexid
 F_waitfordhcpmsg
 	ld bc, dhcp_polltime
 .loop
+	in a, (254)		; check for BREAK
+	rra
+	jr nc, .interrupted
 	push bc
 	ld a, (v_dhcpfd)
 	call POLLFD		; data ready for this file descriptor?
@@ -490,7 +527,11 @@ F_waitfordhcpmsg
 	or c			; check bc for zero
 	jr nz, .loop		; make another loop
 	ld a, DHCP_TIMEOUT	; error code is timeout
-	jp F_closeonerror	; close and return
+	jr F_closeonerror	; close and return
+.interrupted
+	ld hl, STR_interrupted
+	call PRINT42
+	ld a, DHCP_INTERRUPTED	; just fall through to closeonerror
 
 ;--------------------------------------------------------------------------
 ; F_closeonerror

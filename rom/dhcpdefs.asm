@@ -58,7 +58,7 @@ dhcp_opt_netmask equ 0x01	; Netmask
 dhcp_opt_dns	equ 0x06	; DNS server address
 dhcp_opt_msg	equ 0x35	; Message type
 
-dhcp_polltime	equ 16384	; how many times to poll when waiting
+dhcp_polltime	equ 50000	; how many times to poll when waiting
 
 DHCPDISCOVER_BLOCK
 ; The following is a block that can be LDIR'd into the options offset
