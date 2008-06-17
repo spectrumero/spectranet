@@ -13,7 +13,7 @@
 ;
 ; Data is loaded just after the program's last used address.
 ;
-	include "../experiments/w5100defines.asm"
+	include "../rom/w5100_defines.asm"
 
 	org 0xF000		; start with RAND USR 61440
 	di
@@ -34,7 +34,7 @@
 	; the board with a new flash program with very little other
 	; support. Real programs should use the socket library.
 .open	
-	ld hl, 0x0100		; W5100 register page
+	ld a, 0x40		; W5100 register page
 	call F_setpageA	
 	ld a, S_MR_TCP|S_MR_NDMC ; Create a TCP socket, no delayed ACK
 	ld (Sn_MR), a		; as socket 0
@@ -149,9 +149,9 @@
 
 	; Now map in page 1 and 2 of ROM, so the first three pages
 	; are in a contiguous block.
-	ld hl, 1	; chip 0 page 1
+	ld a, 1		; chip 0 page 1
 	call F_setpageA
-	ld hl, 2	; chip 0 page 2
+	ld a, 2		; chip 0 page 2
 	call F_setpageB
 	ld hl, STR_writing
 	call F_print
@@ -171,7 +171,7 @@
 	or c
 	jr nz, .writeloop
 	push hl			; now map in the remaining page
-	ld hl, 3
+	ld a, 3
 	call F_setpageB
 	pop hl			; hl will be pointing at the right byte
 	ld de, 0x2000		; start of page B
@@ -269,42 +269,6 @@ F_clear
 	ld (v_row), hl
 	ret
 
-; Set paging area A. Page in HL (chip in H, page in L)
-F_setpageA
-	push bc
-	ld b, 0x80
-	ld a, (v_chipsel)
-	and 0xFC	; zero lower two bits
-	or h		; insert chip select value
-	ld (v_chipsel), a
-	ld c, CHIPSEL
-	out (c), a
-	ld a, l
-	ld (v_pga), a	; store new page number
-	ld c, PAGEA
-	out (c), a	; page it in
-	pop bc
-	ret
-
-; Set paging area B. As for area A.
-F_setpageB
-	push bc
-	ld b, 0x80
-	ld a, (v_chipsel)
-	and 0xF3	; zero upper 2 bits of nibble
-	rl h		; move chip select value into correct bits
-	rl h		
-	or h		; insert chip select value
-	ld (v_chipsel), a
-	ld c, CHIPSEL
-	out (c), a	
-	ld a, l
-	ld (v_pgb), a
-	ld c, PAGEB
-	out (c), a	; page it in
-	pop bc
-	ret
-
 ; Use the Speccy rom plus a lookup table to turn a keypress (0-z)
 ; into an option.
 F_pollkeys
@@ -324,7 +288,25 @@ F_pollkeys
 	ld d, 0
 	add hl, de
 	ld a, (hl)
-	ret      
+	ret     
+
+; Set paging area A. Page to load in A.
+F_setpageA
+	push bc
+	ld bc, 0x8000|PAGEA
+	ld (v_pga), a	; save the page we've just paged.
+	out (c), a	; page it in
+	pop bc
+	ret
+
+; Set paging area B. As for area A.
+F_setpageB
+	push bc
+	ld bc, 0x8000|PAGEB
+	ld (v_pgb), a
+	out (c), a	; page it in
+	pop bc
+	ret
 
 ; asm modules - TODO: Eventually, these should be the same versions as
 ; the ROM versions, but for now, the experimental ones are the ones we
@@ -332,10 +314,10 @@ F_pollkeys
 	include "../experiments/print5by8.asm"
 	include "w5100config.asm"
 	include "flashwrite.asm"
-	include "../experiments/w5100buffer.asm"
-	include "../experiments/charset.asm"
+	include "../rom/w5100_buffer.asm"
+	include "../rom/ui_charset.asm"
 	block 0xF800-$,0xFF
-	include "../experiments/rclookup.asm"
+	include "../rom/ui_lookup.asm"
 
 STR_send 	defb "Opening socket...",0
 STR_open	defb "Done\n",0

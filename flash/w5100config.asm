@@ -3,7 +3,7 @@
 F_w5100init
 	; Page in the W5100
 	; Chip selects put RAM in area B, W5100 in area A
-	ld hl, 0x0100		; registers are in page 0 of the W5100
+	ld a, 0x40		; registers are in page 0 of the W5100
 	call F_setpageA		; page it into area A
 
 	; Perform a software reset by setting the reset flag in the MR.
