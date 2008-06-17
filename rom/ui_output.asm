@@ -33,6 +33,11 @@
 ; This routine could do with some improvement.
 ; Paramters: A = ASCII character to print.
 F_putc_5by8
+	push af
+	ld a, DATAROM
+	call F_setpageA
+	pop af
+F_putc_5by8_nopage
       push hl
       push bc
       push de
@@ -262,10 +267,13 @@ F_clear
 ; F_print: Prints a null terminated string.
 ; Parameters: HL = pointer to string
 F_print
+	ld a, DATAROM		; Page in the data rom but just once.
+	call F_setpageA		
+.loop
 	ld a, (hl)
-	and a		; NULL?
+	and a			; NULL?
 	ret z
-	call F_putc_5by8 ; print it
+	call F_putc_5by8_nopage ; print it skipping the pagein routine
 	inc hl
-	jr F_print
+	jr .loop
 

@@ -58,10 +58,8 @@ F_ifconfig_netmask
 	ret
 	
 F_regpage
-	push hl
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
-	pop hl
 	ret
 
 ;-------------------------------------------------------------------------
@@ -97,7 +95,7 @@ F_sethwaddr
 ; Parameters: DE = pointer to buffer to fill.
 F_gethwaddr
 	push de
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 	pop de
 	ld hl, SHAR0
@@ -110,7 +108,7 @@ F_gethwaddr
 ; Deconfigure the interface (reset the inet, gateway and netmask fields).
 ; Parameters: None.
 F_deconfig
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 	ld hl, GAR0
 	ld de, GAR1

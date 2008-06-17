@@ -4,6 +4,10 @@ echo "Creating system variables symbol table"
 sjasmplus sysvars.asm --sym=sysvars.sym
 echo
 
+echo "Assembling data ROM page"
+sjasmplus datarom.asm --sym=datarom.sym
+echo
+
 echo "Assembling ROM"
 sjasmplus rom.asm --sym=rom.sym --lst=rom.lst
 echo
@@ -17,6 +21,6 @@ sjasmplus utilrom.asm --sym=utilrom.sym --lst=utilrom.lst
 echo
 
 echo "Creating ROM image"
-sjasmplus romimage.asm
+sjasmplus romimage.asm --lst=romimage.lst
 echo
 

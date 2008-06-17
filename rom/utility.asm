@@ -351,7 +351,7 @@ F_crc16
 ; F_checkromsig
 ; Checks a ROM page signature for a valid vector table. Returns with the
 ; Z flag set if the signature is valid, NZ if not.
-; Parameters: HL = page to test
+; Parameters: A = page to test
 F_checkromsig
 	call F_setpageB
 	ld hl, 0x2000

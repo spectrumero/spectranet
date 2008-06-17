@@ -92,11 +92,11 @@ F_copyrxbuf
 	sub Sn_MR / 256		; derive socket number
 	bit 1, a		; upper page or lower page?
 	jr nz, .upperpage
-	ld hl, 0x0106		; W5100 phys. address 0x6000
+	ld a, RX_LWRDATAPAGE	; W5100 phys. address 0x6000
 	call F_setpageA
 	jr .willitblend
 .upperpage
-	ld hl, 0x0107		; W5100 phys. address 0x7000
+	ld a, RX_UPRDATAPAGE	; W5100 phys. address 0x7000
 	call F_setpageA
 
 	; Does the circular buffer wrap around?
@@ -119,7 +119,7 @@ F_copyrxbuf
 	ldir			; copy buffer contents
 
 .completerx
-	ld hl, 0x0100		; Registers are in W5100 physmem 0x0000
+	ld a, REGPAGE		; Registers are in W5100 physmem 0x0000
 	call F_setpageA
 	ld hl, (v_sockptr)	; retrieve socket pointer
 	ld l, Sn_RX_RD0 % 256	; point it at MSB of bytes read register.
@@ -211,11 +211,11 @@ F_copytxbuf
 	sub Sn_MR / 256		; derive socket number
 	bit 1, a		; upper page or lower page?
 	jr nz, .upperpage
-	ld hl, 0x0104		; W5100 phys. address 0x4000
+	ld a, TX_LWRDATAPAGE	; W5100 phys. address 0x4000
 	call F_setpageA
 	jr .willitblend
 .upperpage
-	ld hl, 0x0105		; W5100 phys. address 0x5000
+	ld a, TX_UPRDATAPAGE	; W5100 phys. address 0x5000
 	call F_setpageA
 
 	; add de (offset) and bc (length) and see if it's >0x0800, in
@@ -238,7 +238,7 @@ F_copytxbuf
 	ldir
 
 .completetx
-	ld hl, 0x0100		; registers in W5100 phys. 0x0000
+	ld a, REGPAGE		; registers in W5100 phys. 0x0000
 	call F_setpageA
 	ld hl, (v_sockptr)	; get the socket pointer back
 	ld l, Sn_TX_WR0 % 256	; transmit register

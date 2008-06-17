@@ -46,7 +46,7 @@
 ;
 ; Preserves: BC
 F_socket
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 
 	; Find a free socket. HL will contain the pointer to the socket
@@ -86,7 +86,7 @@ F_socket
 ; Carry flag is set if an error occurs reopening a virtual socket.
 F_sockclose
 	push af
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 	pop af
 
@@ -191,7 +191,7 @@ F_sockclose
 ; On error carry is set and A contains the error number.
 F_accept
 	push af			; save the fd
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 	pop af
 

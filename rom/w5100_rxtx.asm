@@ -186,7 +186,7 @@ F_recvfrom
 ; and the zero flag is set. On error, the carry flag is set and A is set 
 ; to the error.
 F_poll
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 
 .sockloop
@@ -232,7 +232,7 @@ F_poll
 ; in A. If none are ready, A=0 and the zero flag is set. If an fd is ready,
 ; it is returned in A, and C contains the flags that triggered the condition.
 F_pollall
-	ld hl, W5100_REGISTER_PAGE
+	ld a, REGPAGE
 	call F_setpageA
 	ld d, v_fd1hwsock / 256
 	ld a, (v_lastpolled)	; get addr. of socket to start at

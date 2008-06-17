@@ -103,28 +103,26 @@ J_reset
 ; Spectranet to work at all, the Spectranet utility ROM must occupy some
 ; page somewhere in the flash chip and get initialized.
 F_initroms
-	ld hl, 1	; start from page 1 - page 0 is the fixed page.
-	ld de, vectors	; pointer to the valid vector table
-	ld (v_workspace), de	; save it
+	ld b, 1		; start from page 2 (page 0=fixed, page 1=data)
+	ld hl, vectors	; pointer to the valid vector table
+	ld (v_workspace), hl	; save it
 .initloop
-	ld a, 0x1F	; last ROM?
-	cp l
+	inc b
+	ld a, 0x1F
+	cp b		; last ROM?
 	ret z		; finished
-	push hl
+	ld a, b
 	call F_checkromsig	; Z = valid signature found
-	pop hl
-	inc hl
 	jr nz, .initloop	; No valid ROM signature
 	
 	; Put an entry in the vector table to indicate the ROM page has
 	; a valid vector table.
-	ld de, (v_workspace)	; get vector pointer
-	ld a, l
-	ld (de), a		; save ROM page number in the vector table
-	inc de			; point to next entry in the table
-	ld (v_workspace), de	; and save.
+	ld hl, (v_workspace)	; get vector pointer
+	ld (hl), b		; save ROM page number in the vector table
+	inc hl			; point to next entry in the table
+	ld (v_workspace), hl	; and save.
 
-	push hl
+	push bc			; save which ROM we've examined
 	ld hl, (ROM_INIT_VECTOR) ; get initialization vector from ROM
 	ld a, 0xFF
 	cp h			; does the vector point somewhere useful?
@@ -133,7 +131,7 @@ F_initroms
 	push de			; stack it to simulate CALL
 	jp (hl)			; and call it
 .returnaddr	
-	pop hl
+	pop bc
 	jr .initloop
 
 ;-------------------------------------------------------------------------
@@ -141,9 +139,9 @@ F_initroms
 ; Initialize the W5100 - MAC address and hardware registers.
 F_w5100init
 	; Set up memory pages to configure the hardware
-	ld hl, 0x0100		; registers are in page 0 of the W5100
+	ld a, REGPAGE		; registers are in page 0 of the W5100
 	call F_setpageA		; page it into area A
-	ld hl, 0x001F		; configuration page (flash)
+	ld a, CONFIGPAGE	; configuration page (flash)
 	call F_setpageB		; paged into area B
 
 	ld a, MR_RST		; Perform a software reset on the W5100

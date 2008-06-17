@@ -55,33 +55,33 @@ F_saveconfig
 ; the last 16k sector, then copy back the updated configuration plus the
 ; existing content in the remainder of the last sector of flash).
 F_copyconfig
-	ld hl, 0x031C	; chip 3 page 0x1C - RAM
+	ld a, 0xDC	; chip 3 page 0x1C - RAM
 	call F_setpageA	; page it into page area A
-	ld hl, 0x001C	; chip 0 page 0x1C - flash
+	ld a, 0x1C	; chip 0 page 0x1C - flash
 	call F_pushpageB	; it's likely this is being called from page B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000
 	ld bc, 0x1000
 	ldir
-	ld hl, 0x031D	; chip 3 page 0x1D - RAM
+	ld a, 0xDD	; chip 3 page 0x1D - RAM
 	call F_setpageA	; page it into page area A
-	ld hl, 0x001D	; chip 0 page 0x1D - flash
+	ld a, 0x1D	; chip 0 page 0x1D - flash
 	call F_setpageB	; page it into page area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000
 	ld bc, 0x1000
 	ldir
-	ld hl, 0x031E	; chip 3 page 0x1E - RAM
+	ld a, 0xDE	; chip 3 page 0x1E - RAM
 	call F_setpageA	; page it into page area A
-	ld hl, 0x001E	; chip 0 page 0x1E - flash
+	ld a, 0x1E	; chip 0 page 0x1E - flash
 	call F_setpageB	; page it into page area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000
 	ld bc, 0x1000
 	ldir
-	ld hl, 0x031F	; chip 3 page 0x1F - RAM
+	ld a, 0xDF	; chip 3 page 0x1F - RAM
 	call F_setpageA	; page it into page area A
-	ld hl, 0x001F	; chip 0 page 0x1F - flash
+	ld a, 0x1F	; chip 0 page 0x1F - flash
 	call F_setpageB	; page it into page area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000

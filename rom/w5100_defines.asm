@@ -202,9 +202,10 @@
 	define gSn_TX_MASK	0x07FF
 
 ; Definitions not of the W5100 chip, rather just concerining it.
-W5100_REGISTER_PAGE	equ 0x0100	; chip 1 page 0 (phys. 0x0000)
-W5100_TXBUF_PAGE1	equ 0x0104	; chip 1 page 4 (phys. 0x4000)
-W5100_TXBUF_PAGE2	equ 0x0105	; chip 1 page 5 (phys. 0x5000)
-W5100_RXBUF_PAGE1	equ 0x0106	; chip 1 page 6 (phys. 0x6000)
-W5100_RXBUF_PAGE2	equ 0x0107	; chip 1 page 7 (phys. 0x7000)
+; Hardware pages
+RX_LWRDATAPAGE	equ 0x46
+RX_UPRDATAPAGE	equ 0x47
+TX_LWRDATAPAGE	equ 0x44
+TX_UPRDATAPAGE	equ 0x45
+REGPAGE		equ 0x40
 

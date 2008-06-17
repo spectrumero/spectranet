@@ -19,28 +19,12 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-;
-;
-; General internal functions for the socket library.
-;
-;
-; F_gethwsock:
-; Get the hardware socket for a file descriptor. If no hardware socket
-; is associated with the fd, set the carry flag and return with the error
-; code in A. Otherwise, return the hardware socket register area MSB in
-; H.
-F_gethwsock
-	ex af, af'
-	ld a, REGPAGE
-	call F_setpageA
-	ex af, af'
-	ld h, v_fd1hwsock / 256	; set (hl) to point at the fd map
-	ld l, a
-	ld a, (hl)
-	ld h, a			; point hl at putative hardware socket
-	and NOTSOCKMASK		; is this not a hardware socket?
-	ret z			; OK - return with hw sock register in H
-.nohwsock
-	ld a, EBADF
-	scf
-	ret
+
+; The data ROM.
+; This lives in page 1 of flash, and provides data such as the character
+; set for PUTCHAR42 and other non-code items. It gets paged into area A.
+	org 0x1000
+	include "ui_lookup.asm"
+	include "ui_charset.asm"
+
+DATAROM	equ 0x01	; physical flash page

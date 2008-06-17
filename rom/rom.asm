@@ -52,13 +52,7 @@
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
-	include "ui_charset.asm"	; character set
 	include "jumptable.asm"		; Jump table
-
-	; This sits at the end of ROM page 0, this should always come
-	; after the 'main rom' routines in this file, but before the
-	; jump table and system variables.
-	include "ui_lookup.asm"		; lookup table for 42 col output
 
 	; Memory map for upper fixed page (chip 3 page 0)
 	include "sysvars.sym"		; System variables (from earlier asm)
@@ -67,4 +61,5 @@
 	; Various definitions.
 	include "zxromcalls.asm"	; Defines entry points into the ZX ROM
 	include "zxsysvars.asm"		; Defines for system vars and IO ports
+	include "datarom.sym"		; Addresses of bits of data
 

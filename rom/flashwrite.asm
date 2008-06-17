@@ -34,8 +34,7 @@
 ; Carry flag is set if an error occurs.
 F_FlashEraseSector
 	; Page in the appropriate sector first 4k into page area B.
-	ld h, 0		; flash is chip 0
-	ld l, a		; page to erase in A
+	; Page to start the erase from is in A.
 	call F_setpageB	; page into page area B
 
 	ld a, 0xAA	; unlock code 1
@@ -141,36 +140,36 @@ F_FlashWriteByte
 ; was in the last four pages of flash plus the modified configuration.
 ; The carry flag is set on error.
 F_writeconfig
-	ld hl, 0x031C	; RAM page 0x1C
+	ld a, 0xDC	; RAM page 0x1C
 	call F_setpageA ; Page into area A
-	ld hl, 0x001C	; flash page 0x1C
+	ld a, 0x1C	; flash page 0x1C
 	call F_setpageB
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
 	ret c
-	ld hl, 0x031D	; RAM page 0x1D
+	ld a, 0xDD	; RAM page 0x1D
 	call F_setpageA ; page into area A
-	ld hl, 0x001D	; flash page 0x1D
+	ld a, 0x1D	; flash page 0x1D
 	call F_setpageB	; Page into area B
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
 	ret c
-	ld hl, 0x031E	; RAM page 0x1E
+	ld a, 0xDE	; RAM page 0x1E
 	call F_setpageA	; Page into area A
-	ld hl, 0x001E	; flash page 0x1E
+	ld a, 0x1E	; flash page 0x1E
 	call F_setpageB	; Page into area B
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
 	ret c
-	ld hl, 0x031F	; RAM page 0x1F
+	ld a, 0xDF	; RAM page 0x1F
 	call F_setpageA	; Page into area A
-	ld hl, 0x001F	; flash page 0x1F
+	ld a, 0x1F	; flash page 0x1F
 	call F_setpageB	; Page into area B
 	ld hl, 0x1000
 	ld de, 0x2000
