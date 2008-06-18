@@ -110,6 +110,17 @@ F_showcurrent
 	jr nz, .printhost
 	ld hl, STR_unset
 .printhost
+	ld hl, 0x1000 + HOSTNAME 
+	ld de, buf_workspace
+.xferloop
+	ldi			; transfer the hostname to the workspace
+	ld a, (hl)		; because the print routine needs pageA
+	and a			; for its character set.
+	jr nz, .xferloop
+.printhost2
+	ex de, hl
+	ld (hl), 0
+	ld hl, buf_workspace
 	call PRINT42
 	ld a, '\n'
 	call PUTCHAR42

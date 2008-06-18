@@ -31,7 +31,7 @@
 ; Configuration must be copied to RAM since we are using both paging areas
 ; (one for the W5100 register area, and one for this code).
 F_inetinit
-	ld hl, 0x1F		; flash page containing configuration
+	ld a, 0x1F		; flash page containing configuration
 	call SETPAGEA
 	ld hl, 0x1F00		; last 256 bytes of config
 	ld de, 0x3000		; RAM workspace

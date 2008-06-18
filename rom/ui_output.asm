@@ -26,17 +26,24 @@
 ; The print routine prints 42 columns wide.
 
 ;--------------------------------------------------------------------------
-; F_putc_5by8
+; F_putc_5by8 / F_putc_5by8_nopage
 ; Print characters 42 columns per line.
 ; The routine depends on a character set (in ui_charset.asm) and a lookup
 ; table (in ui_lookup.asm).
-; This routine could do with some improvement.
 ; Paramters: A = ASCII character to print.
 F_putc_5by8
-	push af
+	ex af, af'
 	ld a, DATAROM
-	call F_setpageA
-	pop af
+	call F_pushpageA	; stack the current page A
+	ex af, af'
+	call F_putc_5by8_nopage
+	call F_poppageA		; restore page A
+	ret
+
+;-------------------------------------------------------------------------
+; The 'core' of the putchar routine, F_print calls this directly (handling
+; the paging itself)
+; The routine could probably do with improvement.
 F_putc_5by8_nopage
       push hl
       push bc
@@ -268,12 +275,15 @@ F_clear
 ; Parameters: HL = pointer to string
 F_print
 	ld a, DATAROM		; Page in the data rom but just once.
-	call F_setpageA		
+	call F_pushpageA
 .loop
 	ld a, (hl)
 	and a			; NULL?
-	ret z
+	jr z, .done
 	call F_putc_5by8_nopage ; print it skipping the pagein routine
 	inc hl
 	jr .loop
+.done
+	call F_poppageA		; restore last page
+	ret
 
