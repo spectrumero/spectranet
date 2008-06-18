@@ -13,6 +13,7 @@ sjasmplus rom.asm --sym=rom.sym --lst=rom.lst
 echo
 
 echo "Assembling configuration utility"
+sjasmplus configutilrom.asm --sym=configutilrom.sym --lst=configutilrom.lst
 sjasmplus configutil.asm --sym=configutil.sym --lst=configutil.lst
 echo
 

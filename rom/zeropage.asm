@@ -64,7 +64,7 @@ NMI
 	push de
 	push bc
 	push af
-	ld hl, 0x02		; Utility ROM
+	ld a, 0x02		; Utility ROM
 	call F_setpageB
 	jr NMI2
 

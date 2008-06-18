@@ -13,7 +13,7 @@
 	jr z, .menuloop
 
 	; TODO: Better return to utility ROM.
-	ld hl, 0x02		; utility rom page
+	ld a, 0x02		; utility rom page
 	call SETPAGEB
 	ret
 
@@ -24,33 +24,33 @@
 ; the last 16k sector, then copy back the updated configuration plus the
 ; existing content in the remainder of the last sector of flash).
 F_copyconfig
-	ld hl, 0x031C	; chip 3 page 0x1C - RAM
+	ld a, 0xDC	; chip 3 page 0x1C - RAM
 	call SETPAGEA	; page it into page area A
-	ld hl, 0x001C	; chip 0 page 0x1C - flash
+	ld a, 0x1C	; chip 0 page 0x1C - flash
 	call SETPAGEB	; and mapped into area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000
 	ld bc, 0x1000
 	ldir
-	ld hl, 0x031D	; chip 3 page 0x1D - RAM
+	ld a, 0xDD	; chip 3 page 0x1D - RAM
 	call SETPAGEA	; page it into page area A
-	ld hl, 0x001D	; chip 0 page 0x1D - flash
+	ld a, 0x1D	; chip 0 page 0x1D - flash
 	call SETPAGEB	; page it into page area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000
 	ld bc, 0x1000
 	ldir
-	ld hl, 0x031E	; chip 3 page 0x1E - RAM
+	ld a, 0xDE	; chip 3 page 0x1E - RAM
 	call SETPAGEA	; page it into page area A
-	ld hl, 0x001E	; chip 0 page 0x1E - flash
+	ld a, 0x1E	; chip 0 page 0x1E - flash
 	call SETPAGEB	; page it into page area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000
 	ld bc, 0x1000
 	ldir
-	ld hl, 0x031F	; chip 3 page 0x1F - RAM
+	ld a, 0xDF	; chip 3 page 0x1F - RAM
 	call SETPAGEA	; page it into page area A
-	ld hl, 0x001F	; chip 0 page 0x1F - flash
+	ld a, 0x1F	; chip 0 page 0x1F - flash
 	call SETPAGEB	; page it into page area B
 	ld hl, 0x2000	; and copy
 	ld de, 0x1000

@@ -43,6 +43,27 @@ F_setpageB
 	pop bc
 	ret
 
+; Set paging area A and push the page currently selected onto the stack.
+; A = new page to select
+F_pushpageA
+	ld (v_hlsave), hl
+	ld hl, (v_pga)		; get current page (and the adjacent byte)
+	ex (sp), hl		; stack it
+	push hl			; put the return address back
+	call F_setpageA		; set the new page
+	ld hl, (v_hlsave)	; restore hl
+	ret
+
+; Restore page area A from the stack
+F_poppageA
+	ld (v_hlsave), hl
+	pop hl			; get the return address
+	ex (sp), hl		; get the page to restore
+	ld a, l			; the page itself being in L
+	call F_setpageA		; restore the page
+	ld hl, (v_hlsave)
+	ret
+	
 ;--------------------------------------------------------------------------
 ; J_hldispatch and J_ixdispatch:
 ; Dispatches a page-in from the call table, and unpages when it's done

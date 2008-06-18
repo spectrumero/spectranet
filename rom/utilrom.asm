@@ -50,7 +50,7 @@
 	include "sysvars.sym"
 	include "flashconf.asm"		; defines for configuration memory
 CONFIGUTIL_START
-	incbin "configutil.out"		; Configuration utility image
+	incbin "configutilrom.out"	; Configuration utility image
 CONFIGUTIL_END
 ;	include "ui_config.asm"		; configuration user interface
 ;	include "ui_menu.asm"		; simple menu generator
