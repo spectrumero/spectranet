@@ -67,4 +67,7 @@ HTOI8		equ 0x3E63	; Convert hex string to byte in A
 GETKEY		equ 0x3E66	; Get a key from the keyboard, and put it in A
 KEYUP		equ 0x3E69	; Wait for key release
 INPUTSTRING	equ 0x3E6C	; Read a string into buffer at DE
+GET_IFCONFIG_INET equ 0x3E6F	; Gets the current IPv4 address
+GET_IFCONFIG_NETMASK equ 0x3E72	; Gets the current netmask
+GET_IFCONFIG_GW	equ 0x3E75	; Gets the current gateway address
 

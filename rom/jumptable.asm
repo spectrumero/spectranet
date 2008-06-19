@@ -96,6 +96,9 @@ JUMPTABLE_COPYFROM
 	jp F_getkey
 	jp F_keyup
 	jp F_inputstring
+	jp F_get_ifconfig_inet
+	jp F_get_ifconfig_netmask
+	jp F_get_ifconfig_gw
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM

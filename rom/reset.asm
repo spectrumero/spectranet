@@ -71,6 +71,8 @@ J_reset
 	call F_zxinit
 
 	; Initialize the jump table by copying it to our RAM.
+	ld a, DATAROM
+	call F_setpageA
 	ld hl, JUMPTABLE_COPYFROM
 	ld de, 0x3E00		; jump table start
 	ld bc, JUMPTABLE_SIZE

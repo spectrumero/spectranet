@@ -56,6 +56,37 @@ F_ifconfig_netmask
 	ldi
 	ldi
 	ret
+
+;-------------------------------------------------------------------------
+; F_get_ifconfig routines: F_get_ifconfig_inet, gw, netmask:
+; Returns the inet settings into a 4-byte buffer pointed to by DE
+; in big-endian format.
+F_get_ifconfig_gw
+	call F_regpage
+	ld hl, GAR0
+	ldi
+	ldi
+	ldi
+	ldi
+	ret
+
+F_get_ifconfig_inet
+	call F_regpage
+	ld hl, SIPR0
+	ldi
+	ldi
+	ldi
+	ldi
+	ret
+
+F_get_ifconfig_netmask
+	call F_regpage
+	ld hl, SUBR0
+	ldi
+	ldi
+	ldi
+	ldi
+	ret
 	
 F_regpage
 	ld a, REGPAGE
