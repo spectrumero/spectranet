@@ -26,140 +26,134 @@
 ; The print routine prints 42 columns wide.
 
 ;--------------------------------------------------------------------------
-; F_putc_5by8 / F_putc_5by8_nopage
+; F_putc_5by8 
 ; Print characters 42 columns per line.
-; The routine depends on a character set (in ui_charset.asm) and a lookup
-; table (in ui_lookup.asm).
-; Paramters: A = ASCII character to print.
-F_putc_5by8
-	ex af, af'
-	ld a, DATAROM
-	call F_pushpageA	; stack the current page A
-	ex af, af'
-	call F_putc_5by8_nopage
-	call F_poppageA		; restore page A
-	ret
-
-;-------------------------------------------------------------------------
 ; The 'core' of the putchar routine, F_print calls this directly (handling
 ; the paging itself)
 ; The routine could probably do with improvement.
-F_putc_5by8_nopage
-      push hl
-      push bc
-      push de
-      cp '\n'     ; carriage return?
-      jr z, .nextrow
+F_putc_5by8
 
-      ; find the address of the character in the bitmap table
-      sub 32      ; space = offset 0
-      ld hl, 0
-      ld l, a
+      	push hl
+	push bc
+	push de
+	ld h, a			; save character
+	ld a, DATAROM
+	call F_pushpageA	; stack the current page A
+	ld a, h			; restore character
 
-      ; multiply by 8 to get the byte offset
-      add hl, hl
-      add hl, hl
-      add hl, hl
+	cp '\n'     ; carriage return?
+	jr z, .nextrow
 
-      ; add the offset
-      ld bc, char_space
-      add hl, bc
+	; find the address of the character in the bitmap table
+	sub 32      ; space = offset 0
+	ld hl, 0
+	ld l, a
 
-      ; Now find the address in the frame buffer to be written.
-      ex de, hl
-      ld hl, col_lookup
-      ld a, (v_column)
-      ld b, a
-      add a, l
-      ld l, a        ; hl = pointer to byte in lookup table
-      ld a, (hl)     ; a = lookup table value
-      ld hl, (v_row) ; hl = framebuffer pointer for start of row
-      add l
-      ld l, a        ; hl = frame buffer address
-      
+	; multiply by 8 to get the byte offset
+	add hl, hl
+	add hl, hl
+	add hl, hl
+
+	; add the offset
+	ld bc, char_space
+	add hl, bc
+
+	; Now find the address in the frame buffer to be written.
+	ex de, hl
+	ld hl, col_lookup
+	ld a, (v_column)
+	ld b, a
+	add a, l
+	ld l, a        ; hl = pointer to byte in lookup table
+	ld a, (hl)     ; a = lookup table value
+	ld hl, (v_row) ; hl = framebuffer pointer for start of row
+	add l
+	ld l, a        ; hl = frame buffer address
+
 ; de contains the address of the char bitmap
 ; hl contains address in the frame buffer
 .paintchar
-      ld a, b           ; retrieve column
-      and 3             ; find out how much we need to rotate
-      jr z, .norotate   ; no need to rotate, character starts at MSB
-      rla               ; multipy by 2
-      ld (v_pr_wkspc), a   ; save A
-      ld b, 8           ; byte copy count for outer loop
+	ld a, b           ; retrieve column
+	and 3             ; find out how much we need to rotate
+	jr z, .norotate   ; no need to rotate, character starts at MSB
+	rla               ; multipy by 2
+	ld (v_pr_wkspc), a   ; save A
+	ld b, 8           ; byte copy count for outer loop
 .fbwriterotated
-      push bc           ; save outer loop count
-      ld a, (v_pr_wkspc)
-      ld b, a           ; set up rotate loop count
-      ld a, (de)        ; get character bitmap
-      ld c, a           ; C contains rightmost fragment of bitmap
-      xor a             ; set a=0 to accept lefmost fragment of bitmap
+	push bc           ; save outer loop count
+	ld a, (v_pr_wkspc)
+	ld b, a           ; set up rotate loop count
+	ld a, (de)        ; get character bitmap
+	ld c, a           ; C contains rightmost fragment of bitmap
+	xor a             ; set a=0 to accept lefmost fragment of bitmap
 .rotloop
-      rl c             
-      rla               ; suck out leftmost bit from the carry flag 
-      djnz .rotloop
+	rl c             
+	rla               ; suck out leftmost bit from the carry flag 
+	djnz .rotloop
 .writerotated
-      or (hl)           ; merge with existing character
-      ld (hl), a
-      ld a, c
-      cp 0
-      jr z, .writerotated.skip   ; nothing to do
-      inc l             ; next char cell
-      or (hl)
-      ld (hl), a
-      dec l             ; restore l
+	or (hl)           ; merge with existing character
+	ld (hl), a
+	ld a, c
+	cp 0
+	jr z, .writerotated.skip   ; nothing to do
+	inc l             ; next char cell
+	or (hl)
+	ld (hl), a
+	dec l             ; restore l
 .writerotated.skip      
-      inc h             ; next line
-      inc de            ; next line of character bitmap
-      pop bc            ; retrieve outer loop count
-      djnz .fbwriterotated
+	inc h             ; next line
+	inc de            ; next line of character bitmap
+	pop bc            ; retrieve outer loop count
+	djnz .fbwriterotated
 .nextchar
-      ld a, (v_column)
-      inc a
-      cp 42
-      jr nz, .nextchar.done
+	ld a, (v_column)
+	inc a
+	cp 42
+	jr nz, .nextchar.done
 .nextrow      
-      ld a, (v_rowcount) ; check the row counter
-      cp 23		; 24th line?
-      jr nz, .noscroll
-      call F_jumpscroll
-      ld a, 16
-      ld (v_rowcount), a
-      ld hl, 0x5000     ; address of first row of bottom 1/3rd
-      jr .nextchar.saverow ; save row addr and complete
+	ld a, (v_rowcount) ; check the row counter
+	cp 23		; 24th line?
+	jr nz, .noscroll
+	call F_jumpscroll
+	ld a, 16
+	ld (v_rowcount), a
+	ld hl, 0x5000     ; address of first row of bottom 1/3rd
+	jr .nextchar.saverow ; save row addr and complete
 .noscroll
-      inc a
-      ld (v_rowcount), a
-      ld hl, (v_row)    ; advance framebuffer pointer to next character row
-      ld a, l
-      add 32
-      jr c, .nextthird
-      ld l, a
-      jr .nextchar.saverow
+	inc a
+	ld (v_rowcount), a
+	ld hl, (v_row)    ; advance framebuffer pointer to next character row
+	ld a, l
+	add 32
+	jr c, .nextthird
+	ld l, a
+	jr .nextchar.saverow
 .nextthird
-      ld l, 0
-      ld a, h
-      add 8
-      ld h, a
+	ld l, 0
+	ld a, h
+	add 8
+	ld h, a
 .nextchar.saverow
-      ld (v_row), hl
-      xor a             ; a = 0
+	ld (v_row), hl
+	xor a             ; a = 0
 .nextchar.done
-      ld (v_column), a
+	ld (v_column), a
 
-      pop de
-      pop bc
-      pop hl
-      ret
+	call F_poppageA		; restore page A
+	pop de
+	pop bc
+	pop hl
+	ret
 
 .norotate
-      ld b, 8
+	ld b, 8
 .norotate.loop
-      ld a, (de)        ; move bitmap into the frame buffer
-      ld (hl), a
-      inc de            ; next line of bitmap
-      inc h             ; next line of frame buffer
-      djnz .norotate.loop
-      jr .nextchar
+	ld a, (de)        ; move bitmap into the frame buffer
+	ld (hl), a
+	inc de            ; next line of bitmap
+	inc h             ; next line of frame buffer
+	djnz .norotate.loop
+	jr .nextchar
 
 ;--------------------------------------------------------------------------
 ; F_jumpscroll:
@@ -189,7 +183,11 @@ F_jumpscroll
 ; No parameters.
 F_erasechar
 	; Find the address in the frame buffer.
+	ld a, DATAROM
+	call F_pushpageA
 	ld hl, col_lookup
+	call F_poppageA
+
 	ld a, (v_column)
 	ld b, a
 	add a, l
@@ -274,16 +272,13 @@ F_clear
 ; F_print: Prints a null terminated string.
 ; Parameters: HL = pointer to string
 F_print
-	ld a, DATAROM		; Page in the data rom but just once.
-	call F_pushpageA
 .loop
 	ld a, (hl)
 	and a			; NULL?
 	jr z, .done
-	call F_putc_5by8_nopage ; print it skipping the pagein routine
+	call F_putc_5by8	; print the char
 	inc hl
 	jr .loop
 .done
-	call F_poppageA		; restore last page
 	ret
 

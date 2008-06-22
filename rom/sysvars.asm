@@ -111,6 +111,7 @@ v_bank678	defb 0		; saved state of BANK678
 v_hlsave	defw 0
 v_desave	defw 0
 v_bcsave	defw 0
+v_pagerws	defw 0 		; register storage for the pager
 
 ; Miscellaneous TCP variables
 v_localport	defw 0		; Storage for current local port for connect

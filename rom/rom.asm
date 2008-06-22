@@ -54,6 +54,9 @@
 	include "ui_output.asm"		; User interface: screen output
 	include "jumptable.asm"		; Jump table
 
+	block 0xFD5-$,0xFF
+	include "ui_lookup.asm"
+
 	; Memory map for upper fixed page (chip 3 page 0)
 	include "sysvars.sym"		; System variables (from earlier asm)
 	include "sysdefs.asm"		; General definitions

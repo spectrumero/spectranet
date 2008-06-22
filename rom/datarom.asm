@@ -24,7 +24,7 @@
 ; This lives in page 1 of flash, and provides data such as the character
 ; set for PUTCHAR42 and other non-code items. It gets paged into area A.
 	org 0x1000
-	include "ui_lookup.asm"
+;	include "ui_lookup.asm"
 	include "ui_charset.asm"
 
 DATAROM	equ 0x01	; physical flash page

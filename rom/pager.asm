@@ -46,37 +46,37 @@ F_setpageB
 ; Set paging area A and push the page currently selected onto the stack.
 ; A = new page to select
 F_pushpageA
-	ld (v_hlsave), hl
+	ld (v_pagerws), hl
 	ld hl, (v_pga)		; get current page (and the adjacent byte)
 	ex (sp), hl		; stack it
 	push hl			; put the return address back
 	call F_setpageA		; set the new page
-	ld hl, (v_hlsave)	; restore hl
+	ld hl, (v_pagerws)	; restore hl
 	ret
 
 ; Restore page area A from the stack
 F_poppageA
-	ld (v_hlsave), hl
+	ld (v_pagerws), hl
 	pop hl			; get the return address
 	ex (sp), hl		; get the page to restore
 	ld a, l			; the page itself being in L
 	call F_setpageA		; restore the page
-	ld hl, (v_hlsave)
+	ld hl, (v_pagerws)
 	ret
 	
 ;--------------------------------------------------------------------------
 ; J_hldispatch and J_ixdispatch:
 ; Dispatches a page-in from the call table, and unpages when it's done
 J_hldispatch
-	ld (v_hlsave), hl	; save HL without disturbing the stack
+	ld (v_pagerws), hl	; save HL without disturbing the stack
 	ld hl, UNPAGE		; unpage address
 	push hl			; this is now the return address
-	ld hl, (v_hlsave)	; restore hl
+	ld hl, (v_pagerws)	; restore hl
 	jp (hl)			; jump to routine.
 J_ixdispatch
-	ld (v_hlsave), hl	; save HL without disturbing the stack
+	ld (v_pagerws), hl	; save HL without disturbing the stack
 	ld hl, UNPAGE
 	push hl			; this is now the return address
-	ld hl, (v_hlsave)	; restore hl
+	ld hl, (v_pagerws)	; restore hl
 	jp (ix)			; jump to routine.
 
