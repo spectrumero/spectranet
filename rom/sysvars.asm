@@ -115,6 +115,8 @@ v_pagerws	defw 0 		; register storage for the pager
 
 ; Miscellaneous TCP variables
 v_localport	defw 0		; Storage for current local port for connect
+v_sockfd	defb 0		; Storage for a socket file descriptor
+v_connfd	defb 0		; Storage for a socket file descriptor
 
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

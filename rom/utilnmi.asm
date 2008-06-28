@@ -23,13 +23,18 @@
 ; Utility ROM - NMI handler
 F_nmihandler
 	call F_savescreen	; save frame buffer contents
-	ld hl, CONFIGUTIL_START	; start of the configuration utility
-	ld de, 0x3000		; start of fixed RAM page
-	ld bc, CONFIGUTIL_END-CONFIGUTIL_START
-	ldir			; copy utility to RAM
-	call 0x3000		; call it
+.menuloop
+	call CLEAR42
+	ld hl, STR_nmimenu	; title
+	call PRINT42
+	ld hl, MENU_nmi		; generate the menu
+	call F_genmenu
+	ld hl, MENU_nmi
+	call F_getmenuopt	; act on user keypress
+	jr nz, .menuloop	; routines set Z if they want to exit
 	call F_restorescreen
 	ret
+
 
 ;-------------------------------------------------------------------------
 ; F_savescreen
@@ -67,5 +72,158 @@ F_restorescreen
 	ldir
 	ret
 
-STR_nmi	defb "Testing NMI handler\n",0
+;---------------------------------------------------------------------
+; F_config
+; Invokes the configuration program
+F_config	
+	call CLEAR42
+	ld hl, CONFIGUTIL_START	; start of the configuration utility
+	ld de, 0x3000		; start of fixed RAM page
+	ld bc, CONFIGUTIL_END-CONFIGUTIL_START
+	ldir			; copy utility to RAM
+	call 0x3000		; call it
+	or 1			; reset Z
+	ret
+
+;-----------------------------------------------------------------------
+; F_loader
+; Loads some data into RAM.
+F_loader
+	call CLEAR42
+	
+	ld c, SOCK_STREAM	; open a TCP socket
+	call SOCKET		; file descriptor in A
+	jp c, .borked		; or c set if failed
+	ld (v_sockfd), a	; save the fd
+
+	ld de, 2000		; port 2000
+	call BIND		; bind to the port
+	jp c, .borked
+
+	ld a, (v_sockfd)	; socket we want to listen on
+	call LISTEN		; listen
+	jr c, .borked
+
+	; Display an informative message to the user showing the
+	; IP and port we are listening on.
+	ld hl, STR_send
+	call PRINT42
+	ld de, buf_workspace	; where to deposit our IP address
+	call GET_IFCONFIG_INET
+	ld hl, buf_workspace
+	ld de, buf_workspace+4
+	call LONG2IPSTRING
+	ld hl, buf_workspace+4
+	call PRINT42
+	ld hl, STR_port
+	call PRINT42
+
+	; Wait for a connection.		
+	ld a, (v_sockfd)
+	call ACCEPT		; block until something connects
+	jr c, .borked
+	ld (v_connfd), a	; save the connection file descriptor
+
+	; Get the first 4 bytes which contains the start address and
+	; data length.
+	ld de, buf_workspace	; where to store
+	ld bc, 4		; how many bytes
+	call RECV		; block till we get them
+	call F_printxfinfo	; print information about the data
+
+	; Receive the data.
+	ld de, (buf_workspace)	; current address to write to
+.recvloop
+	ld a, (v_connfd)
+	ld bc, 1024		; receive up to 1K at a time
+	call RECV
+	jr c, .borked
+	ld hl, (buf_workspace+2) ; get remaining length
+	sbc hl, bc
+	ld a, h			; are we done yet?
+	or l
+	jr z, .recvdone
+	ld (buf_workspace+2), hl ; save remaining length
+	ld hl, (buf_workspace)	; get current pointer
+	add hl, bc		; increment it
+	ld (buf_workspace), hl	; save it
+	ex de, hl
+	ld a, '.'		; progress marker
+	call PUTCHAR42
+	jr .recvloop		; get the next block
+.recvdone
+	ld a, (v_connfd)	; close the connection
+	call CLOSE
+	ld a, (v_sockfd)
+	call CLOSE
+.keymsg
+	ld hl, STR_xtoexit
+	call PRINT42
+.waitforkey			; wait for a key so the user has a chance
+	call GETKEY		; to see what happened.
+	cp 'x'			; press 'x' to exit
+	jr nz, .waitforkey
+	or 1			; ensure zero flag is cleared
+	ret
+.borked
+	ld hl, buf_workspace
+	call ITOH8
+	ld hl, STR_borked
+	call PRINT42
+	ld hl, buf_workspace
+	call PRINT42
+	jr .keymsg
+
+; internal function for the above - print info of what's being tx'd to us.
+F_printxfinfo
+	ld hl, STR_est
+	call PRINT42
+	ld hl, STR_start
+	call PRINT42
+	ld a, (buf_workspace+1)
+	ld hl, buf_workspace+4
+	call ITOH8
+	ld a, (buf_workspace)
+	call ITOH8
+	ld hl, buf_workspace+4
+	call PRINT42
+	ld a, '\n'
+	call PUTCHAR42
+	ld hl, STR_len
+	call PRINT42
+	ld a, (buf_workspace+3)
+	ld hl, buf_workspace+4
+	call ITOH8
+	ld a, (buf_workspace+2)
+	call ITOH8
+	ld hl, buf_workspace+4
+	call PRINT42
+	ld a, '\n'
+	call PUTCHAR42
+	ret
+
+;---------------------------------------------------------------------
+; F_exit
+; A very short routine for the menu to be able to set the zero flag.	
+F_exit
+	xor a			; set zero flag
+	ret
+
+MENU_nmi
+	defw	STR_config,F_config
+	defw	STR_loader,F_loader
+	defw	STR_exit,F_exit
+	defw	0,0
+
+STR_config	defb "Configure network settings",0
+STR_loader	defb "Load arbitrary data to RAM",0
+STR_exit	defb "Exit",0
+STR_nmimenu	defb "Spectranet NMI menu\n\n",0
+STR_send	defb "Listening on ",0
+STR_port	defb " port 2000\n",0
+STR_start	defb " Start: ",0
+STR_len		defb "Length: ",0
+STR_xtoexit	defb "\nPress 'x' to exit.\n",0
+STR_borked	defb "\nOperation failed with rc=",0
+STR_est		defb "Connection established\n",0
 

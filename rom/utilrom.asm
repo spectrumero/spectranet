@@ -30,6 +30,7 @@
 
 ; temporary!
 	define SOCK_DGRAM 2
+	define SOCK_STREAM 1
 
 	org 0x2000
 	defb 0xAA
@@ -53,7 +54,7 @@ CONFIGUTIL_START
 	incbin "configutilrom.out"	; Configuration utility image
 CONFIGUTIL_END
 ;	include "ui_config.asm"		; configuration user interface
-;	include "ui_menu.asm"		; simple menu generator
+	include "ui_menu.asm"		; simple menu generator
 
 ;fwstart
 ;	incbin "flashwrite.out"		; this gets LDIR'd to RAM

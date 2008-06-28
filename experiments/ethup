@@ -2,6 +2,7 @@
 use IO::Socket::INET;
 use strict;
 
+my $ip=shift;
 my $file=shift;
 my $addr=shift;
 
@@ -24,8 +25,8 @@ if($size == 0 | $size > 65535)
 	exit;
 }
 
-my $sock=IO::Socket::INET->new(PeerAddr => '172.16.0.200',
-				PeerPort => '23',
+my $sock=IO::Socket::INET->new(PeerAddr => $ip,
+				PeerPort => '2000',
 				Proto => 'tcp')
 	or die("Opening socket: $!");
 
