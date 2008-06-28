@@ -38,9 +38,9 @@
 	call F_setpageA	
 	ld a, S_MR_TCP|S_MR_NDMC ; Create a TCP socket, no delayed ACK
 	ld (Sn_MR), a		; as socket 0
-	ld a, 23		; port 23
+	ld a, 2000 / 256	; port 2000
 	ld (Sn_PORT1), a	; lsb of port address
-	xor a
+	ld a, 2000 % 256
 	ld (Sn_PORT0), a	; msb of port address
 	ld a, S_CR_OPEN		; open the socket
 	ld (Sn_CR), a
