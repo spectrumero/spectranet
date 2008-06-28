@@ -74,6 +74,7 @@ NMI
 UNPAGE
 	ret
 NMI2
+	call F_pagezxbasic	; ensure the BASIC ROM is paged in
 	ld hl, (NMI_VECTOR)	; Test NMI_VECTOR
 	ld a, 0xFF
 	cp h			; FF = unset
@@ -82,6 +83,7 @@ NMI2
 	push de			; save it, so subsequent RET comes back
 	jp (hl)			; jump to the NMI vector
 .nmidone
+	call F_pagezxrestore	; restore original 128K paging settings
 	pop af
 	pop bc
 	pop de
