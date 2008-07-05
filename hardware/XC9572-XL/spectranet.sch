@@ -53,10 +53,8 @@ BEGIN SCHEMATIC
         SIGNAL PA15
         SIGNAL PA16
         SIGNAL PA17
-        BEGIN SIGNAL PA18
-        END SIGNAL
-        BEGIN SIGNAL PA19
-        END SIGNAL
+        SIGNAL PA18
+        SIGNAL PA19
         SIGNAL XLXN_145
         SIGNAL XLXN_202
         SIGNAL XLXN_203
@@ -86,7 +84,6 @@ BEGIN SCHEMATIC
         SIGNAL XLXN_371
         SIGNAL XLXN_372
         SIGNAL XLXN_381
-        SIGNAL XLXN_384
         SIGNAL NMI_L
         SIGNAL NMIEVT
         SIGNAL XLXN_394
@@ -114,7 +111,7 @@ BEGIN SCHEMATIC
         SIGNAL CALLTRAP
         SIGNAL XLXN_356
         SIGNAL D(7:0)
-        SIGNAL XLXN_26
+        SIGNAL WRITE_ENABLE
         SIGNAL IO_PAGEIN
         SIGNAL XLXN_481
         SIGNAL XLXN_482
@@ -128,7 +125,7 @@ BEGIN SCHEMATIC
         SIGNAL RESET_L
         SIGNAL XLXN_514
         SIGNAL XLXN_515
-        SIGNAL XLXN_516
+        SIGNAL TRAP_PORT
         SIGNAL XLXN_518
         SIGNAL XLXN_519
         SIGNAL XLXN_521
@@ -149,19 +146,11 @@ BEGIN SCHEMATIC
         SIGNAL XLXN_270
         SIGNAL XLXN_275
         SIGNAL XLXN_279
-        SIGNAL XLXN_585
-        SIGNAL XLXN_586
-        SIGNAL XLXN_587
-        SIGNAL XLXN_588
-        SIGNAL INT_L
-        SIGNAL INT_TRAP
-        SIGNAL INT_ENABLE
+        BEGIN SIGNAL INT_ENABLE
+        END SIGNAL
         SIGNAL A15OUT
         SIGNAL XLXN_595
         SIGNAL ROMCS_SENSE
-        SIGNAL XLXN_600
-        SIGNAL XLXN_601
-        SIGNAL INT_OUT
         SIGNAL XLXN_604
         SIGNAL XLXN_605
         SIGNAL XLXN_612
@@ -176,9 +165,27 @@ BEGIN SCHEMATIC
         SIGNAL XLXN_626
         SIGNAL XLXN_628
         SIGNAL RETN
-        SIGNAL XLXN_157
-        SIGNAL XLXN_158
         SIGNAL XLXN_159
+        SIGNAL XLXN_630(7:0)
+        SIGNAL XLXN_631(7:0)
+        SIGNAL A(7:0)
+        SIGNAL A(15:8)
+        SIGNAL XLXN_638
+        SIGNAL XLXN_640
+        SIGNAL XLXN_643
+        SIGNAL XLXN_637
+        SIGNAL XLXN_649
+        SIGNAL XLXN_650
+        SIGNAL XLXN_651
+        SIGNAL XLXN_652
+        BEGIN SIGNAL MATCH_LO
+        END SIGNAL
+        BEGIN SIGNAL MATCH_HI
+        END SIGNAL
+        SIGNAL XLXN_655
+        SIGNAL XLXN_659
+        BEGIN SIGNAL TRAPMATCH
+        END SIGNAL
         PORT Input M1_L
         PORT Input CLK
         PORT Output PA12
@@ -203,10 +210,8 @@ BEGIN SCHEMATIC
         PORT Output HLDROMCS_ODL
         PORT Input TRAPENABLE_L
         PORT Output NMIOUT_L
-        PORT Input INT_L
         PORT Output A15OUT
         PORT Input ROMCS_SENSE
-        PORT Output INT_OUT
         BEGIN BLOCKDEF d2_4e
             TIMESTAMP 2000 1 1 10 10 10
             RECTANGLE N 64 -384 320 -64 
@@ -533,16 +538,76 @@ BEGIN SCHEMATIC
             LINE N 256 -320 216 -320 
             CIRCLE N 192 -332 216 -308 
         END BLOCKDEF
-        BEGIN BLOCKDEF and2b1
+        BEGIN BLOCKDEF comp8
             TIMESTAMP 2000 1 1 10 10 10
+            RECTANGLE N 64 -384 320 -64 
+            LINE N 384 -224 320 -224 
+            RECTANGLE N 0 -332 64 -308 
+            LINE N 0 -320 64 -320 
+            RECTANGLE N 0 -140 64 -116 
+            LINE N 0 -128 64 -128 
+        END BLOCKDEF
+        BEGIN BLOCKDEF fjkc
+            TIMESTAMP 2000 1 1 10 10 10
+            LINE N 0 -128 64 -128 
+            LINE N 0 -32 64 -32 
+            LINE N 0 -320 64 -320 
+            LINE N 384 -256 320 -256 
+            LINE N 0 -256 64 -256 
+            LINE N 192 -32 64 -32 
+            LINE N 192 -64 192 -32 
+            LINE N 80 -128 64 -144 
+            LINE N 64 -112 80 -128 
+            RECTANGLE N 64 -384 320 -64 
+        END BLOCKDEF
+        BEGIN BLOCKDEF nand2
+            TIMESTAMP 2000 1 1 10 10 10
+            LINE N 0 -64 64 -64 
+            LINE N 0 -128 64 -128 
+            LINE N 256 -96 216 -96 
+            CIRCLE N 192 -108 216 -84 
             LINE N 64 -48 64 -144 
             LINE N 64 -144 144 -144 
             LINE N 144 -48 64 -48 
             ARC N 96 -144 192 -48 144 -48 144 -144 
-            LINE N 256 -96 192 -96 
-            LINE N 0 -128 64 -128 
+        END BLOCKDEF
+        BEGIN BLOCKDEF nand2b1
+            TIMESTAMP 2000 1 1 10 10 10
             LINE N 0 -64 40 -64 
             CIRCLE N 40 -76 64 -52 
+            LINE N 0 -128 64 -128 
+            LINE N 256 -96 216 -96 
+            CIRCLE N 192 -108 216 -84 
+            LINE N 64 -48 64 -144 
+            LINE N 64 -144 144 -144 
+            LINE N 144 -48 64 -48 
+            ARC N 96 -144 192 -48 144 -48 144 -144 
+        END BLOCKDEF
+        BEGIN BLOCKDEF or3
+            TIMESTAMP 2000 1 1 10 10 10
+            LINE N 0 -64 48 -64 
+            LINE N 0 -128 72 -128 
+            LINE N 0 -192 48 -192 
+            LINE N 256 -128 192 -128 
+            ARC N 28 -256 204 -80 112 -80 192 -128 
+            ARC N -40 -184 72 -72 48 -80 48 -176 
+            LINE N 48 -64 48 -80 
+            LINE N 48 -192 48 -176 
+            LINE N 112 -80 48 -80 
+            ARC N 28 -176 204 0 192 -128 112 -176 
+            LINE N 112 -176 48 -176 
+        END BLOCKDEF
+        BEGIN BLOCKDEF or2b1
+            TIMESTAMP 2000 1 1 10 10 10
+            LINE N 0 -64 32 -64 
+            CIRCLE N 32 -76 56 -52 
+            LINE N 0 -128 64 -128 
+            LINE N 256 -96 192 -96 
+            LINE N 112 -48 48 -48 
+            ARC N 28 -144 204 32 192 -96 112 -144 
+            LINE N 112 -144 48 -144 
+            ARC N -40 -152 72 -40 48 -48 48 -144 
+            ARC N 28 -224 204 -48 112 -48 192 -96 
         END BLOCKDEF
         BEGIN BLOCK XLXI_30 m2_1e
             PIN D0 FFA(0)
@@ -725,14 +790,10 @@ BEGIN SCHEMATIC
             PIN O XLXN_394
         END BLOCK
         BEGIN BLOCK XLXI_136 ldc
-            PIN G XLXN_384
+            PIN G XLXN_659
             PIN CLR XLXN_562
             PIN D XLXN_561
             PIN Q NMIEVT
-        END BLOCK
-        BEGIN BLOCK XLXI_138 inv
-            PIN I NMI_L
-            PIN O XLXN_384
         END BLOCK
         BEGIN BLOCK XLXI_139 or2
             PIN I0 RETN
@@ -842,14 +903,14 @@ BEGIN SCHEMATIC
         END BLOCK
         BEGIN BLOCK XLXI_7 fd8ce
             PIN C XLXN_518
-            PIN CE XLXN_26
+            PIN CE WRITE_ENABLE
             PIN CLR RESET_H
             PIN D(7:0) D(7:0)
             PIN Q(7:0) FFA(7:0)
         END BLOCK
         BEGIN BLOCK XLXI_8 fd8ce
             PIN C XLXN_519
-            PIN CE XLXN_26
+            PIN CE WRITE_ENABLE
             PIN CLR RESET_H
             PIN D(7:0) D(7:0)
             PIN Q(7:0) FFB(7:0)
@@ -863,7 +924,7 @@ BEGIN SCHEMATIC
         END BLOCK
         BEGIN BLOCK XLXI_173 fdce
             PIN C XLXN_521
-            PIN CE XLXN_26
+            PIN CE WRITE_ENABLE
             PIN CLR XLXN_481
             PIN D D(0)
             PIN Q IO_PAGEIN
@@ -905,13 +966,13 @@ BEGIN SCHEMATIC
             PIN E XLXN_13
             PIN D0 XLXN_514
             PIN D1 XLXN_515
-            PIN D2 XLXN_516
+            PIN D2 TRAP_PORT
             PIN D3 XLXN_537
         END BLOCK
         BEGIN BLOCK XLXI_9 fd
             PIN C CLK
             PIN D XLXN_23
-            PIN Q XLXN_26
+            PIN Q WRITE_ENABLE
         END BLOCK
         BEGIN BLOCK XLXI_10 inv
             PIN I WR_L
@@ -1021,55 +1082,12 @@ BEGIN SCHEMATIC
             PIN I1 XLXN_275
             PIN O UNPAGE
         END BLOCK
-        BEGIN BLOCK XLXI_235 nor8
-            PIN I0 D(0)
-            PIN I1 D(1)
-            PIN I2 D(2)
-            PIN I3 XLXN_586
-            PIN I4 XLXN_587
-            PIN I5 XLXN_585
-            PIN I6 D(6)
-            PIN I7 D(7)
-            PIN O XLXN_588
-        END BLOCK
-        BEGIN BLOCK XLXI_236 inv
-            PIN I D(5)
-            PIN O XLXN_585
-        END BLOCK
-        BEGIN BLOCK XLXI_238 inv
-            PIN I D(3)
-            PIN O XLXN_586
-        END BLOCK
-        BEGIN BLOCK XLXI_239 inv
-            PIN I D(4)
-            PIN O XLXN_587
-        END BLOCK
-        BEGIN BLOCK XLXI_242 or4
-            PIN I0 XLXN_394
-            PIN I1 XLXN_364
-            PIN I2 XLXN_363
-            PIN I3 INT_TRAP
-            PIN O XLXN_482
-        END BLOCK
         BEGIN BLOCK XLXI_244 fdce
             PIN C XLXN_521
-            PIN CE XLXN_26
+            PIN CE WRITE_ENABLE
             PIN CLR RESET_H
             PIN D D(3)
             PIN Q INT_ENABLE
-        END BLOCK
-        BEGIN BLOCK XLXI_245 buft
-            PIN I INT_ENABLE
-            PIN T RD_SREG
-            PIN O D(3)
-        END BLOCK
-        BEGIN BLOCK XLXI_246 and5b2
-            PIN I0 INT_L
-            PIN I1 M1_L
-            PIN I2 XLXN_588
-            PIN I3 UAZERO
-            PIN I4 INT_ENABLE
-            PIN O INT_TRAP
         END BLOCK
         BEGIN BLOCK XLXI_83 or2
             PIN I0 HLDROMCS
@@ -1085,19 +1103,6 @@ BEGIN SCHEMATIC
             PIN E XLXN_595
             PIN I XLXN_552
             PIN O HLDROMCS_ODL
-        END BLOCK
-        BEGIN BLOCK XLXI_250 and2b1
-            PIN I0 INT_L
-            PIN I1 INT_ENABLE
-            PIN O XLXN_600
-        END BLOCK
-        BEGIN BLOCK XLXI_252 obufe
-            PIN E XLXN_600
-            PIN I XLXN_601
-            PIN O INT_OUT
-        END BLOCK
-        BEGIN BLOCK XLXI_253 gnd
-            PIN G XLXN_601
         END BLOCK
         BEGIN BLOCK XLXI_254 and2
             PIN I0 UAZERO
@@ -1189,6 +1194,69 @@ BEGIN SCHEMATIC
             PIN I1 PA18
             PIN O XLXN_203
         END BLOCK
+        BEGIN BLOCK XLXI_276 comp8
+            PIN A(7:0) A(7:0)
+            PIN B(7:0) XLXN_630(7:0)
+            PIN EQ MATCH_LO
+        END BLOCK
+        BEGIN BLOCK XLXI_277 comp8
+            PIN A(7:0) A(15:8)
+            PIN B(7:0) XLXN_631(7:0)
+            PIN EQ MATCH_HI
+        END BLOCK
+        BEGIN BLOCK XLXI_280 fd8ce
+            PIN C XLXN_651
+            PIN CE WRITE_ENABLE
+            PIN CLR RESET_H
+            PIN D(7:0) D(7:0)
+            PIN Q(7:0) XLXN_630(7:0)
+        END BLOCK
+        BEGIN BLOCK XLXI_281 fd8ce
+            PIN C XLXN_652
+            PIN CE WRITE_ENABLE
+            PIN CLR RESET_H
+            PIN D(7:0) D(7:0)
+            PIN Q(7:0) XLXN_631(7:0)
+        END BLOCK
+        BEGIN BLOCK XLXI_285 nand2
+            PIN I0 XLXN_650
+            PIN I1 TRAP_PORT
+            PIN O XLXN_651
+        END BLOCK
+        BEGIN BLOCK XLXI_279 vcc
+            PIN P XLXN_637
+        END BLOCK
+        BEGIN BLOCK XLXI_278 fjkc
+            PIN C TRAP_PORT
+            PIN CLR RESET_H
+            PIN J XLXN_637
+            PIN K XLXN_637
+            PIN Q XLXN_650
+        END BLOCK
+        BEGIN BLOCK XLXI_292 nand2b1
+            PIN I0 XLXN_650
+            PIN I1 TRAP_PORT
+            PIN O XLXN_652
+        END BLOCK
+        BEGIN BLOCK XLXI_296 or3
+            PIN I0 XLXN_394
+            PIN I1 XLXN_364
+            PIN I2 XLXN_363
+            PIN O XLXN_482
+        END BLOCK
+        BEGIN BLOCK XLXI_298 and5b2
+            PIN I0 MREQ_L
+            PIN I1 M1_L
+            PIN I2 MATCH_HI
+            PIN I3 MATCH_LO
+            PIN I4 INT_ENABLE
+            PIN O TRAPMATCH
+        END BLOCK
+        BEGIN BLOCK XLXI_299 or2b1
+            PIN I0 NMI_L
+            PIN I1 TRAPMATCH
+            PIN O XLXN_659
+        END BLOCK
     END NETLIST
     BEGIN SHEET 1 3520 2720
         INSTANCE XLXI_7 2448 624 R0
@@ -1206,19 +1274,26 @@ BEGIN SCHEMATIC
             WIRE 2352 1024 2352 1408
             WIRE 2352 368 2448 368
         END BRANCH
-        BEGIN BRANCH XLXN_26
+        BEGIN BRANCH WRITE_ENABLE
             WIRE 848 1856 2288 1856
             WIRE 2288 1856 2288 2288
             WIRE 2288 2288 2432 2288
             WIRE 848 1856 848 2288
             WIRE 848 2288 1136 2288
-            WIRE 1744 336 2288 336
+            WIRE 1744 336 1904 336
+            WIRE 1904 336 2288 336
             WIRE 2288 336 2288 432
             WIRE 2288 432 2448 432
             WIRE 2288 432 2288 1088
             WIRE 2288 1088 2432 1088
             WIRE 2288 1088 2288 1824
             WIRE 2288 1824 2288 1856
+            BEGIN DISPLAY 848 1856 ATTR Name
+                ALIGNMENT SOFT-BCENTER
+            END DISPLAY
+            BEGIN DISPLAY 1909 336 ATTR Name
+                ALIGNMENT SOFT-BCENTER
+            END DISPLAY
         END BRANCH
         BEGIN BRANCH RESET_H
             WIRE 1056 2448 1136 2448
@@ -1473,8 +1548,14 @@ BEGIN SCHEMATIC
             WIRE 1744 832 1776 832
         END BRANCH
         INSTANCE XLXI_185 1776 864 R0
-        BEGIN BRANCH XLXN_516
+        BEGIN BRANCH TRAP_PORT
             WIRE 1744 896 1776 896
+            WIRE 1776 896 2000 896
+            WIRE 2000 896 2032 896
+            WIRE 2032 896 2048 896
+            BEGIN DISPLAY 1996 896 ATTR Name
+                ALIGNMENT SOFT-BCENTER
+            END DISPLAY
         END BRANCH
         BEGIN BRANCH XLXN_518
             WIRE 2000 768 2208 768
@@ -1529,35 +1610,14 @@ BEGIN SCHEMATIC
         INSTANCE XLXI_199 1456 1616 R0
         INSTANCE XLXI_201 3136 2096 R0
         INSTANCE XLXI_244 1136 2480 R0
-        BEGIN BRANCH INT_ENABLE
-            WIRE 1456 2464 1600 2464
-            WIRE 1456 2464 1456 2672
-            WIRE 1456 2672 1568 2672
-            WIRE 1520 2224 1568 2224
-            WIRE 1568 2224 1568 2224
-            WIRE 1568 2224 1600 2224
-            WIRE 1600 2224 1632 2224
-            WIRE 1600 2224 1600 2464
-            BEGIN DISPLAY 1572 2224 ATTR Name
-                ALIGNMENT SOFT-BCENTER
-            END DISPLAY
-        END BRANCH
-        INSTANCE XLXI_245 1568 2704 R0
-        BEGIN BRANCH RD_SREG
-            WIRE 1392 2608 1568 2608
-            BEGIN DISPLAY 1392 2608 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(3)
-            WIRE 1792 2672 1888 2672
-            WIRE 1888 2672 1888 2672
-            WIRE 1888 2672 1904 2672
-            BEGIN DISPLAY 1884 2672 ATTR Name
-                ALIGNMENT SOFT-BCENTER
-            END DISPLAY
-        END BRANCH
         BUSTAP 2144 1568 2240 1568
+        BEGIN BRANCH INT_ENABLE
+            WIRE 1520 2224 1600 2224
+            WIRE 1600 2224 1648 2224
+            BEGIN DISPLAY 1608 2224 ATTR Name
+                ALIGNMENT SOFT-BCENTER
+            END DISPLAY
+        END BRANCH
     END SHEET
     BEGIN SHEET 2 3520 2720
         INSTANCE XLXI_30 1168 352 R0
@@ -2148,12 +2208,8 @@ BEGIN SCHEMATIC
             WIRE 704 2352 1040 2352
         END BRANCH
         INSTANCE XLXI_136 2224 2000 R0
-        INSTANCE XLXI_138 1776 1904 R0
-        BEGIN BRANCH XLXN_384
-            WIRE 2000 1872 2224 1872
-        END BRANCH
         BEGIN BRANCH NMI_L
-            WIRE 1648 1872 1776 1872
+            WIRE 1648 1872 1744 1872
         END BRANCH
         IOMARKER 1648 1872 NMI_L R180 28
         BEGIN BRANCH RESET_H
@@ -2221,12 +2277,13 @@ BEGIN SCHEMATIC
         END BRANCH
         INSTANCE XLXI_175 2192 880 R0
         BEGIN BRANCH XLXN_482
-            WIRE 1616 624 1712 624
+            WIRE 1616 656 1712 656
+            WIRE 1712 432 1712 624
             WIRE 1712 624 2096 624
             WIRE 2096 624 2192 624
             WIRE 2096 624 2096 688
             WIRE 2096 688 2192 688
-            WIRE 1712 432 1712 624
+            WIRE 1712 624 1712 656
             WIRE 1712 432 2688 432
             WIRE 2688 432 2688 560
             WIRE 2688 560 2768 560
@@ -2310,14 +2367,6 @@ BEGIN SCHEMATIC
             WIRE 2160 2064 2224 2064
             WIRE 2224 1968 2224 2064
         END BRANCH
-        INSTANCE XLXI_242 1360 784 R0
-        BEGIN BRANCH INT_TRAP
-            WIRE 1296 416 1360 416
-            WIRE 1360 416 1360 528
-            BEGIN DISPLAY 1296 416 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
         BEGIN BRANCH A(15)
             WIRE 2976 96 3040 96
             BEGIN DISPLAY 2976 96 ATTR Name
@@ -2364,6 +2413,19 @@ BEGIN SCHEMATIC
         BEGIN BRANCH RETN
             WIRE 1760 2096 1888 2096
             BEGIN DISPLAY 1760 2096 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH XLXN_659
+            WIRE 2000 1840 2144 1840
+            WIRE 2144 1840 2144 1872
+            WIRE 2144 1872 2224 1872
+        END BRANCH
+        INSTANCE XLXI_296 1360 784 R0
+        INSTANCE XLXI_299 1744 1936 R0
+        BEGIN BRANCH TRAPMATCH
+            WIRE 1696 1808 1744 1808
+            BEGIN DISPLAY 1696 1808 ATTR Name
                 ALIGNMENT SOFT-RIGHT
             END DISPLAY
         END BRANCH
@@ -2493,127 +2555,6 @@ BEGIN SCHEMATIC
             END DISPLAY
         END BRANCH
         INSTANCE XLXI_129 2384 2240 R0
-        INSTANCE XLXI_235 832 1008 R0
-        BEGIN BRANCH XLXN_585
-            WIRE 800 624 832 624
-        END BRANCH
-        INSTANCE XLXI_236 576 656 R0
-        BEGIN BRANCH XLXN_586
-            WIRE 800 752 832 752
-        END BRANCH
-        INSTANCE XLXI_238 576 784 R0
-        BEGIN BRANCH XLXN_587
-            WIRE 800 688 832 688
-        END BRANCH
-        INSTANCE XLXI_239 576 720 R0
-        BEGIN BRANCH XLXN_588
-            WIRE 1088 720 1248 720
-        END BRANCH
-        BEGIN BRANCH UAZERO
-            WIRE 1152 656 1248 656
-            BEGIN DISPLAY 1152 656 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH M1_L
-            WIRE 1152 784 1248 784
-            BEGIN DISPLAY 1152 784 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH INT_L
-            WIRE 832 1152 1152 1152
-            WIRE 1152 1152 1200 1152
-            WIRE 1200 1152 1520 1152
-            WIRE 1152 848 1248 848
-            WIRE 1152 848 1152 1152
-            WIRE 1520 1072 1520 1152
-            WIRE 1520 1072 1584 1072
-        END BRANCH
-        IOMARKER 832 1152 INT_L R180 28
-        BEGIN BRANCH D(7)
-            WIRE 512 496 832 496
-            BEGIN DISPLAY 512 496 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(6)
-            WIRE 512 560 832 560
-            BEGIN DISPLAY 512 560 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(5)
-            WIRE 512 624 576 624
-            BEGIN DISPLAY 512 624 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(4)
-            WIRE 512 688 576 688
-            BEGIN DISPLAY 512 688 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(3)
-            WIRE 512 752 576 752
-            BEGIN DISPLAY 512 752 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(2)
-            WIRE 512 816 528 816
-            WIRE 528 816 832 816
-            BEGIN DISPLAY 512 816 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(1)
-            WIRE 512 880 832 880
-            BEGIN DISPLAY 512 880 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH D(0)
-            WIRE 512 944 832 944
-            BEGIN DISPLAY 512 944 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        INSTANCE XLXI_246 1248 912 R0
-        BEGIN BRANCH INT_TRAP
-            WIRE 1504 720 1648 720
-            WIRE 1648 720 1760 720
-            BEGIN DISPLAY 1648 720 ATTR Name
-                ALIGNMENT SOFT-BCENTER
-            END DISPLAY
-        END BRANCH
-        BEGIN BRANCH INT_ENABLE
-            WIRE 1152 592 1200 592
-            WIRE 1200 592 1248 592
-            WIRE 1200 512 1200 592
-            WIRE 1200 512 1520 512
-            WIRE 1520 512 1520 1008
-            WIRE 1520 1008 1584 1008
-            BEGIN DISPLAY 1152 592 ATTR Name
-                ALIGNMENT SOFT-RIGHT
-            END DISPLAY
-        END BRANCH
-        INSTANCE XLXI_250 1584 1136 R0
-        BEGIN BRANCH XLXN_600
-            WIRE 1840 1040 1968 1040
-        END BRANCH
-        INSTANCE XLXI_252 1968 1136 R0
-        INSTANCE XLXI_253 1824 1296 R0
-        BEGIN BRANCH XLXN_601
-            WIRE 1888 1104 1968 1104
-            WIRE 1888 1104 1888 1168
-        END BRANCH
-        BEGIN BRANCH INT_OUT
-            WIRE 2192 1104 2208 1104
-            WIRE 2208 1104 2336 1104
-        END BRANCH
-        IOMARKER 2336 1104 INT_OUT R0 28
     END SHEET
     BEGIN SHEET 5 3520 2720
         INSTANCE XLXI_107 1056 1104 R0
@@ -2993,5 +2934,135 @@ BEGIN SCHEMATIC
                 ALIGNMENT SOFT-BCENTER
             END DISPLAY
         END BRANCH
+        BEGIN DISPLAY 68 84 TEXT "The RETN decoder"
+            FONT 40 "Arial"
+        END DISPLAY
+    END SHEET
+    BEGIN SHEET 7 3520 2720
+        INSTANCE XLXI_276 2176 720 R0
+        INSTANCE XLXI_277 2176 1536 R0
+        BEGIN BRANCH XLXN_630(7:0)
+            WIRE 1968 592 2176 592
+        END BRANCH
+        BEGIN BRANCH XLXN_631(7:0)
+            WIRE 1968 1408 2176 1408
+        END BRANCH
+        BEGIN BRANCH D(7:0)
+            WIRE 1392 592 1584 592
+            WIRE 1392 592 1392 1408
+            WIRE 1392 1408 1584 1408
+            BEGIN DISPLAY 1392 592 ATTR Name
+                ALIGNMENT SOFT-BCENTER
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH A(7:0)
+            WIRE 1968 400 2176 400
+            BEGIN DISPLAY 1968 400 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH A(15:8)
+            WIRE 1968 1216 2176 1216
+            BEGIN DISPLAY 1968 1216 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH RESET_H
+            WIRE 384 1248 448 1248
+            WIRE 448 1248 448 1632
+            WIRE 448 1632 1408 1632
+            WIRE 1408 1632 1584 1632
+            WIRE 448 1248 512 1248
+            WIRE 1408 816 1584 816
+            WIRE 1408 816 1408 1632
+            BEGIN DISPLAY 384 1248 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        INSTANCE XLXI_280 1584 848 R0
+        INSTANCE XLXI_281 1584 1664 R0
+        BEGIN BRANCH WRITE_ENABLE
+            WIRE 1424 656 1584 656
+            WIRE 1424 656 1424 1472
+            WIRE 1424 1472 1584 1472
+            BEGIN DISPLAY 1424 656 ATTR Name
+                ALIGNMENT SOFT-BCENTER
+            END DISPLAY
+        END BRANCH
+        INSTANCE XLXI_279 336 880 R0
+        INSTANCE XLXI_278 512 1280 R0
+        BEGIN BRANCH TRAP_PORT
+            WIRE 304 592 304 1088
+            WIRE 304 1088 416 1088
+            WIRE 416 1088 416 1152
+            WIRE 416 1152 512 1152
+            WIRE 304 592 608 592
+            WIRE 608 592 608 688
+            WIRE 608 688 976 688
+            WIRE 976 688 1040 688
+            WIRE 976 688 976 1504
+            WIRE 976 1504 1040 1504
+            WIRE 352 1152 416 1152
+            BEGIN DISPLAY 352 1152 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH XLXN_637
+            WIRE 400 880 400 960
+            WIRE 400 960 512 960
+            WIRE 400 960 400 1024
+            WIRE 400 1024 512 1024
+        END BRANCH
+        INSTANCE XLXI_285 1040 816 R0
+        INSTANCE XLXI_292 1040 1632 R0
+        BEGIN BRANCH XLXN_650
+            WIRE 896 1024 960 1024
+            WIRE 960 1024 960 1568
+            WIRE 960 1568 1040 1568
+            WIRE 960 752 960 1024
+            WIRE 960 752 1040 752
+        END BRANCH
+        BEGIN BRANCH XLXN_651
+            WIRE 1296 720 1584 720
+        END BRANCH
+        BEGIN BRANCH XLXN_652
+            WIRE 1296 1536 1584 1536
+        END BRANCH
+        BEGIN BRANCH MATCH_LO
+            WIRE 2560 496 2592 496
+            WIRE 2592 496 2896 496
+        END BRANCH
+        BEGIN BRANCH MATCH_HI
+            WIRE 2560 1312 2592 1312
+            WIRE 2592 560 2896 560
+            WIRE 2592 560 2592 1312
+        END BRANCH
+        BEGIN BRANCH M1_L
+            WIRE 2768 624 2896 624
+            BEGIN DISPLAY 2768 624 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH MREQ_L
+            WIRE 2768 688 2896 688
+            BEGIN DISPLAY 2768 688 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH TRAPMATCH
+            WIRE 3152 560 3184 560
+            WIRE 3184 560 3184 592
+            BEGIN DISPLAY 3184 592 ATTR Name
+                ALIGNMENT SOFT-VRIGHT
+            END DISPLAY
+        END BRANCH
+        BEGIN BRANCH INT_ENABLE
+            WIRE 2688 432 2752 432
+            WIRE 2752 432 2896 432
+            BEGIN DISPLAY 2688 432 ATTR Name
+                ALIGNMENT SOFT-RIGHT
+            END DISPLAY
+        END BRANCH
+        INSTANCE XLXI_298 2896 752 R0
     END SHEET
 END SCHEMATIC

@@ -13,7 +13,7 @@ net A(9) loc=p16;
 net A(10) loc=p17;
 net A(11) loc=p18;
 
-net INT_OUT loc=p20;
+#net INT_OUT loc=p20;
 net CLK loc=p22;
 
 net A(12) loc=p27;
@@ -56,5 +56,5 @@ net NMI_L loc=p92;
 
 net ROMCS_SENSE loc=p93;
 net A15OUT loc=p96;
-net INT_L loc=p97;
+#net INT_L loc=p97;
 
