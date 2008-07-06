@@ -99,9 +99,15 @@ JUMPTABLE_COPYFROM
 	jp F_get_ifconfig_inet
 	jp F_get_ifconfig_netmask
 	jp F_get_ifconfig_gw
+	jp F_settrap
+	jp F_disabletrap
+	jp F_enabletrap
+	jp F_pushpageA
+	jp F_poppageA
+	jp F_pushpageB
+	jp F_poppageB
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM
 
-	include "spectranet.asm"	; A list of public symbols
 

@@ -52,6 +52,7 @@
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output
+	include "progtrap.asm"		; Programmable trap set routines
 	include "jumptable.asm"		; Jump table
 
 	block 0xFD5-$,0xFF

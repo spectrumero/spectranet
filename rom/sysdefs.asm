@@ -24,10 +24,22 @@
 ;
 ; Miscellaneous system defines.
 ;
-CHIPSEL		equ 0xED	; CPLD memory chip select register (4 bit) (wo)
-PAGEA		equ 0xE9	; CPLD page area A 4k page (8 bit) (wo)
-PAGEB		equ 0xEB	; CPLD page area B 4k page (8 bit) (wo)
-CTRLREG		equ 0xEF	; CPLD control register (rw)
+TRAPSET		equ 0x80ED	; CPLD programmable trap (write only)
+PAGEA		equ 0x80E9	; CPLD page area A 4k page (8 bit) (wo)
+PAGEB		equ 0x80EB	; CPLD page area B 4k page (8 bit) (wo)
+CTRLREG		equ 0x80EF	; CPLD control register (rw)
+
+; Control register bit mask
+MASK_PAGEIN	equ 1		; I/O pagein (read/write)
+MASK_EXECTRAP	equ 2		; Execution trap (read only) 1 if true
+MASK_CALLTRAP	equ 4		; Call trap (read only) 1 if true
+MASK_PROGTRAP_EN equ 8		; Programmable trap enabled (r/w) 1 if true
+
+; ...and bit positions
+BIT_PAGEIN	equ 0
+BIT_EXECTRAP	equ 1
+BIT_CALLTRAP	equ 2
+BIT_PROGTRAP_EN	equ 3
 
 ; Initialization stack - until the Spectrum has initialized its main
 ; ROM we don't really know what we have, but there's definitely some

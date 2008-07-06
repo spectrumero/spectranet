@@ -28,7 +28,7 @@
 ; Set paging area A. Page to load in A.
 F_setpageA
 	push bc
-	ld bc, 0x8000|PAGEA
+	ld bc, PAGEA
 	ld (v_pga), a	; save the page we've just paged.
 	out (c), a	; page it in
 	pop bc
@@ -37,7 +37,7 @@ F_setpageA
 ; Set paging area B. As for area A.
 F_setpageB
 	push bc
-	ld bc, 0x8000|PAGEB
+	ld bc, PAGEB
 	ld (v_pgb), a
 	out (c), a	; page it in
 	pop bc
@@ -61,6 +61,27 @@ F_poppageA
 	ex (sp), hl		; get the page to restore
 	ld a, l			; the page itself being in L
 	call F_setpageA		; restore the page
+	ld hl, (v_pagerws)
+	ret
+	
+; Set paging area B and push the page currently selected onto the stack.
+; A = new page to select
+F_pushpageB
+	ld (v_pagerws), hl
+	ld hl, (v_pgb)		; get current page (and the adjacent byte)
+	ex (sp), hl		; stack it
+	push hl			; put the return address back
+	call F_setpageB		; set the new page
+	ld hl, (v_pagerws)	; restore hl
+	ret
+
+; Restore page area B from the stack
+F_poppageB
+	ld (v_pagerws), hl
+	pop hl			; get the return address
+	ex (sp), hl		; get the page to restore
+	ld a, l			; the page itself being in L
+	call F_setpageB		; restore the page
 	ld hl, (v_pagerws)
 	ret
 	

@@ -58,14 +58,12 @@ INTERRUPT
 	block 0x66-$,0xFF
 NMI
 	; stack everything that will be changed.
-	; TODO: Create more flexible NMI handler that checks through all
-	; ROM vectors.
 	push hl
 	push de
 	push bc
 	push af
-	ld a, 0x02		; Utility ROM
-	call F_setpageB
+	ld hl, 8
+	add hl, sp	; hl now points at return address
 	jr NMI2
 
 	block 0x7C-$,0xFF
@@ -74,6 +72,28 @@ NMI
 UNPAGE
 	ret
 NMI2
+	ld bc, CTRLREG		; test for trap enable
+	in a, (c)
+	and MASK_PROGTRAP_EN
+	jr z, .nmimenu		; not enabled
+	ld a, (v_trapcomefrom)	; get comefrom address LSB
+	cp (hl)			; equal to low order?
+	jr nz, .nmimenu		; no
+	inc hl			; return address MSB
+	ld a, (v_trapcomefrom+1) ; comefrom MSB
+	cp (hl)			; equal to high order?
+	jr nz, .nmimenu		; no
+
+	; Set up the environment ready to handle the trap.
+	ld a, (v_trappage)	; get the page to page in
+	and a			; if it's zero though, ignore it.
+	call nz, F_pushpageB	; page in requested page, stacking current
+	ld hl, (v_trapaddr)	; no paging to be done - just get the call addr
+	jp (hl)			; jump to it
+	
+.nmimenu
+	ld a, 0x02		; Utility ROM
+	call F_setpageB
 	call F_pagezxbasic	; ensure the BASIC ROM is paged in
 	ld hl, (NMI_VECTOR)	; Test NMI_VECTOR
 	ld a, 0xFF

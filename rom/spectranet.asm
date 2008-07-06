@@ -70,4 +70,15 @@ INPUTSTRING	equ 0x3E6C	; Read a string into buffer at DE
 GET_IFCONFIG_INET equ 0x3E6F	; Gets the current IPv4 address
 GET_IFCONFIG_NETMASK equ 0x3E72	; Gets the current netmask
 GET_IFCONFIG_GW	equ 0x3E75	; Gets the current gateway address
+SETTRAP		equ 0x3E78	; Sets the programmable trap
+DISABLETRAP	equ 0x3E7B	; Disables the programmable trap
+ENABLETRAP	equ 0x3E7E	; Enables the programmable trap
+PUSHPAGEA	equ 0x3E81	; Pages a page into area A, pushing the old one
+POPPAGEA	equ 0x3E84	; Restores the previous page in area A
+PUSHPAGEB	equ 0x3E87	; Pages into area B pushing the old one
+POPPAGEB	equ 0x3E8A	; Restores the previous page in area B
+
+; Definitions
+SOCK_STREAM	equ 1
+SOCK_DGRAM	equ 2
 

@@ -60,7 +60,7 @@ F_pagezxbasic
 	out (c), a		; switch pages
 	ld a, (ZX_BANK678)	
 	ld (v_bank678),a	; save old state
-	or 0x04			; set bit 2
+	ld a, 0x04		; set bit 2
 	ld (ZX_BANK678), a	; update +3 sysvar
 	ld bc, ZX_IO_BANK678	
 	out (c), a		; switch pages
