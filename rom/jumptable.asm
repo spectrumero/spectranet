@@ -106,6 +106,8 @@ JUMPTABLE_COPYFROM
 	jp F_poppageA
 	jp F_pushpageB
 	jp F_poppageB
+	jp J_pagetrapreturn
+	jp J_trapreturn
 JUMPTABLE_END
 
 JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM

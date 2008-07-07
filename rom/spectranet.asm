@@ -77,6 +77,8 @@ PUSHPAGEA	equ 0x3E81	; Pages a page into area A, pushing the old one
 POPPAGEA	equ 0x3E84	; Restores the previous page in area A
 PUSHPAGEB	equ 0x3E87	; Pages into area B pushing the old one
 POPPAGEB	equ 0x3E8A	; Restores the previous page in area B
+PAGETRAPRETURN	equ 0x3E8D	; Returns from a trap to page area B
+TRAPRETURN	equ 0x3E90	; Returns from a trap that didn't page area B
 
 ; Definitions
 SOCK_STREAM	equ 1

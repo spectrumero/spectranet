@@ -76,3 +76,21 @@ F_enabletrap
 	out (c), a		; and write it back
 	ret
 
+;--------------------------------------------------------------------------
+; J_pagetrapreturn
+; Returns from a trap, restoring page area B, the stack, and unpaging
+; the Spectranet
+J_pagetrapreturn
+	call F_poppageB
+;--------------------------------------------------------------------------
+; J_trapreturn
+; Returns from a trap, restoring the stack and unpaging the Spectranet
+J_trapreturn
+	pop af
+	pop bc
+	pop de
+	ld hl, UNPAGE		; the page out address
+	ex (sp), hl		; restore hl, put page out on stack
+	retn
+
+
