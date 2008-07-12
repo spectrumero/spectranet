@@ -45,16 +45,25 @@ do_callbas
 do_rst8
 	ld (v_hlsave), hl	; save hl without disturbing stack
 	pop hl			; get stack value - entry code
+	push hl
 	push af
 	ld a, h			; check for zero - Spectrum ROM routine return
 	or l
 	jr z, .returnfromzxrom	; returning from a Spectrum ROM call
-	
+
+	; This is to allow testing of RST8 routines without
+	; flashing a new ROM each time.
+	ex de, hl		; keep the stack value in DE
+	ld hl, (v_rst8vector)
+	ld a, h
+	or l
+	jr z, .done
+	jp (hl)
+.done	
 	; The call to the interpreter would end up here.
 	; For now just reshuffle the stack so we can pass control back
 	; to the ZX rom.
 	pop af
-	push hl			; put the code back on the stack
 	ld hl, 0x000B		; address to return to
 	push hl			; stack it for the RET at UNPAGE
 	ld hl, (ZX_CH_ADD)	; do the same as the first RST 8 instruction
@@ -62,6 +71,7 @@ do_rst8
 
 .returnfromzxrom
 	pop af			; restore af
+	pop hl			; fix stack
 	ld hl, (v_hlsave)	; restore hl
 	ret			; go back to the calling routine.
 

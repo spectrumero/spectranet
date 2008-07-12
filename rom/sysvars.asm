@@ -120,6 +120,10 @@ v_localport	defw 0		; Storage for current local port for connect
 v_sockfd	defb 0		; Storage for a socket file descriptor
 v_connfd	defb 0		; Storage for a socket file descriptor
 
+; RST8 variables for interpreter extensions
+v_rst8vector	defw 0		; points to a routine to call
+v_interpflags	defb 0		; flags
+
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 

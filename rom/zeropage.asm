@@ -62,7 +62,9 @@ NMI
 	push de
 	push bc
 	push af
-	ld hl, 8
+	ex af, af'
+	push af
+	ld hl, 10
 	add hl, sp	; hl now points at return address
 	jr NMI2
 
@@ -104,6 +106,8 @@ NMI2
 	jp (hl)			; jump to the NMI vector
 .nmidone
 	call F_pagezxrestore	; restore original 128K paging settings
+	pop af
+	ex af, af'
 	pop af
 	pop bc
 	pop de

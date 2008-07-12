@@ -87,6 +87,8 @@ J_pagetrapreturn
 ; Returns from a trap, restoring the stack and unpaging the Spectranet
 J_trapreturn
 	pop af
+	ex af, af'
+	pop af
 	pop bc
 	pop de
 	ld hl, UNPAGE		; the page out address

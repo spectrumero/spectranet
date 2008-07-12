@@ -25,8 +25,12 @@
 ; Disassembly", but prepended with 'ZX' so that when browsing the code 
 ; it's immediately obvious where they come from.
 
+; Fetch the hook/error code
+ZX_GET_ERR	equ 0x007B	; page in ROM, ld a, (hl); ret
+
 ; Keyboard routines.
 ZX_KEY_SCAN	equ 0x028E	; Finds keyboard 'scan code'
 ZX_K_TEST	equ 0x031E	; Tests what key is being pressed
 ZX_K_DECODE	equ 0x0333	; Decodes K_TEST's output into a character
+
 
