@@ -53,6 +53,7 @@ CALLBAS
 
 	block 0x38-$,0xFF
 INTERRUPT
+	ei
 	reti		; TODO - do something!
 
 	block 0x66-$,0xFF
