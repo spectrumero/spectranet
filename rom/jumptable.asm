@@ -20,15 +20,8 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The upper entry point.
-; CALL instructions to 0x3FF8 and higher cause a ROM page-in. A small
-; amount of code can live here to dispatch these calls elsewhere.
-UPPER_ENTRYPT
-	defb 0		; unused at present
-	ret		; A way of paging in without using an OUT
-	jp J_hldispatch	; HLCALL - 0x3FFA
-	jp J_ixdispatch	; IXCALL - 0x3FFD
-UPPER_ENTRYPT_SIZE	equ 0x08
+	include "rom.sym"
+	org 0x1F00
 
 ; The jump table
 ; --------------
@@ -58,7 +51,6 @@ UPPER_ENTRYPT_SIZE	equ 0x08
 ;
 ; This jump table is copied to 0x3E00 on reset (the fixed upper 4k page,
 ; which is RAM).
-JUMPTABLE_COPYFROM
 	jp F_socket
 	jp F_sockclose
 	jp F_listen
@@ -108,8 +100,13 @@ JUMPTABLE_COPYFROM
 	jp F_poppageB
 	jp J_pagetrapreturn
 	jp J_trapreturn
-JUMPTABLE_END
 
-JUMPTABLE_SIZE		equ JUMPTABLE_END - JUMPTABLE_COPYFROM
-
+	block 0x1FF8-$,0xFF
+; The upper entry point.
+; CALL instructions to 0x3FF8 and higher cause a ROM page-in. A small
+; amount of code can live here to dispatch these calls elsewhere.
+	defb 0		; unused at present
+	ret		; A way of paging in without using an OUT
+	jp J_hldispatch	; HLCALL - 0x3FFA
+	jp J_ixdispatch	; IXCALL - 0x3FFD
 

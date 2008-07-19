@@ -20,6 +20,12 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+; Locations in the data rom that need to be copied.
+JUMPTABLE_COPYFROM 	equ 0x1F00
+JUMPTABLE_SIZE		equ 0xF8
+UPPER_ENTRYPT		equ 0x1FF8
+UPPER_ENTRYPT_SIZE	equ 0x08
+
 ; Initialization routines that are run on reset.
 ;
 ; The first thing that's done is to page in the configuration area into
@@ -69,6 +75,9 @@ J_reset
 
 	; Initialize any ZX bits that need to be done.
 	call F_zxinit
+
+	ld a, 0x01		; Data ROM
+	call F_setpageA		; and page into paging area A.
 
 	; Initialize the jump table by copying it to our RAM.
 	ld hl, JUMPTABLE_COPYFROM

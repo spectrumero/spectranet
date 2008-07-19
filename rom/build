@@ -1,4 +1,7 @@
 #!/bin/sh
+rm -f *.out
+rm -f *.sym
+rm -f *.lst
 
 echo "Creating system variables symbol table"
 sjasmplus sysvars.asm --sym=sysvars.sym
@@ -10,6 +13,10 @@ echo
 
 echo "Assembling ROM"
 sjasmplus rom.asm --sym=rom.sym --lst=rom.lst
+echo
+
+echo "Assembling jump table"
+sjasmplus jumptable.asm --sym=jumptable.sym
 echo
 
 echo "Assembling configuration utility"

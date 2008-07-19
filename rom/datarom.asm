@@ -27,4 +27,7 @@
 ;	include "ui_lookup.asm"
 	include "ui_charset.asm"
 
+; Note that the jump table gets included at 0x1F00 when the ROM image
+; is built.
+
 DATAROM	equ 0x01	; physical flash page
