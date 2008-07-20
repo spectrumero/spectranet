@@ -20,6 +20,16 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+; A table of BASIC extensions starts here.
+; Entries should be structured as:
+;  byte 0   - ZX error code that's relevant
+;  byte 1,2 - pointer to command string
+;  byte 3   - ROM page (0 if none)
+;  byte 4,5 - pointer to routine to call
+; The entire table should be null terminated.
+		org 0x3A00
+TABLE_basext
+
 ; A 512 byte block is reserved for network messages that are used in the
 ; normal course of communicating with the world, for example, UDP packets
 ; sent to a DNS server or received from a DNS server.
@@ -123,6 +133,10 @@ v_connfd	defb 0		; Storage for a socket file descriptor
 ; RST8 variables for interpreter extensions
 v_rst8vector	defw 0		; points to a routine to call
 v_interpflags	defb 0		; flags
+v_tabletop	defw 0		; Current top of interpreter table
+v_errnr_save	defb 0		; Error number storage
+v_chaddsave	defw 0		; Storage for CH_ADD
+v_origpageb	defb 0		; Original page in paging area B
 
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

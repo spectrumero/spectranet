@@ -99,6 +99,11 @@ J_reset
 	ld hl, STR_unpaging	
 	call F_print
 
+	ld hl, J_rst8handler	; Set the RST8 handler vector
+	ld (v_rst8vector), hl
+	ld hl, TABLE_basext	; Set the BASIC extension table pointer
+	ld (v_tabletop), hl
+
 	ld hl, 0		; We're done so put 0x0000 
 	push hl
 	jp UNPAGE		; unpage (a ret instruction)

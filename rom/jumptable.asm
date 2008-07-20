@@ -100,6 +100,9 @@
 	jp F_poppageB
 	jp J_pagetrapreturn
 	jp J_trapreturn
+	jp F_addbasicext
+	jp F_statement_end
+	jp J_exit_success
 
 	block 0x1FF8-$,0xFF
 ; The upper entry point.

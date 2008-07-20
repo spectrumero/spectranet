@@ -79,6 +79,9 @@ PUSHPAGEB	equ 0x3E87	; Pages into area B pushing the old one
 POPPAGEB	equ 0x3E8A	; Restores the previous page in area B
 PAGETRAPRETURN	equ 0x3E8D	; Returns from a trap to page area B
 TRAPRETURN	equ 0x3E90	; Returns from a trap that didn't page area B
+ADDBASICEXT	equ 0x3E93	; Adds a BASIC command
+STATEMENT_END	equ 0x3E96	; Check for statement end, exit at syntax time
+EXIT_SUCCESS	equ 0x3E99	; Use this to exit successfully after cmd
 
 ; Definitions
 SOCK_STREAM	equ 1
