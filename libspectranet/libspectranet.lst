@@ -1,0 +1,9 @@
+sethwaddr.asm
+gethwaddr.asm
+ifconfig_inet.asm
+get_ifconfig_inet.asm
+ifconfig_netmask.asm
+get_ifconfig_netmask.asm
+ifconfig_gw.asm
+get_ifconfig_gw.asm
+

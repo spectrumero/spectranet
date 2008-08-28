@@ -138,6 +138,16 @@ v_errnr_save	defb 0		; Error number storage
 v_chaddsave	defw 0		; Storage for CH_ADD
 v_origpageb	defb 0		; Original page in paging area B
 
+; BASIC channels
+CHANSTART
+v_chanfd	defb 0		; file descriptor associated with the channel
+v_chanbufptr	defw 0		; buffer pointer
+v_chandestip	defw 0,0	; sendto() address for datagrams
+CHANEND
+CHANSIZE	equ CHANEND-CHANSTART
+		block CHANSIZE*3, 0x0	; reserve space
+v_chanorigpgb	defb 0		; Original page B
+
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
