@@ -5,7 +5,7 @@ LIB libspectranet
 	include "spectranet.asm"
 .get_ifconfig_netmask
 	ex de, hl
-	ld hl, GET_IFCONFIG_NETMASK
+	ld hl, GET_IFCONFIG_NETMASK_ROM
 	call HLCALL
 	ret
 

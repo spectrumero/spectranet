@@ -5,7 +5,7 @@ LIB libspectranet
 	include "spectranet.asm"
 .get_ifconfig_inet
 	ex de, hl
-	ld hl, GET_IFCONFIG_INET
+	ld hl, GET_IFCONFIG_INET_ROM
 	call HLCALL
 	ret
 

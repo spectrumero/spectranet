@@ -71,10 +71,18 @@ extern void __LIB__			inputstring(char *str, int len);
 extern void __LIB__ __CALLEE__		inputstring_callee(char *str, int len);
 extern unsigned int __LIB__		rand16();
 
+/* Conversion functions */
+extern void __LIB__		long2ipstring(in_addr_t *addr, char *str);
+extern int  __LIB__		ipstring2long(char *str, in_addr_t *addr);
+extern void __LIB__ __CALLEE__	long2ipstring_callee(in_addr_t *addr, char *str);
+extern int  __LIB__ __CALLEE__	ipstring2long_callee(char *str, in_addr_t *addr);
+
 /* Make CALLEE the default */
 #define mac2string(a,b)			mac2string_callee(a,b)
 #define string2mac(a,b)			string2mac_callee(a,b)
-#define inputstring_callee(a,b)		inputstring_callee(a,b)
+#define inputstring(a,b)		inputstring_callee(a,b)
+#define long2ipstring(a,b)		long2ipstring_callee(a,b)
+#define ipstring2long(a,b)		ipstring2long_callee(a,b)
 
 #endif
 

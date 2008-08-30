@@ -6,4 +6,11 @@ ifconfig_netmask.asm
 get_ifconfig_netmask.asm
 ifconfig_gw.asm
 get_ifconfig_gw.asm
+long2ipstring.asm
+long2ipstring_callee.asm
+deconfig.asm
+setpagea.asm
+setpageb.asm
+mac2string.asm
+mac2string_callee.asm
 
