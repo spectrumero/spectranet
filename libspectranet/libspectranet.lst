@@ -13,4 +13,7 @@ setpagea.asm
 setpageb.asm
 mac2string.asm
 mac2string_callee.asm
-
+pagein.asm
+pageout.asm
+ipstring2long_callee.asm
+ipstring2long.asm

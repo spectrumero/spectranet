@@ -3,8 +3,7 @@ XLIB setpageb
 LIB libspectranet
 	
 	include "spectranet.asm"
-.setpagea
+.setpageb
 	ld a, l
-	ld hl, SETPAGEB_ROM
-	call HLCALL
+	call SETPAGEB_ROM
 	ret

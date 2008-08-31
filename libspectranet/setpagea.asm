@@ -5,6 +5,5 @@ LIB libspectranet
 	include "spectranet.asm"
 .setpagea
 	ld a, l
-	ld hl, SETPAGEA_ROM
-	call HLCALL
+	call SETPAGEA_ROM
 	ret
