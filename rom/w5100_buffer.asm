@@ -42,6 +42,10 @@
 ; On return	BC = bytes copied
 ; Unchanged	IX, IY, shadow registers
 F_copyrxbuf
+	; check whether page A is being used.
+	; (note: will use page B if this is the case)
+	call F_checkpageA
+
 	; Set de to the number of bytes that have been received.
 	push de
 
@@ -135,7 +139,10 @@ F_copyrxbuf
 	ld (hl), d		; copy MSB, RX_RD now set.
 	ld l, Sn_CR % 256	; (hl) = socket command register
 	ld (hl), S_CR_RECV	; tell hardware that receive is complete
-	ret			; BC = length copied.
+	ld a, (v_buf_pgb)	; check to see whether to re-page area B
+	and a			; zero?
+	jp nz, F_setpageB	; yes - restore page B and return.
+	ret			; no, return.
 
 	; The circular buffer wraps around, leading to a slightly
 	; more complicated copy.
@@ -254,7 +261,10 @@ F_copytxbuf
 	ld (hl), d
 	ld l, Sn_CR % 256	; (hl) = command register
 	ld (hl), S_CR_SEND	; update command register
-	ret
+	ld a, (v_buf_pgb)	; check to see whether to re-page area B
+	and a			; zero?
+	jp nz, F_setpageB	; yes - restore page B and return.
+	ret			; no, return.
 
 .wrappedcopy
 	ld hl, 0x0800		; the highest offset you can have
@@ -307,3 +317,23 @@ F_getbaseaddr
 	add hl, de
 	ret
 
+;=========================================================================
+; F_checkpageA
+; On entry: DE = buffer start
+F_checkpageA
+	ld a, d
+	and 0xF0		; mask off top 4 bits
+	cp 0x10			; are we in 0x1000 - 0x1FFF?
+	jr z, .swappages	; yes, swap pages.
+	xor a			; reset the sysvar
+	ld (v_buf_pgb), a
+	ret
+.swappages
+	ld a, d
+	xor 0x30		; flip bits 4 and 5 to convert 0x1xxx to 0x2xxx
+	ld d, a
+	ld a, (v_pgb)		; get current page B
+	ld (v_buf_pgb),a 	; save it
+	ld a, (v_buf_pga)	; get page A value
+	call F_setpageB		; page it in
+	ret	
