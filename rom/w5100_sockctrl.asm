@@ -56,12 +56,12 @@
 ; On error, carry flag is set and A contains error number.
 F_bind
 	call F_gethwsock	; H now is hardware socket MSB address
-	ret c			; carry is set on error
+	jp c, J_leavesockfn	; carry is set on error
 	ld l, Sn_PORT0 % 256	; port register
 	ld (hl), d		; set port MSB
 	inc l
 	ld (hl), e		; set port LSB
-	ret
+	jp J_leavesockfn
 
 ;--------------------------------------------------------------------------
 ; F_listen:
@@ -72,17 +72,17 @@ F_bind
 ; On error, the carry flag is set and A contains the error number.
 F_listen
 	call F_gethwsock	; H is now hardware socket MSB address
-	ret c			; unless carry is set because of an error
+	jp c, J_leavesockfn	; unless carry is set because of an error
 
 	ld l, Sn_CR % 256	; hl points at hardware socket's command reg
 	ld (hl), S_CR_LISTEN	; tell the socket to listen
 	ld l, Sn_SR % 256	; hl points at the status register
 	ld a, (hl)		; read it
 	cp S_SR_SOCK_LISTEN	; check state is now listening
-	ret z			; Socket is listening so return
+	jp z, J_leavesockfn	; Socket is listening so return
 	ld a, EBUGGERED		; hardware error
 	scf			; set carry flag and return
-	ret
+	jp J_leavesockfn
 
 ;-------------------------------------------------------------------------
 ; F_connect:
@@ -129,13 +129,13 @@ F_connect
 	jr nz, .refused
 	ld a, ETIMEDOUT		; connection timed out
 	scf
-	ret	
+	jp J_leavesockfn
 .refused
 	ld a, ECONNREFUSED
 	scf
-	ret
+	jp J_leavesockfn
 .connected
 	set BIT_IR_CON, (hl)	; reset interrupt bit
 	xor a			; connection OK
-	ret
+	jp J_leavesockfn
 

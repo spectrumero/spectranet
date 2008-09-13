@@ -89,6 +89,8 @@ v_workspace	defb 0,0,0,0,0,0,0,0
 v_bufptr	defw 0		; buffer pointer
 v_stringptr	defw 0		; temp storage for a string pointer
 v_stringlen	defw 0		; temp storage for string lengths
+v_buf_pga	defb 0		; original page A value on call to gethwsock
+v_buf_pgb	defb 0		; original page B storage for buffer copies
 
 ; DNS system variables
 v_seed		defw 0		; 16 bit random number seed
@@ -120,6 +122,7 @@ v_bankm		defb 0		; saved state of BANKM
 v_bank678	defb 0		; saved state of BANK678
 
 ; Temporary register storage
+v_asave		defb 0
 v_hlsave	defw 0
 v_desave	defw 0
 v_bcsave	defw 0

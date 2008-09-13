@@ -123,7 +123,7 @@ F_setsockinfo
 ;             Pointer to sockaddr_in in DE
 F_remoteaddress
 	call F_gethwsock
-	ret c			; invalid socket
+	jp c, J_leavesockfn	; invalid socket
 
 	inc de			; increment past int sin_family
 	inc de
@@ -137,5 +137,5 @@ F_remoteaddress
 	ldi	
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 		

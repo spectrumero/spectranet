@@ -31,6 +31,8 @@
 ; H.
 F_gethwsock
 	ex af, af'
+	ld a, (v_pga)		; save current page A
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 	ex af, af'
@@ -43,4 +45,13 @@ F_gethwsock
 .nohwsock
 	ld a, EBADF
 	scf
+	ret
+
+;----------------------------------------------------------------------------
+; J_leavesockfn - jump point to restore original page A
+J_leavesockfn
+	ex af, af'
+	ld a, (v_buf_pga)
+	call F_setpageA
+	ex af, af'
 	ret

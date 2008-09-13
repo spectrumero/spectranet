@@ -37,7 +37,7 @@ F_ifconfig_gw
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 
 F_ifconfig_inet
 	call F_regpage
@@ -46,7 +46,7 @@ F_ifconfig_inet
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 
 F_ifconfig_netmask
 	call F_regpage
@@ -55,7 +55,7 @@ F_ifconfig_netmask
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 
 ;-------------------------------------------------------------------------
 ; F_get_ifconfig routines: F_get_ifconfig_inet, gw, netmask:
@@ -68,7 +68,7 @@ F_get_ifconfig_gw
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 
 F_get_ifconfig_inet
 	call F_regpage
@@ -77,7 +77,7 @@ F_get_ifconfig_inet
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 
 F_get_ifconfig_netmask
 	call F_regpage
@@ -86,9 +86,11 @@ F_get_ifconfig_netmask
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 	
 F_regpage
+	ld a, (v_pga)		; copy original page A value
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 	ret
@@ -115,32 +117,28 @@ F_sethwaddr
 	inc de
 	jp pe, .readback ; keep going till BC=0
 	or 0		; ensure carry is cleared
-	ret
+	jp J_leavesockfn
 .readbackerr
 	scf
-	ret
+	jp J_leavesockfn
 
 ;---------------------------------------------------------------------------
 ; F_gethwaddr
 ; Read the hardware address and fill a 6 byte buffer.
 ; Parameters: DE = pointer to buffer to fill.
 F_gethwaddr
-	push de
-	ld a, REGPAGE
-	call F_setpageA
-	pop de
+	call F_regpage
 	ld hl, SHAR0
 	ld bc, 6
 	ldir
-	ret
+	jp J_leavesockfn
 
 ;---------------------------------------------------------------------------
 ; F_deconfig
 ; Deconfigure the interface (reset the inet, gateway and netmask fields).
 ; Parameters: None.
 F_deconfig
-	ld a, REGPAGE
-	call F_setpageA
+	call F_regpage
 	ld hl, GAR0
 	ld de, GAR1
 	ld bc, 7
@@ -152,5 +150,5 @@ F_deconfig
 	ldi
 	ldi
 	ldi
-	ret
+	jp J_leavesockfn
 

@@ -33,16 +33,16 @@
 ; Carry flag is set on error and A contains error code.
 F_send
 	call F_gethwsock	; H is socket reg. MSB address
-	ret c			; error finding socket if carry set
+	jp c, J_leavesockfn	; error finding socket if carry set
 	ld a, b			; MSB of send buffer size
 	cp 0x08			; greater than 2K if compare result is pos.
 	jp p, .multisend	; TODO: send buffers >2k
 	call F_copytxbuf
-	ret
+	jp J_leavesockfn
 .multisend			; see TODO above!
 	ld bc, 0x7FF		; send as much as possible for now.
 	call F_copytxbuf
-	ret
+	jp J_leavesockfn
 
 ; F_recv:
 ; Receive data from a socket. Note - this function blocks if no data
@@ -54,7 +54,7 @@ F_send
 ;              BC = number of bytes to get
 F_recv
 	call F_gethwsock	; H is socket reg MSB
-	ret c			; carry is set if the fd is not valid
+	jp c, J_leavesockfn	; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register
 
 .waitforrecv
@@ -65,12 +65,12 @@ F_recv
 	jr z, .waitforrecv	; no, so keep waiting
 	ld a, ECONNRESET	; connection reset by peer
 	scf
-	ret
+	jp J_leavesockfn
 
 .rxdata
 	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
-	ret
+	jp J_leavesockfn
 
 ;=========================================================================
 ; Sendto:
@@ -83,7 +83,7 @@ F_recv
 F_sendto	
 	ld (v_bufptr), hl	; save socket info buffer pointer
 	call F_gethwsock	; H is socket reg. MSB address
-	ret c			; error finding socket if carry set
+	jp c, J_leavesockfn	; error finding socket if carry set
 	push de			; save data buffer
 	push bc			; save buffer length
 	ld de, (v_bufptr)	; get sock info ptr
@@ -94,11 +94,11 @@ F_sendto
 	cp 0x08			; greater than 2K if compare result is pos.
 	jp p, .multisend	; TODO: send buffers >2k
 	call F_copytxbuf
-	ret
+	jp J_leavesockfn
 .multisend			; see TODO above!
 	ld bc, 0x7FF		; send as much as possible for now.
 	call F_copytxbuf
-	ret
+	jp J_leavesockfn
 
 ;=========================================================================
 ; Recvfrom - receive data from a socket. Usually used for a SOCK_DGRAM
@@ -114,7 +114,7 @@ F_sendto
 F_recvfrom
 	ld (v_bufptr), hl	; save the connection buffer ptr
 	call F_gethwsock	; H is socket reg MSB
-	ret c			; carry is set if the fd is not valid
+	jp c, J_leavesockfn	; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register
 
 .waitforrecv
@@ -125,7 +125,7 @@ F_recvfrom
 	jr z, .waitforrecv	; no, so keep waiting
 	ld a, ECONNRESET	; connection reset by peer
 	scf
-	ret
+	jp J_leavesockfn
 
 .rxdata
 	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
@@ -136,7 +136,7 @@ F_recvfrom
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
 	ld de, (v_bufptr)	; retrieve the buffer pointer
 	call F_sockinfo		; get socket information
-	ret
+	jp J_leavesockfn
 
 	; UDP data comes with an 8 byte header stuck to the front.
 	; To avoid having to shift the entire receive data buffer around,
@@ -168,7 +168,7 @@ F_recvfrom
 	inc l
 	ld a, (hl)
 	ld (ix+6), a		; low order of the source port
-	ret
+	jp J_leavesockfn
 
 ;--------------------------------------------------------------------------
 ; F_poll:
@@ -186,6 +186,8 @@ F_recvfrom
 ; and the zero flag is set. On error, the carry flag is set and A is set 
 ; to the error.
 F_poll
+	ld a, (v_pga)		; save original page A
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 
@@ -210,11 +212,11 @@ F_poll
 	djnz .sockloop		
 .noneready
 	xor a			; loop finished, no sockets were ready
-	ret
+	jp J_leavesockfn
 .ready
 	ld b, a			; save flags
 	ld a, c			; retrieve fd
-	ret
+	jp J_leavesockfn
 
 ;---------------------------------------------------------------------------
 ; F_pollall:
@@ -232,6 +234,8 @@ F_poll
 ; in A. If none are ready, A=0 and the zero flag is set. If an fd is ready,
 ; it is returned in A, and C contains the flags that triggered the condition.
 F_pollall
+	ld a, (v_pga)		; save current page A
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 	ld d, v_fd1hwsock / 256
@@ -264,14 +268,14 @@ F_pollall
 	jr .nextsock		; advance to next socket fd
 .noneready
 	xor a			; A=0, zero flag set
-	ret
+	jp J_leavesockfn
 .ready
 	ld c, a			; copy flags into C
 	ld a, e			; ready fd in e
 	inc a
 	ld (v_lastpolled), a	; save last polled sockfd+1
 	dec a			; restore A to proper value
-	ret
+	jp J_leavesockfn
 
 ;-------------------------------------------------------------------------
 ; F_pollfd
@@ -285,11 +289,11 @@ F_pollall
 ; Carry is set on error.
 F_pollfd
 	call F_gethwsock	; H is socket reg MSB
-	ret c			; carry is set if the fd is not valid
+	jp c, J_leavesockfn	; carry is set if the fd is not valid
 
 	ld l, Sn_IR % 256	; interrupt register
 	ld a, (hl)		; read its value
 	and S_IR_CON|S_IR_RECV|S_IR_DISCON
 	ld c, a			; copy flags into C
-	ret
+	jp J_leavesockfn
 

@@ -46,6 +46,8 @@
 ;
 ; Preserves: BC
 F_socket
+	ld a, (v_pga)		; save page A
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 
@@ -55,7 +57,7 @@ F_socket
 	jr nc, .foundsock
 .nosockets
 	ld a, ENFILE		; no more hardware sockets, sorry
-	ret
+	jp J_leavesockfn
 .foundsock
 	ld de, v_fd1hwsock	; (de) = fd map first entry
 	ex de, hl
@@ -70,11 +72,11 @@ F_socket
 	call F_hwopensock	; h = msb of socket register
 	jr nc, .sockopen	; if carry not set, socket was opened
 	ld a, EBUGGERED		; TODO: better return code
-	ret
+	jp J_leavesockfn
 
 .sockopen
 	ld a, e			; a = file descriptor
-	ret
+	jp J_leavesockfn
 
 ;-------------------------------------------------------------------------
 ; F_sockclose:
@@ -86,6 +88,8 @@ F_socket
 ; Carry flag is set if an error occurs reopening a virtual socket.
 F_sockclose
 	push af
+	ld a, (v_pga)		; save page A
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 	pop af
@@ -95,7 +99,7 @@ F_sockclose
 	ld a, (hl)		; get possible MSB of socket register ptr
 	bit 6, a		; is this a virtual socket or not even open?
 	ld (hl), FD_CLOSED	; unmap the file descriptor
-	ret nz			; virtual socket, no hardware sock to close
+	jp nz, J_leavesockfn	; virtual socket, no hardware sock to close
 
 	ld h, a			; h = MSB of socket register pointer
 	ld l, Sn_MR % 256	; check for non-stream socket
@@ -136,12 +140,11 @@ F_sockclose
 	jr nz, .realloc		; reallocate the hardware socket to this fd
 	inc l			; check the next fd
 	djnz .vsearch
-	ret			; nothing more to do - function complete.
+	jp J_leavesockfn	; nothing more to do - function complete.
 
 	; To reallocate a hardware socket to a file descriptor that's
 	; gone virtual, it must be opened.
 .realloc
-;	call debugblue		; debug
 	; The hardware needs a delay before a socket is re-opened.
 	; TODO: write to Wiznet and see if there's a better way of doing this.
 	ld b, 255
@@ -152,7 +155,7 @@ F_sockclose
 	ld a, (v_virtualmr)	; get socket type for the socket we're doing
 	ld c, a			; socket type in C
 	call F_hwopensock	; open socket pointed to by (hl)
-	ret c			; an error has occurred if carry is set.
+	jp c, J_leavesockfn	; an error has occurred if carry is set.
 	ex de, hl		; fd address now in hl, sock register in de
 	push hl			; save fd
 	ld hl, v_virtualport	; v_virtualport is in network byte order
@@ -169,11 +172,11 @@ F_sockclose
 	pop hl			; retrieve fd
 	jr nz, .reallocerr
 	ld (hl), d		; store socket register ptr MSB in fd map
-	ret
+	jp J_leavesockfn
 .reallocerr
 	ld a, EBUGGERED
 	scf
-	ret
+	jp J_leavesockfn
 
 ;--------------------------------------------------------------------------
 ; F_accept: Accept a connection on a socket that is listening.
@@ -191,6 +194,8 @@ F_sockclose
 ; On error carry is set and A contains the error number.
 F_accept
 	push af			; save the fd
+	ld a, (v_pga)		; save page A
+	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 	pop af
@@ -241,11 +246,11 @@ F_accept
 	jr nz, .listenfail
 	pop hl			; get fd back to return to caller
 	ld a, l			; set fd number in A
-	ret
+	jp J_leavesockfn
 .listenfail
 	ld a, EBUGGERED		; set error code and return with carry set
 	scf
-	ret
+	jp J_leavesockfn
 
 .virtualize
 	ex de, hl		; get original fd address
@@ -259,7 +264,7 @@ F_accept
 	ldi			
 	pop hl			; get fd back	
 	ld a, l			; new fd number in A
-	ret
+	jp J_leavesockfn
 
 ;--------------------------------------------------------------------------
 ; Find a free hardware socket. Carry flag is set if no free sockets.

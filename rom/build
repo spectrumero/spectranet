@@ -1,34 +1,22 @@
 #!/bin/sh
+# note, the order of ASMSOURCES is important.
+ASMSOURCES=( sysvars datarom rom jumptable configutilrom configutil \
+             utilrom romimage romprog )
+
 rm -f *.out
 rm -f *.sym
 rm -f *.lst
 
-echo "Creating system variables symbol table"
-sjasmplus sysvars.asm --sym=sysvars.sym
-echo
-
-echo "Assembling data ROM page"
-sjasmplus datarom.asm --sym=datarom.sym
-echo
-
-echo "Assembling ROM"
-sjasmplus rom.asm --sym=rom.sym --lst=rom.lst
-echo
-
-echo "Assembling jump table"
-sjasmplus jumptable.asm --sym=jumptable.sym
-echo
-
-echo "Assembling configuration utility"
-sjasmplus configutilrom.asm --sym=configutilrom.sym --lst=configutilrom.lst
-sjasmplus configutil.asm --sym=configutil.sym --lst=configutil.lst
-echo
-
-echo "Assembling utility ROM"
-sjasmplus utilrom.asm --sym=utilrom.sym --lst=utilrom.lst
-echo
-
-echo "Creating ROM image"
-sjasmplus romimage.asm --lst=romimage.lst
-echo
+for src in ${ASMSOURCES[@]}
+do
+   echo "Assembling $src..."
+   sjasmplus $src.asm --sym=$src.sym --lst=$src.lst >.output
+   if [ "$?" != "0" ]; then
+      echo
+      echo "Assembly failed:"
+      cat .output
+      echo
+      exit
+   fi
+done
 
