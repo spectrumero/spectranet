@@ -186,6 +186,10 @@ F_copyrxbuf
 ; in chunks of <=2k a time or it'll hang. The socket library's send() 
 ; call should do this.
 F_copytxbuf
+	; check whether page A is being used.
+	; (note: will use page B if this is the case)
+	call F_checkpageA
+
 	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
 .waitformsb
 	ld a, b			; MSB of argment
