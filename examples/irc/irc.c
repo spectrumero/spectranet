@@ -33,6 +33,7 @@
 
 char nick[NICKSZ];	/* user's nickname */
 char server[SVRSIZE];	/* server to use */
+char pass[PASSSZ];	/* password, if any */
 char chan[CHANSZ];	/* channel joined */
 char tempbuf[128];	/* some storage */
 int ircfd=0;		/* socket file descriptor */
@@ -105,6 +106,23 @@ void setupConnection()
 			break;
 		}
 	}
+
+	resetinput();
+	while(1)	/* until valid password */
+	{
+		mainprint
+		("Type the password if the server has one (or press Enter):");
+		str=kbinput();
+		if(strlen(str) > sizeof(pass))
+		{
+			mainprint("Password was too long.");
+		}
+		else
+		{
+			strcpy(pass, str);
+			break;
+		}
+	}
 }
 
 /* This function simply gets keyboard entry, used for when we aren't
@@ -156,6 +174,18 @@ void connToServer()
 	}
 	mainprint("*** Connected.");	
 	setStatusLine("Not registered", "No channel");
+
+	/* If there is a password, send it */
+	if(strlen(pass))
+	{
+		sprintf(connmsg, "PASS %s\r\n", pass);
+		rc=send(ircfd, connmsg, strlen(connmsg), 0);
+		if(rc < 0)
+		{
+			mainprint("Failed to send password!");
+			return;
+		}
+	}
 
 	/* Identify to the server */
 	sprintf(connmsg, "NICK %s\r\nUSER %s %s %s: Spectranet\r\n",
