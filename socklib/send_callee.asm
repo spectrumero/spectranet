@@ -1,3 +1,4 @@
+; process
 ; int send_callee(int sockfd, const void *buf, int len, int flags);
 ; The flags field is not currently used by the Spectranet implementation
 ; of send, but it must be provided for compatibility.
@@ -13,8 +14,7 @@ XDEF ASMDISP_SEND_CALLEE
 	ex (sp), hl	; restore return address, sock in l
 	ld a, l		; sock in a
 .asmentry
-	ld hl, SEND
-	call HLCALL
+	HLCALL SEND
 	jr c, err	; send failed?
 	
 	; bytes sent value in BC, move it to hl

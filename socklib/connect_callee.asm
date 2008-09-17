@@ -1,3 +1,4 @@
+; process
 ; int connect(int sockfd, const struct sockaddr *my_addr, socklen_t addrlen);
 ; Connect to a remote address
 ; This is simplified compared to the full BSD implementation; the Spectranet
@@ -21,8 +22,7 @@ XDEF ASMDISP_CONNECT_CALLEE
 	ld b, (hl)	; sin_port MSB
 	inc hl
 	ex de, hl	; de now points at address
-	ld hl, CONNECT
-	call HLCALL
+	HLCALL CONNECT
 	jr c, err
 	ld hl, 0	; return 0
 	ret

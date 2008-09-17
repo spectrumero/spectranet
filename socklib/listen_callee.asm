@@ -1,3 +1,4 @@
+; process
 ; int listen_callee(int sockfd, int backlog);
 ; The Spectranet listen() implementation currently does not take a
 ; backlog parameter, but it must be provided for compatibility.
@@ -11,8 +12,7 @@ XDEF ASMDISP_LISTEN_CALLEE
 	ex (sp), hl	; swap socket/return address
 	ld a, l		; socket in A
 .asmentry
-	ld hl, LISTEN
-	call HLCALL
+	HLCALL LISTEN
 	jr c, err
 	ld hl, 0
 	ret

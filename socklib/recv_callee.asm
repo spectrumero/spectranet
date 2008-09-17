@@ -1,3 +1,4 @@
+; process
 ; int recv_callee(int sockfd, const void *buf, int len, int flags);
 ; The flags field is not currently used by the Spectranet implementation
 ; of recv, but it must be provided for compatibility.
@@ -13,8 +14,7 @@ XDEF ASMDISP_RECV_CALLEE
 	ex (sp), hl	; restore return address, sock in l
 	ld a, l		; sock in a
 .asmentry
-	ld hl, RECV
-	call HLCALL
+	HLCALL RECV
 	jr c, err	; recv failed?
 	
 	; bytes sent value in BC, move it to hl

@@ -1,3 +1,4 @@
+; process
 ; int accept_callee(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
 XLIB accept_callee
@@ -15,8 +16,7 @@ XDEF ASMDISP_ACCEPT_CALLEE
 	or e
 	jr nz, accept_getdata
 	ex af, af'	; retrieve socket fd
-	ld hl, ACCEPT	; Just accept, no structure to fill.
-	call HLCALL
+	HLCALL ACCEPT
 	jr c, err
 	ld h, 0		; success, return new socket
 	ld l, a
@@ -25,21 +25,18 @@ XDEF ASMDISP_ACCEPT_CALLEE
 	ld hl, -1
 	ret
 .accept_getdata
-	call PAGEIN	; spectranet pagein
 	ex af, af'	; get sockfd back
 	push de		; and the address of struct sockaddr *addr
-	call ACCEPT	; accept the connection
+	HLCALL ACCEPT
 	jr c, err2
 	ld h, 0
 	ld l, a		; new socket number
 	pop de		; get addr pointer back
 	push hl		; save return code
-	call REMOTEADDRESS	; get the remote port/address into *addr
-	call PAGEOUT	; spectranet pageout
+	IXCALL REMOTEADDRESS
 	pop hl		; retrieve return code
 	ret
 .err2
-	call PAGEOUT
 	pop de		; fix the stack
 	ld hl, -1
 	ret

@@ -1,3 +1,4 @@
+; process
 ; int bind(int sockfd, const struct sockaddr *my_addr, socklen_t addrlen);
 ; Bind a name to a local address
 ; This is simplified compared to the full BSD implementation; the Spectranet
@@ -16,8 +17,7 @@ XDEF ASMDISP_BIND_CALLEE
 .asmentry
 	ld e, (ix+2)	; sin_port LSB
 	ld d, (ix+3)	; sin_port MSB
-	ld hl, BIND	; library fn to call
-	call HLCALL
+	HLCALL BIND
 	jr c, err
 	ld hl, 0	; return code 0
 	ret

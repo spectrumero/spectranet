@@ -1,3 +1,4 @@
+; process
 ; int __CALLEE__ socket_callee(int domain, int type, int protocol);
 ; Open a socket.
 ; The Spectranet only supports domain AF_INET and IP.
@@ -13,8 +14,7 @@ XDEF ASMDISP_SOCKET_CALLEE
 	ex (sp), hl	; restore the return address, hl = domain
 
 .asmentry
-	ld hl, SOCKET	; jump table address
-	call HLCALL	; open the socket
+	HLCALL SOCKET
 	
 	ld h, 0
 	ld l, a		; socket in hl

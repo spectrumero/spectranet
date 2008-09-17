@@ -1,11 +1,11 @@
+; process
 ; unsigned char __FASTCALL__ pollall(struct pollfd *p);
 XLIB pollall
 
 	include "spectranet.asm"
 .pollall
 	push hl			; save pointer to param
-	ld hl, POLLALL_ROM	; use IXCALL to preserve hl
-	call HLCALL
+	HLCALL POLLALL_ROM
 	pop ix			; use ix to fill structure
 	jr z, noneready
 	ld (ix+0), a		; ready sockfd

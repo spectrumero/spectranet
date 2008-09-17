@@ -1,3 +1,4 @@
+; process
 ; int __FASTCALL__ sockclose(int fd);
 XLIB sockclose
 LIB libsocket
@@ -5,8 +6,7 @@ LIB libsocket
 	include "spectranet.asm"
 .sockclose
 	ld a, l		; file descriptor in lsb of hl
-	ld hl, CLOSE
-	call HLCALL
+	HLCALL CLOSE
 	jr c, err_close
 	ld hl, 0	; return code 0
 	ret

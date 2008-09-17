@@ -1,3 +1,4 @@
+; process
 ; int sendto_callee(int sockfd, const void *buf, int len, int flags,
 ;                   const struct sockaddr *to, socklen_t tolen);
 XLIB sendto_callee
@@ -38,8 +39,7 @@ XDEF ASMDISP_SENDTO_CALLEE
 	pop de
 
 	ld hl, _sendtoremoteip	; hl = start of sockinfo
-	ld ix, SENDTO
-	call IXCALL
+	IXCALL SENDTO
 	jr c, sendto_err
 	ld h, b			; bytes sent in BC, transfer to HL
 	ld l, c

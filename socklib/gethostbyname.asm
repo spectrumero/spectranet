@@ -1,3 +1,4 @@
+; process
 ; struct hostent * __FASTCALL__ gethostbyname(const char *name);
 XLIB gethostbyname
 XDEF _h_errno
@@ -7,8 +8,7 @@ XDEF _h_errno
 	; hl already contains the pointer to the string. DE must point
 	; at our static storage.
 	ld de, _he_addr1
-	ld ix, GETHOSTBYNAME_ROM
-	call IXCALL
+	IXCALL GETHOSTBYNAME_ROM
 	jr c, err
 	ld hl, _he_addr1
 	ld (_he_h_addr_list), hl	; set addr list pointer
