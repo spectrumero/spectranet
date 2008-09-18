@@ -1,9 +1,12 @@
 # Makefile to build the Spectranet C library.
 
 ASSEMBLER = z80asm
-LIBNAME = libspectranet
-ASMFLAGS = -d -ns -nm -Mo -x$(LIBNAME)
-ASMFILES = libspectranet.lst
+SRCGEN = ./makesources.pl
+PLIBNAME = libspectranet
+NPLIBNAME = libspectranet_np
+ASMFLAGS = -d -ns -nm -Mo
+PASMFILES = libspectranet.lst
+NPASMFILES = libspectranet_np.lst
 RM = rm -f
 CC = zcc
 TESTOUT = testlibsn.bin
@@ -12,12 +15,17 @@ COBJS = testlibsn.o
 CLIBS = -lndos -llibspectranet
 
 
-all:	$(ASMFILES)
-	$(ASSEMBLER) $(ASMFLAGS) @$(ASMFILES)
+plib:	$(PASMFILES)
+	$(SRCGEN)
+	$(ASSEMBLER) $(ASMFLAGS) -x$(PLIBNAME) @$(PASMFILES)
+
+nplib:	$(NPASMFILES)
+	$(SRCGEN)
+	$(ASSEMBLER) $(ASMFLAGS) -x$(NPLIBNAME) @$(NPASMFILES)
 
 test:	$(COBJS)
 	$(CC) $(CFLAGS) -o $(TESTOUT) $(COBJS) $(CLIBS)
 
 clean:
-	$(RM) $(LIBNAME).lib *.o
+	$(RM) $(LIBNAME).lib *.o *_p.asm *_np.asm
 

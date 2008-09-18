@@ -1,3 +1,4 @@
+; process
 ; CALLEE linkage for mac2string
 ; void mac2string_callee(char *mac, char *str);
 
@@ -10,8 +11,7 @@ XDEF ASMDISP_MAC2IPSTRING_CALLEE
 	pop hl		; char *mac
 	push bc		; resture ret addr
 .asmentry
-	ld ix, MAC2STRING_ROM
-	call IXCALL
+	IXCALL MAC2STRING_ROM
 	ret
 
 defc ASMDISP_MAC2STRING_CALLEE = asmentry - mac2string_callee

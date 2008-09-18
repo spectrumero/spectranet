@@ -1,3 +1,4 @@
+; process
 ; CALLEE linkage for long2ipstring
 ; int long2ipstring_callee(inet_addr_t *addr, char *str);
 
@@ -10,8 +11,7 @@ XDEF ASMDISP_LONG2IPSTRING_CALLEE
 	pop hl		; inet_addr_t *addr
 	push bc		; restore return address
 .asmentry
-	ld ix, LONG2IPSTRING_ROM
-	call IXCALL
+	IXCALL LONG2IPSTRING_ROM
 	ret
 
 defc ASMDISP_LONG2IPSTRING_CALLEE = asmentry - long2ipstring_callee
