@@ -17,3 +17,7 @@ pagein.asm
 pageout.asm
 ipstring2long_callee_p.asm
 ipstring2long.asm
+addbasicext_p.asm
+statement_end.asm
+exit_success.asm
+

@@ -36,6 +36,15 @@
 #define in_addr_t	unsigned long
 #endif
 
+/* structures */
+struct basic_cmd
+{
+	unsigned char errorcode;
+	char *command;
+	unsigned char rompage;
+	void *function;
+};
+
 /* Control of settings - hardware address, IP address, gateway etc. */
 /* Set and get the hardware address */
 extern int  __LIB__ __FASTCALL__	sethwaddr(char *hwaddr);
@@ -76,6 +85,10 @@ extern void __LIB__		long2ipstring(in_addr_t *addr, char *str);
 extern int  __LIB__		ipstring2long(char *str, in_addr_t *addr);
 extern void __LIB__ __CALLEE__	long2ipstring_callee(in_addr_t *addr, char *str);
 extern int  __LIB__ __CALLEE__	ipstring2long_callee(char *str, in_addr_t *addr);
+
+extern int __LIB__ __FASTCALL__	addbasicext(struct basic_cmd *cmd);
+extern void __LIB__		statement_end();
+extern void __LIB__		exit_success();
 
 /* Make CALLEE the default */
 #define mac2string(a,b)			mac2string_callee(a,b)
