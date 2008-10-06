@@ -82,6 +82,7 @@ TRAPRETURN	equ 0x3E90	; Returns from a trap that didn't page area B
 ADDBASICEXT	equ 0x3E93	; Adds a BASIC command
 STATEMENT_END	equ 0x3E96	; Check for statement end, exit at syntax time
 EXIT_SUCCESS	equ 0x3E99	; Use this to exit successfully after cmd
+PARSE_ERROR	equ 0x3E9C	; Use this to exit to BASIC with a parse error
 
 ; Definitions
 SOCK_STREAM	equ 1

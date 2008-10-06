@@ -103,6 +103,7 @@
 	jp F_addbasicext
 	jp F_statement_end
 	jp J_exit_success
+	jp J_err_6
 
 	block 0x1FF8-$,0xFF
 ; The upper entry point.
