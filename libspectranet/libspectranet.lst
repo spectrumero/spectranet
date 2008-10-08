@@ -20,4 +20,6 @@ ipstring2long.asm
 addbasicext_p.asm
 statement_end.asm
 exit_success.asm
+expect2num.asm
+find_int2.asm
 
