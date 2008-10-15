@@ -22,4 +22,7 @@ statement_end.asm
 exit_success.asm
 expect2num.asm
 find_int2.asm
+string_fetch.asm
+string_fetch_callee.asm
+expectstringexp.asm
 
