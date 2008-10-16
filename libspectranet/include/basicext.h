@@ -51,5 +51,11 @@ extern unsigned char __LIB__ expectStringExp();
 /*----------------------------------------------------------------------*/
 extern unsigned char __LIB__ next_char();
 
+/* CALLEE linkage */
+extern unsigned int __LIB__ __CALLEE__ string_fetch_callee(char *buf, int bufsz);
+
+/* Make CALLEE the default */
+#define string_fetch(a,b)	string_fetch_callee(a,b)
+
 #endif
 
