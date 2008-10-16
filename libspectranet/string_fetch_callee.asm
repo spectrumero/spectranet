@@ -16,7 +16,7 @@ XDEF ASMDISP_STRING_FETCH_CALLEE
 	cp (ix+0)	; with the size of the buffer
 	jr c, copybuf	; copy the buffer if buffer is larger than source
 .setlen
-	ld c, a		; set length to copy to passed in length
+	ld c, (ix+0)	; set length to copy to passed in length
 	ld b, (ix+1)
 	dec bc		; leaving room for the NULL
 .copybuf
