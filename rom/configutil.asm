@@ -7,6 +7,7 @@
 	jp PAGEOUT
 	include "ui_config.asm"
 	include "ui_menu.asm"
+	include "configlang_en.asm"
 	include "flashwrite.asm"
 	include "flashconf.asm"
 	include "sysvars.sym"

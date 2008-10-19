@@ -1,7 +1,8 @@
 #!/bin/sh
 # note, the order of ASMSOURCES is important.
-ASMSOURCES=( sysvars datarom rom jumptable configutilrom configutil \
-             utilrom romimage romprog )
+ASMSOURCES=( sysvars datarom rom jumptable configutilrom configutilrom_es \
+	     configutil utilrom utilrom_es romimage romimage_es romprog \
+	     romprog_es )
 
 rm -f *.out
 rm -f *.sym
