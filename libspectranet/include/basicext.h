@@ -28,8 +28,11 @@
 /*--------------------------------------------------*/
 /* Retrieve values from BASIC using ZX ROM routines */
 
-/* Get a 16 byte int from the current position in the BASIC line */
+/* Get a 16 bit int from the current position in the BASIC line */
 extern unsigned int __LIB__ find_int2();
+
+/* Get an 8 bit int */
+extern unsigned int __LIB__ find_int1();
 
 /* Get a string from the BASIC line. This function makes a C string, and
  * returns the string length */

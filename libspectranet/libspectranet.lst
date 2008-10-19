@@ -20,9 +20,12 @@ ipstring2long.asm
 addbasicext_p.asm
 statement_end.asm
 exit_success.asm
+expectnum.asm
 expect2num.asm
+find_int1.asm
 find_int2.asm
 string_fetch.asm
 string_fetch_callee.asm
 expectstringexp.asm
+next_char.asm
 
