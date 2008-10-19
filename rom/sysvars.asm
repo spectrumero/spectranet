@@ -52,6 +52,7 @@ v_rowcount	defb 0		; current row number
 v_pr_wkspc	defb 0		; Print routine workspace
 v_pga		defb 0		; Current memory page in area A
 v_pgb		defb 0		; Current memory page in area B
+v_utf8		defb 0		; utf-8 character state
 v_trappage	defb 0		; Page to select on programmable trap
 v_trapaddr	defw 0		; Address to call on programmable trap
 v_trapcomefrom	defw 0		; Address on stack when trap is triggered

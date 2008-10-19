@@ -84,7 +84,7 @@ STR_erasing	defb "Erasing lower flash sector\n",0
 STR_writing	defb "Writing payload...\n",0
 STR_writedone	defb "Write done\n",0
 STR_borked	defb "Operation failed.\n",0
-	block 0x8600-$,0
+	block 0x8800-$,0
 col_lookup
         defb 0,0,1,2,3,3,4,5,6,6,7,8,9,9,10,11,12,12,13,14,15,15
         defb 16,17,18,18,19,20,21,21,22,23,24,24,25,26,27,27,28,29,30,30,31

@@ -39,15 +39,22 @@ F_putc_5by8
 	ld h, a			; save character
 	ld a, DATAROM
 	call F_pushpageA	; stack the current page A
+	ld a, (v_utf8)		; check UTF-8 state
+	and a			; if nonzero, process it
+	jp nz, .map_utf8
 	ld a, h			; restore character
 
 	cp '\n'     ; carriage return?
 	jr z, .nextrow
 
+	cp 0xC1			; utf-8 character that we support
+	jp nc, .utf8		; which is 0xC2 and higher
+
 	; find the address of the character in the bitmap table
-	sub 32      ; space = offset 0
-	ld hl, 0
+	sub 32      		; space = offset 0
 	ld l, a
+.utf8_continue			; we return here from the utf8 map subroutine
+	ld h, 0
 
 	; multiply by 8 to get the byte offset
 	add hl, hl
@@ -138,7 +145,7 @@ F_putc_5by8
 	xor a             ; a = 0
 .nextchar.done
 	ld (v_column), a
-
+.leave
 	call F_poppageA		; restore page A
 	pop de
 	pop bc
@@ -154,6 +161,31 @@ F_putc_5by8
 	inc h             ; next line of frame buffer
 	djnz .norotate.loop
 	jr .nextchar
+
+	; Support for a subset of utf-8 - a few of the 0xC2 characters
+	; (€, ¡ and ¿) and all of the 0xC3 characters (mostly accented
+	; chars and the Spanish ñ character)
+.utf8
+	cp 0xC3		; 0xC3 chars need no translation
+	jr z, .leave	
+	ld (v_utf8), a	; else set the UTF8 variable to the byte passed
+	jr .leave
+
+.map_utf8
+	xor a		; reset UTF8 state
+	ld (v_utf8), a
+	ld a, h		; get char
+	cp 0x80		; euro
+	ld l, (char_euro-char_space)/8
+	jp z, .utf8_continue
+	cp 0xA1		; ¡
+	ld l, (char_inverted_pling-char_space)/8
+	jp z, .utf8_continue
+	cp 0xA2		; cent
+	inc l
+	jp z, .utf8_continue
+	ld l, (char_inverted_quest-char_space)/8
+	jp .utf8_continue
 
 ;--------------------------------------------------------------------------
 ; F_jumpscroll:
