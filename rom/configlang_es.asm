@@ -20,8 +20,8 @@
 ;THE SOFTWARE.
 ;
 
-STR_choose	defb "\n\nOpciónes de configuración:\n",0
-STR_dhcp	defb "Usa/no usa DHCP",0
+STR_choose	defb "\n\nOpciones de configuración:\n",0
+STR_dhcp	defb "Usar/no usar DHCP",0
 STR_ipaddr	defb "Cambiar la dirección de IP",0
 STR_netmask	defb "Cambiar la máscara de subred",0
 STR_gateway	defb "Cambiar la puerta de enlace",0
@@ -30,13 +30,13 @@ STR_pridns	defb "Cambiar el DNS primario",0
 STR_secdns	defb "Cambiar el DNS secundario",0
 STR_hwaddr	defb "Cambiar la dirección del hardware",0
 STR_save	defb "Guardar los cambios y salir",0
-STR_cancel	defb "Salir",0
+STR_cancel	defb "Salir sin guardar",0
 
-STR_currset	defb "Configuración ahora\n===================\n",0
+STR_currset	defb "Configuración actual\n====================\n",0
 STR_usedhcp	defb "Usar DHCP             : ",0
 STR_currip	defb "Dirección             : ",0
 STR_currmask	defb "Máscara de subred     : ",0
-STR_currgw	defb "La puerta de enlace   : ",0
+STR_currgw	defb "Puerta de enlace      : ",0
 STR_currhwaddr	defb "Dirección del hardware: ",0
 STR_currhost	defb "Nombre del host       : ",0
 STR_currpridns	defb "DNS primario          : ",0
@@ -51,7 +51,7 @@ STR_invalidip	defb "\nLa dirección no fue válido\n",0
 STR_dhcpquestion defb "\n¿Usar DHCP? (S/N): ",0
 STR_askip	defb "\nDirección de IP: ",0
 STR_asknetmask	defb "\nMáscara de subred: ",0
-STR_askgw	defb "\nLa puerta de enlace: ",0
+STR_askgw	defb "\nPuerta de enlace: ",0
 STR_askhw	defb "\nDirección del hardware: ",0
 STR_askhostname	defb "\nNombre del host: ",0
 STR_askpridns	defb "\nDNS primario: ",0

@@ -20,44 +20,17 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM
+; Español strings para NMI
 
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
-
-	org 0x2000
-	include "spectranet.asm"
-
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-
-	org 0x2000
-	defb 0xAA
-	defb 0x55
-	defw F_inetinit			; RESET vector
-	defw 0xFFFF			; RST8 vector
-	defw 0xFFFF			; INT vector
-	defw F_nmihandler		; NMI vector
-	defw 0xFFFF
-	defw 0xFFFF
-	defw 0xFFFF
-
-	include "inetinit.asm"		; Initializes inet settings
-	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_es.asm"	; mesa de los strings en español
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-	include "sysvars.sym"
-	include "flashconf.asm"		; defines for configuration memory
-CONFIGUTIL_START
-	incbin "configutilrom_es.out"	; Configuration utility image
-CONFIGUTIL_END
-;	include "ui_config.asm"		; configuration user interface
-	include "ui_menu.asm"		; simple menu generator
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
+STR_config	defb "Cambiar la configuración del red",0
+STR_loader	defb "Cargar los datos a RAM",0
+STR_exit	defb "Salir",0
+STR_nmimenu	defb "Menú del Spectranet NMI\n\n",0
+STR_send	defb "Escuchando en ",0
+STR_port	defb " puerta 2000\n",0
+STR_start	defb "Principio: ",0
+STR_len		defb "   Tamaño: ",0
+STR_xtoexit	defb "\nPulsar 'x' a salir.\n",0
+STR_borked	defb "\nOperación falló con rc=",0
+STR_est		defb "\nConexión se estableció\n",0
 

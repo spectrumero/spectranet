@@ -20,44 +20,18 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM
+; English NMI menu strings
 
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
+STR_config	defb "Configure network settings",0
+STR_loader	defb "Load arbitrary data to RAM",0
+STR_exit	defb "Exit",0
+STR_nmimenu	defb "Spectranet NMI menu\n\n",0
+STR_send	defb "Listening on ",0
+STR_port	defb " port 2000\n",0
+STR_start	defb " Start: ",0
+STR_len		defb "Length: ",0
+STR_xtoexit	defb "\nPress 'x' to exit.\n",0
+STR_borked	defb "\nOperation failed with rc=",0
+STR_est		defb "Connection established\n",0
 
-	org 0x2000
-	include "spectranet.asm"
-
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-
-	org 0x2000
-	defb 0xAA
-	defb 0x55
-	defw F_inetinit			; RESET vector
-	defw 0xFFFF			; RST8 vector
-	defw 0xFFFF			; INT vector
-	defw F_nmihandler		; NMI vector
-	defw 0xFFFF
-	defw 0xFFFF
-	defw 0xFFFF
-
-	include "inetinit.asm"		; Initializes inet settings
-	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_es.asm"	; mesa de los strings en español
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-	include "sysvars.sym"
-	include "flashconf.asm"		; defines for configuration memory
-CONFIGUTIL_START
-	incbin "configutilrom_es.out"	; Configuration utility image
-CONFIGUTIL_END
-;	include "ui_config.asm"		; configuration user interface
-	include "ui_menu.asm"		; simple menu generator
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
 

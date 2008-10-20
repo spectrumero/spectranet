@@ -46,6 +46,7 @@
 	include "inetinit.asm"		; Initializes inet settings
 	include "dhcpclient.asm"	; DHCP client
 	include "utilnmi.asm"		; NMI handler
+	include "utilnmi_en.asm"	; English string table
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"
 	include "sysvars.sym"
