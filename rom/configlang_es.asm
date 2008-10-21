@@ -44,10 +44,10 @@ STR_currsecdns	defb "DNS secundario        : ",0
 STR_no		defb "No\n",0
 STR_yes		defb "Sí\n",0
 STR_bydhcp	defb "DHCP",0
-STR_unset	defb "[No se establece]",0
+STR_unset	defb "[No establecido]",0
 
-STR_abort	defb "Deje una linea blanca a abandonar",0
-STR_invalidip	defb "\nLa dirección no fue válido\n",0
+STR_abort	defb "Dejar linea en blanco para abortar",0
+STR_invalidip	defb "\nLa dirección era inválida\n",0
 STR_dhcpquestion defb "\n¿Usar DHCP? (S/N): ",0
 STR_askip	defb "\nDirección de IP: ",0
 STR_asknetmask	defb "\nMáscara de subred: ",0
@@ -58,7 +58,7 @@ STR_askpridns	defb "\nDNS primario: ",0
 STR_asksecdns	defb "\nDNS secundario: ",0
 
 STR_saving	defb "\nGuardando...",0
-STR_done	defb "Configuración completo\n",0
-STR_erasebork	defb "Falló borrarse\n",0
-STR_writebork	defb "Falló escribirse\n",0
+STR_done	defb "Configuración completa\n",0
+STR_erasebork	defb "Fallo al borrar\n",0
+STR_writebork	defb "Fallo al escribir\n",0
 
