@@ -22,7 +22,7 @@
 
 ; Español strings para NMI
 
-STR_config	defb "Cambiar la configuración del red",0
+STR_config	defb "Cambiar la configuración de la red",0
 STR_loader	defb "Cargar los datos a RAM",0
 STR_exit	defb "Salir",0
 STR_nmimenu	defb "Menú NMI de Spectranet\n\n",0
