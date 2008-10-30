@@ -31,18 +31,8 @@
 ; temporary!
 	define SOCK_DGRAM 2
 	define SOCK_STREAM 1
-
 	org 0x2000
-	defb 0xAA
-	defb 0x55
-	defw F_inetinit			; RESET vector
-	defw 0xFFFF			; RST8 vector
-	defw 0xFFFF			; INT vector
-	defw F_nmihandler		; NMI vector
-	defw 0xFFFF
-	defw 0xFFFF
-	defw 0xFFFF
-
+	include "utilromvectors.asm"	; Utility ROM vector table
 	include "inetinit.asm"		; Initializes inet settings
 	include "dhcpclient.asm"	; DHCP client
 	include "utilnmi.asm"		; NMI handler

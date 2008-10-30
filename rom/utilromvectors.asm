@@ -20,19 +20,14 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; English NMI menu strings
-
-STR_config	defb "Configure network settings",0
-STR_loader	defb "Load arbitrary data to RAM",0
-STR_exit	defb "Exit",0
-STR_nmimenu	defb "Spectranet NMI menu\n\n",0
-STR_send	defb "Listening on ",0
-STR_port	defb " port 2000\n",0
-STR_start	defb " Start: ",0
-STR_len		defb "Length: ",0
-STR_xtoexit	defb "\nPress 'x' to exit.\n",0
-STR_borked	defb "\nOperation failed with rc=",0
-STR_est		defb "Connection established\n",0
-STR_ident	defb "Spectranet utility ROM",0
-
+; The Utility ROM vector table
+	defb 0xAA
+	defb 0x01			; ROM ID 0x01
+	defw F_inetinit			; RESET vector
+	defw 0xFFFF			; RST8 vector
+	defw 0xFFFF			; INT vector
+	defw F_nmihandler		; NMI vector
+	defw 0xFFFF
+	defw 0xFFFF
+	defw STR_ident
 

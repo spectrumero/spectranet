@@ -119,7 +119,6 @@ J_reset
 F_initroms
 	ld b, 1		; start from page 2 (page 0=fixed, page 1=data)
 	ld hl, vectors	; pointer to the valid vector table
-	ld (v_workspace), hl	; save it
 .initloop
 	inc b
 	ld a, 0x1F
@@ -127,15 +126,17 @@ F_initroms
 	ret z		; finished
 	ld a, b
 	call F_checkromsig	; Z = valid signature found
-	jr nz, .initloop	; No valid ROM signature
-	
+	jr z, .rominit		; Valid sig found
+	inc hl
+	jr .initloop
+
+.rominit	
 	; Put an entry in the vector table to indicate the ROM page has
 	; a valid vector table.
-	ld hl, (v_workspace)	; get vector pointer
-	ld (hl), b		; save ROM page number in the vector table
+	ld a, (0x2001)		; fetch the ROM ID
+	ld (hl), a		; store it in the rom vector table
 	inc hl			; point to next entry in the table
-	ld (v_workspace), hl	; and save.
-
+	push hl			; save the table address pointer
 	push bc			; save which ROM we've examined
 	ld hl, (ROM_INIT_VECTOR) ; get initialization vector from ROM
 	ld a, 0xFF
@@ -146,6 +147,7 @@ F_initroms
 	jp (hl)			; and call it
 .returnaddr	
 	pop bc
+	pop hl
 	jr .initloop
 
 ;-------------------------------------------------------------------------

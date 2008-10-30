@@ -109,7 +109,7 @@
 ; The upper entry point.
 ; CALL instructions to 0x3FF8 and higher cause a ROM page-in. A small
 ; amount of code can live here to dispatch these calls elsewhere.
-	defb 0		; unused at present
+	rst 0x30	; ROM module dispatcher
 	ret		; A way of paging in without using an OUT
 	jp J_hldispatch	; HLCALL - 0x3FFA
 	jp J_ixdispatch	; IXCALL - 0x3FFD

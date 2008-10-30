@@ -101,3 +101,34 @@ J_ixdispatch
 	ld hl, (v_pagerws)	; restore hl
 	jp (ix)			; jump to routine.
 
+;-------------------------------------------------------------------------
+; J_moduledispatch
+; Finds the ROM module for the call to be handed off. The ROM ID is in
+; H.
+J_moduledispatch
+	ex af, af'		; save af
+	push hl			; save hl
+	push bc			; save bc
+	ld b, h			; get ROM module ID
+	ld hl, vectors		; start of vector table
+.findcall
+	ld a, (hl)		; get ROM ID from table
+	and a			; check for terminator
+	jr z, .notfound
+	cp b			; ROM ID to look for
+	jr nz, .findcall
+.found
+	ld a, l			; get vector address LSB
+	sub vectors % 256 - 2	; subtract the base to get the ROM slot
+	pop bc
+	pop hl
+	call F_pushpageB	; select the page and stack the existing
+	ex af, af'		; get original AF value
+	call 0x2010		; enter ROM module
+	call F_poppageB
+	ret
+.notfound
+	scf			; return with "function not found"
+	ld a, -1
+	ret
+

@@ -354,9 +354,7 @@ F_crc16
 ; Parameters: A = page to test
 F_checkromsig
 	call F_setpageB
-	ld hl, 0x2000
-	ld a, (0x2001)
-	xor (hl)
-	cp 0xFF
+	ld a, (0x2000)
+	cp 0xAA
 	ret
 
