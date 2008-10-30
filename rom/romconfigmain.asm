@@ -82,7 +82,7 @@ F_findfirstfreepage
 	call SETPAGEB
 	ld a, (0x2000)
 	cp 0xFF			; FF = free page
-	ret z
+	jr z, .found
 	ex af, af'
 	cp 0x1F			; Last page?
 	jr z, .nospace
@@ -90,6 +90,10 @@ F_findfirstfreepage
 	jr F_findfirstfreepage
 .nospace
 	scf
+	ret
+.found
+	ex af, af'
+	and a			; make sure carry is reset
 	ret
 
 ;-----------------------------------------------------------------------
@@ -169,14 +173,6 @@ F_loader
 	call CLOSE
 	ld a, (v_sockfd)
 	call CLOSE
-.keymsg
-	ld hl, STR_xtoexit
-	call PRINT42
-.waitforkey			; wait for a key so the user has a chance
-	call GETKEY		; to see what happened.
-	cp 'x'			; press 'x' to exit
-	jr nz, .waitforkey
-	or 1			; ensure zero flag is cleared
 	ret
 .borked
 	ld hl, buf_workspace
@@ -185,7 +181,8 @@ F_loader
 	call PRINT42
 	ld hl, buf_workspace
 	call PRINT42
-	jr .keymsg
+	scf
+	ret
 
 ; internal function for the above - print info of what's being tx'd to us.
 F_printxfinfo
@@ -217,14 +214,47 @@ F_configmenu
 	jr nz, F_configmenu
 	ret
 
+;-------------------------------------------------------------------------
+; F_addmodule
+; Adds a new module to the last slot in ROM, assuming there's one available
 F_addmodule
-	ret
+	call F_findfirstfreepage	; Find the ROM page for the module
+	jp c, J_noroom			; Report "no room" if C is set
+	call SETPAGEB			; page it into area B
+	call F_loader			; fetch data over the network
+	jp c, F_waitforkey		; bale out now, error receiving
+	ld hl, STR_writingmod		; tell the user
+	call PRINT42
+	ld hl, v_workspace		; hex conversion
+	ld a, (v_pgb)			; of current page B
+	call ITOH8			; convert to hex string
+	ld hl, v_workspace
+	call PRINT42			; print it
+	jp F_waitforkey
+
 F_repmodule
 	ret
 F_remmodule
 	ret
 F_exit
 	and 0
+	ret
+
+;-------------------------------------------------------------------------
+; J_noroom
+J_noroom
+	ld hl, STR_noroom
+	call PRINT42
+;-------------------------------------------------------------------------
+; 'Press x to exit'
+F_waitforkey
+	ld hl, STR_xtoexit
+	call PRINT42
+.waitforkey
+	call GETKEY
+	cp 'x'
+	jr nz, .waitforkey
+	or 1
 	ret
 
 ;-------------------------------------------------------------------------

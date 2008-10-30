@@ -37,4 +37,5 @@ STR_xtoexit	defb "\nPress 'x' to exit.\n",0
 STR_borked	defb "\nOperation failed with rc=",0
 STR_est		defb "Connection established\n",0
 STR_len		defb "Length: ",0
-
+STR_noroom	defb "No space left in flash.\n",0
+STR_writingmod	defb "\nWriting module to flash page ",0
