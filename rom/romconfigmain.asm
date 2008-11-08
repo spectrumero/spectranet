@@ -78,8 +78,9 @@ F_showroms
 ; carry flag set if no free pages are available.
 F_findfirstfreepage
 	ld a, 0x04
-	ex af, af'
+.loop
 	call SETPAGEB
+	ex af, af'
 	ld a, (0x2000)
 	cp 0xFF			; FF = free page
 	jr z, .found
@@ -87,12 +88,12 @@ F_findfirstfreepage
 	cp 0x1F			; Last page?
 	jr z, .nospace
 	inc a
-	jr F_findfirstfreepage
+	jr .loop
 .nospace
 	scf
 	ret
 .found
-	ex af, af'
+	ex af, af´
 	and a			; make sure carry is reset
 	ret
 
@@ -101,7 +102,6 @@ F_findfirstfreepage
 ; Loads some data into RAM.
 F_loader
 	; Page in some RAM for the data to land.
-	ld a, 0xC3
 	call SETPAGEA
 
 	call CLEAR42
@@ -221,6 +221,7 @@ F_addmodule
 	call F_findfirstfreepage	; Find the ROM page for the module
 	jp c, J_noroom			; Report "no room" if C is set
 	call SETPAGEB			; page it into area B
+	ld a, 0xC3			; page to fill in RAM
 	call F_loader			; fetch data over the network
 	jp c, F_waitforkey		; bale out now, error receiving
 	ld hl, STR_writingmod		; tell the user
@@ -230,10 +231,52 @@ F_addmodule
 	call ITOH8			; convert to hex string
 	ld hl, v_workspace
 	call PRINT42			; print it
+	ld hl, 0x1000			; program a 4K block
+	ld de, 0x2000
+	ld bc, 0x1000
+	di
+	call F_FlashWriteBlock
+	ei
+	jr c, J_writeborked
 	jp F_waitforkey
 
+;-------------------------------------------------------------------------
+; F_repmodule
+; Replaces a module.
 F_repmodule
+	ld hl, STR_entermod
+	call PRINT42
+	call F_getromnum		; ask for the ROM id
+	ret z				; user baled on us
+	ld (v_workspace), a		; the ROM that will be replaced.
+	and 0xFC			; mask out bottom two bits to find
+	ld (v_workspace + 1), a		; the sector, store it for later
+	call F_copysectortoram		; copy the flash sector
+	ld a, (v_workspace)		; calculate the RAM page to use
+	and 0x03			; get position in the sector
+	add 0xDC			; add RAM page number
+	call F_loader			; get the new data over the net
+	ld a, (v_workspace + 1)		; retrieve sector page
+	di
+	call F_FlashEraseSector
+	jr c, J_eraseborked		; oops!
+	ld a, (v_workspace + 1)
+	call F_writesector		; write the new contents of RAM
+	ei
+	jr c, J_writeborked
+	jp F_waitforkey
+
+;------------------------------------------------------------------------
+; Report flash write/erase failures
+J_eraseborked
+	ld hl, STR_erasebork
+	call PRINT42
 	ret
+J_writeborked
+	ld hl, STR_writebork
+	call PRINT42
+	ret
+
 F_remmodule
 	ret
 F_exit
@@ -255,6 +298,61 @@ F_waitforkey
 	cp 'x'
 	jr nz, .waitforkey
 	or 1
+	ret
+
+;-------------------------------------------------------------------------
+; F_getromnum
+; Ask the user for a ROM slot (hex value)
+F_getromnum
+	ld hl, STR_entermod
+	call PRINT42
+	ld c, 3			; buffer is 3 bytes long (2 + null)
+	ld de, v_workspace
+	call INPUTSTRING
+	ld hl, v_workspace
+	ld a, (hl)
+	and a			; nothing entered?
+	ret z
+	call HTOI8		; convert hex string pointed to by hl
+	cp 4			; must be greater than 4
+	jr c, .invalid
+	push af			; save the ROM number selected
+	call F_findfirstfreepage
+	pop bc			; get AF back into BC for comparison
+	cp b			; b should be <= a
+	jr c, .invalid
+	ld a, b			; move result into A
+	ret
+.invalid	
+	ld hl, STR_notvalid
+	call PRINT42
+	jr F_getromnum
+	
+;-------------------------------------------------------------------------
+; F_copysectortoram
+; Copies 4 pages of flash to RAM.
+; Parameter: A = first page.
+F_copysectortoram
+	ld (v_workspace + 2), a		; save RAM page
+	ld a, 0xDC			; first RAM page
+	ld (v_workspace + 3), a
+	ld b, 4				; pages to copy
+.copyloop
+	push bc
+	ld a, (v_workspace + 2)	
+	call F_setpageA			; page flash into A
+	inc a
+	ld (v_workspace + 2), a
+	ld a, (v_workspace + 3)
+	call F_setpageB			; RAM into B
+	inc a
+	ld (v_workspace + 3), a
+	ld hl, 0x1000			; copy the page
+	ld de, 0x2000
+	ld bc, 0x1000
+	ldir
+	pop bc
+	djnz .copyloop
 	ret
 
 ;-------------------------------------------------------------------------

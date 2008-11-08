@@ -23,7 +23,7 @@
 ; ROM configuration utility - strings
 
 STR_installed	defb "Current configuration\n=====================\n\n",0
-STR_datarom	defb "-- data --",0
+STR_datarom	defb "-- data --\n",0
 
 STR_menutitle	defb "\n\nROM configuration menu\n======================\n\n",0
 STR_addmodule	defb "Add a new ROM module",0
@@ -39,3 +39,9 @@ STR_est		defb "Connection established\n",0
 STR_len		defb "Length: ",0
 STR_noroom	defb "No space left in flash.\n",0
 STR_writingmod	defb "\nWriting module to flash page ",0
+
+STR_entermod	defb "Enter hex number of ROM to replace: ",0
+STR_notvalid	defb "\nNot a valid ROM number.\n",0
+STR_erasebork	defb "Erase failed\n",0
+STR_writebork	defb "Write failed\n",0
+	

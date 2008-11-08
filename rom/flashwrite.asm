@@ -134,48 +134,30 @@ F_FlashWriteByte
 	ret
 
 ;---------------------------------------------------------------------------
-; F_writeconfig
-; Erases the last flash sector and copies the last four 4k pages from
-; RAM to the last four 4k pages of flash. The RAM should contain what
-; was in the last four pages of flash plus the modified configuration.
-; The carry flag is set on error.
-F_writeconfig
-	ld a, 0xDC	; RAM page 0x1C
+; F_writesector
+; Writes 4 pages from the last 4 pages of RAM to flash, starting at the
+; page specified in A
+F_writesector
+	ex af, af'	; swap with alternate set
+	ld a, 0xDC	; RAM page 0xDC
+	ld b, 4		; number of pages
+.loop
 	call F_setpageA ; Page into area A
-	ld a, 0x1C	; flash page 0x1C
+	inc a		; next page
+	ex af, af'	; get flash page to program
 	call F_setpageB
+	inc a		; next page
+	ex af, af'	; back to ram page for next iteration
+	push bc
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
 	call F_FlashWriteBlock
-	ret c
-	ld a, 0xDD	; RAM page 0x1D
-	call F_setpageA ; page into area A
-	ld a, 0x1D	; flash page 0x1D
-	call F_setpageB	; Page into area B
-	ld hl, 0x1000
-	ld de, 0x2000
-	ld bc, 0x1000
-	call F_FlashWriteBlock
-	ret c
-	ld a, 0xDE	; RAM page 0x1E
-	call F_setpageA	; Page into area A
-	ld a, 0x1E	; flash page 0x1E
-	call F_setpageB	; Page into area B
-	ld hl, 0x1000
-	ld de, 0x2000
-	ld bc, 0x1000
-	call F_FlashWriteBlock
-	ret c
-	ld a, 0xDF	; RAM page 0x1F
-	call F_setpageA	; Page into area A
-	ld a, 0x1F	; flash page 0x1F
-	call F_setpageB	; Page into area B
-	ld hl, 0x1000
-	ld de, 0x2000
-	ld bc, 0x1000
-	call F_FlashWriteBlock
-.leave
+	pop bc
+	ret c		; write failed
+	djnz .loop	; next page
+	ld a, 7
+	out (254), a
 	ret
 
 	include "pager.asm"	; we need our own copy of the pager code
