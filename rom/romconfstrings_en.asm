@@ -41,7 +41,11 @@ STR_noroom	defb "No space left in flash.\n",0
 STR_writingmod	defb "\nWriting module to flash page ",0
 
 STR_entermod	defb "Enter hex number of ROM to replace: ",0
-STR_notvalid	defb "\nNot a valid ROM number.\n",0
+STR_delrom	defb "Enter hex number of ROM to delete:",0
+STR_notvalid	defb "\nNot a valid ROM number.\nPlese re-enter: ",0
 STR_erasebork	defb "Erase failed\n",0
 STR_writebork	defb "Write failed\n",0
+STR_defragment	defb "Defragmenting...\n",0
+STR_erasing	defb "\nErasing...\n",0
+STR_eraseok	defb "Erase complete\n",0
 	

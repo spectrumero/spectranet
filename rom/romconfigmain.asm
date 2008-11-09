@@ -237,7 +237,7 @@ F_addmodule
 	di
 	call F_FlashWriteBlock
 	ei
-	jr c, J_writeborked
+	jp c, J_writeborked
 	jp F_waitforkey
 
 ;-------------------------------------------------------------------------
@@ -271,14 +271,131 @@ F_repmodule
 J_eraseborked
 	ld hl, STR_erasebork
 	call PRINT42
+	scf
 	ret
+
+;-----------------------------------------------------------------------
+; F_removepage
+; Removes a page from a sector of flash, shuffling all the ROMs down.
+; Page to remove should be in (v_workspace), and A should have the sector
+; first page.
+F_removepage
+	ld b, 3				; 3 pages to copy to RAM
+	ex af, af'
+	ld a, 0xDC			; RAM page to start with
+.loop
+	push bc
+	call F_setpageB			; page in RAM destination
+	inc a
+	ex af, af'
+	ld hl, v_workspace
+	cp (hl)				; is this the page to delete?
+	jr nz, .noskip			
+	inc a				; if so skip it
+.noskip
+	call F_setpageA			; page in ROM source
+	inc a
+	ex af, af'
+	ld hl, 0x1000			; ROM source addr
+	ld de, 0x2000			; RAM dest addr
+	ld bc, 0x1000
+	ldir
+	pop bc
+	djnz .loop
+
+	call F_setpageB			; page in the final RAM page
+	ld hl, 0x2000
+	ld de, 0x2001
+	ld bc, 0xFFF
+	ld (hl), 0xFF			; and fill it with 0xFF (empty flash)
+	ldir
+
+	ex af, af'			; get the flash page pointer back
+	dec a				; and turn it back into the
+	and 0xFC			; first page in the sector
+	push af				; save it
+	di
+	call F_FlashEraseSector		; erase it
+	jr c, .fail
+	pop af
+	call F_writesector		; write the modified sector back
+	ei
+	jr c, J_writeborked
+	ret
+.fail
+	ei
+	pop af				; restore stack
+	jr J_eraseborked
+
+;-----------------------------------------------------------------------
+; Jump here to display a write failed message.
 J_writeborked
 	ld hl, STR_writebork
 	call PRINT42
+	scf
 	ret
 
+;-----------------------------------------------------------------------
+; F_remmodule: Removes a module.
 F_remmodule
+	ld hl, STR_delrom
+	call PRINT42
+	call F_getromnum		; ask for the ROM id
+	ret z				; user baled on us
+	ex af, af'
+	dec a
+	ld (v_workspace+2), a		; save the first free page - 1
+	ex af, af'
+	ld (v_workspace), a		; make a copy of the user selection
+	and 0xFC			; find the sector
+	ld (v_workspace+1), a		; store the sector's first page num
+	ld hl, STR_erasing
+	call PRINT42
+	ld a, (v_workspace+1)
+	call F_removepage		; remove the selected ROM
+	ret c				; leave if it failed
+	ld hl, STR_eraseok
+	call PRINT42
+
+	; If there are further occupied sectors after the one from which
+	; the ROM page was just removed, we need to take a page from the
+	; last sector and use it to fill in the hole we just made.
+	ld a, (v_workspace+2)
+	and 0xFC			; what sector?
+	ld b, a
+	ld a, (v_workspace+1)
+	cp b				; no more sectors after this one
+	jr z, .leave
+
+	ld hl, STR_defragment		; report progress
+	call PRINT42
+	ld a, (v_workspace+2)		; page in the relevant page
+	call F_setpageA			; to page area A
+	ld a, 0xDC
+	call F_setpageB			; RAM in B
+	ld hl, 0x1000			; copy
+	ld de, 0x2000
+	ld bc, 0x1000
+	ldir
+	ld a, (v_workspace+1)		; get the sector with the hole
+	or 0x03				; and the page of the hole to fill
+	call F_setpageB
+	ld hl, 0x1000			; flash it into the hole
+	ld de, 0x2000
+	ld bc, 0x1000
+	di
+	call F_FlashWriteBlock
+	ei
+	jr c, J_writeborked
+	ld a, (v_workspace + 2)		; get the page of the data we copied
+	call F_removepage		; and remove it
 	ret
+.leave
+	or 1				; reset zero flag
+	ret
+
+;----------------------------------------------------------------------
+; F_exit: Exit the ROM utility.
 F_exit
 	and 0
 	ret
@@ -302,10 +419,9 @@ F_waitforkey
 
 ;-------------------------------------------------------------------------
 ; F_getromnum
-; Ask the user for a ROM slot (hex value)
+; Ask the user for a ROM slot (hex value), return it in A
+; Note. First free page is also returned in A'
 F_getromnum
-	ld hl, STR_entermod
-	call PRINT42
 	ld c, 3			; buffer is 3 bytes long (2 + null)
 	ld de, v_workspace
 	call INPUTSTRING
@@ -321,7 +437,9 @@ F_getromnum
 	pop bc			; get AF back into BC for comparison
 	cp b			; b should be <= a
 	jr c, .invalid
+	ex af, af'		; keep first free page in A'
 	ld a, b			; move result into A
+	or a			; make sure Z is not set
 	ret
 .invalid	
 	ld hl, STR_notvalid
@@ -333,20 +451,17 @@ F_getromnum
 ; Copies 4 pages of flash to RAM.
 ; Parameter: A = first page.
 F_copysectortoram
-	ld (v_workspace + 2), a		; save RAM page
+	ex af, af'			; save ROM page
 	ld a, 0xDC			; first RAM page
-	ld (v_workspace + 3), a
 	ld b, 4				; pages to copy
 .copyloop
 	push bc
-	ld a, (v_workspace + 2)	
-	call F_setpageA			; page flash into A
+	call F_setpageB			; RAM into area B
 	inc a
-	ld (v_workspace + 2), a
-	ld a, (v_workspace + 3)
-	call F_setpageB			; RAM into B
+	ex af, af'			; ROM page into A
+	call F_setpageA			; page it in
 	inc a
-	ld (v_workspace + 3), a
+	ex af, af'			; for the next iteration.
 	ld hl, 0x1000			; copy the page
 	ld de, 0x2000
 	ld bc, 0x1000
@@ -354,6 +469,55 @@ F_copysectortoram
 	pop bc
 	djnz .copyloop
 	ret
+
+F_debugpages
+	push af
+	ex af, af'
+	push af
+
+	ex af, af'
+	ld hl, v_workspace+2
+	call ITOH8
+	ld hl, STR_accum
+	call PRINT42
+	ld hl, v_workspace+2
+	call PRINT42
+
+	pop af
+	push af
+	ld hl, v_workspace+2
+	call ITOH8
+	ld hl, STR_accum1
+	call PRINT42
+	ld hl, v_workspace+2
+	call PRINT42
+
+	ld a, (v_workspace)
+	ld hl, v_workspace+2
+	call ITOH8
+	ld hl, STR_workspace
+	call PRINT42
+	ld hl, v_workspace+2
+	call PRINT42
+	
+	ld a, (v_workspace+1)
+	ld hl, v_workspace+2
+	call ITOH8
+	ld hl, STR_workspace1
+	call PRINT42
+	ld hl, v_workspace+2
+	call PRINT42
+
+	call F_waitforkey
+	pop af
+	ex af, af'
+	pop af
+	ret
+	
+STR_workspace	defb "\nworkspace + 0: ",0
+STR_workspace1	defb "\nworkspace + 1: ",0
+STR_accum	defb "\nA register   : ",0
+STR_accum1	defb "\nA' register  : ",0
 
 ;-------------------------------------------------------------------------
 ; Definitions.

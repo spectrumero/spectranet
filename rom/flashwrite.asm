@@ -142,22 +142,27 @@ F_writesector
 	ld a, 0xDC	; RAM page 0xDC
 	ld b, 4		; number of pages
 .loop
+	push bc
 	call F_setpageA ; Page into area A
 	inc a		; next page
 	ex af, af'	; get flash page to program
 	call F_setpageB
 	inc a		; next page
 	ex af, af'	; back to ram page for next iteration
-	push bc
 	ld hl, 0x1000
 	ld de, 0x2000
 	ld bc, 0x1000
+	push af
 	call F_FlashWriteBlock
+	jr c, .failed	; restore stack and exit
+	pop af
 	pop bc
-	ret c		; write failed
 	djnz .loop	; next page
-	ld a, 7
-	out (254), a
+	ret
+.failed			; restore stack, set carry flag
+	pop af
+	pop bc
+	scf
 	ret
 
 	include "pager.asm"	; we need our own copy of the pager code
