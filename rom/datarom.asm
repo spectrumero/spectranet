@@ -26,6 +26,9 @@
 	org 0x1000
 ;	include "ui_lookup.asm"
 	include "ui_charset.asm"
+ROMMODCONF_START
+	incbin "rommodconfig_en.out"
+ROMMODCONF_END
 
 ; Note that the jump table gets included at 0x1F00 when the ROM image
 ; is built.

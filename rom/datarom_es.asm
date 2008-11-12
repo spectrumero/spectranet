@@ -20,20 +20,17 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; English NMI menu strings
+; The data ROM.
+; This lives in page 1 of flash, and provides data such as the character
+; set for PUTCHAR42 and other non-code items. It gets paged into area A.
+	org 0x1000
+;	include "ui_lookup.asm"
+	include "ui_charset.asm"
+ROMMODCONF_START
+	incbin "rommodconfig_es.out"
+ROMMODCONF_END
 
-STR_config	defb "Configure network settings",0
-STR_rom		defb "Add and remove ROM modules",0
-STR_loader	defb "Load arbitrary data to RAM",0
-STR_exit	defb "Exit",0
-STR_nmimenu	defb "Spectranet NMI menu\n\n",0
-STR_send	defb "Listening on ",0
-STR_port	defb " port 2000\n",0
-STR_start	defb " Start: ",0
-STR_len		defb "Length: ",0
-STR_xtoexit	defb "\nPress 'x' to exit.\n",0
-STR_borked	defb "\nOperation failed with rc=",0
-STR_est		defb "Connection established\n",0
-STR_ident	defb "Spectranet utility ROM",0
+; Note that the jump table gets included at 0x1F00 when the ROM image
+; is built.
 
-
+DATAROM	equ 0x01	; physical flash page

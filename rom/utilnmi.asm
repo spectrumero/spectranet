@@ -86,6 +86,21 @@ F_config
 	ret
 
 ;-----------------------------------------------------------------------
+; F_rom
+; Invokes the ROM module utility. This is stored in page 0x01 of flash
+; as a binary object.
+F_rom
+	ld a, 0x01
+	call SETPAGEA		; this utility's executable code is in the
+	ld hl, ROMMODCONF_START	; data ROM, so page it in and copy it from
+	ld de, 0x3000		; 0x1000 to 0x3000.
+	ld bc, ROMMODCONF_END - ROMMODCONF_START
+	ldir
+	call 0x3000		; call it
+	or 1			; reset Z
+	ret
+
+;-----------------------------------------------------------------------
 ; F_loader
 ; Loads some data into RAM.
 F_loader
@@ -211,6 +226,7 @@ F_exit
 
 MENU_nmi
 	defw	STR_config,F_config
+	defw	STR_rom,F_rom
 	defw	STR_loader,F_loader
 	defw	STR_exit,F_exit
 	defw	0,0

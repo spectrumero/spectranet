@@ -26,10 +26,10 @@ STR_installed	defb "Configuración actual\n====================\n\n",0
 STR_datarom	defb "-- datos --\n",0
 
 STR_menutitle	defb "\n\nMenu de configuración ROM\n=========================\n",0
-STR_addmodule	defb "Añadir un módulo de ROM nuevo\n",0
-STR_repmodule	defb "Reemplazar un módulo\n",0
-STR_remmodule	defb "Borrar un módulo\n",0
-STR_exit	defb "Salir\n",0
+STR_addmodule	defb "Añadir un módulo de ROM nuevo",0
+STR_repmodule	defb "Reemplazar un módulo",0
+STR_remmodule	defb "Borrar un módulo",0
+STR_exit	defb "Salir",0
 
 STR_send	defb "Escuchando en ",0
 STR_port	defb " puerto 2000\n",0

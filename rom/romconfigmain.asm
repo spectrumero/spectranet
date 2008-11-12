@@ -23,6 +23,21 @@
 ; ROM configuration utility main routine.
 
 ;--------------------------------------------------------------------------
+; F_romconfigmain: Main loop
+F_romconfigmain
+	call CLEAR42
+	ld hl, STR_installed
+	call PRINT42
+	call F_showroms
+	call F_configmenu
+	jr z, F_romconfigmain
+	
+	; page back in caller
+	ld a, 0x02		; utility ROM
+	call SETPAGEB
+	ret
+
+;--------------------------------------------------------------------------
 ; F_showroms - Shows the current available ROMs.
 F_showroms
 	ld a, 0x02		; first valid ROM slot
@@ -211,7 +226,6 @@ F_configmenu
 	call F_genmenu
 	ld hl, MENU_romconfig
 	call F_getmenuopt
-	jr nz, F_configmenu
 	ret
 
 ;-------------------------------------------------------------------------
@@ -365,7 +379,7 @@ F_remmodule
 	ld b, a
 	ld a, (v_workspace+1)
 	cp b				; no more sectors after this one
-	jr z, .leave
+	ret z
 
 	ld hl, STR_defragment		; report progress
 	call PRINT42
@@ -389,15 +403,13 @@ F_remmodule
 	jr c, J_writeborked
 	ld a, (v_workspace + 2)		; get the page of the data we copied
 	call F_removepage		; and remove it
-	ret
-.leave
-	or 1				; reset zero flag
+	xor a				; reset Z
 	ret
 
 ;----------------------------------------------------------------------
 ; F_exit: Exit the ROM utility.
 F_exit
-	and 0
+	or 1				; reset Z flag
 	ret
 
 ;-------------------------------------------------------------------------
@@ -414,7 +426,7 @@ F_waitforkey
 	call GETKEY
 	cp 'x'
 	jr nz, .waitforkey
-	or 1
+	xor a			; set Z flag
 	ret
 
 ;-------------------------------------------------------------------------

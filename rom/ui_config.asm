@@ -286,7 +286,8 @@ F_saveconfig
 	ld a, 0x1C		; page that belongs to last 16k of flash
 	call F_FlashEraseSector
 	jr c, .eraseborked
-	call F_writeconfig
+	ld a, 0x1C		; page to start writing from
+	call F_writesector
 	jr c, .writeborked
 	ld hl, STR_done
 	call PRINT42

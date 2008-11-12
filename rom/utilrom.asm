@@ -47,6 +47,7 @@ CONFIGUTIL_START
 CONFIGUTIL_END
 ;	include "ui_config.asm"		; configuration user interface
 	include "ui_menu.asm"		; simple menu generator
+	include "datarom.sym"		; Datarom symbol file
 
 ;fwstart
 ;	incbin "flashwrite.out"		; this gets LDIR'd to RAM

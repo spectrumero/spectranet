@@ -20,9 +20,10 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Español strings para NMI
+; Mesanjes español para NMI
 
 STR_config	defb "Cambiar la configuración de la red",0
+STR_rom		defb "Añadir y quitar los módulos de ROM",0
 STR_loader	defb "Cargar los datos a RAM",0
 STR_exit	defb "Salir",0
 STR_nmimenu	defb "Menú NMI de Spectranet\n\n",0
@@ -33,5 +34,5 @@ STR_len		defb "   Tamaño: ",0
 STR_xtoexit	defb "\nPulsar 'x' para salir.\n",0
 STR_borked	defb "\nLa operación falló con rc=",0
 STR_est		defb "\nConexión establecida\n",0
-STR_ident	defb "Servicio ROM del Spectranet",0
+STR_ident	defb "ROM de servicio del Spectranet",0
 
