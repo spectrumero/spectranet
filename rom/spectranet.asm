@@ -24,6 +24,7 @@
 ; symbolic access to the public jump table entry points.
 
 ; Hardware page-in entry points
+MODULECALL	equ 0x3FF8
 PAGEIN		equ 0x3FF9
 PAGEOUT		equ 0x007C
 HLCALL		equ 0x3FFA

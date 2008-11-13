@@ -50,10 +50,15 @@ CALLBAS
 	ld (v_desave), de
 	pop hl
 	jp do_callbas
-
+	block 0x28-$,0xFF
+MODULECALL_NOPAGE
+	jp J_moduledispatch
 	block 0x30-$,0xFF
 MODULECALL
-	jp J_moduledispatch
+	call J_moduledispatch
+	ex (sp), hl		; throw away return to 0x3FF9
+	pop hl			
+	jr UNPAGE		; unpage and return to caller
 	block 0x38-$,0xFF
 INTERRUPT
 	ei

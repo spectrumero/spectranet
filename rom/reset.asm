@@ -125,8 +125,12 @@ F_initroms
 	cp b		; last ROM?
 	ret z		; finished
 	ld a, b
-	call F_checkromsig	; Z = valid signature found
+	call F_checkromsig	; Z = valid signature found for executable
 	jr z, .rominit		; Valid sig found
+	cp 0xFF			; empty slot
+	jr z, .skip
+	ld (hl), 0xFF		; "occupied but not executable"
+.skip
 	inc hl
 	jr .initloop
 

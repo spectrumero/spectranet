@@ -104,7 +104,8 @@ J_ixdispatch
 ;-------------------------------------------------------------------------
 ; J_moduledispatch
 ; Finds the ROM module for the call to be handed off. The ROM ID is in
-; H.
+; H. The call number is in L. This routine just needs H (L is handled by
+; the module)
 J_moduledispatch
 	ex af, af'		; save af
 	push hl			; save hl
@@ -115,11 +116,12 @@ J_moduledispatch
 	ld a, (hl)		; get ROM ID from table
 	and a			; check for terminator
 	jr z, .notfound
+	inc l			; increment table pointer
 	cp b			; ROM ID to look for
 	jr nz, .findcall
 .found
 	ld a, l			; get vector address LSB
-	sub vectors % 256 - 2	; subtract the base to get the ROM slot
+	sub vectors % 256 - 1	; subtract the base to get the ROM slot
 	pop bc
 	pop hl
 	call F_pushpageB	; select the page and stack the existing
@@ -128,6 +130,8 @@ J_moduledispatch
 	call F_poppageB
 	ret
 .notfound
+	pop bc
+	pop hl
 	scf			; return with "function not found"
 	ld a, -1
 	ret
