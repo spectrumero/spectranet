@@ -26,7 +26,7 @@ STR_installed	defb "Configuración actual\n====================\n\n",0
 STR_datarom	defb "-- datos --\n",0
 
 STR_menutitle	defb "\n\nMenu de configuración ROM\n=========================\n",0
-STR_addmodule	defb "Añadir un módulo de ROM nuevo",0
+STR_addmodule	defb "Añadir un nuevo módulo de ROM",0
 STR_repmodule	defb "Reemplazar un módulo",0
 STR_remmodule	defb "Borrar un módulo",0
 STR_exit	defb "Salir",0
@@ -37,15 +37,15 @@ STR_xtoexit	defb "\nPulsar 'x' para salir.\n",0
 STR_borked	defb "\nLa operación falló con rc=",0
 STR_est		defb "Conexión establecida\n",0
 STR_len		defb "Tamaño: ",0
-STR_noroom	defb "No hay ningún espacio en la memoria flash\n",0
+STR_noroom	defb "No hay espacio en la memoria flash\n",0
 STR_writingmod	defb "\nEscribiendo el módulo en página ",0
 
-STR_entermod	defb "El número hex del módulo a reemplazar:",0
-STR_delrom	defb "El número hex del módulo a borrar:",0
-STR_notvalid	defb "El número del módulo era equivocado.\nPor favor, rehacerlo: ",0
+STR_entermod	defb "Número hex del módulo a reemplazar:",0
+STR_delrom	defb "Número hex del módulo a borrar:",0
+STR_notvalid	defb "Número de módulo inválido.\nIntroducir de nuevo: ",0
 STR_erasebork	defb "Fallo al borrar\n",0
 STR_writebork	defb "Fallo al escribir\n",0
-STR_defragment	defb "Desfragmentendo...\n",0
+STR_defragment	defb "Desfragmentando...\n",0
 STR_erasing	defb "\nBorrando...\n",0
-STR_eraseok	defb "Borrar completo.\n",0
+STR_eraseok	defb "Borrardo completo.\n",0
 

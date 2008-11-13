@@ -34,5 +34,5 @@ STR_len		defb "   Tamaño: ",0
 STR_xtoexit	defb "\nPulsar 'x' para salir.\n",0
 STR_borked	defb "\nLa operación falló con rc=",0
 STR_est		defb "\nConexión establecida\n",0
-STR_ident	defb "ROM de servicio del Spectranet",0
+STR_ident	defb "ROM de servicio de Spectranet",0
 
