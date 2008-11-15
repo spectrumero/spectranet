@@ -94,18 +94,18 @@ J_reset
 	; Initialize the W5100 - set the MAC address and initialize
 	; hardware registers.
 	call F_w5100init
-	
-	call F_initroms		; Initialize any ROM modules we may have
-	ld hl, STR_unpaging	
-	call F_print
 
 	ld hl, J_rst8handler	; Set the RST8 handler vector
 	ld (v_rst8vector), hl
 	ld hl, TABLE_basext	; Set the BASIC extension table pointer
 	ld (v_tabletop), hl
+	
+	call F_initroms		; Initialize any ROM modules we may have
+	ld hl, STR_unpaging	
+	call F_print
 
 	ld hl, 0		; We're done so put 0x0000 
-	push hl
+	push hl			; on the stack
 	jp UNPAGE		; unpage (a ret instruction)
 
 ;------------------------------------------------------------------------

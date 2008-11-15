@@ -28,7 +28,11 @@
 ; BASIC sets the IY flag to point to the system variables area, this
 ; is used extensively to examine flags and sysvars. The tokens 'D_xxx'
 ; are a displacement for (iy+d) operations.
-
+;
+; Credits - Garry Lancaster for pointers on how the ZX error
+; handler works and some sample code.
+; Melbourne House for the Complete Shadow ROM disassembly, which was very
+; instructive in this endeavour.
 ;---------------------------------------------------------------------------
 ; F_addbasext: Adds a new BASIC command or extension.
 ; Parameters: HL = pointer to info table for new command.
