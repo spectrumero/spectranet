@@ -30,6 +30,7 @@
 	ld (v_connfd), a
 
 .startscreen
+	; put a HALT instruction here if you want to sync with the 50hz intr.
 	ld de, 16384		; frame buffer
 	ld hl, 6144
 	ld (v_remaining), hl
@@ -44,8 +45,8 @@
 	ld (v_remaining), hl
 	ld a, h
 	or l
-	jr z, .startscreen
 	pop hl
+	jr z, .startscreen
 	add hl, bc		; advance pointer
 	ex de, hl
 	jp .readloop
