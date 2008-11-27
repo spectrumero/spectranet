@@ -54,6 +54,7 @@
 	include "ui_output.asm"		; User interface: screen output
 	include "progtrap.asm"		; Programmable trap set routines
 	include "basicextn.asm"		; BASIC extension infrastructure
+	include "pagealloc.asm"		; page allocation
 
 	block 0xFD5-$,0xFF
 	include "ui_lookup.asm"		; PRINT42 lookup table

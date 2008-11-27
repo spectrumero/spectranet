@@ -40,13 +40,13 @@ F_nmihandler
 ; F_savescreen
 ; Save the current Spectrum frame buffer into our static memory.
 F_savescreen
-	ld a, 0xC1		; page 1 of Spectranet memory
+	ld a, 0xDA		; Use pages 0xDA, 0xDB of RAM
 	call SETPAGEA
 	ld hl, 0x4000		; Spectrum screen buffer
 	ld de, 0x1000		; Page area A
 	ld bc, 0x1000		; 4K
 	ldir
-	ld a, 0xC2
+	ld a, 0xDB
 	call SETPAGEA
 	ld hl, 0x5000
 	ld de, 0x1000
@@ -58,13 +58,13 @@ F_savescreen
 ; F_restorescreen
 ; Restore the Spectrum framebuffer.
 F_restorescreen
-	ld a, 0xC1
+	ld a, 0xDA
 	call SETPAGEA
 	ld hl, 0x1000
 	ld de, 0x4000
 	ld bc, 0x1000
 	ldir
-	ld a, 0xC2
+	ld a, 0xDB
 	call SETPAGEA
 	ld hl, 0x1000
 	ld de, 0x5000

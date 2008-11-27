@@ -41,6 +41,12 @@ buf_message
 		org 0x3D00
 buf_workspace
 
+; General purpose small workspace for ROM modules. Each ROM page gets 8 bytes
+; of workspace here. Work out the ROM's workspace location by taking the
+; page number and multiplying by 8 (page number left shifted 3 times).
+		org 0x3E00
+buf_moduleworkspace
+
 ; The system variables live in chip 4 page 0 which is permanently mapped
 ; to 0x3000-0x3FFF. Specifically, they live in the upper part of this memory,
 ; the lower part being available as general purpose workspace.
@@ -154,6 +160,7 @@ v_chanorigpgb	defb 0		; Original page B
 
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+pagealloc	defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 ; Reserve memory above 0x3FF8 for the jump table.
 		block 0x3FF8-$,0xff

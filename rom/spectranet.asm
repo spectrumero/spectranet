@@ -84,6 +84,8 @@ ADDBASICEXT	equ 0x3E93	; Adds a BASIC command
 STATEMENT_END	equ 0x3E96	; Check for statement end, exit at syntax time
 EXIT_SUCCESS	equ 0x3E99	; Use this to exit successfully after cmd
 PARSE_ERROR	equ 0x3E9C	; Use this to exit to BASIC with a parse error
+RESERVEPAGE	equ 0x3E9F	; Reserve a page of static RAM
+FREEPAGE	equ 0x3EA2	; Free a page of static RAM
 
 ; Definitions
 SOCK_STREAM	equ 1

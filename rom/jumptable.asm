@@ -104,6 +104,8 @@
 	jp F_statement_end
 	jp J_exit_success
 	jp J_err_6
+	jp F_reservepage
+	jp F_freepage
 
 	block 0x1FF8-$,0xFF
 ; The upper entry point.
