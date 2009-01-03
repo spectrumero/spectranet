@@ -26,6 +26,7 @@
 	org 0x1000
 ;	include "ui_lookup.asm"
 	include "ui_charset.asm"
+	include "ui_keyscan.asm"
 ROMMODCONF_START
 	incbin "rommodconfig_en.out"
 ROMMODCONF_END

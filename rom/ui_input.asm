@@ -49,17 +49,19 @@ KEY_GRAPH	equ 0x0F
 ; The routine returns the key on keydown. The calling routine should then
 ; wait for keyup before getting the next key.
 F_getkey
+	ld a, DATAROM		; key scan routines live here
+	call F_pushpageA
 .loop
-	rst CALLBAS
-	defw ZX_KEY_SCAN	; scan the keyboard
-	rst CALLBAS
-	defw ZX_K_TEST		; test for key press
+	call key_scan
+	call key_test
 	jr nc, .loop
 	ld e, a			; partially decoded key is in A, copy it to E
 	ld d, 8			; not in 'K' cursor mode
 	ld c, 0			; FLAGS = 0
-	rst CALLBAS
-	defw ZX_K_DECODE	; decode keypress into actual ascii value
+	call key_code		; decode keypress into actual ascii value
+	ld c, a
+	call F_poppageA		; restore original page A
+	ld a, c
 	ret
 
 ;===========================================================================
@@ -67,12 +69,13 @@ F_getkey
 ; Waits for the keyboard not being pressed anywhere that will generate
 ; a character.
 F_keyup
+	ld a, DATAROM		; key scan routines live here
+	call F_pushpageA
 .loop
-	rst CALLBAS
-	defw ZX_KEY_SCAN	; scan the keyboard
-	rst CALLBAS
-	defw ZX_K_TEST
+	call key_scan
+	call key_test
 	jr c, .loop		; carry set = key being pressed
+	call F_poppageA
 	ret
 
 ;===========================================================================
