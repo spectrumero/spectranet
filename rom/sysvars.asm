@@ -124,6 +124,10 @@ v_dhcpreqaddr	defb 0,0,0,0	; Our requested address
 v_dhcplease	defb 0,0,0,0	; lease in seconds
 v_nspointer	defw 0		; nameserver address pointer
 
+; TNFS system variables
+v_tnfssock	defb 0		; socket descriptor
+v_tnfssockinfo	defb 0,0,0,0,0,0,0,0	; server address/port
+
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM
 v_bank678	defb 0		; saved state of BANK678
