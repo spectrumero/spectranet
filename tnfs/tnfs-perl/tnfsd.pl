@@ -15,6 +15,7 @@
 use IO::Socket::INET;
 use IO::Select;
 use FileHandle;
+use Data::Dumper;
 use strict;
 
 my $MAXSIZE=1024;	# largest TNFS datagram
@@ -27,7 +28,7 @@ if(!$root)
 }
 
 # Define which TNFS command IDs should go to what functions.
-my %TNFSCMDS={	0x00	=> \&mount,
+my %TNFSCMDS=(	0x00	=> \&mount,
 		0x01	=> \&umount );
 
 # Sessions - clients that have mounted us
@@ -41,9 +42,11 @@ my $sock=IO::Socket::INET->new(LocalPort 	=> 16384,
 	or die("Unable to create socket: $!");
 
 my $msg;
+my $port;
+my $ipaddr;
 while($sock->recv($msg, $MAXSIZE))
 {
-	my($port, $ipaddr) = sockaddr_in($sock->peername);
+	($port, $ipaddr) = sockaddr_in($sock->peername);
 	my $host = gethostbyaddr($ipaddr, AF_INET);
 
 	my ($session, $retry, $cmd)=unpack("SCC", $msg);
@@ -51,6 +54,7 @@ while($sock->recv($msg, $MAXSIZE))
 
 	if($cmd != 0x00 && $ipaddr ne $SESSION{$session})
 	{
+		printf("$host: Session ID %x invalid\n", $session);
 		sendMsg(0x00, $cmd, 0xFF);
 		next;
 	}
@@ -62,6 +66,7 @@ while($sock->recv($msg, $MAXSIZE))
 	else
 	{
 		# reply ENOSYS 'operation not implemented'
+		printf("$host: Operation %x not implemented\n", $cmd);
 		sendMsg($session, $cmd, 0x16);
 	}
 }

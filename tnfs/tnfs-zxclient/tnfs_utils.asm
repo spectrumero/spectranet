@@ -100,13 +100,13 @@ F_tnfs_message
 	or c
 	jr nz, .poll
 	scf			; timed out
-	ref
+	ret
 
 .continue
 	ld a, (v_tnfssock)
 	ld hl, v_tnfssockinfo	; current connection info
-	ld de, 0x3000		; TODO: reserve a page
+	ld de, tnfs_recv_buffer	; Address to receive data
 	ld bc, 1024		; max message size
-	call F_recvfrom
+	call RECVFROM
 	ret
 
