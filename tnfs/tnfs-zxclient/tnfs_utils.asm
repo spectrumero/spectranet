@@ -41,6 +41,12 @@ F_tnfs_strcpy
 	ret
 
 ;------------------------------------------------------------------------
+; F_tnfs_header_w
+; Creates a TNFS header at a fixed address, buf_workspace, with the
+; extant session id
+F_tnfs_header_w
+	ld hl, buf_workspace
+	ld de, (v_tnfs_sid)
 ; F_tnfs_header
 ; Creates a TNFS header. Session ID in DE. Command in A. HL is a pointer
 ; to the buffer to fill.
@@ -78,6 +84,16 @@ F_tnfs_opensock
 	ret
 
 ;------------------------------------------------------------------------
+; F_tnfs_message_w
+; Sends the block of data starting at buf_workspace and ending at DE.
+F_tnfs_message_w
+	ex de, hl		; end pointer into HL for length calc
+F_tnfs_message_w_hl		; entry point for when HL is already set
+	ld de, buf_workspace	; start of block
+	sbc hl, de		; calculate length
+	ld b, h
+	ld c, l
+;------------------------------------------------------------------------
 ; F_tnfs_message
 ; Sends the block of data pointed to by DE for BC bytes and gets the
 ; response.
@@ -110,3 +126,13 @@ F_tnfs_message
 	call RECVFROM
 	ret
 
+;-------------------------------------------------------------------------
+; F_tnfs_mounted
+; Ask if a volume is mounted. Returns with carry reset if so, and
+; carry set if not, with A set to the error number.
+F_tnfs_mounted
+	ld a, (v_tnfssock)
+	and a
+	ret nz			; valid handle exists, return
+	scf			; no valid handle - set carry flag
+	ret			; TODO: set A to error number!

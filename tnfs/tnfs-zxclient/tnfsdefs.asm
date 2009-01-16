@@ -30,5 +30,14 @@ tnfs_sid_offset		equ 0
 tnfs_retry_offset	equ 2
 tnfs_cmd_offset		equ 3
 tnfs_err_offset		equ 4
+tnfs_msg_offset		equ 5
 
+; Mount group
+TNFS_OP_MOUNT		equ 0
+TNFS_OP_UMOUNT		equ 1
+
+; Directory group
+TNFS_OP_OPENDIR		equ 0x10
+TNFS_OP_READDIR		equ 0x11
+TNFS_OP_CLOSEDIR	equ 0x12
 
