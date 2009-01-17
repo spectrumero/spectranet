@@ -209,15 +209,15 @@ OPENDIR - Open a directory for reading - Command ID 0x10
 --------------------------------------------------------
 
 Format:
-Standard header followed by a null terminated path. "." indicates
-current directory. ".." indicates up one level. The path delimiter is always
-a "/". Servers whose underlying file system uses other delimiters, such
-as Acorn ADFS, should translate. Note that any recent version of Windows
-understands "/" to be a path delimiter, so a Windows server does not need
+Standard header followed by a null terminated absolute path.
+The path delimiter is always a "/". Servers whose underlying 
+file system uses other delimiters, such as Acorn ADFS, should 
+translate. Note that any recent version of Windows understands "/" 
+to be a path delimiter, so a Windows server does not need
 to translate a "/" to a "\".
+Clients should keep track of their own current working directory.
 
 Example:
-0xBEEF 0x00 0x10 . 0x00 - Open current directory
 0xBEEF 0x00 0x10 /home/tnfs 0x00 - Open absolute path "/home/tnfs"
 
 The server responds with the standard header, with byte 4 set to the
@@ -306,5 +306,6 @@ ID	POSIX equiv	Description
 0x1E	ENOBUFS		No buffer space available
 0x1F	EALREADY	Operation already in progress
 0x20	ESTALE		Stale TNFS handle
+0x21	EOF		End of file
 0xFF			Invalid TNFS handle
 

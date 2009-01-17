@@ -92,3 +92,24 @@ F_tnfs_mount
 	scf			; set the carry flag
 	ret	
 
+;-------------------------------------------------------------------------
+; F_tnfs_umount
+; Unmounts the TNFS filesystem and closes the socket.
+F_tnfs_umount
+	ld a, TNFS_OP_UMOUNT
+	call F_tnfs_header_w		; create the header
+	call F_tnfs_message_w_hl	; not much to do here at all
+	ret c				; communications error
+	ld a, (tnfs_recv_buffer+tnfs_err_offset)
+	and a				; no error?
+	jr nz, .error
+	ld a, (v_tnfssock)		; close the socket
+	call CLOSE
+	xor a
+	ld (v_tnfssock), a		; clear socket number
+	ld (v_tnfs_sid), a		; clear session id
+	ld (v_tnfs_sid+1), a
+	ret
+.error
+	scf				; flag the error condition
+	ret

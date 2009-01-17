@@ -68,13 +68,13 @@ F_tnfs_readdir
 	call F_tnfs_message_w_hl	; send the message
 	pop de				; get buffer pointer back
 	ret c				; but return on network error
-	ld a, (tnfs_recv_buf+tnfs_err_offset)
+	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; if rc is zero then copy the
 	jr z, .copybuf			; buffer to DE
 	scf
 	ret
 .copybuf
-	ld hl, tnfs_recv_buf+tnfs_msg_offset
+	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ld b, 255			; max filename length
 	jp F_tnfs_strcpy		; exit via strcpy
 
@@ -94,7 +94,7 @@ F_tnfs_closedir
 	inc hl
 	call F_tnfs_message_w_hl
 	ret c				; return now on network error
-	ld a, (tnfs_recv_buf+tnfs_err_offset)
+	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
 	ret z				; no error
 	scf				
