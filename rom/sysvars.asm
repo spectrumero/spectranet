@@ -127,6 +127,7 @@ v_nspointer	defw 0		; nameserver address pointer
 ; TNFS system variables
 v_tnfssock	defb 0		; socket descriptor
 v_tnfssockinfo	defb 0,0,0,0,0,0,0,0	; server address/port
+v_tnfs_sid	defw 0		; session identifier
 
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM
