@@ -29,16 +29,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef UNIX
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <netdb.h>
-#include <unistd.h>
-#endif
-
-#ifdef WIN32
+#else
 #include <windows.h>
 #endif
 
@@ -55,6 +53,10 @@ int main(int argc, char **argv)
 	unsigned int addr=32768;	/* default start address */
 	struct stat filestat;
 	char buf[1025];
+#ifdef WIN32
+WSADATA wsaData;
+#endif
+	
 
 	if(argc < 3 || argc > 4)
 	{
@@ -67,15 +69,24 @@ int main(int argc, char **argv)
 		addr=strtol(argv[3], (char **)NULL, 10);
 		if(errno)
 		{
-			perror("Invalid start address");
+			perror("strtol");
 			return(255);
 		}
-		else if(addr > 65535)
+		else if(addr > 65535 || addr < 0)
 		{
-			printf("Start address must be < 65535\n");
+			fprintf(stderr, "Start address must be < 65535\n");
 			return(255);
 		}
 	}
+
+#ifdef WIN32
+	if(WSAStartup(MAKEWORD(2,0), &wsaData) != 0)
+   {
+		fprintf(stderr, "Winsock failed to initialize\n");
+		return(255);
+   }
+#endif
+	
 
 	he=gethostbyname(argv[1]);
 	if(!he)
@@ -130,7 +141,7 @@ int main(int argc, char **argv)
 	buf[1]=(unsigned char)(addr / 256);
 	buf[2]=(unsigned char)(filestat.st_size % 256);
 	buf[3]=(unsigned char)(filestat.st_size / 256);
-	sent=write(sockfd, buf, 4);
+	sent=send(sockfd, buf, 4, 0);
 	if(sent != 4)
 	{
 		printf("Oops. Failed to send size block.\n");
@@ -140,7 +151,7 @@ int main(int argc, char **argv)
 	while((bytes=fread(buf, 1, 1024, stream)) > 0)
 	{
 		printf(".");
-		while((sent=write(sockfd, buf, bytes)) < bytes)
+		while((sent=send(sockfd, buf, bytes, 0)) < bytes)
 		{
 			bytes-=sent;
 		}
