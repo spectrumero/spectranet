@@ -16,6 +16,7 @@ use IO::Socket::INET;
 use IO::Select;
 use FileHandle;
 use Data::Dumper;
+use Fcntl;
 use strict;
 
 my $MAXSIZE=1024;	# largest TNFS datagram
@@ -32,7 +33,16 @@ my %TNFSCMDS=(	0x00	=> \&mount,
 		0x01	=> \&umount,
 		0x10	=> \&opendir,
 		0x11	=> \&readdir,
-		0x12	=> \&closedir );
+		0x12	=> \&closedir,
+		0x20	=> \&openFile,
+		0x21	=> \&readBlock,
+		0x22	=> \&writeBlock,
+		0x23	=> \&closeFile );
+
+# File modes
+my %MODE=(	0x01	=> O_RDONLY,
+		0x02	=> O_WRONLY,
+		0x03	=> O_RDWR );
 
 # Sessions - clients that have mounted us
 my %SESSION;		# Table of session ids to IP addresses
@@ -245,6 +255,151 @@ sub closedir
 	}
 }
 
+# openFile: Open a file.
+sub openFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+	my ($filemode, $fileflags)=unpack("CC", $msg);
+	my $filename=substr($msg, 2);
+	$filename =~ s/\x0//g;
+	my $path="$MOUNTPOINT{$session}" . $filename;
+	print("Open request: $path\n");
+
+	# use sysopen to do, well, a sysopen.
+	my $fhnd;
+	if(sysopen($fhnd, $path, $MODE{$filemode} | getOpenFlags($fileflags)))
+	{
+		# add to the file handle table - first find out
+		# whether this client has a directory table and create it
+		# if not.
+		my $clientHandle=0;
+		if(not defined $FILEHANDLE{$session})
+		{
+			my @hlist;
+			$hlist[0]=$fhnd;
+			$FILEHANDLE{$session}=\@hlist;
+		}
+		else
+		{
+			my $hlist=$FILEHANDLE{$session};
+			my $laste=$#{@$hlist};
+			for(my $i=0; $i <= $laste; $i++)
+			{
+				if(not defined $hlist->[$i])
+				{
+					$clientHandle=$i;
+					$hlist->[$i]=$fhnd;
+					last;
+				}
+			}
+			
+			# didn't find a hole? Add to the end
+			if(!$clientHandle)
+			{
+				$clientHandle=$laste+1;
+				$hlist->[$clientHandle]=$fhnd;
+			}
+				
+		}
+		sendMsg($session, 0x20, 0x00, pack("C", $clientHandle));
+
+	}
+	else
+	{
+		my $err=int($!);
+		sendMsg($session, 0x20, $err);
+	}
+}
+
+# readBlock - Reads from an open file handle.
+sub readBlock
+{
+	my ($session, $cmd, $status, $msg)=@_;
+	
+	my ($clientHandle, $szlsb, $szmsb)=unpack("CCC", $msg);
+	my $blocksize=($szmsb*256)+$szlsb;
+	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
+	if(defined $fhnd)
+	{
+		my $block;
+		my $bytes=sysread($fhnd, $block, $blocksize);
+		if($bytes > 0)
+		{
+			my $msg=pack("CC", $bytes%256, int($bytes/256)) .
+				$block;
+			sendMsg($session, 0x21, 0x00, $msg);
+		}
+		elsif($bytes == 0)
+		{
+			sendMsg($session, 0x21, 0x21);	# EOF
+		}
+		else
+		{
+			# send errno
+			sendMsg($session, 0x21, int($!));
+		}
+	}
+	else
+	{
+		# Bad file handle - EBADF
+		sendMsg($session, 0x21, 0x06);
+	}
+	
+}
+
+# write - Writes to an open file handle.
+sub writeBlock
+{
+	my ($session, $cmd, $status, $msg)=@_;
+
+	my ($clientHandle, $szlsb, $szmsb)=unpack("CCC", $msg);
+	my $blocksize=($szmsb*256)+$szlsb;
+	my $block=substr($msg, 3);
+	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
+	if(defined $fhnd)
+	{
+		print("Writing $blocksize bytes\n");
+		my $bytes=syswrite($fhnd, $block, $blocksize);
+		if($bytes > 0)
+		{
+			my $msg=pack("CC", $bytes%256, int($bytes/256)) .
+				$block;
+			sendMsg($session, 0x22, 0x00, $msg);
+		}
+		else
+		{
+			# send errno
+			sendMsg($session, 0x22, int($!));
+		}
+	}
+	else
+	{
+		# Bad file handle - EBADF
+		sendMsg($session, 0x21, 0x06);
+	}
+}
+
+# close - Closes an open file handle.
+sub closeFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+
+	# Retrieve the file handle
+	my $clientHandle=unpack("C", $msg);
+	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
+	if(defined $fhnd)
+	{
+		closedir($fhnd);
+		delete $FILEHANDLE{$session}->[$clientHandle];
+		sendMsg($session, 0x23, 0x00);
+	}
+	else
+	{
+		# Bad file handle - EBADF
+		sendMsg($session, 0x23, 0x06);
+	}
+
+}
 
 sub sendMsg
 {
@@ -263,5 +418,20 @@ sub makeSessionId
 		$sid=int(rand(65536));
 	} while($SESSION{$sid});
 	return $sid;
+}
+
+#---------------------------------------------------------------------------
+# Miscellaneous functions
+# getOpenFlags: convert tnfs flags to flags for open.
+sub getOpenFlags
+{
+	my $flags=0;
+	my $tf=shift;
+
+	if($tf & 0x01) { $flags |= O_APPEND; }
+	if($tf & 0x02) { $flags |= O_CREAT; }
+	if($tf & 0x04) { $flags |= O_EXCL; }
+	if($tf & 0x08) { $flags |= O_TRUNC; }
+	return $flags;
 }
 
