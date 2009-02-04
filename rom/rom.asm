@@ -48,7 +48,7 @@
 	include "w5100_sockinfo.asm"	; internal socket info marshalling
 	include "dns.asm"		; gethostbyname
 	include "dnsdefs.asm"		; defines for DNS
-	include "zxpaging.asm"		; Control 128k ROM paging
+;	include "zxpaging.asm"		; Control 128k ROM paging
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
 	include "ui_output.asm"		; User interface: screen output

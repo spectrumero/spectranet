@@ -45,6 +45,8 @@ J_reset
 	call F_clear		; clear the screen
 	ld hl, STR_bootmsg	
 	call F_print		; show the boot message
+	ld hl, bldstr
+	call F_print
 
 	; Initialize some system variables that need it.
 
@@ -74,7 +76,7 @@ J_reset
 	ld (v_localport), hl	; set initial local port address
 
 	; Initialize any ZX bits that need to be done.
-	call F_zxinit
+;	call F_zxinit		; not required at present
 
 	ld a, 0x01		; Data ROM
 	call F_setpageA		; and page into paging area A.
@@ -182,6 +184,7 @@ F_w5100init
 	ret
 
 STR_bootmsg
-	defb "Alioth Spectranet (beta)\n",0
+	defb "Alioth Spectranet ",0
+	include "ver.asm"	; include the build number file
 STR_unpaging
 	defb "Unpaging\n",0
