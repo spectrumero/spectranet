@@ -100,3 +100,8 @@ F_tnfs_closedir
 	scf				
 	ret				; return error number	
 
+;===========================================================================
+; F_tnfs_chdir
+; Chdir is not part of the protocol, but it's part of the client. It works
+; by statting the path supplied, and if it's a directory, storing this
+; path (which gets prepended to subsequent file operations).

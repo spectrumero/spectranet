@@ -41,6 +41,151 @@ F_tnfs_strcpy
 	ret
 
 ;------------------------------------------------------------------------
+; F_tnfs_strcat
+; Concatenates two null terminated strings.
+; Arguments		HL = pointer to first string buffer
+;			DE = pointer to string to concatenate
+;			BC = buffer size in bytes
+; On return, carry is set if the buffer was too small
+F_tnfs_strcat
+	; find the end of the first string
+	dec bc			; guarantee that we can null terminate it
+.findend
+	ld a, (hl)
+	and a
+	jr z, .string_end
+	inc hl
+	dec bc
+	ld a, b
+	or c
+	jr nz, .findend
+	scf			; buffer too short
+	ret
+.string_end
+	ld a, (de)		; second string
+	ld (hl), a
+	and a			; null?
+	ret z
+	inc hl
+	inc de
+	dec bc
+	ld a, b
+	or c
+	jr nz, .string_end
+	ld (hl), 0		; add a terminator
+	scf			; buffer too small
+	ret
+
+;------------------------------------------------------------------------
+; F_tnfs_abspath
+; Make an absolute path from a supplied relative path.
+; Parameters	HL = pointer to path string
+;		DE = pointer to a buffer to store the resulting path
+F_tnfs_abspath
+	push hl
+	ld (v_desave), de	; save start of buffer
+	ld hl, v_cwd		; first copy the working directory
+	ld b, 255
+.cploop
+	ld a, (hl)
+	and a			; zero?
+	jr z, .stringend
+	ld (de), a
+	inc hl
+	inc de
+	djnz .cploop
+.stringend
+	ld a, 255		; did we actually copy anything?
+	cp b
+	jr z, .addslash		; no, so put on a leading /
+	dec de
+	ld a, (de)		; check for trailing /
+	cp '/'
+	inc de
+	jr z, .parsepath	; trailing / is present, nothing to do
+.addslash
+	ld a, '/'
+	ld (de), a		; add the trailing /
+	inc de
+.parsepath
+	pop hl
+
+	; Build up the actual path. If we encounter a ../, remove the
+	; top path entry. If we encounter a ./, skip it.
+.loop
+	call .relativepath	; check for relative path ../ or ./
+	jr c, .loop		; relative path processed, don't copy any more
+.copypath
+	ld a, (hl)		; copy the byte
+	ld (de), a
+	inc hl
+	inc de
+	cp '/'			; up to a /
+	jr z, .loop		; when we go for the next bit.
+	and a			; hit the NULL at the end?
+	ret z			; all done
+	jr .copypath
+
+.addnull
+	xor a
+	ld (de), a
+	inc de
+	ret
+
+	; Deal with relative paths. When a ../ is encountered, the last
+	; dir should be removed (stopping at the start of the string).
+	; If a ./ is encountered it should be skipped.
+.relativepath
+	ld (v_hlsave), hl	; save pointer
+	ld a, (hl)
+	cp '.'
+	jr nz, .notrelative	; definitely not a relative path
+	inc hl
+	ld a, (hl)
+	cp '/'
+	jr z, .omit		; It's a ./ - omit it
+	cp '.'
+	jr nz, .notrelative	; It's .somethingelse
+	inc hl
+	ld a, (hl)
+	cp '/'
+	jr nz, .notrelative	; It's ..somethingelse
+.relative
+	inc hl			; make HL point at next byte for return.
+	ex de, hl		; do the work in HL
+	push hl			; save the pointer.
+	ld bc, (v_desave)	; get the pointer to the start of the buffer
+	inc bc			; add 1 to it
+	sbc hl, bc		; compare with the current address
+	pop hl			; get current address back into HL
+	jr z, .relativedone	; at the root already, so do nothing
+
+	dec hl			; get rid of the topmost path element
+	ld (hl), 0		; remove the trailing /
+.chewpath
+	dec hl
+	ld a, (hl)		; is it a / ?
+	cp '/'			; if so we're nearly done
+	jr z, .relativealmostdone
+	ld (hl), 0		; erase char
+	jr .chewpath
+.relativealmostdone
+	inc hl			; HL points at next char
+.relativedone
+	ex de, hl
+	scf			; indicate that path copy shouldn't take place
+	ret
+
+.notrelative
+	ld hl, (v_hlsave)
+	and a			; set Z flag if zero
+	ret
+.omit
+	inc hl			; advance pointer to next element of the path
+	scf			; set carry
+	ret
+
+;------------------------------------------------------------------------
 ; F_tnfs_header_w
 ; Creates a TNFS header at a fixed address, buf_workspace, with the
 ; extant session id

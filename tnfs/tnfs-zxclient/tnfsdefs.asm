@@ -47,3 +47,39 @@ TNFS_OP_READ		equ 0x21
 TNFS_OP_WRITE		equ 0x22
 TNFS_OP_CLOSE		equ 0x23
 
+; TNFS error codes - not surprisingly, nearly all the same as POSIX...
+ESUCCESS		equ 0x00
+EPERM			equ 0x01
+ENOENT			equ 0x02
+EIO			equ 0x03
+ENXIO			equ 0x04
+E2BIG			equ 0x05
+EBADF			equ 0x06
+EAGAIN			equ 0x07
+ENOMEM			equ 0x08
+EACCES			equ 0x09
+EBUSY			equ 0x0A
+EEXIST			equ 0x0B
+ENOTDIR			equ 0x0C
+EISDIR			equ 0x0D
+EINVAL			equ 0x0E
+ENFILE			equ 0x0F
+EMFILE			equ 0x10
+EFBIG			equ 0x11
+ENOSPC			equ 0x12
+ESPIPE			equ 0x13
+EROFS			equ 0x14
+ENAMETOOLONG		equ 0x15
+ENOSYS			equ 0x16
+ENOTEMPTY		equ 0x17
+ELOOP			equ 0x18
+ENODATA			equ 0x19
+ENOSTR			equ 0x1A
+EPROTO			equ 0x1B
+EBADFD			equ 0x1C
+EUSERS			equ 0x1D
+ENOBUFS			equ 0x1E
+EALREADY		equ 0x1F
+ESTALE			equ 0x20
+EOF			equ 0x21
+

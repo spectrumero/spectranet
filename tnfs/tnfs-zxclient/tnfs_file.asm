@@ -159,3 +159,39 @@ F_tnfs_close
 	scf		
 	ret			; error, return with c set
 
+;------------------------------------------------------------------------
+; F_tnfs_stat
+; Stats a file (gets information on it).
+; Arguments		HL = pointer to a null-terminated string - the filename
+; 			DE = pointer to a buffer for the result
+; The result is exactly the structure defined in tnfs-protocol.txt
+; Returns with carry set on error and A = return code.
+; An optimization would be to copy the reply directly from the ethernet
+; buffer and save a buffer copy.
+F_tnfs_stat
+	call F_tnfs_mounted
+	ret c
+	push de
+	push hl
+	ld a, TNFS_OP_STAT
+	call F_tnfs_header_w
+	pop hl			; copy the filename string to the buffer
+	call F_tnfs_strcpy
+	call F_tnfs_message_w
+	pop de
+	ret c			; network error
+	ld a, (tnfs_recv_buffer+tnfs_err_offset)
+	and a
+	jr z, .copybuf
+	scf			; tnfs error
+	ret
+.copybuf
+	dec bc			; decrease BC by the size of the
+	dec bc			; TNFS header + status byte
+	dec bc
+	dec bc
+	dec bc
+	ld hl, tnfs_recv_buffer+tnfs_msg_offset
+	ldir			; de is already the dest, bc is size
+	ret
+
