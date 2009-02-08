@@ -59,11 +59,12 @@ F_genmenu
 ; F_getmenuopt:
 ; Wait for the user to press a key, then call the appropriate routine.
 F_getmenuopt
-	push hl
+	ld (v_hlsave), hl	; save HL without disturbing stack
+.getkey
 	call GETKEY		; wait for key to be pressed
-	pop hl
+	ld hl, (v_hlsave)
 	sub 'a'			; ASCII a = 0
-	jr c, F_getmenuopt	; key pressed was < 'a'
+	jr c, .getkey		; key pressed was < 'a'
 .loop
 	push af
 	ld a, (hl)
@@ -80,7 +81,7 @@ F_getmenuopt
 	jr .loop
 .outofrange
 	pop af			; fix stack
-	jr F_getmenuopt		; try again
+	jr .getkey		; try again
 .callopt
 	ld e, (hl)		; get call address into DE
 	inc hl
