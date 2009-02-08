@@ -37,7 +37,8 @@ my %TNFSCMDS=(	0x00	=> \&mount,
 		0x20	=> \&openFile,
 		0x21	=> \&readBlock,
 		0x22	=> \&writeBlock,
-		0x23	=> \&closeFile );
+		0x23	=> \&closeFile,
+		0x24	=> \&statFile );
 
 # File modes
 my %MODE=(	0x01	=> O_RDONLY,
@@ -399,6 +400,32 @@ sub closeFile
 		sendMsg($session, 0x23, 0x06);
 	}
 
+}
+
+# statFile - gets information on a file.
+sub statFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+	
+	# the message contains the file to stat, remove the terminator
+	$msg=~s/\x00//g;
+	my $filename=$MOUNTPOINT{$session} . $msg;
+	print("Statting $filename\n");
+	if(my @st=stat($filename))
+	{
+		# perms in big endian, rest in "vax order" - little
+		# endian. (See perldoc for "pack")
+		my $smsg=pack("vvvVVVV", $st[2], $st[4], $st[5],
+				$st[7], $st[8], $st[9], $st[10]);
+		$smsg .= getpwuid($st[4]) . "\x0" . getgrgid($st[5]) . "\x0";
+		sendMsg($session, 0x24, 0x00, $smsg);
+		
+	}
+	else
+	{
+		# send error number
+		sendMsg($session, 0x24, int($!));
+	}
 }
 
 sub sendMsg

@@ -46,6 +46,7 @@ TNFS_OP_OPEN		equ 0x20
 TNFS_OP_READ		equ 0x21
 TNFS_OP_WRITE		equ 0x22
 TNFS_OP_CLOSE		equ 0x23
+TNFS_OP_STAT		equ 0x24
 
 ; TNFS error codes - not surprisingly, nearly all the same as POSIX...
 ESUCCESS		equ 0x00

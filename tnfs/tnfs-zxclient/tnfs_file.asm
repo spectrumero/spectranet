@@ -42,8 +42,7 @@ F_tnfs_open
 	inc hl
 	ex de, hl		; prepare for string copy
 	pop hl			; retrieve filename pointer
-	ld b, 255		; max 255 bytes
-	call F_tnfs_strcpy
+	call F_tnfs_abspath	; create absolute path to file
 	call F_tnfs_message_w	; send the message
 	ret c			; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
@@ -175,8 +174,9 @@ F_tnfs_stat
 	push hl
 	ld a, TNFS_OP_STAT
 	call F_tnfs_header_w
+	ex de, hl		; set DE to point to buffer
 	pop hl			; copy the filename string to the buffer
-	call F_tnfs_strcpy
+	call F_tnfs_abspath	; as an absolute path
 	call F_tnfs_message_w
 	pop de
 	ret c			; network error

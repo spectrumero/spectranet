@@ -81,11 +81,16 @@ F_tnfs_strcat
 ; Make an absolute path from a supplied relative path.
 ; Parameters	HL = pointer to path string
 ;		DE = pointer to a buffer to store the resulting path
+; On return DE points to the end of the new string.
 F_tnfs_abspath
+	ld a, (hl)		; is it already an absolute path?
+	cp '/'
+	ld b, 255
+	jp z, F_tnfs_strcpy	; yes, so just copy it verbatim.
+
 	push hl
 	ld (v_desave), de	; save start of buffer
 	ld hl, v_cwd		; first copy the working directory
-	ld b, 255
 .cploop
 	ld a, (hl)
 	and a			; zero?

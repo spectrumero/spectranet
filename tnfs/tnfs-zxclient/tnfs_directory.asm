@@ -36,8 +36,7 @@ F_tnfs_opendir
 	call F_tnfs_header_w		; header created at buf_workspace
 	ex de, hl
 	pop hl
-	ld b, 255			; maximum path length
-	call F_tnfs_strcpy
+	call F_tnfs_abspath		; create absolute path to dir
 	call F_tnfs_message_w		; send message starting at workspace
 	ret c				; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
@@ -105,3 +104,25 @@ F_tnfs_closedir
 ; Chdir is not part of the protocol, but it's part of the client. It works
 ; by statting the path supplied, and if it's a directory, storing this
 ; path (which gets prepended to subsequent file operations).
+; Parameters	HL = path to chdir to
+; Returns with carry set on error and A=error code
+F_tnfs_chdir
+	push hl
+	ld de, buf_tnfs_wkspc	; result of stat in the second workspace
+	call F_tnfs_stat	; stat the path
+	jr c, .error		; stat returned an error
+	ld hl, buf_tnfs_wkspc+1 ; MSB of stat filemode bitfield
+	ld a, S_IFDIR / 256	; MSB of S_IFDIR bitfield
+	and (hl)		; AND it all together...
+	jr z, .notadir		; ...if zero, it wasn't a directory.
+	pop hl
+	ld de, v_cwd		; copy the path as the new working directory
+	call F_tnfs_abspath	; as an absolute path.
+	ret
+.notadir
+	ld a, ENOTDIR
+	scf
+.error	
+	pop hl
+	ret
+

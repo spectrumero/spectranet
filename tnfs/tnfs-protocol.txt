@@ -70,8 +70,8 @@ unlink - remove a file
 
 Note: Not all servers have to support all operations - for example, a server
 on a Spectrum with a microdrive, or +3 floppy won't support
-chdir/mkdir/rmdir and will only support limited options for chmod. But
-a BBC Micro with ADFS would support chdir/mkdir/readdir.
+mkdir/rmdir and will only support limited options for chmod. But
+a BBC Micro with ADFS would support mkdir/rmdir and more file mode options.
 
 The directory delimiter in all cases is a "/". A server running on a filesystem
 that has a different delimiter will have to translate, for example,
@@ -366,6 +366,77 @@ code:
 
 0xBEEF 0x00 0x23 0x00 - File closed.
 0xBEEF 0x00 0x23 0x06 - Operation failed with EBADF, "bad file descriptor"
+
+
+STAT - Get information on a file - Command 0x24
+-----------------------------------------------
+Reads the file's information, such as size, datestamp etc. The TNFS
+stat contains less data than the POSIX stat - information that is unlikely
+to be of use to 8 bit systems are omitted.
+The request consists of the standard header, followed by the full path
+of the file to stat, terminated by a NULL. Example:
+
+0xBEEF 0x00 0x24 /foo/bar/baz.txt 0x00
+
+The server replies with the standard header, followed by the return code.
+On success, the file information follows this. Stat information is returned
+in this order. Not all values are used by all servers.
+
+File mode	- 2 bytes: file permissions - little endian byte order
+uid		- 2 bytes: Numeric UID of owner
+gid		- 2 bytes: Numeric GID of owner
+size		- 4 bytes: Unsigned 32 bit little endian size of file in bytes
+atime		- 4 bytes: Access time in seconds since the epoch, little end.
+mtime		- 4 bytes: Modification time in seconds since the epoch,
+                           little endian
+ctime		- 4 bytes: Time of last status change, as above.
+uidstring	- 0 or more bytes: Null terminated user id string
+gidstring	- 0 or more bytes: Null terminated group id string
+
+Fields that don't apply to the server in question should be left as 0x00.
+The ´mtime' field and 'size' fields are unsigned 32 bit integers.
+The uidstring and gidstring are helper fields so the client doesn't have
+to then ask the server for the string representing the uid and gid.
+
+File mode flags will be most useful for code that is showing a directory
+listing, and for programs that need to find out what kind of file (regular
+file or directory, etc) a particular file may be. They follow the POSIX
+convention which is:
+
+Flags		Octal representation
+S_IFMT		0170000		Bitmask for the file type bitfields
+S_IFSOCK	0140000		Is a socket
+S_IFLNK		0120000		Is a symlink
+S_IFREG		0100000		Is a regular file
+S_IFBLK		0060000		block device
+S_IFDIR		0040000		Directory
+S_IFCHR		0020000		Character device
+S_IFIFO		0010000		FIFO
+S_ISUID		0004000		set UID bit
+S_ISGID		0002000		set group ID bit
+S_ISVTX		0001000		sticky bit
+S_IRWXU		00700		Mask for file owner permissions
+S_IRUSR		00400		owner has read permission
+S_IWUSR		00200		owner has write permission
+S_IXUSR		00100		owner has execute permission
+S_IRGRP		00040		group has read permission
+S_IWGRP		00020		group has write permission
+S_IXGRP		00010		group has execute permission
+S_IROTH		00004		others have read permission
+S_IWOTH		00002		others have write permission
+S_IXOTH		00001		others have execute permission
+
+Most of these won't be of much interest to an 8 bit client, but the
+read/write/execute permissions can be used for a client to determine whether
+to bother even trying to open a remote file, or to automatically execute
+certain types of files etc. (Further file metadata such as load and execution
+addresses are platform specific and should go into a header of the file
+in question). Note the "trivial" bit in TNFS means that the client is
+unlikely to do anything special with a FIFO, so writing to a file of that
+type is likely to have effects on the server, and not the client! It's also
+worth noting that the server is responsible for enforcing read and write
+permissions (although the permission bits can help the client work out
+whether it should bother to send a request).
 
 LIST OF VALID RETURN CODES
 ==========================
