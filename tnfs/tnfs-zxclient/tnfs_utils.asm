@@ -309,10 +309,12 @@ F_tnfs_pathcmd
 ; As above but handles the return code too.
 F_tnfs_simplepathcmd
 	call F_tnfs_pathcmd
+; Entry point for simple exit handler
+F_tnfs_simpleexit
 	ret c
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
 	ret z
-	scr
+	scf
 	ret
 

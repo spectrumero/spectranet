@@ -190,7 +190,31 @@ F_tnfs_stat
 
 ;---------------------------------------------------------------------------
 ; F_tnfs_lseek
-
+; Seek to a position in a file.
+; Parameters: 	A = file descriptor
+;		C = operation 0x00 = SEEK_SET, 0x01 = SEEK_CUR, 0x02 = SEEK_END
+;		HLDE = 32 bit signed seek position
+; Returns with carry set and A=error code on error.
+F_tnfs_lseek
+	ex af, af'
+	call F_tnfs_mounted
+	ret c
+	ld a, TNFS_OP_LSEEK
+	push hl
+	push de
+	call F_tnfs_header_w	; Create the header in workspace
+	ex af, af'
+	ld (hl), a		; Set the file descriptor
+	pop de			
+	pop hl
+	ld a, c			; Operation type
+	ld (buf_workspace+4), a
+	ld (buf_workspace+5), de ; 32 bit little endian seek position
+	ld (buf_workspace+7), hl
+	ld de, buf_workspace	; send message from workspace
+	ld bc, 9		; that is 9 bytes long
+	call F_tnfs_message
+	jp F_tnfs_simpleexit
 
 ;---------------------------------------------------------------------------
 ; F_tnfs_unlink
@@ -200,3 +224,26 @@ F_tnfs_unlink
 	ld a, TNFS_OP_UNLINK
 	jp F_tnfs_simplepathcmd
 
+;---------------------------------------------------------------------------
+; F_tnfs_chmod
+; Changes file mode.
+; Parameters		HL = pointer to filename
+;			DE = 16 bit mode flags
+; On error returns with carry set and A=error
+F_tnfs_chmod
+	call F_tnfs_mounted
+	ret c
+	ld a, TNFS_OP_CHMOD
+	push hl
+	push de
+	call F_tnfs_header_w	; Create the header in workspace
+	pop de
+	ld (hl), e		; add the requested file mode flags
+	inc hl
+	ld (hl), d
+	inc hl
+	ex de, hl		; buffer pointer in DE for strcpy op
+	pop hl			; get filename parameter back
+	call F_tnfs_abspath	; copy filename as absolute path
+	call F_tnfs_message_w	; send message and get reply
+	jp F_tnfs_simpleexit	; and handle exit

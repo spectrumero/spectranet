@@ -529,6 +529,39 @@ Example: Set permissions to 755 on /foo/bar/baz.bas:
 
 The reply is the standard header plus the return code of the chmod operation.
 
+DEVICE OPERATIONS
+=================
+These operations get information about the device that is mounted.
+
+SIZE - Requests the size of the mounted filesystem - Command 0x30
+-----------------------------------------------------------------
+Finds the size, in kilobytes, of the filesystem that is currently mounted.
+The request consists of a standard header and nothing more.
+
+Example:
+0xBEEF 0x00 0x30
+
+The reply is the standard header, followed by the return code, followed
+by a 32 bit little endian integer which is the size of the filesystem
+in kilobytes, for example:
+
+0xBEEF 0x00 0x30 0x00 0xD0 0x02 0x00 0x00 - Filesystem is 720kbytes
+0xBEEF 0x00 0x30 0xFF - Request failed with error code 0xFF
+
+FREE - Requests the amount of free space on the filesystem - Command 0x31
+-------------------------------------------------------------------------
+Finds the size, in kilobytes, of the free space remaining on the mounted
+filesystem. The request consists of the standard header and nothing more.
+
+Example:
+0xBEEF 0x00 0x31
+
+The reply is as for SIZE - the standard header, return code, and little
+endian integer for the free space in kilobytes, for example:
+
+0xBEEF 0x00 0x31 0x00 0x64 0x00 0x00 0x00 - There is 64K free.
+0xBEEF 0x00 0x31 0x1F - Request failed with error 0x1F
+
 LIST OF VALID RETURN CODES
 ==========================
 Note not all servers may return all codes. For example, a server on a machine
