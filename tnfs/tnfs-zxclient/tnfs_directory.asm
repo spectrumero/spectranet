@@ -29,15 +29,8 @@
 ; On success, returns the directory handle in A.
 ; On error, sets the carry flag and sets A to the error number.
 F_tnfs_opendir
-	call F_tnfs_mounted		; Check for valid mount
-	ret c
-	push hl
 	ld a, TNFS_OP_OPENDIR
-	call F_tnfs_header_w		; header created at buf_workspace
-	ex de, hl
-	pop hl
-	call F_tnfs_abspath		; create absolute path to dir
-	call F_tnfs_message_w		; send message starting at workspace
+	call F_tnfs_pathcmd		; send command, get reply
 	ret c				; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; return code is zero?
@@ -126,3 +119,20 @@ F_tnfs_chdir
 	pop hl
 	ret
 
+;-------------------------------------------------------------------------
+; F_tnfs_mkdir
+; Create a directory on the server.
+; Parameters		HL = pointer to directory name
+; Returns with carry set on error and A=error code.
+F_tnfs_mkdir
+	ld a, TNFS_OP_MKDIR
+	jp F_tnfs_simplepathcmd
+
+;------------------------------------------------------------------------
+; F_tnfs_rmdir
+; Removes a directory on the server.
+; Parameters		HL = pointer to the directory
+; Returns with carry set on error and A=error code.
+F_tnfs_rmdir
+	ld a, TNFS_OP_RMDIR
+	jp F_tnfs_simplepathcmd

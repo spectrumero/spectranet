@@ -40,6 +40,8 @@ TNFS_OP_UMOUNT		equ 1
 TNFS_OP_OPENDIR		equ 0x10
 TNFS_OP_READDIR		equ 0x11
 TNFS_OP_CLOSEDIR	equ 0x12
+TNFS_OP_MKDIR		equ 0x13
+TNFS_OP_RMDIR		equ 0x14
 
 ; File group
 TNFS_OP_OPEN		equ 0x20
@@ -47,6 +49,13 @@ TNFS_OP_READ		equ 0x21
 TNFS_OP_WRITE		equ 0x22
 TNFS_OP_CLOSE		equ 0x23
 TNFS_OP_STAT		equ 0x24
+TNFS_OP_LSEEK		equ 0x25
+TNFS_OP_UNLINK		equ 0x26
+TNFS_OP_CHMOD		equ 0x27
+
+; Utility group
+TNFS_OP_SIZE		equ 0x30
+TNFS_OP_FREE		equ 0x31
 
 ; TNFS error codes - not surprisingly, nearly all the same as POSIX...
 ESUCCESS		equ 0x00

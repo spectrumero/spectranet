@@ -286,3 +286,33 @@ F_tnfs_mounted
 	ret nz			; valid handle exists, return
 	scf			; no valid handle - set carry flag
 	ret			; TODO: set A to error number!
+
+;----------------------------------------------------------------------------
+; F_tnfs_pathcmd
+; Many TNFS commands are just the command id + null terminated path.
+; This routine handles the assembly of the data block for all of these.
+; Arguments: A = command
+;           HL = pointer to string argument
+F_tnfs_pathcmd
+	ex af, af'		; save the cmd
+	call F_tnfs_mounted
+	ret c
+	ex af, af'
+	push hl
+	call F_tnfs_header_w	; create the header in the workspace area
+	ex de, hl		; de now points at current address
+	pop hl
+	call F_tnfs_abspath	; create absolute path
+	call F_tnfs_message_w	; send the message and get the reply.
+	ret
+
+; As above but handles the return code too.
+F_tnfs_simplepathcmd
+	call F_tnfs_pathcmd
+	ret c
+	ld a, (tnfs_recv_buffer+tnfs_err_offset)
+	and a
+	ret z
+	scr
+	ret
+

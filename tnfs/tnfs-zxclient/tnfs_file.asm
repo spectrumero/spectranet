@@ -168,16 +168,9 @@ F_tnfs_close
 ; An optimization would be to copy the reply directly from the ethernet
 ; buffer and save a buffer copy.
 F_tnfs_stat
-	call F_tnfs_mounted
-	ret c
 	push de
-	push hl
 	ld a, TNFS_OP_STAT
-	call F_tnfs_header_w
-	ex de, hl		; set DE to point to buffer
-	pop hl			; copy the filename string to the buffer
-	call F_tnfs_abspath	; as an absolute path
-	call F_tnfs_message_w
+	call F_tnfs_pathcmd	; send the command + path
 	pop de
 	ret c			; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
@@ -194,4 +187,16 @@ F_tnfs_stat
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ldir			; de is already the dest, bc is size
 	ret
+
+;---------------------------------------------------------------------------
+; F_tnfs_lseek
+
+
+;---------------------------------------------------------------------------
+; F_tnfs_unlink
+; Unlink (delete) a file.
+; Parameters		HL = pointer to filename
+F_tnfs_unlink
+	ld a, TNFS_OP_UNLINK
+	jp F_tnfs_simplepathcmd
 
