@@ -38,7 +38,10 @@ my %TNFSCMDS=(	0x00	=> \&mount,
 		0x21	=> \&readBlock,
 		0x22	=> \&writeBlock,
 		0x23	=> \&closeFile,
-		0x24	=> \&statFile );
+		0x24	=> \&statFile,
+		0x25	=> \&seekFile,
+		0x26	=> \&unlinkFile,
+		0x27	=> \&chmodFile );
 
 # File modes
 my %MODE=(	0x01	=> O_RDONLY,
@@ -402,6 +405,33 @@ sub closeFile
 
 }
 
+# seekFile - Seeks to a location in a file. (Command 0x25)
+sub seekFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+	
+	my ($clientHandle, $seektype, $seekloc)=unpack("CCl", $msg);
+	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
+	if(defined $fhnd)
+	{
+		# this assumes posix definitions of SEEK_CUR, SYS_END etc.
+		if(sysseek($fhnd, $seektype, $seekloc))
+		{
+			# success
+			sendMsg($session, 0x25, 0x00);
+		}
+		else
+		{
+			sendMsg($session, 0x25, int($!));
+		}
+	}
+	else
+	{
+		# send EBADF
+		sendMsg($session, 0x25, 0x06);
+	}
+}
+
 # statFile - gets information on a file.
 sub statFile
 {
@@ -425,6 +455,43 @@ sub statFile
 	{
 		# send error number
 		sendMsg($session, 0x24, int($!));
+	}
+}
+
+# unlinkFile - Unlinks a file (cmd 0x26)
+sub unlinkFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+
+	# remove terminator and create the path	
+	$msg=~s/\x00//g;
+	my $filename=$MOUNTPOINT{$session} . $msg;
+	if(unlink $filename)
+	{
+		sendMsg($session, 0x26, 0x00);
+	}
+	else
+	{
+		sendMsg($session, 0x26, int($!));
+	}
+}
+
+# chmodFile - Changes perms on a file (cmd 0x27)
+sub chmodFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+
+	# remove terminator and create the path	
+	$msg=~s/\x00$//g;
+	my ($perm, $filename)=unpack("vA", $msg);
+	$filename=$MOUNTPOINT{$session} . $filename;
+	if(chmod($perm, $filename))
+	{
+		sendMsg($session, 0x27, 0x00);
+	}
+	else
+	{
+		sendMsg($session, 0x27, int($!));
 	}
 }
 

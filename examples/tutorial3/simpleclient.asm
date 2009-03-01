@@ -2,7 +2,7 @@
 ; http://spectrum.alioth.net/doc/index.php/Spectranet:_Tutorial_3
 
 	include "spectranet.asm"
-	org 0x8000		; Start with RAND USR 32768
+	org 49152		; Start with RAND USR 32768
 
 	ld a, 2
 	call 0x1601		; Set up rst 16 routine.

@@ -53,13 +53,12 @@ F_addbasicext
 	dec de
 	dec de
 	dec de			; point DE at the page byte
-	ex de, hl
-	ld a, (hl)
+	ld a, (de)
 	cp 0xFF			; if it's 0xFF then we find the ROM page
 	ccf
 	ret nz
 	ld a, (v_pgb)		; copy the currently paged page
-	ld (hl), a
+	ld (de), a
 	and a			; reset carry flag
 	ret
 

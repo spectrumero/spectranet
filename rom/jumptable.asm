@@ -106,6 +106,7 @@
 	jp J_err_6
 	jp F_reservepage
 	jp F_freepage
+	jp J_reporterr
 
 	block 0x1FF8-$,0xFF
 ; The upper entry point.

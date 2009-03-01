@@ -93,3 +93,7 @@ EALREADY		equ 0x1F
 ESTALE			equ 0x20
 EOF			equ 0x21
 
+; Non protocol codes
+TTIMEOUT		equ 0x22
+TNOTMOUNTED		equ 0x23
+
