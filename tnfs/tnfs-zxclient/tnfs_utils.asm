@@ -118,6 +118,9 @@ F_tnfs_abspath
 	; Build up the actual path. If we encounter a ../, remove the
 	; top path entry. If we encounter a ./, skip it.
 .loop
+	ld a, (hl)		; check for end of string
+	and a
+	jr z, .addnull		; finished so add a null to the destination
 	call .relativepath	; check for relative path ../ or ./
 	jr c, .loop		; relative path processed, don't copy any more
 .copypath
@@ -149,14 +152,20 @@ F_tnfs_abspath
 	ld a, (hl)
 	cp '/'
 	jr z, .omit		; It's a ./ - omit it
+	and a			; or a . (null), same thing
+	jr z, .omitnull
 	cp '.'
 	jr nz, .notrelative	; It's .somethingelse
 	inc hl
 	ld a, (hl)
 	cp '/'
-	jr nz, .notrelative	; It's ..somethingelse
+	jr z, .relative		; relative path
+	and 0			; null terminator? also relative path
+	jr z, .relativenull	; 
+	jr .notrelative		; something else
 .relative
 	inc hl			; make HL point at next byte for return.
+.relativenull
 	ex de, hl		; do the work in HL
 	push hl			; save the pointer.
 	ld bc, (v_desave)	; get the pointer to the start of the buffer
@@ -187,6 +196,7 @@ F_tnfs_abspath
 	ret
 .omit
 	inc hl			; advance pointer to next element of the path
+.omitnull
 	scf			; set carry
 	ret
 
