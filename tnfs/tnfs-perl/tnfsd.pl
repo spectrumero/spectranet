@@ -54,6 +54,7 @@ my %LASTMSG;		# Table of last messages for a session
 my %MOUNTPOINT;		# Table of mount points for sessions
 my %DIRHANDLE;		# Table of directory handles
 my %FILEHANDLE;		# Table of file handles
+my %SEQNO;		# Table of sequence numbers
 
 # Main program. Create the socket and listen for requests.
 my $sock=IO::Socket::INET->new(LocalPort 	=> 16384,
@@ -80,6 +81,7 @@ while($sock->recv($msg, $MAXSIZE))
 	
 	if(defined $TNFSCMDS{$cmd})
 	{
+		$SEQNO{$session}=$retry;
 		$TNFSCMDS{$cmd}->($session, $retry, $cmd, $payload);
 	}
 	else
@@ -107,6 +109,7 @@ sub mount
 	my ($mountpoint, $user, $pw)=split(/\x0/, substr($message,2));
 
 	my $session=makeSessionId();
+	$SEQNO{$session}=$retry;
 
 	# check the mount point actually exists
 	if(opendir(DHND, $mountpoint))
@@ -188,6 +191,7 @@ sub umount
 	my ($session, $retry, $cmd, $message)=@_;
 
 	delete $SESSION{$session};
+	delete $SEQNO{$session};
 	my $dirhandles=$DIRHANDLE{$session};
 	if(defined($dirhandles))
 	{
@@ -498,7 +502,8 @@ sub chmodFile
 sub sendMsg
 {
 	my ($session, $cmd, $status, $msg)=@_;
-	my $dgram=pack("SCCC", $session, 0, $cmd, $status);
+	my $seq=$SEQNO{$session};
+	my $dgram=pack("SCCC", $session, $seq, $cmd, $status);
 	$dgram .= $msg;
 	$LASTMSG{$session}=$dgram;
 	$sock->send($dgram);

@@ -188,13 +188,19 @@ F_tbas_ls
 	call F_tnfs_opendir		; open the directory
 	jp c, J_tbas_error
 	ld (V_dirhandle), a		; save the directory handle
+	ld a, 2	
+	rst CALLBAS			; set channel to 2
+	defw 0x1601
 .catloop
+	ld a, (V_dirhandle)		; get the dir handle back
 	ld de, INTERPWKSPC		; location for result
 	call F_tnfs_readdir		; read dir
 	jr c, .readdone			; read is probably at EOF
 	ld hl, INTERPWKSPC
 	call F_tbas_zxprint		; print a C string to #2
-	ld a, (V_dirhandle)		; get the dir handle back
+	ld a, '\r'			; newline
+	rst CALLBAS
+	defw 0x10
 	jr .catloop
 .readdone
 	push af				; save error code while
@@ -206,6 +212,19 @@ F_tbas_ls
 	cp EOF				; EOF is good
 	jp nz, J_tbas_error		; everything else is bad, report it
 	jp EXIT_SUCCESS
+
+;----------------------------------------------------------------------------
+; F_tbas_zxprint
+; Prints a C string to the current ZX channel
+; HL = pointer to string 
+F_tbas_zxprint
+	ld a, (hl)
+	and a
+	ret z
+	rst CALLBAS
+	defw 0x10
+	inc hl
+	jr F_tbas_zxprint
 	
 ;----------------------------------------------------------------------------
 ; handle errors and return control to BASIC.
@@ -246,4 +265,5 @@ CMD_MOUNT	defb	"%mount",0
 CMD_UMOUNT	defb	"%umount",0
 CMD_CHDIR	defb	"%cd",0
 CMD_LS		defb	"%cat",0
+STR_cwd		defb	".",0
 

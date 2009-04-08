@@ -97,11 +97,11 @@ The connection ID is to add extra identifying information, since the same
 machine can establish more than one connection to the same server and may
 do so with different credentials.
 
-Byte 2 is a retry number. This allows the receiver to determine whether
-the datagram it just got is a retry or not. When byte 2 is set to 0x00,
-this is the first attempt at sending the command. For example, if a server
-receives a read command with retry set to 0x01, it knows it should resend
-the last block instead of sending a new one.
+Byte 2 is a sequence number. This allows the receiver to determine whether
+the datagram it just got is a retry or not. It should be incremented
+by one for each request sent. Clients should discard datagrams from the
+server if the sequence number does not match the number that was in
+the request datagram.
 
 The last byte is the command.
 
@@ -128,7 +128,7 @@ to make and set the back-off value accordingly. Clients should retry as normal
 once the back-off time expires.
 
 As can be seen from this very simple wire protocol, TNFS is not designed
-for confidentiality.
+for confidentiality or security. You have been warned.
 
 ------------------------------------------------------------------------------
 

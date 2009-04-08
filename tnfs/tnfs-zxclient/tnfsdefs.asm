@@ -27,7 +27,7 @@ tnfs_recv_buffer	equ 0x9000	; TODO: A place in Spectranet RAM
 
 ; Standard header offsets
 tnfs_sid_offset		equ 0
-tnfs_retry_offset	equ 2
+tnfs_seqno_offset	equ 2
 tnfs_cmd_offset		equ 3
 tnfs_err_offset		equ 4
 tnfs_msg_offset		equ 5

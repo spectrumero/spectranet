@@ -206,7 +206,12 @@ F_tnfs_header
 	inc hl
 	ld (hl), d
 	inc hl
-	ld (hl), 0		; initially retry = 0
+	push af
+	ld a, (v_tnfs_seqno)
+	inc a			; pre-increment the sequence number
+	ld (hl), a
+	ld (v_tnfs_seqno), a	; so that the seqno in memory = current seq
+	pop af
 	inc hl
 	ld (hl), a		; command
 	inc hl
@@ -254,6 +259,7 @@ F_tnfs_message
 	ret c
 	
 	; wait for the response by polling
+.pollstart
 	ld bc, tnfs_polltime
 .poll
 	ld a, (v_tnfssock)
@@ -275,6 +281,13 @@ F_tnfs_message
 	ld de, tnfs_recv_buffer	; Address to receive data
 	ld bc, 1024		; max message size
 	call RECVFROM
+	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
+	push bc
+	ld b, a
+	ld a, (v_tnfs_seqno)
+	cp b			; sequence number match? if not
+	pop bc
+	jr nz, .pollstart	; see if the real message is still to come
 	ret
 
 ;-------------------------------------------------------------------------
