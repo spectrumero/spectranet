@@ -97,3 +97,6 @@ EOF			equ 0x21
 TTIMEOUT		equ 0x22
 TNOTMOUNTED		equ 0x23
 
+; File mode and flag definitions
+O_RDONLY		equ 0x01
+

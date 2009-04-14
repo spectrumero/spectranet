@@ -156,6 +156,37 @@ F_tbas_chdir
 	jp c, J_tbas_error		; carry set = error
 	jp EXIT_SUCCESS
 
+;---------------------------------------------------------------------------
+; F_tbas_aload: Loads an arbitary file from the TNFS filesystem.
+; The syntax is %aload "filename" CODE address. This allows the user
+; to load an arbitrary file with no ZX formatting into memory.
+F_tbas_aload
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; expect a string expression
+	cp TOKEN_CODE			; expect CODE
+	jp nz, PARSE_ERROR
+	rst CALLBAS			; fetch the next bit 
+	defw ZX_NEXT_CHAR		; which must be a number
+	rst CALLBAS
+	defw ZX_EXPT1_NUM
+	call STATEMENT_END		; and then the end of statement
+
+	;------- runtime -------
+	rst CALLBAS
+	defw ZX_FIND_INT2		; find the 16 bit int	
+	push bc				; save it
+	rst CALLBAS
+	defw ZX_STK_FETCH		; get the filename
+	ld hl, INTERPWKSPC		; save it in workspace...
+	call F_basstrcpy
+	
+	; Now read the file into memory
+	ld hl, INTERPWKSPC
+	pop de				; retrieve address
+	call F_tbas_readrawfile
+	jp c, J_tbas_error
+	jp EXIT_SUCCESS
+
 ;----------------------------------------------------------------------------
 ; F_tbas_ls
 ; List a directory
@@ -241,7 +272,7 @@ STR_basicinit	defb	"TNFS BASIC extensions installed\n",0
 STR_basinsterr	defb	"Failed to install TNFS BASIC extensions\n",0
 
 INTERPWKSPC	equ	0x3000		; interpreter workspace
-NUMCMDS		equ	4
+NUMCMDS		equ	5
 TNFS_PAGE	equ 	0		; for testing
 PARSETABLE	
 P_mount		defb	0x0b
@@ -260,10 +291,15 @@ P_cat		defb	0x0b
 		defw	CMD_LS
 		defb	TNFS_PAGE
 		defw	F_tbas_ls
+P_aload		defb	0x0b
+		defw	CMD_ALOAD	; Arbitrary load
+		defb	TNFS_PAGE
+		defw	F_tbas_aload
 
 CMD_MOUNT	defb	"%mount",0
 CMD_UMOUNT	defb	"%umount",0
 CMD_CHDIR	defb	"%cd",0
 CMD_LS		defb	"%cat",0
+CMD_ALOAD	defb	"%aload",0
 STR_cwd		defb	".",0
 
