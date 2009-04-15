@@ -263,29 +263,38 @@ F_tnfs_message_w_hl		; entry point for when HL is already set
 ; Sends the block of data pointed to by DE for BC bytes and gets the
 ; response.
 F_tnfs_message
+	ld a, tnfs_max_retries	; number of retries
+	ld (v_tnfs_retriesleft), a	; into memory
+
+.retryloop
 	ld a, (v_tnfssock)	; socket descriptor
 	ld hl, v_tnfssockinfo	; info structure
+	push de			; stack the parameters
+	push bc
 	call SENDTO		; send the data
-	ret c
+	jr nc, .pollstart
+	pop bc			; error, leave now after restoring stack
+	pop de
+	ret
 	
 	; wait for the response by polling
 .pollstart
-	ld bc, tnfs_polltime
-.poll
-	ld a, (v_tnfssock)
-	push bc
-	call POLLFD
-	pop bc
-	jr nz, .continue
-	dec bc
-	ld a, b
-	or c
-	jr nz, .poll
-	ld a, TTIMEOUT		; error code
+	call F_tnfs_poll
+	jr nc, .continue	; a message is ready
+	ld a, (v_tnfs_retriesleft) ; get retries left
+	dec a			; decrement it
+	ld (v_tnfs_retriesleft), a ; and store it
+	and a			; is it at zero?
+	pop bc			; fetch parameters to either restore stack
+	pop de			; or get ready for the next try
+	jr nz, .retryloop
+	ld a, TTIMEOUT		; error code - we tried...but gave up
 	scf			; timed out
 	ret
 
 .continue
+	pop bc			; restore stack
+	pop de
 	ld a, (v_tnfssock)
 	ld hl, v_tnfssockinfo	; current connection info
 	ld de, tnfs_recv_buffer	; Address to receive data
@@ -298,6 +307,25 @@ F_tnfs_message
 	cp b			; sequence number match? if not
 	pop bc
 	jr nz, .pollstart	; see if the real message is still to come
+	ret
+
+;-------------------------------------------------------------------------
+; F_tnfs_poll
+; Polls the tnfs fd for 1 time unit. Returns with carry set if the time
+; expired.
+F_tnfs_poll
+	ld bc, tnfs_polltime
+.loop
+	push bc
+	ld a, (v_tnfssock)
+	call POLLFD
+	pop bc
+	ret nz			; done - fd is ready
+	dec bc
+	ld a, b
+	or c
+	jr nz, .loop
+	scf			; poll unit time over
 	ret
 
 ;-------------------------------------------------------------------------
