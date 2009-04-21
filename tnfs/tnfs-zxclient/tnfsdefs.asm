@@ -97,6 +97,9 @@ EOF			equ 0x21
 ; Non protocol codes
 TTIMEOUT		equ 0x22
 TNOTMOUNTED		equ 0x23
+TBADLENGTH		equ 0x24
+TBADTYPE		equ 0x25
+TUNKTYPE		equ 0x26
 
 ; File mode and flag definitions
 O_RDONLY		equ 0x01

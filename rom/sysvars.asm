@@ -129,6 +129,7 @@ v_tnfssock	defb 0		; socket descriptor
 v_tnfssockinfo	defb 0,0,0,0,0,0,0,0	; server address/port
 v_tnfs_sid	defw 0		; session identifier
 v_tnfs_seqno	defb 0		; sequence number
+v_tnfs_curfd	defb 0		; filehandle for current file IO operation
 
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM
@@ -139,6 +140,7 @@ v_asave		defb 0
 v_hlsave	defw 0
 v_desave	defw 0
 v_bcsave	defw 0
+v_ixsave	defw 0
 v_pagerws	defw 0 		; register storage for the pager
 
 ; Miscellaneous TCP variables

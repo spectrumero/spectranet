@@ -427,6 +427,9 @@ STR_EOF		defb	"End of file",0				; 0x21
 ; Non-protocol error messages
 STR_TIMEOUT	defb	"Operation timed out",0			; 0x22
 STR_NOTMOUNTED	defb	"Filesystem not mounted",0		; 0x23
+STR_BADLENGTH	defb	"Incorrect header length",0		; 0x24
+STR_BADTYPE	defb	"Incorrect block type",0		; 0x25
+STR_UNKTYPE	defb	"Unknown file type",0			; 0x26
 
 ERR_TABLE_END
 STR_UNKNOWN	defb	"Unknown error",0
