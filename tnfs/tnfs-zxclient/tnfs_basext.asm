@@ -188,6 +188,27 @@ F_tbas_aload
 	jp EXIT_SUCCESS
 
 ;----------------------------------------------------------------------------
+; F_tbas_load: Loads a ZX file (BASIC, CODE etc.)
+; The syntax is as for ZX BASIC LOAD, except %load.
+; TODO: CODE et al.
+F_tbas_load
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; expect a string expression
+	call STATEMENT_END		; and then the end
+
+	;------ runtime ------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; fetch the filename
+	ld hl, INTERPWKSPC
+	call F_basstrcpy		; copy + convert to C string
+
+	; Now call the loader routine with the filename in HL
+	ld hl, INTERPWKSPC
+	call F_tbas_loader
+	jp c, J_tbas_error
+	jp EXIT_SUCCESS
+
+;----------------------------------------------------------------------------
 ; F_tbas_ls
 ; List a directory
 ; Two forms - either %cat or %cat "directory"
@@ -272,7 +293,7 @@ STR_basicinit	defb	"TNFS BASIC extensions installed\n",0
 STR_basinsterr	defb	"Failed to install TNFS BASIC extensions\n",0
 
 INTERPWKSPC	equ	0x3000		; interpreter workspace
-NUMCMDS		equ	5
+NUMCMDS		equ	6
 TNFS_PAGE	equ 	0		; for testing
 PARSETABLE	
 P_mount		defb	0x0b
@@ -295,11 +316,16 @@ P_aload		defb	0x0b
 		defw	CMD_ALOAD	; Arbitrary load
 		defb	TNFS_PAGE
 		defw	F_tbas_aload
+P_load		defb	0x0b
+		defw	CMD_LOAD	; Standard LOAD command
+		defb	TNFS_PAGE
+		defw	F_tbas_load
 
 CMD_MOUNT	defb	"%mount",0
 CMD_UMOUNT	defb	"%umount",0
 CMD_CHDIR	defb	"%cd",0
 CMD_LS		defb	"%cat",0
 CMD_ALOAD	defb	"%aload",0
+CMD_LOAD	defb	"%load",0
 STR_cwd		defb	".",0
 

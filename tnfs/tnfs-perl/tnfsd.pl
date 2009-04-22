@@ -111,6 +111,9 @@ sub mount
 	my $session=makeSessionId();
 	$SEQNO{$session}=$retry;
 
+	# convert path
+	$mountpoint=$root . $mountpoint;
+
 	# check the mount point actually exists
 	if(opendir(DHND, $mountpoint))
 	{

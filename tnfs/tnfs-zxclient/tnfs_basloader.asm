@@ -55,6 +55,45 @@ F_tbas_readrawfile
 	ret			; up.
 
 ;--------------------------------------------------------------------------
+; F_tbas_loader
+; The BASIC LOAD command. Opens the named file, reads the header, then
+; decides how to load the file from the header information contained.
+; Parameters	HL = pointer to filename
+;		DE = memory address to load to for CODE files
+F_tbas_loader
+	ld (v_desave), de	; save address
+	ld a, O_RDONLY		; Open file read only
+	ld b, 0x00		; with no flags
+	call F_tnfs_open	
+	ret c			; return if the open operation fails
+	ld (v_tnfs_curfd), a	; save the returned filehandle
+	ld de, INTERPWKSPC	; set destination pointer to workspace
+	call F_tbas_getheader	; Fetch the header
+	jr c, .cleanupdie	; on error, clean up and return
+	ld ix, INTERPWKSPC+3	; start of "tape" header in a TAP file
+	ld a, (INTERPWKSPC+3)	; get the type byte
+	and a			; type 0? BASIC program
+	jr nz, .testcode	; No, test for CODE
+	call F_tbas_loadbasic	; Load a BASIC program
+	jr c, .cleanupdie	; handle errors
+.cleanup
+	ld a, (v_tnfs_curfd)
+	call F_tnfs_close
+	ret
+.testcode
+	; TODO: handle CODE files
+	ld a, TUNKTYPE
+	scf
+	ret
+
+.cleanupdie
+	push af			; save error code
+	ld a, (v_tnfs_curfd)		; and attempt to close the file
+	call F_tnfs_close
+	pop af			; restore error and return with it.
+	ret
+
+;--------------------------------------------------------------------------
 ; F_tbas_getheader
 ; Reads a block header into memory from the file handle in v_tnfs_curfd.
 ; Spectranet files are the same format as TAP files, so each block has
@@ -101,19 +140,18 @@ F_tbas_loadblock
 	push de			; save destination ptr
 	push bc			; save length
 	ld de, INTERPWKSPC	; get the length from TAP block
-	ld bc, 2		; 2 bytes long
+	ld bc, 3		; 3 bytes long (length + flags)
 	ld a, (v_tnfs_curfd)
 	call F_tnfs_read	; read the TAP header
 	pop bc			; get the length
 	pop de			; and destination pointer
 	ret c			; and leave on read error
-	ld a, (INTERPWKSPC)
-	cp c			; should be equal
+	ld hl, (INTERPWKSPC)	; sanity check TAP length
+	dec hl			; which should be length in ZX header + 2
+	dec hl
+	sbc hl, bc		; zero flag is set if length is correct
 	jr nz, .lengtherr
-	ld a, (INTERPWKSPC+1)
-	cp b			; should also be equal
-	jr nz, .lengtherr
-	ld h, b			; length remaining in HL
+	ld h, b			; copy length remaining into HL
 	ld l, c
 .loadloop
 	ld a, (v_tnfs_curfd)	; get file descriptor
@@ -126,6 +164,14 @@ F_tbas_loadblock
 	ld c, l
 	jr nz, .loadloop	; continue until 0 bytes left
 	ret
+.lengtherr
+	di
+	call F_regdump
+	halt
+
+	ld a, TBADLENGTH
+	scf
+	ret
 
 ;----------------------------------------------------------------------------
 ; F_tbas_loadbasic
@@ -135,6 +181,7 @@ F_tbas_loadblock
 ; Much of this is modelled on the ZX ROM loader.
 F_tbas_loadbasic
 	ld hl, (ZX_E_LINE)	; End marker of current variables area
+	ld de, (ZX_PROG)	; Destination address
 	dec hl
 	ld (v_ixsave), ix	; save IX
 	ld c, (ix+0x0b)		; Length argument in "tape" header
@@ -156,8 +203,6 @@ F_tbas_loadbasic
 				; TODO: Consider LINE number in header
 	pop bc			; fetch the length
 	pop de			; fetch the start
+
 	jp F_tbas_loadblock	; load the block
-
-
-	
 

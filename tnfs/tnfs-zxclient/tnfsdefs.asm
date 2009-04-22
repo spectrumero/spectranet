@@ -33,6 +33,9 @@ tnfs_cmd_offset		equ 3
 tnfs_err_offset		equ 4
 tnfs_msg_offset		equ 5
 
+; Definitions for header blocks not wire protocol related
+TNFS_HDR_LEN		equ 21		; 3 byte TAP + 17 bytes ZX + check byte
+
 ; Mount group
 TNFS_OP_MOUNT		equ 0
 TNFS_OP_UMOUNT		equ 1
