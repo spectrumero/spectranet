@@ -13,3 +13,5 @@ ZX_MAKE_ROOM	equ 0x1655
 
 ; Token definitions
 TOKEN_CODE	equ 0xAF
+TOKEN_SCREEN	equ 0xAA
+TOKEN_LINE	equ 0xCA

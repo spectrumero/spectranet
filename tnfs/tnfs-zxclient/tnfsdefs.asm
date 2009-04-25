@@ -35,6 +35,14 @@ tnfs_msg_offset		equ 5
 
 ; Definitions for header blocks not wire protocol related
 TNFS_HDR_LEN		equ 21		; 3 byte TAP + 17 bytes ZX + check byte
+OFFSET_HDRBYTE		equ 2		; 0x00 = header, 0xFF = data
+OFFSET_TYPE		equ 3		; Type ID, 0=bas, 3=code
+OFFSET_FILENAME		equ 4		; 10 bytes of filename
+OFFSET_LENGTH		equ 14		; 2 byte little endian length
+OFFSET_PARAM1		equ 16		; 2 byte little endian
+OFFSET_PARAM2		equ 18		; 2 byte little endian
+OFFSET_CHKSUM		equ 20		; "checksum" byte
+ZX_HEADERLEN		equ 17		; Length of ZX header excl. check byte
 
 ; Mount group
 TNFS_OP_MOUNT		equ 0
@@ -106,4 +114,10 @@ TUNKTYPE		equ 0x26
 
 ; File mode and flag definitions
 O_RDONLY		equ 0x01
+O_WRONLY		equ 0x02
+O_RDWR			equ 0x03
+O_APPEND		equ 0x01
+O_CREAT			equ 0x02
+O_EXCL			equ 0x04
+O_TRUNC			equ 0x08
 

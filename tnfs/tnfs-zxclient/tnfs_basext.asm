@@ -209,6 +209,56 @@ F_tbas_load
 	jp EXIT_SUCCESS
 
 ;----------------------------------------------------------------------------
+; F_tbas_save: Save a ZX file (BASIC, CODE etc.)
+; The syntax is as for ZX BASIC SAVE.
+; TODO: CODE et al.
+F_tbas_save
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; fetch the file name
+;	rst CALLBAS
+;	defw ZX_NEXT_CHAR		; Examine the next char
+;	cp TOKEN_CODE			; for CODE
+;	jr z, .savecode
+;	cp TOKEN_SCREEN			; for SCREEN$
+;	jr z, .savescreen	
+;	cp TOKEN_LINE			; then for LINE
+;	jr z, .savebasline
+
+	call STATEMENT_END		; a basic BASIC save.
+
+	;------- runtime for simple BASIC save -------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; There is only a filename.
+	push de				; save params
+	push bc
+	xor a				; type = 0
+	call F_tbas_mktapheader		; Create the header
+
+	; Fill in the header, length and length without vars
+	ld hl, (ZX_E_LINE)		; get the length of the BASIC prog
+	ld de, (ZX_PROG)		; by calculating it
+	scf
+	sbc hl, de		
+	ld (INTERPWKSPC+OFFSET_LENGTH), hl	; prog + vars
+	ld hl, (ZX_VARS)		; now save the length - vars
+	sbc hl, de			; calculate it...
+	ld (INTERPWKSPC+OFFSET_PARAM2), hl
+	ld a, 0x80			; When no LINE, put 0x80 in PARAM1
+	ld (INTERPWKSPC+OFFSET_PARAM1+1), a
+
+	pop bc				; retrieve the filename
+	pop de
+	call F_tbas_writefile		; Write it out.
+	jp c, J_tbas_error
+	jp EXIT_SUCCESS
+
+.savecode
+.savescreen
+.savebasline
+	ld a, TBADTYPE			; TODO - code etc.
+	jp J_tbas_error
+
+;----------------------------------------------------------------------------
 ; F_tbas_ls
 ; List a directory
 ; Two forms - either %cat or %cat "directory"
@@ -293,7 +343,7 @@ STR_basicinit	defb	"TNFS BASIC extensions installed\n",0
 STR_basinsterr	defb	"Failed to install TNFS BASIC extensions\n",0
 
 INTERPWKSPC	equ	0x3000		; interpreter workspace
-NUMCMDS		equ	6
+NUMCMDS		equ	7
 TNFS_PAGE	equ 	0		; for testing
 PARSETABLE	
 P_mount		defb	0x0b
@@ -320,6 +370,10 @@ P_load		defb	0x0b
 		defw	CMD_LOAD	; Standard LOAD command
 		defb	TNFS_PAGE
 		defw	F_tbas_load
+P_save		defb	0x0b
+		defw	CMD_SAVE
+		defb	TNFS_PAGE
+		defw	F_tbas_save
 
 CMD_MOUNT	defb	"%mount",0
 CMD_UMOUNT	defb	"%umount",0
@@ -327,5 +381,6 @@ CMD_CHDIR	defb	"%cd",0
 CMD_LS		defb	"%cat",0
 CMD_ALOAD	defb	"%aload",0
 CMD_LOAD	defb	"%load",0
+CMD_SAVE	defb	"%save",0
 STR_cwd		defb	".",0
 

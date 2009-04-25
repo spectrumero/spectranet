@@ -69,13 +69,13 @@ F_tbas_loader
 	ld (v_tnfs_curfd), a	; save the returned filehandle
 	ld de, INTERPWKSPC	; set destination pointer to workspace
 	call F_tbas_getheader	; Fetch the header
-	jr c, .cleanupdie	; on error, clean up and return
+	jp c, J_cleanuperror	; on error, clean up and return
 	ld ix, INTERPWKSPC+3	; start of "tape" header in a TAP file
 	ld a, (INTERPWKSPC+3)	; get the type byte
 	and a			; type 0? BASIC program
 	jr nz, .testcode	; No, test for CODE
 	call F_tbas_loadbasic	; Load a BASIC program
-	jr c, .cleanupdie	; handle errors
+	jp c, J_cleanuperror	; handle errors
 .cleanup
 	ld a, (v_tnfs_curfd)
 	call F_tnfs_close
@@ -84,13 +84,6 @@ F_tbas_loader
 	; TODO: handle CODE files
 	ld a, TUNKTYPE
 	scf
-	ret
-
-.cleanupdie
-	push af			; save error code
-	ld a, (v_tnfs_curfd)		; and attempt to close the file
-	call F_tnfs_close
-	pop af			; restore error and return with it.
 	ret
 
 ;--------------------------------------------------------------------------
@@ -165,10 +158,6 @@ F_tbas_loadblock
 	jr nz, .loadloop	; continue until 0 bytes left
 	ret
 .lengtherr
-	di
-	call F_regdump
-	halt
-
 	ld a, TBADLENGTH
 	scf
 	ret
@@ -205,4 +194,170 @@ F_tbas_loadbasic
 	pop de			; fetch the start
 
 	jp F_tbas_loadblock	; load the block
+
+;--------------------------------------------------------------------------
+; F_tbas_mktapheader
+; Create a TAP header with filename and type.
+; Parameters		A = type
+;			DE = filename
+;			BC = filename length
+F_tbas_mktapheader
+	push de
+	push bc
+	; Create the header
+	ld hl, 0x13		; length of header block in TAP format
+	ld (INTERPWKSPC), hl
+	ld (INTERPWKSPC+3), a	; save the type byte
+	xor a
+	ld (INTERPWKSPC+2), a	; is a header block, set to 0x00
+	ld a, 10		; > 10 chars in the filename?
+	cp b
+	jr nc, .continue
+	ld c, 10		; copy max of 10
+.continue
+	ld b, c			; prepare to copy string
+	ld hl, INTERPWKSPC+4
+.loop
+	ld a, (de)		; copy the string
+	ld (hl), a
+	inc de
+	inc hl
+	djnz .loop
+	ld a, 10		; find remaining bytes
+	sub c
+	jr z, .exit		; nothing to do!
+	ld b, a			; A now contains the loop count
+.spaces
+	ld (hl), 0x20		; fill the rest with spaces
+	inc hl
+	djnz .spaces
+.exit
+	pop bc
+	pop de
+	ld hl, 0		; make the parameters default to 0
+	ld (INTERPWKSPC+OFFSET_PARAM1), hl
+	ld (INTERPWKSPC+OFFSET_PARAM2), hl
+	ret
+
+;---------------------------------------------------------------------------
+; F_tbas_writefile
+; Writes a file from a %SAVE command. The header must be complete and stored
+; in INTERPWKSPC.
+; Parameters:		DE = pointer to filename
+;			BC = length of filename (i.e. from ZX_STK_FETCH)
+; On error returns with carry set and A = errno.
+F_tbas_writefile
+	ld hl, INTERPWKSPC+21	; convert filename to a C string
+	call F_basstrcpy
+
+	ld hl, INTERPWKSPC+21	; Open the file for write (the full C string
+	ld a, O_WRONLY		; for the filename is in mem after the header)
+	ld b, O_CREAT		; flags = CREATE
+	call F_tnfs_open	; Open the file.
+	ret c
+	ld (v_tnfs_curfd), a	; store the file descriptor
+
+	ld hl, INTERPWKSPC+OFFSET_TYPE	; checksum the header
+	ld bc, ZX_HEADERLEN
+	xor a			; start with 0x00 for header block
+	call F_tbas_mkchecksum
+	ld (INTERPWKSPC+OFFSET_CHKSUM), a
+	ld hl, INTERPWKSPC	; write the 21 byte TAP block
+	ld a, (v_tnfs_curfd)
+	ld bc, 21
+	call F_tnfs_write
+	jp c, J_cleanuperror
+
+	ld hl, (INTERPWKSPC+OFFSET_LENGTH)
+	inc hl			; add 2 for the 0xFF data block byte
+	inc hl			; and check byte
+	ld (INTERPWKSPC), hl	; create TAP header and ZX data block
+	ld a, 0xFF		; which consists of a 16 bit length 
+	ld (INTERPWKSPC+2), a	; followed by 0xFF
+	ld a, (v_tnfs_curfd)
+	ld hl, INTERPWKSPC
+	ld bc, 3
+	call F_tnfs_write	; write it out
+	jp c, J_cleanuperror
+
+.writedata
+	ld a, (INTERPWKSPC+OFFSET_TYPE)	; find the type of block we´re saving
+	and a			; if zero, it is BASIC
+	jr nz, .testcode	; if not jump forward
+	ld hl, (ZX_PROG)	; find the start of the program
+	jr .save
+.testcode
+	cp 3			; type CODE
+	jr nz, .badtype		; TODO: character/number arrays
+	ld hl, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
+.save
+	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; length
+	push hl			; save values so we can calculate the
+	push bc			; checksum (TODO optimize)
+.saveloop
+	push bc
+	push hl			; save current position and length
+	ld a, (v_tnfs_curfd)	; get file descriptor
+	call F_tnfs_write
+	pop hl			; retrieve start
+	pop de			; retrieve length
+	jr c, .cleanuperror	; exit on error
+	add hl, bc		; increment the pointer
+	ex de, hl
+	sbc hl, bc		; decrement the bytes remaining
+	jr z, .done		; and leave if we're finished.
+	ld b, h			; and move to bc
+	ld c, l
+	ex de, hl
+	jr .saveloop
+.done
+	pop bc			; retrieve original size
+	pop hl			; and start address
+	ld a, 0xFF		; start with 0xFF for data block
+	call F_tbas_mkchecksum
+	ld (INTERPWKSPC), a	; store result
+	ld a, (v_tnfs_curfd)	; TODO: checksum saving could do with
+	ld hl, INTERPWKSPC	; being optimized!
+	ld bc, 1
+	call F_tnfs_write
+	jp c, J_cleanuperror	
+	ld a, (v_tnfs_curfd)	; close the file.
+	call F_tnfs_close
+	ret
+.badtype
+	ld a, TBADTYPE
+	scf
+	jp J_cleanuperror
+.cleanuperror
+	pop bc			; restore stack
+	pop hl
+	jp J_cleanuperror
+
+;---------------------------------------------------------------------------
+; F_tbas_mkchecksum
+; Make checksum for "tape" blocks.
+; Parameters:		HL = pointer to block
+;			BC = size
+;			A = initial byte
+; Result is returned in A.
+F_tbas_mkchecksum
+.loop
+	xor (hl)		; the checksum is made just by XORing each
+	inc hl			; byte.
+	dec bc
+	ld e, a			; save A
+	ld a, b
+	or c			; BC = 0?
+	ld a, e			; restore A
+	jr nz, .loop
+	ret
+
+;----------------------------------------------------------------------------
+; Generic 'clean up and leave'
+J_cleanuperror
+	push af			; save error code
+	ld a, (v_tnfs_curfd)	; and attempt to close the file
+	call F_tnfs_close
+	pop af			; restore error and return with it.
+	ret
 
