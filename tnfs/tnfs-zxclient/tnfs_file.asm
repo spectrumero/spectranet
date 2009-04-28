@@ -131,7 +131,6 @@ F_tnfs_write
 .sizecap
 	ld bc, 256		; cap at 512 bytes
 .continue
-	call F_regdump
 	push hl			; save buffer pointer
 	ld a, TNFS_OP_WRITE
 	call F_tnfs_header_w

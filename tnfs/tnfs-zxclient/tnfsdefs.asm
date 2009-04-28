@@ -111,6 +111,7 @@ TNOTMOUNTED		equ 0x23
 TBADLENGTH		equ 0x24
 TBADTYPE		equ 0x25
 TUNKTYPE		equ 0x26
+TMISMCHLENGTH		equ 0x27
 
 ; File mode and flag definitions
 O_RDONLY		equ 0x01

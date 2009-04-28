@@ -430,6 +430,7 @@ STR_NOTMOUNTED	defb	"Filesystem not mounted",0		; 0x23
 STR_BADLENGTH	defb	"Incorrect header length",0		; 0x24
 STR_BADTYPE	defb	"Incorrect block type",0		; 0x25
 STR_UNKTYPE	defb	"Unknown file type",0			; 0x26
+STR_MISMCHLEN	defb	"Data block length mismatch",0		; 0x27
 
 ERR_TABLE_END
 STR_UNKNOWN	defb	"Unknown error",0

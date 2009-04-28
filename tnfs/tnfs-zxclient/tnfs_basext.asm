@@ -194,9 +194,14 @@ F_tbas_aload
 F_tbas_load
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; expect a string expression
-	call STATEMENT_END		; and then the end
+	cp TOKEN_CODE			; Check for CODE...
+	jr z, .loadcode
+	call STATEMENT_END		; If not, statment end for BASIC.
 
-	;------ runtime ------
+	;------ runtime for BASIC ------
+	xor a				; type 0x00 is BASIC
+.loader
+	push af				; save type
 	rst CALLBAS
 	defw ZX_STK_FETCH		; fetch the filename
 	ld hl, INTERPWKSPC
@@ -204,9 +209,20 @@ F_tbas_load
 
 	; Now call the loader routine with the filename in HL
 	ld hl, INTERPWKSPC
+	pop af				; get type id
 	call F_tbas_loader
 	jp c, J_tbas_error
 	jp EXIT_SUCCESS
+
+.loadcode
+	; TODO - code to a specific address.
+	rst CALLBAS
+	defw ZX_NEXT_CHAR
+	call STATEMENT_END
+
+	;------ runtime for CODE with no addr -------
+	ld a, 3				; type=CODE
+	jr .loader			; get the filename then load.
 
 ;----------------------------------------------------------------------------
 ; F_tbas_save: Save a ZX file (BASIC, CODE etc.)
@@ -241,9 +257,6 @@ F_tbas_save
 	ld hl, (ZX_VARS)		; now save the length - vars
 	sbc hl, de			; calculate it...
 	ld (INTERPWKSPC+OFFSET_PARAM2), hl
-	ld a, 0x80			; When no LINE, put 0x80 in PARAM1
-	ld (INTERPWKSPC+OFFSET_PARAM1+1), a
-
 	pop bc				; retrieve the filename
 	pop de
 	call F_tbas_writefile		; Write it out.

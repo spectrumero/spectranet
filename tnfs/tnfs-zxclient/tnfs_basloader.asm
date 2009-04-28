@@ -36,19 +36,19 @@ F_tbas_readrawfile
 	call F_tnfs_open	; Filename pointer is already in HL
 	pop de
 	ret c
-	ld (INTERPWKSPC), a	; save the filehandle
+	ld (v_tnfs_curfd), a	; save the filehandle
 .readloop
-	ld a, (INTERPWKSPC)	; restore filehandle
+	ld a, (v_tnfs_curfd)	; restore filehandle
 	ld bc, 512		; read max 512 bytes
 	call F_tnfs_read
 	jr nc, .readloop	; keep going until nothing more can be read
 	cp EOF			; End of file?
 	jr nz, .failed		; No - something went wrong
-	ld a, (INTERPWKSPC)	; Close the file
+	ld a, (v_tnfs_curfd)	; Close the file
 	jp F_tnfs_close
 .failed
 	push af			; preserve return code
-	ld a, (INTERPWKSPC)
+	ld a, (v_tnfs_curfd)
 	call F_tnfs_close	; close the file
 	pop af			; but let the earlier return code have
 	scf			; precedence over any errors that close throws
@@ -60,7 +60,9 @@ F_tbas_readrawfile
 ; decides how to load the file from the header information contained.
 ; Parameters	HL = pointer to filename
 ;		DE = memory address to load to for CODE files
+;               A  = type to expect
 F_tbas_loader
+	ld (INTERPWKSPC+21), a	; save the type parameter
 	ld (v_desave), de	; save address
 	ld a, O_RDONLY		; Open file read only
 	ld b, 0x00		; with no flags
@@ -71,7 +73,9 @@ F_tbas_loader
 	call F_tbas_getheader	; Fetch the header
 	jp c, J_cleanuperror	; on error, clean up and return
 	ld ix, INTERPWKSPC+3	; start of "tape" header in a TAP file
-	ld a, (INTERPWKSPC+3)	; get the type byte
+	ld a, (INTERPWKSPC+21)	; get the type byte
+	cp (ix+0)		; check that it's the right type
+	jr nz, .wrongtype
 	and a			; type 0? BASIC program
 	jr nz, .testcode	; No, test for CODE
 	call F_tbas_loadbasic	; Load a BASIC program
@@ -81,7 +85,17 @@ F_tbas_loader
 	call F_tnfs_close
 	ret
 .testcode
+	cp 0x03			; type CODE
+	jr nz, .unktype		; not a type we know
+	ld de, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
+	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; and the expected length
+	jp F_tbas_loadblock	; and load the TAP block
+.wrongtype
 	; TODO: handle CODE files
+	ld a, TBADTYPE
+	scf
+	ret
+.unktype
 	ld a, TUNKTYPE
 	scf
 	ret
@@ -128,6 +142,7 @@ F_tbas_getheader
 ; F_tbas_loadblock
 ; Loads a TAP block
 ; Parameters: DE = where to copy in memory
+;	      BC = expected length
 ;             v_tnfs_curfd contains the file descriptor
 F_tbas_loadblock
 	push de			; save destination ptr
@@ -158,7 +173,7 @@ F_tbas_loadblock
 	jr nz, .loadloop	; continue until 0 bytes left
 	ret
 .lengtherr
-	ld a, TBADLENGTH
+	ld a, TMISMCHLENGTH	; Length of data block doesn't match header
 	scf
 	ret
 
@@ -236,6 +251,7 @@ F_tbas_mktapheader
 	pop de
 	ld hl, 0		; make the parameters default to 0
 	ld (INTERPWKSPC+OFFSET_PARAM1), hl
+	ld h, 0x80		; the default when no param2
 	ld (INTERPWKSPC+OFFSET_PARAM2), hl
 	ret
 
@@ -292,7 +308,6 @@ F_tbas_writefile
 	ld hl, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
 .save
 	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; length
-	call F_regdump
 	push hl			; save values so we can calculate the
 	push bc			; checksum (TODO optimize)
 .saveloop
