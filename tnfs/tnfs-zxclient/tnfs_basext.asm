@@ -215,12 +215,10 @@ F_tbas_load
 F_tbas_save
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; fetch the file name
-;	rst CALLBAS
-;	defw ZX_NEXT_CHAR		; Examine the next char
-;	cp TOKEN_CODE			; for CODE
-;	jr z, .savecode
-;	cp TOKEN_SCREEN			; for SCREEN$
-;	jr z, .savescreen	
+	cp TOKEN_CODE			; for CODE
+	jr z, .savecode
+	cp TOKEN_SCREEN			; for SCREEN$
+	jr z, .savescreen	
 ;	cp TOKEN_LINE			; then for LINE
 ;	jr z, .savebasline
 
@@ -252,8 +250,43 @@ F_tbas_save
 	jp c, J_tbas_error
 	jp EXIT_SUCCESS
 
+	; Deal with SAVE "filename" CODE
 .savecode
+	rst CALLBAS
+	defw ZX_NEXT2_NUM		; check for 2 numbers
+	call STATEMENT_END		; then end of command.
+	
+	; Runtime
+	rst CALLBAS
+	defw ZX_FIND_INT2		; Get the length
+	push bc				; into BC and save it
+	rst CALLBAS
+	defw ZX_FIND_INT2		; and the start
+	push bc				; and save that, too
+.savecodemain
+	rst CALLBAS
+	defw ZX_STK_FETCH		; and get the filename
+	ld a, 3				; type = 3 - CODE
+	call F_tbas_mktapheader		; create the header template
+	pop hl				; retrieve the start address
+	ld (INTERPWKSPC+OFFSET_PARAM1), hl	; and put it in the header
+	pop hl				; and the length
+	ld (INTERPWKSPC+OFFSET_LENGTH), hl	; and put it in the header
+	call F_tbas_writefile		; finally write it out
+	jp c, J_tbas_error
+	jp EXIT_SUCCESS
+	
 .savescreen
+	rst CALLBAS
+	defw ZX_NEXT_CHAR		; advance to the end of the line
+	call STATEMENT_END
+	
+	; Runtime
+	ld hl, 6912			; Put the length of a SCREEN$
+	push hl				; on the stack
+	ld hl, 16384			; followed by the start address
+	push hl
+	jr .savecodemain		; and do as for CODE
 .savebasline
 	ld a, TBADTYPE			; TODO - code etc.
 	jp J_tbas_error

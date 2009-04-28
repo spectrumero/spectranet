@@ -292,6 +292,7 @@ F_tbas_writefile
 	ld hl, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
 .save
 	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; length
+	call F_regdump
 	push hl			; save values so we can calculate the
 	push bc			; checksum (TODO optimize)
 .saveloop

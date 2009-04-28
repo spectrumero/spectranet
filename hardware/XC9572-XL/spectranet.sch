@@ -20,7 +20,12 @@ BEGIN SCHEMATIC
         SIGNAL D(1)
         SIGNAL D(2)
         SIGNAL D(3)
-        SIGNAL CLK
+        BEGIN SIGNAL CLK
+            BEGIN ATTR BUFG "CLK"
+                VERILOG all:0 wsynth:1
+                VHDL all:0 wa:1 wd:1
+            END ATTR
+        END SIGNAL
         SIGNAL FFA(7:0)
         SIGNAL FFB(7:0)
         SIGNAL A(15)
@@ -167,17 +172,11 @@ BEGIN SCHEMATIC
         SIGNAL XLXN_613
         SIGNAL XLXN_612
         SIGNAL XLXN_605
-        SIGNAL XLXN_660
         SIGNAL TRAPENABLE_L
         SIGNAL XLXN_664
         SIGNAL RESETEVT_L
-        SIGNAL XLXN_666
         SIGNAL XLXN_667
-        SIGNAL XLXN_668
         SIGNAL A(15:0)
-        SIGNAL XLXN_678
-        SIGNAL XLXN_679
-        SIGNAL XLXN_680
         SIGNAL XLXN_5
         SIGNAL XLXN_11
         SIGNAL XLXN_683
@@ -2209,6 +2208,7 @@ BEGIN SCHEMATIC
         END BRANCH
         BEGIN BRANCH D(1)
             WIRE 3232 960 3264 960
+            WIRE 3264 960 3264 960
             WIRE 3264 960 3328 960
             BEGIN DISPLAY 3272 960 ATTR Name
                 ALIGNMENT SOFT-BCENTER
@@ -2216,6 +2216,7 @@ BEGIN SCHEMATIC
         END BRANCH
         BEGIN BRANCH D(2)
             WIRE 3232 1136 3280 1136
+            WIRE 3280 1136 3280 1136
             WIRE 3280 1136 3328 1136
             BEGIN DISPLAY 3284 1136 ATTR Name
                 ALIGNMENT SOFT-BCENTER
@@ -2313,7 +2314,7 @@ BEGIN SCHEMATIC
             WIRE 688 272 688 496
             WIRE 688 272 768 272
             WIRE 768 272 800 272
-            BEGIN DISPLAY 770 272 ATTR Name
+            BEGIN DISPLAY 768 272 ATTR Name
                 ALIGNMENT SOFT-BCENTER
             END DISPLAY
         END BRANCH
@@ -2332,12 +2333,13 @@ BEGIN SCHEMATIC
             WIRE 2688 752 2688 1152
             WIRE 2688 1152 2992 1152
             WIRE 2992 1152 2992 1232
+            WIRE 2992 1232 2992 1232
             WIRE 2992 1232 2992 1264
             WIRE 2944 1264 2992 1264
             BEGIN DISPLAY 2688 752 ATTR Name
                 ALIGNMENT SOFT-BCENTER
             END DISPLAY
-            BEGIN DISPLAY 2992 1235 ATTR Name
+            BEGIN DISPLAY 2992 1236 ATTR Name
                 ALIGNMENT SOFT-TVCENTER
             END DISPLAY
         END BRANCH

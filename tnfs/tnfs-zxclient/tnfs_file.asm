@@ -122,15 +122,16 @@ F_tnfs_write
 	call F_tnfs_mounted
 	ret c	
 	ld a, b			; cap write size at 512 bytes
-	cp 0x02
+	cp 0x01
 	jr c, .continue		; less than 512 bytes if < 0x02
 	jr nz, .sizecap		; if msb > 0x02 cap the size
 	ld a, c
 	and a			; compare with zero
 	jr z, .continue		; less than 512 bytes if zero
 .sizecap
-	ld bc, 512		; cap at 512 bytes
+	ld bc, 256		; cap at 512 bytes
 .continue
+	call F_regdump
 	push hl			; save buffer pointer
 	ld a, TNFS_OP_WRITE
 	call F_tnfs_header_w
