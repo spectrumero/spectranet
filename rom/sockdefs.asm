@@ -27,6 +27,8 @@ FD_CLOSED	equ 0x80
 CLOSEDBIT	equ 7
 FD_VIRTUAL	equ 0x40
 VIRTBIT		equ 6
+FD_VFS		equ 0x20	; for file descriptors that are valid
+VFSBIT		equ 5		; but are not sockets
 NOTSOCKMASK	equ 0xE0	; all hw sockets must be < 0x1F
 SOCKMASK	equ 0x1F
 

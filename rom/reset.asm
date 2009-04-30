@@ -21,9 +21,10 @@
 ;THE SOFTWARE.
 
 ; Locations in the data rom that need to be copied.
-JUMPTABLE_COPYFROM 	equ 0x1F00
+; The jump table lives in the first 256 bytes of ROM3
+JUMPTABLE_COPYFROM 	equ 0x1000
 JUMPTABLE_SIZE		equ 0xF8
-UPPER_ENTRYPT		equ 0x1FF8
+UPPER_ENTRYPT		equ 0x10F8
 UPPER_ENTRYPT_SIZE	equ 0x08
 
 ; Initialization routines that are run on reset.
@@ -78,7 +79,7 @@ J_reset
 	; Initialize any ZX bits that need to be done.
 ;	call F_zxinit		; not required at present
 
-	ld a, 0x01		; Data ROM
+	ld a, 0x03		; ROM page where jumptable lives
 	call F_setpageA		; and page into paging area A.
 
 	; Initialize the jump table by copying it to our RAM.

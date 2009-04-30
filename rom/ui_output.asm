@@ -31,14 +31,11 @@
 ; The 'core' of the putchar routine, F_print calls this directly (handling
 ; the paging itself)
 ; The routine could probably do with improvement.
-F_putc_5by8
-
+F_putc_5by8_impl
       	push hl
 	push bc
 	push de
 	ld h, a			; save character
-	ld a, DATAROM
-	call F_pushpageA	; stack the current page A
 	ld a, (v_utf8)		; check UTF-8 state
 	and a			; if nonzero, process it
 	jp nz, .map_utf8
@@ -121,7 +118,7 @@ F_putc_5by8
 	ld a, (v_rowcount) ; check the row counter
 	cp 23		; 24th line?
 	jr nz, .noscroll
-	call F_jumpscroll
+	call F_jumpscroll_impl
 	ld a, 16
 	ld (v_rowcount), a
 	ld hl, 0x5000     ; address of first row of bottom 1/3rd
@@ -146,7 +143,6 @@ F_putc_5by8
 .nextchar.done
 	ld (v_column), a
 .leave
-	call F_poppageA		; restore page A
 	pop de
 	pop bc
 	pop hl
@@ -191,7 +187,7 @@ F_putc_5by8
 ; F_jumpscroll:
 ; a simple 'jump scroll' which scrolls the screen by 1/3rd. Simpler
 ; than scrolling one line.
-F_jumpscroll
+F_jumpscroll_impl
 	push hl
 	push de
 	push bc
@@ -213,12 +209,9 @@ F_jumpscroll
 ; F_erasechar
 ; Removes the character at the current 5by8 character position.
 ; No parameters.
-F_erasechar
+F_erasechar_impl
 	; Find the address in the frame buffer.
-	ld a, DATAROM
-	call F_pushpageA
 	ld hl, col_lookup
-	call F_poppageA
 
 	ld a, (v_column)
 	ld b, a
@@ -274,17 +267,17 @@ F_erasechar
 ;--------------------------------------------------------------------------
 ; F_backspace: Perform a backspace (move current character position 1
 ; back and delete the right most character).
-F_backspace
+F_backspace_impl
 	ld a, (v_column)
 	and a		; Are we at column 0?
 	ret z		; nothing more to do (possible TODO - go back a line)
 	dec a		; move column pointer one space back
 	ld (v_column), a ; and store it
-	jp F_erasechar	; then erase the character that's there.
+	jp F_erasechar_impl	; then erase the character that's there.
 	
 ;--------------------------------------------------------------------------
 ; F_clear: Clears the screen to spectranet UI colours.
-F_clear
+F_clear_impl
 	ld hl, 16384
 	ld de, 16385
 	ld bc, 6144
@@ -303,12 +296,12 @@ F_clear
 ;--------------------------------------------------------------------------
 ; F_print: Prints a null terminated string.
 ; Parameters: HL = pointer to string
-F_print
+F_print_impl
 .loop
 	ld a, (hl)
 	and a			; NULL?
 	jr z, .done
-	call F_putc_5by8	; print the char
+	call F_putc_5by8_impl	; print the char
 	inc hl
 	jr .loop
 .done

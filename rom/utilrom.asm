@@ -40,7 +40,7 @@
 	include "utilnmi_en.asm"	; English string table
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"
-	include "sysvars.sym"
+;	include "sysvars.sym"		; now dragged in by datarom.sym
 	include "flashconf.asm"		; defines for configuration memory
 CONFIGUTIL_START
 	incbin "configutilrom.out"	; Configuration utility image

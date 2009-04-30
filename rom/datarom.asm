@@ -24,12 +24,15 @@
 ; This lives in page 1 of flash, and provides data such as the character
 ; set for PUTCHAR42 and other non-code items. It gets paged into area A.
 	org 0x1000
-;	include "ui_lookup.asm"
 	include "ui_charset.asm"
-	include "ui_keyscan.asm"
+	include "ui_keyscan.asm"	; keyscan routines
+	include "ui_output.asm"		; character generation routines
+	include "sysvars.sym"		; system variable declarations
 ROMMODCONF_START
 	incbin "rommodconfig_en.out"
 ROMMODCONF_END
+	block 0x1FD5-$,0xFF
+	include "ui_lookup.asm"
 
 ; Note that the jump table gets included at 0x1F00 when the ROM image
 ; is built.

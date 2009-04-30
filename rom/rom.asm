@@ -51,16 +51,16 @@
 ;	include "zxpaging.asm"		; Control 128k ROM paging
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
-	include "ui_output.asm"		; User interface: screen output
+	include "ui_output_stub.asm"		; User interface: screen output
 	include "progtrap.asm"		; Programmable trap set routines
 	include "basicextn.asm"		; BASIC extension infrastructure
 	include "pagealloc.asm"		; page allocation
 
-	block 0xFD5-$,0xFF
-	include "ui_lookup.asm"		; PRINT42 lookup table
+	block 0xFFF-$,0xFF
 
 	; Memory map for upper fixed page (chip 3 page 0)
-	include "sysvars.sym"		; System variables (from earlier asm)
+	; note sysvars now gets pulled in by datarom.sym
+;	include "sysvars.sym"		; System variables (from earlier asm)
 	include "sysdefs.asm"		; General definitions
 
 	; Various definitions.

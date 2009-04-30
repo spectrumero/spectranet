@@ -56,6 +56,7 @@ v_column	defb 0		; Current column for 42 col print.
 v_row		defw 0		; Current row address for print routine
 v_rowcount	defb 0		; current row number
 v_pr_wkspc	defb 0		; Print routine workspace
+v_pr_pga	defb 0		; page A value storage for print routine
 v_pga		defb 0		; Current memory page in area A
 v_pgb		defb 0		; Current memory page in area B
 v_utf8		defb 0		; utf-8 character state
@@ -73,7 +74,8 @@ v_copied	defw 0		; Socket bytes copied so far
 ; to the standard BSD library, and in any case, we don't want to limit
 ; ourselves to that particular IP implementation in any case.
 ;
-; Most significant bits are flag bits.
+; These are also used for VFS file descriptors, the idea being a write() or
+; read() (etc) with a file descriptor should automatically Do The Right Thing.
 ;
 v_fd1hwsock	defb 0		; hardware socket number
 v_fd2hwsock	defb 0
@@ -156,15 +158,34 @@ v_errnr_save	defb 0		; Error number storage
 v_chaddsave	defw 0		; Storage for CH_ADD
 v_origpageb	defb 0		; Original page in paging area B
 
-; BASIC channels
-CHANSTART
-v_chanfd	defb 0		; file descriptor associated with the channel
-v_chanbufptr	defw 0		; buffer pointer
-v_chandestip	defw 0,0	; sendto() address for datagrams
-CHANEND
-CHANSIZE	equ CHANEND-CHANSTART
-		block CHANSIZE*3, 0x0	; reserve space
-v_chanorigpgb	defb 0		; Original page B
+; VFS vector table
+v_fs1rom	defb 0		; ROM number where the code lives
+v_fs1table	defw 0		; address of FS function call table
+v_fs2rom	defb 0
+v_fs2table	defw 0
+v_fs3rom	defb 0
+v_fs3table	defb 0
+
+; File descriptor vector table
+v_fd1rom	defb 0		; ROM number where the table lives
+v_fd1table	defw 0		; Address of table
+v_fd2rom	defb 0
+v_fd2table	defw 0
+v_fd3rom	defb 0
+v_fd3table	defw 0
+v_fd4rom	defb 0
+v_fd4table	defw 0
+v_fd5rom	defb 0
+v_fd5table	defw 0
+v_fd6rom	defb 0
+v_fd6table	defw 0
+v_fd7rom	defb 0
+v_fd7table	defw 0
+v_fd8rom	defb 0
+v_fd8table	defw 0
+v_fd9rom	defb 0
+v_fd9table	defw 0
+
 
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
