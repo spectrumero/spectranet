@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2008 Dylan Smith
+;Copyright (c) 2009 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,35 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM vector table
-	defb 0xAA
-	defb 0x01			; ROM ID 0x01
-	defw F_inetinit			; RESET vector
-	defw 0xFFFF			; CANMOUNT vector
-	defw 0xFFFF			; MOUNT vector
-	defw F_nmihandler		; NMI vector
-	defw 0xFFFF
-	defw 0xFFFF
-	defw STR_ident
+; This just defines vector table addresses and jump tables for ROM modules.
+MOD_SIGNATURE		equ 0x2000
+MOD_ROMID		equ 0x2001
+MOD_VEC_RESET		equ 0x2002
+MOD_VEC_MOUNT		equ 0x2004
+MOD_VEC_RESERVED0	equ 0x2006
+MOD_VEC_RESERVED1	equ 0x2008
+MOD_VEC_RESERVED2	equ 0x200A
+MOD_VEC_RESERVED3	equ 0x200C
+MOD_VEC_IDENT		equ 0x200E
+
+MOD_JP_MODCALL		equ 0x2010
+
+VFSJUMPOFFSET		equ 0x9B	; 0xAE - 0x13 
+MOD_VFS_UMOUNT		equ 0x2013
+MOD_VFS_OPENDIR		equ 0x2016
+MOD_VFS_OPEN		equ 0x2019
+MOD_VFS_UNLINK		equ 0x201C
+MOD_VFS_MKDIR		equ 0x201F
+MOD_VFS_RMDIR		equ 0x2022
+MOD_VFS_SIZE		equ 0x2025
+MOD_VFS_FREE		equ 0x2028
+MOD_VFS_STAT		equ 0x202B
+MOD_VFS_CHMOD		equ 0x202E
+MOD_VFS_READ		equ 0x2031
+MOD_VFS_WRITE		equ 0x2034
+MOD_VFS_LSEEK		equ 0x2037
+MOD_VFS_CLOSE		equ 0x203A
+MOD_VFS_POLL		equ 0x203D
+MOD_VFS_READDIR		equ 0x2040
+MOD_VFS_CLOSEDIR	equ 0x2043
 

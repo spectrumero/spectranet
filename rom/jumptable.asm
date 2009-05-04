@@ -108,6 +108,35 @@
 	jp F_freepage
 	jp J_reporterr
 
+	; it is very important that the VFS entry points are CALL, not
+	; JUMP instructions... because the VFS dispatcher figures out
+	; the entry point in the jump table by using the first value
+	; on the stack. Note they all go to the same address!
+	jp F_mount		; mount
+	call F_vfs_dispatch	; umount
+	call F_vfs_dispatch	; opendir
+	call F_vfs_dispatch	; open
+	call F_vfs_dispatch	; unlink
+	call F_vfs_dispatch	; mkdir
+	call F_vfs_dispatch	; rmdir
+	call F_vfs_dispatch	; size
+	call F_vfs_dispatch	; free
+	call F_vfs_dispatch	; stat
+	call F_vfs_dispatch	; chmod
+	call F_fd_dispatch	; read
+	call F_fd_dispatch	; write
+ 	call F_fd_dispatch	; lseek
+	call F_fd_dispatch	; close
+	call F_fd_dispatch	; poll
+	call F_dir_dispatch	; readdir
+	call F_dir_dispatch	; closedir
+	call F_vfs_dispatch	; reserved
+	call F_vfs_dispatch	; reserved
+	call F_vfs_dispatch	; reserved
+	jp F_allocfd		; Allocate fd
+	jp F_freefd		; Free fd
+	
+
 	block 0x1FF8-$,0xFF
 ; The upper entry point.
 ; CALL instructions to 0x3FF8 and higher cause a ROM page-in. A small

@@ -43,6 +43,12 @@ J_reset
 	ld (hl), 0
 	ldir
 
+	; Set up the VFS jump point
+	ld a, 0xC3
+	ld (VFSJUMP), a
+	ld a, 0x20
+	ld (VFSJUMP+2), a
+
 	call F_clear		; clear the screen
 	ld hl, STR_bootmsg	
 	call F_print		; show the boot message

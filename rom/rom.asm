@@ -55,6 +55,7 @@
 	include "progtrap.asm"		; Programmable trap set routines
 	include "basicextn.asm"		; BASIC extension infrastructure
 	include "pagealloc.asm"		; page allocation
+	include "vfs.asm"		; VFS dispatcher
 
 	block 0xFFF-$,0xFF
 

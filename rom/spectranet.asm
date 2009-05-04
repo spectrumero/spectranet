@@ -88,6 +88,31 @@ RESERVEPAGE	equ 0x3E9F	; Reserve a page of static RAM
 FREEPAGE	equ 0x3EA2	; Free a page of static RAM
 REPORTERR	equ 0x3EA5	; report an error via BASIC
 
+; Filesystem functions
+MOUNT		equ 0x3EA8
+UMOUNT		equ 0x3EAB
+OPENDIR		equ 0x3EAE
+OPEN		equ 0x3EB1
+UNLINK		equ 0x3EB4
+MKDIR		equ 0x3EB7
+RMDIR		equ 0x3EBA
+SIZE		equ 0x3EBD
+FREE		equ 0x3EC0
+STAT		equ 0x3EC3
+CHMOD		equ 0x3EC6
+READ		equ 0x3EC9
+WRITE		equ 0x3ECC
+LSEEK		equ 0x3ECF
+VCLOSE		equ 0x3ED2
+VPOLL		equ 0x3ED5
+READDIR		equ 0x3ED8
+CLOSEDIR	equ 0x3EDB
+RESERVED0	equ 0x3EDE
+RESERVED1	equ 0x3ED1
+RESERVED2	equ 0x3ED4
+ALLOCFD		equ 0x3ED7
+FREEFD		equ 0x3EDA
+
 ; Definitions
 SOCK_STREAM	equ 1
 SOCK_DGRAM	equ 2

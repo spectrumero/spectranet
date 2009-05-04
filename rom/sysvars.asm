@@ -77,6 +77,7 @@ v_copied	defw 0		; Socket bytes copied so far
 ; These are also used for VFS file descriptors, the idea being a write() or
 ; read() (etc) with a file descriptor should automatically Do The Right Thing.
 ;
+FDBASE
 v_fd1hwsock	defb 0		; hardware socket number
 v_fd2hwsock	defb 0
 v_fd3hwsock	defb 0
@@ -159,37 +160,47 @@ v_chaddsave	defw 0		; Storage for CH_ADD
 v_origpageb	defb 0		; Original page in paging area B
 
 ; VFS vector table
-v_fs1rom	defb 0		; ROM number where the code lives
-v_fs1table	defw 0		; address of FS function call table
-v_fs2rom	defb 0
-v_fs2table	defw 0
-v_fs3rom	defb 0
-v_fs3table	defb 0
+VFSVECBASE
+v_fs1page 	defb 0		; Page number where the code lives
+v_fs2page	defb 0
+v_fs3page	defb 0
+v_fs4page	defb 0
 
 ; File descriptor vector table
-v_fd1rom	defb 0		; ROM number where the table lives
-v_fd1table	defw 0		; Address of table
-v_fd2rom	defb 0
-v_fd2table	defw 0
-v_fd3rom	defb 0
-v_fd3table	defw 0
-v_fd4rom	defb 0
-v_fd4table	defw 0
-v_fd5rom	defb 0
-v_fd5table	defw 0
-v_fd6rom	defb 0
-v_fd6table	defw 0
-v_fd7rom	defb 0
-v_fd7table	defw 0
-v_fd8rom	defb 0
-v_fd8table	defw 0
-v_fd9rom	defb 0
-v_fd9table	defw 0
+FDVECBASE
+v_fd1page	defb 0		; ROM number where the table lives
+v_fd2page	defb 0
+v_fd3page	defb 0
+v_fd4page	defb 0
+v_fd5page	defb 0
+v_fd6page	defb 0
+v_fd7page	defb 0
+v_fd8page	defb 0
+v_fd9page	defb 0
+VECOFFS		equ (FDVECBASE-FDBASE)%256
 
+DIRVECBASE
+MAX_DIRHNDS	equ 9
+v_dhnd1page	defb 0
+v_dhnd2page	defb 0
+v_dhnd3page	defb 0
+v_dhnd4page	defb 0
+v_dhnd5page	defb 0
+v_dhnd6page	defb 0
+v_dhnd7page	defb 0
+v_dhnd8page	defb 0
+v_dhnd9page	defb 0
+
+; VFS workspace
+v_mountnumber	defb 0		; Current selected mount point
+v_vfspgb_vecsave defb 0		; page area B original page numbers
+v_vfs_workspace	defw 0		; short temp workspace for VFS code
+VFSJUMP		jp 0x2000	; yes, it's self modifying code!
 
 ; ROM table - list of ROM pages with a valid vector table (max 31)
 vectors		defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 pagealloc	defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+ROMVECOFFS	equ (vectors-2)%256
 
 ; Reserve memory above 0x3FF8 for the jump table.
 		block 0x3FF8-$,0xff
