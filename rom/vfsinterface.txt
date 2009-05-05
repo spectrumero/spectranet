@@ -1,0 +1,51 @@
+Standard parameters for all VFS calls. All strings are null terminated C
+strings.
+
+mount			IX - pointer to an 10 byte structure that contains:
+			byte 0,1 - pointer to null terminated protocol
+			byte 2,3 - pointer to null terminated hostname
+                        byte 4,5 - pointer to null terminated mount source
+                        byte 6,7 - pointer to null terminated user id
+                        byte 8,9 - pointer to null terminated passwd
+			A - Mount point ("mount handle") - 0 to 3
+umount			A - Mount point (0 to 3)
+opendir			HL - pointer to directory name
+open			HL - pointer to filename
+			D  - Flags (POSIX style)
+			E  - Mode (POSIX style)
+			A  - mount point handle
+unlink			HL - pointer to filename
+			A  - mount point
+mkdir			HL - pointer to directory name
+			A  - mount point
+rmdir			HL - pointer to directory name
+			A  - mount point
+size			A  - mount point
+free			A  - mount point
+stat			HL - pointer to filename or directory name
+			A  - mount point
+chmod			HL - pointer to filename, DE - filemode
+			A  - mount point
+read			A - file descriptor
+write			A - file descriptor
+lseek			A - file descriptor
+close			A - file descriptor
+poll			A - file descriptor
+readdir			A - directory handle
+closedir		A - directory handle
+chdir			HL - directory name
+			A - mount point
+
+On success, functions return something meaningful in A (such as a file
+handle or directory handle, where required) and carry reset. On error,
+carry is set and A set to the error number. The mount function is different -
+a successful mount should return with Z and C flags reset. If the protocol
+is not recognised, it should return with Z set and C reset. If the protocol
+was recognised but mounting failed, it should return with C set and A
+as the error number.
+
+The mount point handle allows filesystem modules to know which mounted
+filesystem the operation is being carried out on - since there can be up
+to 4 mounted filesystems and it is possible that they are all the same type.
+It is up to the module to decide how to deal with them.
+

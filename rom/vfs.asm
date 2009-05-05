@@ -70,21 +70,25 @@ F_vfs_dispatch
 	ex (sp), hl
 	push de
 	ld de, VFSVECBASE
-	jr F_dispatch
+	jr F_dispatch_notfd
 
 F_dir_dispatch
 	ex (sp), hl
 	push de
 	ld de, DIRVECBASE
-	jr F_dispatch
+	jr F_dispatch_notfd
 
 ;--------------------------------------------------------------------------
 ; F_dispatch
 ; Find the appropriate ROM page for the file (or whatever) descriptor,
 ; and fetch the jump address from the jump table within.
+F_dispatch_notfd
+	push af
+	jr F_dispatch_1
 F_dispatch
 	push af
 	sub FDBASE%256
+F_dispatch_1
 	add a, e		; Calculate the address in the fd table
 	ld e, a			; make DE point to it
 	ld a, (de)		; get the ROM to page

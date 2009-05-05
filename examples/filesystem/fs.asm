@@ -26,6 +26,7 @@
 
 	org 0x2000
 	include "spectranet.asm"
+	include "../../rom/sysvars.sym"
 	
 	; First, define the tables.
 sig	defb 0xAA		; This is a valid ROM module
@@ -60,15 +61,16 @@ modcall	ret			; No modcall code
 	jp F_undef		; Poll - not implemented
 	jp F_readdir		; readdir
 	jp F_closedir		; Close a directory
+	jp F_undef		; chdir
+	jp F_undef		; reserved1
+	jp F_undef		; reserved2
 
 STR_ident
 	defb "Example filesystem",0
 
 ; The 'undef' routine just returns an error. (Put all other routines
 ; here till they are done!)
-F_umount
 F_opendir
-F_open
 F_size
 F_free
 F_stat
@@ -84,4 +86,4 @@ F_undef
 
 ; Now include the code that does all the work.
 	include "mount.asm"
-
+	include "file.asm"

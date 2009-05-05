@@ -135,6 +135,8 @@
 	call F_vfs_dispatch	; reserved
 	jp F_allocfd		; Allocate fd
 	jp F_freefd		; Free fd
+	jp F_allocdirhnd	; Allocate dir handle
+	jp F_freedirhnd		; Free dhnd
 	
 
 	block 0x1FF8-$,0xFF
