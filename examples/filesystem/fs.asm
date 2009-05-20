@@ -74,12 +74,12 @@ F_opendir
 F_size
 F_free
 F_stat
-F_read
 F_write
-F_close
 F_readdir
 F_closedir
 F_undef
+	ld a, 2
+	out (254), a
 	scf
 	ld a, 0xFF		; TODO: The proper return code
 	ret

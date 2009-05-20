@@ -63,8 +63,19 @@
 F_fd_dispatch
 	ex (sp), hl		; fetch return address, saving HL
 	push de
+	ld d, 0x3F		; point DE at memory address containing
+	ld e, a			; the fd's flags
+	ex de, hl
+	bit CLOSEDBIT, (hl)
+	ex de, hl
+	jr nz, .notopen
 	ld de, FDVECBASE	; set base address of the descriptor table
 	jr F_dispatch
+.notopen
+	pop de
+	ld a, 0x06		; TODO: errno.asm
+	scf
+	ret
 
 F_vfs_dispatch
 	ex (sp), hl
@@ -242,14 +253,17 @@ F_allocfd
 	pop bc
 	ret
 .alloc
+	res 7, (hl)		; basic allocation
+	push hl			; save FD address and FD number
 	ld b, a			; save parameter
 	ld a, l
 	add VECOFFS		; find the address of the vector table
 	ld l, a			; and make HL point to it
 	ld a, b			; retrieve param
 	ld (hl), a		; set vector table page address
+	pop hl
 	pop bc
-	ret
+	ret			; FD is returned in L, address in HL
 
 ;-------------------------------------------------------------------------
 ; F_freefd
@@ -262,6 +276,7 @@ F_freefd
 	add VECOFFS		; add the vector table offset
 	ld l, a			; and point HL to it
 	ld (hl), 0x00		; clear it down
+	pop hl
 	ret
 
 ;------------------------------------------------------------------------
@@ -297,76 +312,5 @@ F_freedirhnd
 	ld h, v_dhnd1page / 256
 	ld l, a
 	ld (hl), 0
-	pop hl
-	ret
-F_regdump
-	push hl
-	push de
-	push bc
-	push af
-
-	ld a, '\n'
-	call F_putc_5by8
-
-	push hl
-	ld a, h
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	pop hl
-	ld a, l
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	ld a, ','
-	call F_putc_5by8
-
-	ld a, d
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	ld a, e
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	ld a, ','
-	call F_putc_5by8
-	
-	ld a, b
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	ld a, c
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	ld a, ','
-	call F_putc_5by8
-
-	pop af
-	push af
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	pop bc
-	push bc
-	ld a, c
-	ld hl, v_workspace
-	call F_itoh8
-	ld hl, v_workspace
-	call F_print
-	ld a, '\n'
-	call F_putc_5by8
-
-	pop af
-	pop bc
-	pop de
 	pop hl
 	ret

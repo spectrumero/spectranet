@@ -27,7 +27,13 @@ stat			HL - pointer to filename or directory name
 chmod			HL - pointer to filename, DE - filemode
 			A  - mount point
 read			A - file descriptor
+			DE - buffer to return data into
+			BC - maximum bytes ot read
+			(on return BC = bytes read)
 write			A - file descriptor
+			DE - buffer to write
+			BC - size of the buffer
+			(on return BC = bytes written)
 lseek			A - file descriptor
 close			A - file descriptor
 poll			A - file descriptor

@@ -51,7 +51,7 @@
 ;	include "zxpaging.asm"		; Control 128k ROM paging
 	include "utility.asm"		; Utility functions
 	include "ui_input.asm"		; User interface: input routines
-	include "ui_output_stub.asm"		; User interface: screen output
+	include "ui_output_stub.asm"	; User interface: screen output
 	include "progtrap.asm"		; Programmable trap set routines
 	include "basicextn.asm"		; BASIC extension infrastructure
 	include "pagealloc.asm"		; page allocation
