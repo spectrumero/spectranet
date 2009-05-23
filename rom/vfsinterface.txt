@@ -38,6 +38,7 @@ lseek			A - file descriptor
 close			A - file descriptor
 poll			A - file descriptor
 readdir			A - directory handle
+			DE - Buffer to fill with the directory entry
 closedir		A - directory handle
 chdir			HL - directory name
 			A - mount point

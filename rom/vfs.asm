@@ -68,12 +68,12 @@ F_fd_dispatch
 	ex de, hl
 	bit CLOSEDBIT, (hl)
 	ex de, hl
-	jr nz, .notopen
+	jr nz, J_notopen
 	ld de, FDVECBASE	; set base address of the descriptor table
 	jr F_dispatch
-.notopen
+J_notopen
 	pop de
-	ld a, 0x06		; TODO: errno.asm
+	ld a, 0x06		; TODO: errno.asm - EBADF
 	scf
 	ret
 
@@ -86,8 +86,15 @@ F_vfs_dispatch
 F_dir_dispatch
 	ex (sp), hl
 	push de
-	ld de, DIRVECBASE
-	jr F_dispatch_notfd
+	ld d, 0x3F		; point DE at the address containing
+	ld e, a			; directory handle information
+	ex af, af'
+	ld a, (de)
+	and a			; is this a valid open descriptor?
+	jr z, J_notopen
+	ex af, af'
+	push af
+	jr F_dispatch_2
 
 ;--------------------------------------------------------------------------
 ; F_dispatch
@@ -101,11 +108,12 @@ F_dispatch
 	sub FDBASE%256
 F_dispatch_1
 	add a, e		; Calculate the address in the fd table
+F_dispatch_2
 	ld e, a			; make DE point to it
 	ld a, (de)		; get the ROM to page
 	and a			; ROM 0 is handled specially
 	jr z, .isasocket
-	ex af, af´		; save AF while copying the current page
+	ex af, af'		; save AF while copying the current page
 	ld a, (v_pgb)		; save current page
 	ld (v_vfspgb_vecsave), a
 	ex af, af'
@@ -197,8 +205,9 @@ F_mount
 	push af			; save ROM slot number
 	call F_pushpageB
 	ld hl, (MOD_VEC_MOUNT)	; get address of the real mount routine
-	ld a, 0x20		; H must be 0x20 for a valid MOUNT routine
-	cp h
+	ld a, h			; H must be 0x20-0x2F for a valid MOUNT routine
+	and 0xF0		; mask out low nibble
+	cp 0x20			; result should be 0x20 for valid MOUNT
 	jr nz, .testnext
 	ld de, .return		; simulate CALL instruction with JP (HL)
 	push de
@@ -283,7 +292,7 @@ F_freefd
 ; F_allocdirhnd
 ; Allocates a directory handle.
 ; Parameters	A = ROM number for the handle
-; On return HL = address of the handle (L is the actual handle)
+; On return HL = address of the handle, L is the handle itself
 F_allocdirhnd
 	push bc
 	ld hl, v_dhnd1page
