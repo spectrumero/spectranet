@@ -347,10 +347,6 @@ F_tnfs_mounted
 ; Arguments: A = command
 ;           HL = pointer to string argument
 F_tnfs_pathcmd
-	ex af, af'		; save the cmd
-	call F_tnfs_mounted
-	ret c
-	ex af, af'
 	push hl
 	call F_tnfs_header_w	; create the header in the workspace area
 	ex de, hl		; de now points at current address

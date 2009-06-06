@@ -25,34 +25,54 @@
 ;--------------------------------------------------------------------------
 ; F_tnfs_open
 ; Opens a file on the remote server.
-; Arguments	A - File mode
-;		B - File flags
+; Arguments	
+;		D  - File flags (POSIX)
+;		E  - File mode (POSIX)
 ;		HL - Pointer to a string containing the full path to the file
 F_tnfs_open
-	ld c, a			; save filemode flags
-	call F_tnfs_mounted
-	ret c			; no filesystem mounted
+	call F_fetchpage
+	ret c
+
 	push hl			; save filename pointer
+	push de			; and flags
 	ld a, TNFS_OP_OPEN
 	call F_tnfs_header_w	; create the header
-	ld a, c			; retrieve filemode
-	ld (hl), a		; insert into message
+	pop de
+	ld (hl), e		; insert file mode into message
 	inc hl
-	ld (hl), b		; insert the flags into the message
+	ld (hl), d		; insert the flags into the message
 	inc hl
 	ex de, hl		; prepare for string copy
 	pop hl			; retrieve filename pointer
 	call F_tnfs_abspath	; create absolute path to file
 	call F_tnfs_message_w	; send the message
-	ret c			; return on network error
+	jp c, F_leave		; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
 	jr z, .gethandle
 	scf			; tnfs error
-	ret
+	jp F_leave
 .gethandle
+	ld a, (v_pgb)		; Allocate a new file descriptor
+	call ALLOCFD		; for this TNFS handle
+	jr c, .nofds
+	ld a, 0x20		; indicate "not a socket"
+	ld (hl), a		; and update the FD table
+	ld h, HANDLESPACE / 256	; now save the TNFS handle
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
-	ret
+	ld (hl), a		; in our sysvars area.
+	ld a, l			; FD is in L, needs to be returned in A
+	jp F_leave
+.nofds
+	ld a, TNFS_OP_CLOSE	; cleanup recovery from finding no free
+	call F_tnfs_header_w	; file descriptors - close TNFS handle
+	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
+	ld (hl), a		; insert the tnfs handle
+	inc hl
+	call F_tnfs_message_w_hl
+	ld a, 0xFF		; TODO - proper return code
+	scf
+	jp F_leave
 
 ;--------------------------------------------------------------------------
 ; F_tnfs_read
@@ -63,9 +83,10 @@ F_tnfs_open
 ; Returns with carry set on error and A=code, or carry reset on success
 ; with BC = actual number of bytes read
 F_tnfs_read
-	ex af, af'		; save file descriptor
-	call F_tnfs_mounted
+	call F_fetchpage
 	ret c
+
+	ex af, af'		; save FD
 	ld a, b			; cap read size at 512 bytes
 	cp 0x02
 	jr c, .continue		; less than 512 bytes if < 0x02
@@ -79,7 +100,10 @@ F_tnfs_read
 	push de			; save buffer pointer
 	ld a, TNFS_OP_READ
 	call F_tnfs_header_w
-	ex af, af'		; get file descriptor back
+	ex af, af'		; get the FD back
+	ld e, a			; get the address of the TNFS handle
+	ld d, HANDLESPACE / 256
+	ld a, (de)		; get the TNFS handle
 	ld (hl), a		; add it to the request
 	inc hl
 	ld (hl), c		; add the length to the request
@@ -95,19 +119,19 @@ F_tnfs_read
 	; into the supplied buffer.
 	call F_tnfs_message_w_hl	; send it, and get the reply
 	pop de
-	ret c				; network error, return now
+	jp c, F_leave			; network error, return now
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; check for tnfs error
 	jr z, .copybuf
 	scf
-	ret
+	jp F_leave
 .copybuf
 	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)
 	push bc
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset+2
 	ldir
 	pop bc
-	ret
+	jp F_leave
 
 ;--------------------------------------------------------------------------
 ; F_tnfs_write
@@ -118,9 +142,7 @@ F_tnfs_read
 ; Returns with carry set on error and A = return code. BC = bytes
 ; written.
 F_tnfs_write
-	ex af, af´		; save the fd
-	call F_tnfs_mounted
-	ret c	
+	ex af, af'
 	ld a, b			; cap write size at 512 bytes
 	cp 0x01
 	jr c, .continue		; less than 512 bytes if < 0x02
@@ -135,7 +157,10 @@ F_tnfs_write
 	ld a, TNFS_OP_WRITE
 	call F_tnfs_header_w
 	ex af, af'
-	ld (hl), a		; insert file descriptor
+	ld e, a			; get the TNFS handle for the file descriptor
+	ld d, HANDLESPACE / 256
+	ld a, (de)
+	ld (hl), a		; insert the TNFS handle
 	inc hl
 	ld (hl), c		; insert LSB of size
 	inc hl
@@ -145,7 +170,7 @@ F_tnfs_write
 	pop hl			; source
 	ldir
 	call F_tnfs_message_w	; write the command and get the reply
-	ret c			; network error
+	jp c, F_leave		; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a			; check for tnfs error
 	jr z, .getsize
@@ -153,7 +178,7 @@ F_tnfs_write
 	ret			
 .getsize
 	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)
-	ret
+	jp F_leave
 
 ;------------------------------------------------------------------------
 ; F_tnfs_close
@@ -161,21 +186,24 @@ F_tnfs_write
 ; Arguments		A = the file descriptor
 ; Returns with carry set on error and A = return code.
 F_tnfs_close
-	ld b, a
-	call F_tnfs_mounted
+	call F_fetchpage
 	ret c
+
+	ld b, a
 	ld a, TNFS_OP_CLOSE
 	call F_tnfs_header_w
-	ld a, b
-	ld (hl), a		; insert the file descriptor
+	ld e, b			; make address of TNFS handle
+	ld d, HANDLESPACE / 256
+	ld a, (de)		; get the TNFS handle
+	ld (hl), a		; insert it into the message
 	inc hl
 	call F_tnfs_message_w_hl
-	ret c
+	jp c, F_leave		; protocol error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	ret z			; no error
+	jp z, F_leave		; no error
 	scf		
-	ret			; error, return with c set
+	jp F_leave		; error, return with c set
 
 ;------------------------------------------------------------------------
 ; F_tnfs_stat
@@ -187,16 +215,19 @@ F_tnfs_close
 ; An optimization would be to copy the reply directly from the ethernet
 ; buffer and save a buffer copy.
 F_tnfs_stat
+	call F_fetchpage
+	ret c
+
 	push de
 	ld a, TNFS_OP_STAT
 	call F_tnfs_pathcmd	; send the command + path
 	pop de
-	ret c			; network error
+	jp c, F_leave		; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
 	jr z, .copybuf
 	scf			; tnfs error
-	ret
+	jp F_leave
 .copybuf
 	dec bc			; decrease BC by the size of the
 	dec bc			; TNFS header + status byte
@@ -205,7 +236,7 @@ F_tnfs_stat
 	dec bc
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ldir			; de is already the dest, bc is size
-	ret
+	jp F_leave
 
 ;---------------------------------------------------------------------------
 ; F_tnfs_lseek
@@ -215,15 +246,19 @@ F_tnfs_stat
 ;		HLDE = 32 bit signed seek position
 ; Returns with carry set and A=error code on error.
 F_tnfs_lseek
-	ex af, af'
-	call F_tnfs_mounted
+	call F_fetchpage
 	ret c
+
+	ex af, af'
 	ld a, TNFS_OP_LSEEK
 	push hl
 	push de
 	call F_tnfs_header_w	; Create the header in workspace
 	ex af, af'
-	ld (hl), a		; Set the file descriptor
+	ld e, a			; get the TNFS handle
+	ld d, HANDLESPACE / 256
+	ld a, (de)
+	ld (hl), a		; Set the TNFS handle
 	pop de			
 	pop hl
 	ld a, c			; Operation type
@@ -250,7 +285,7 @@ F_tnfs_unlink
 ;			DE = 16 bit mode flags
 ; On error returns with carry set and A=error
 F_tnfs_chmod
-	call F_tnfs_mounted
+	call F_fetchpage
 	ret c
 	ld a, TNFS_OP_CHMOD
 	push hl

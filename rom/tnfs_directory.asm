@@ -131,10 +131,10 @@ F_tnfs_chdir
 	ret c
 
 	push hl
-	ld de, buf_tnfs_wkspc	; result of stat in the second workspace
-	call F_tnfs_stat	; stat the path
+	ld a, TNFS_OP_STAT	
+	call F_tnfs_pathcmd	; stat the path
 	jr c, .error		; stat returned an error
-	ld hl, buf_tnfs_wkspc+1 ; MSB of stat filemode bitfield
+	ld hl, tnfs_recv_buffer+tnfs_msg_offset+1 ; MSB of stat filemode bitfield
 	ld a, S_IFDIR / 256	; MSB of S_IFDIR bitfield
 	and (hl)		; AND it all together...
 	jr z, .notadir		; ...if zero, it wasn't a directory.

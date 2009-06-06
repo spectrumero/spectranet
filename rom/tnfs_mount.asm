@@ -102,6 +102,10 @@ F_tnfs_mount
 	jr nz, .mounterr	; clean up on error
 	ld hl, (tnfs_recv_buffer + tnfs_sid_offset)
 	ld (v_tnfs_sid), hl	; save the session identifier
+	ld a, '/'		; set the CWD to /
+	ld (v_cwd), a
+	xor a
+	ld (v_cwd+1), a
 
 	; set up mount point in VFS mount table
 	ld a, (v_curmountpt)	; get the mount point
