@@ -3,7 +3,8 @@
 ASMSOURCES=( sysvars rommodconfig_en rommodconfig_es datarom datarom_es \
              rom jumptable  \
 	     configutilrom configutilrom_es \
-	     configutil utilrom utilrom_es romimage romimage_es romprog \
+	     configutil utilrom utilrom_es tnfs \
+	     romimage romimage_es romprog \
 	     romprog_es )
 
 rm -f *.out

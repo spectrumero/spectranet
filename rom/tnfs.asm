@@ -23,12 +23,6 @@
 ; File that builds the TNFS ROM library.
 
 	org 0x2000			; this is a standard ROM module.
-	include "spectranet.asm"	; Base ROM definitions
-	include "sysvars.asm"		; Base system variables
-	include "fs_statdefs.asm"	; Definitions for stat()
-	include "fs_defs.asm"		; General filesystem definitions
-	include "tnfs_defs.asm"		; TNFS definitions
-	include "tnfs_sysvars.asm"	; System variables and workspaces
 
 	include "tnfs_vectors.asm"	; Vector table
 	include "tnfs_init.asm"
@@ -36,3 +30,11 @@
 	include "tnfs_mount.asm"	; Mount and unmount filesystems
 	include "tnfs_file.asm"		; File operations
 	include "tnfs_directory.asm"	; Directory operations
+
+	; definitions
+	include "spectranet.asm"	; Base ROM definitions
+	include "sysvars.asm"		; Base system variables
+	include "fs_statdefs.asm"	; Definitions for stat()
+	include "fs_defs.asm"		; General filesystem definitions
+	include "tnfs_defs.asm"		; TNFS definitions
+	include "tnfs_sysvars.asm"	; System variables and workspaces

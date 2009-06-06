@@ -25,7 +25,11 @@
 ; TNFS sysvars. These live in the page of RAM that we claim on initialization.
 ; The page of RAM is paged at area A (0x1000-0x1FFF)
 
-v_tnfs_retriesleft	equ 0x1000
+v_tnfs_retriesleft	equ 0x1000	; Retries remaining before giving up
+v_curmountpt		equ 0x1001	; Current mount point
 
-v_cwd			equ 0x1100	; current working directory
-buf_tnfs_wkspc		equ 0x1200	; Workspace
+HANDLESPACE		equ 0x1100	; Handle information storage space
+
+v_cwd			equ 0x1200	; current working directory
+tnfs_recv_buffer	equ 0x1C00	; up to 1kb
+buf_tnfs_wkspc		equ 0x1E00	; Workspace

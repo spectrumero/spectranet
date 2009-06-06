@@ -24,28 +24,48 @@
 
 ;-----------------------------------------------------------------------
 ; F_tnfs_mount: Mount a remote filesystem.
-; Arguments:	IX = pointer to 8 byte structure containing
-;			byte 0,1 - pointer to null terminated hostname
-;                       byte 2,3 - pointer to null terminated mount point
-;                       byte 4,5 - pointer to null terminated user id
-;                       byte 6,7 - pointer to null terminated passwd
+; Parameters: IX - pointer to 10 byte VFS mount structure:
+;		byte 0,1 - Pointer to null terminated protocol
+;		byte 2,3 - pointer to null terminated hostname
+; 		byte 4,5 - pointer to null terminated mount source
+;		byte 6,7 - pointer to null terminated user id
+;		byte 8,9 - pointer to null terminated passwd
+;		A - Mount point - 0 to 3
+;
 ; On success, returns the session number in HL. On error, returns the
 ; error number in HL and sets the carry flag.
 F_tnfs_mount
-	ld de, buf_workspace	; first look up the host
-	ld l, (ix+0)
-	ld h, (ix+1)
+	call F_fetchpage	; get our private RAM page
+	ret c			; which was allocated on startup.
+	ld (v_curmountpt), a	; save the mount point for later
+
+	; first check the requested protocol
+	ld e, (ix+0)
+	ld d, (ix+1)
+	ld hl, STR_tnfstype
+	ld bc, 5
+.cploop
+        ld a, (de)              ; Effectively this is a "strncmp" to check
+        cpi                     ; that the passed protocol is "dev" plus
+        jp nz, .notourfs        ; a null.
+        inc de
+        jp pe, .cploop
+
+	; It is now certain that the requested FS is TNFS.
+	ld de, buf_tnfs_wkspc	; Look up the host
+	ld l, (ix+2)
+	ld h, (ix+3)
 	call GETHOSTBYNAME
-	ret c
+	jp c, F_leave		; exit if host not found
 
 	; create the socket that will be used for tnfs communications
-	ld hl, buf_workspace	; IP address is here
+	ld hl, buf_tnfs_wkspc	; IP address is here
 	call F_tnfs_opensock
-	ret c
+	jp c, F_leave		; unable to open socket
 
 	; We've successfully looked up a host so create the datagram
 	; that will be sent.
-	ld hl, buf_workspace+4
+	ld hl, buf_tnfs_wkspc+4
 	ld de, 0		; no session id yet
 	xor a			; cmd is 0x00
 	call F_tnfs_header	; create the header, HL now at the next byte
@@ -54,22 +74,22 @@ F_tnfs_mount
 	ld (hl), 1		; msb of protocol version
 	inc hl
 	ex de, hl		; make destination = DE
-	ld l, (ix+2)		; mount point
-	ld h, (ix+3)
+	ld l, (ix+4)		; remote mount point
+	ld h, (ix+5)
 	ld b, 255		; maximum size of mount point
 	call F_tnfs_strcpy
-	ld l, (ix+4)		; user id
-	ld h, (ix+5)
+	ld l, (ix+6)		; user id
+	ld h, (ix+7)
 	ld b, 64
 	call F_tnfs_strcpy
-	ld l, (ix+6)		; passwd
-	ld h, (ix+7)
+	ld l, (ix+8)		; passwd
+	ld h, (ix+9)
 	ld b, 64
 	call F_tnfs_strcpy
 
 	; the packet is assembled - send it.
 	ex de, hl		; get current dest pointer into hl
-	ld de, buf_workspace+4	; calculate the size
+	ld de, buf_tnfs_wkspc+4	; calculate the size
 	sbc hl, de		; hl now contains the size
 	ld b, h			; move into bc
 	ld c, l
@@ -82,7 +102,16 @@ F_tnfs_mount
 	jr nz, .mounterr	; clean up on error
 	ld hl, (tnfs_recv_buffer + tnfs_sid_offset)
 	ld (v_tnfs_sid), hl	; save the session identifier
-	ret
+
+	; set up mount point in VFS mount table
+	ld a, (v_curmountpt)	; get the mount point
+	add VFSVECBASE % 256	; find it in the sysvars
+	ld l, a
+	ld h, 0x3F		; point HL at the address in sysvars
+	ld a, (v_pgb)		; Fetch our ROM number
+	ld (hl), a		; and store it in the mount point table
+	or 1			; reset Z and C flags - mounted OK.
+	jp F_leave
 
 .mounterr
 	push af			; save the error code
@@ -90,7 +119,11 @@ F_tnfs_mount
 	call CLOSE
 	pop af
 	scf			; set the carry flag
-	ret	
+	jp F_leave
+.notourfs
+	xor a			; signal 'not our filesystem' by setting
+	jp F_leave		; the zero flag.
+STR_tnfstype defb "tnfs",0
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_umount

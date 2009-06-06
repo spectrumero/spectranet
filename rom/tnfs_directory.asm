@@ -29,18 +29,38 @@
 ; On success, returns the directory handle in A.
 ; On error, sets the carry flag and sets A to the error number.
 F_tnfs_opendir
+	call F_fetchpage		; get our sysvars at 0x1000
+	ret c
+
 	ld a, TNFS_OP_OPENDIR
 	call F_tnfs_pathcmd		; send command, get reply
-	ret c				; return on network error
+	jp c, F_leave			; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; return code is zero?
 	jr z, .gethandle
 	scf				; return with tnfs error
-	ret
+	jp F_leave
 .gethandle
+	ld a, (v_pgb)			; allocate a
+	call ALLOCDIRHND		; directory handle.
+	jr c, .cleanupandexit
+	ld h, HANDLESPACE / 256		; create our private sysvar addr
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
-	ret				; return the handle
-
+	ld (hl), a			; save TNFS handle
+	ld a, l				; move dirhandle into A
+	jp F_leave			; return the directory handle
+.cleanupandexit
+	push af
+	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
+	ld b, a
+	ld a, TNFS_OP_CLOSEDIR		; close the TNFS handle
+	call F_tnfs_header_w
+	ld (hl), b			; message is just the dirhandle
+	inc hl
+	call F_tnfs_message_w_hl
+	pop af
+	jp F_leave
+	
 ;=========================================================================
 ; F_tnfs_readdir
 ; Reads the next directory entry.
@@ -49,9 +69,12 @@ F_tnfs_opendir
 ; On success, returns with carry cleared, and the buffer at DE filled
 ; with the result. On error, sets the carry flag and A to the error number
 F_tnfs_readdir
-	ld b, a				; save the dirhandle
-	call F_tnfs_mounted
+	call F_fetchpage
 	ret c
+
+	ld l, a				; get the TNFS handle address
+	ld h, HANDLESPACE / 256
+	ld b, (hl)			; get the TNFS handle
 	push de
 	ld a, TNFS_OP_READDIR
 	call F_tnfs_header_w		; create the header
@@ -59,16 +82,17 @@ F_tnfs_readdir
 	inc hl
 	call F_tnfs_message_w_hl	; send the message
 	pop de				; get buffer pointer back
-	ret c				; but return on network error
+	jp c, F_leave			; but return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; if rc is zero then copy the
 	jr z, .copybuf			; buffer to DE
 	scf
-	ret
+	jp F_leave
 .copybuf
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ld b, 255			; max filename length
-	jp F_tnfs_strcpy		; exit via strcpy
+	call F_tnfs_strcpy		; copy then exit
+	jp F_leave
 
 ;===========================================================================
 ; F_tnfs_closedir
@@ -77,20 +101,23 @@ F_tnfs_readdir
 ; On success, returns with carry cleared. On error, returns with carry
 ; set and A as the error.
 F_tnfs_closedir
-	ld b, a				; save the dirhandle
-	call F_tnfs_mounted
+	call F_fetchpage
 	ret c
+
+	ld l, a				; get the handle address
+	ld h, HANDLESPACE / 256
+	ld b, (hl)			; and fetch the TNFS handle
 	ld a, TNFS_OP_CLOSEDIR
 	call F_tnfs_header_w
 	ld (hl), b			; message is just the dirhandle
 	inc hl
 	call F_tnfs_message_w_hl
-	ret c				; return now on network error
+	jp c, F_leave			; return now on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	ret z				; no error
+	jp z, F_leave			; no error
 	scf				
-	ret				; return error number	
+	jp F_leave			; return error number	
 
 ;===========================================================================
 ; F_tnfs_chdir
@@ -100,6 +127,9 @@ F_tnfs_closedir
 ; Parameters	HL = path to chdir to
 ; Returns with carry set on error and A=error code
 F_tnfs_chdir
+	call F_fetchpage
+	ret c
+
 	push hl
 	ld de, buf_tnfs_wkspc	; result of stat in the second workspace
 	call F_tnfs_stat	; stat the path
@@ -111,13 +141,13 @@ F_tnfs_chdir
 	pop hl
 	ld de, v_cwd		; copy the path as the new working directory
 	call F_tnfs_abspath	; as an absolute path.
-	ret
+	jp F_leave
 .notadir
 	ld a, ENOTDIR
 	scf
 .error	
 	pop hl
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_mkdir

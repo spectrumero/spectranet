@@ -202,10 +202,10 @@ F_tnfs_abspath
 
 ;------------------------------------------------------------------------
 ; F_tnfs_header_w
-; Creates a TNFS header at a fixed address, buf_workspace, with the
+; Creates a TNFS header at a fixed address, buf_tnfs_wkspc, with the
 ; extant session id
 F_tnfs_header_w
-	ld hl, buf_workspace
+	ld hl, buf_tnfs_wkspc
 	ld de, (v_tnfs_sid)
 ; F_tnfs_header
 ; Creates a TNFS header. Session ID in DE. Command in A. HL is a pointer
@@ -250,11 +250,11 @@ F_tnfs_opensock
 
 ;------------------------------------------------------------------------
 ; F_tnfs_message_w
-; Sends the block of data starting at buf_workspace and ending at DE.
+; Sends the block of data starting at buf_tnfs_wkspc and ending at DE.
 F_tnfs_message_w
 	ex de, hl		; end pointer into HL for length calc
 F_tnfs_message_w_hl		; entry point for when HL is already set
-	ld de, buf_workspace	; start of block
+	ld de, buf_tnfs_wkspc	; start of block
 	sbc hl, de		; calculate length
 	ld b, h
 	ld c, l
@@ -361,15 +361,17 @@ F_tnfs_pathcmd
 
 ; As above but handles the return code too.
 F_tnfs_simplepathcmd
+	call F_fetchpage
+	ret c
 	call F_tnfs_pathcmd
 ; Entry point for simple exit handler
 F_tnfs_simpleexit
-	ret c
+	jp c, F_leave
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	ret z
+	jp z, F_leave
 	scf
-	ret
+	jp F_leave
 
 ;----------------------------------------------------------------------------
 ; F_tnfs_geterrstr

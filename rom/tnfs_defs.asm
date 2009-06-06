@@ -23,7 +23,6 @@
 ; TNFS definitions.
 
 tnfs_polltime		equ 65535	; How long we should wait for a reply
-tnfs_recv_buffer	equ 0x9000	; TODO: A place in Spectranet RAM
 tnfs_max_retries	equ 5
 
 ; Standard header offsets

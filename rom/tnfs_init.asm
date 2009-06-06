@@ -43,3 +43,56 @@ F_init
         ret
 STR_allocfailed defb    "tnfs: No memory pages available\n",0
 STR_init        defb    "TNFS 1.0 initialized\n",0
+
+;-----------------------------------------------------------------------------
+; F_fetchpage
+; Gets our page of RAM and puts it in page area A.
+F_fetchpage
+	push af
+	push hl
+	ld a, (v_pgb)		; get our ROM number and calculate
+	rlca			; the offset in sysvars
+	rlca
+	rlca
+	ld h, 0x39		; address in HL
+	ld l, a
+	ld a, (hl)		; fetch the page number
+	and a			; make sure it's nonzero
+	jr z, .nopage
+	inc l			; point hl at "page number storage"
+	ex af, af'
+	ld a, (v_pga)
+	ld (hl), a		; store current page A
+	ex af, af'
+	call SETPAGEA		; Set page A to the selected page
+	pop hl
+	pop af
+	or a			; ensure carry is cleared
+	ret
+.nopage
+	pop hl			; restore the stack
+	pop af
+	ld a, 0xFF		; TODO: ENOMEM return code
+	scf
+	ret
+
+;---------------------------------------------------------------------------
+; F_restorepage
+; Restores page A to its original value.
+F_leave
+F_restorepage
+	push af
+	push hl
+	ld a, (v_pgb)		; calculate the offset...
+	rlca
+	rlca
+	rlca
+	inc a			; +1
+	ld h, 0x39
+	ld l, a
+	ld a, (hl)		; fetch original page
+	call SETPAGEA		; and restore it
+	pop hl
+	pop af
+	ret
+

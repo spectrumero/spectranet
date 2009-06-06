@@ -22,9 +22,9 @@
 
 ; Locations in the data rom that need to be copied.
 ; The jump table lives in the first 256 bytes of ROM3
-JUMPTABLE_COPYFROM 	equ 0x1000
+JUMPTABLE_COPYFROM 	equ 0x1F00
 JUMPTABLE_SIZE		equ 0xF8
-UPPER_ENTRYPT		equ 0x10F8
+UPPER_ENTRYPT		equ 0x1FF8
 UPPER_ENTRYPT_SIZE	equ 0x08
 
 ; Initialization routines that are run on reset.

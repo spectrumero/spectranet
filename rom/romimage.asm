@@ -5,5 +5,7 @@
 	block 0x2000-$,0xFF
 	incbin "utilrom.out"
 	block 0x3000-$,0xFF
+	incbin "tnfs.out"
+	block 0x3F00-$,0xFF
 	incbin "jumptable.out"
 
