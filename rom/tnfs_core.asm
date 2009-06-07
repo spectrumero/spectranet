@@ -240,7 +240,7 @@ F_tnfs_opensock
 	ldi
 	ld hl, 16384		; dest port
 	ld (v_tnfssockinfo+4), hl
-	ld hl, 0		; blank source port
+	ld hl, 0x7890		; blank source port
 	ld (v_tnfssockinfo+6), hl
 	ld c, SOCK_DGRAM
 	call SOCKET		; open a UDP socket.

@@ -90,7 +90,7 @@ F_setsockinfo
 	or (hl)
 	ex de, hl		; restore registers to expected order
 	jr z, .checkset		; need to set random source port?
-	ld l, Sn_PORT1 % 256	; hl points at source port
+	ld l, Sn_PORT0 % 256	; hl points at source port
 	ld a, (de)		; source port MSB
 	ld (hl), a		; set MSB
 	inc l
