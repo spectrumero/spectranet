@@ -73,6 +73,7 @@ F_fd_dispatch
 	jr F_dispatch
 J_notopen
 	pop de
+	pop hl
 	ld a, 0x06		; TODO: errno.asm - EBADF
 	scf
 	ret
@@ -80,8 +81,20 @@ J_notopen
 F_vfs_dispatch
 	ex (sp), hl
 	push de
+	push af
 	ld de, VFSVECBASE
-	jr F_dispatch_notfd
+	add a, e		; find the address of the VFS vector
+	ld e, a			; and check that something is mounted
+	ld a, (de)
+	and a			; not mounted if the VFS ROM no. was 0
+	jr nz, F_dispatch_3
+.notmounted
+	pop af			; fix the stack
+	pop de
+	pop hl
+	ld a, 0x23		; TODO: errno.asm
+	scf
+	ret
 
 F_dir_dispatch
 	ex (sp), hl
@@ -112,7 +125,8 @@ F_dispatch_2
 	ld e, a			; make DE point to it
 	ld a, (de)		; get the ROM to page
 	and a			; ROM 0 is handled specially
-	jr z, .isasocket
+	jr z, isasocket
+F_dispatch_3
 	ex af, af'		; save AF while copying the current page
 	ld a, (v_pgb)		; save current page
 	ld (v_vfspgb_vecsave), a
@@ -136,7 +150,7 @@ F_dispatch_2
 ; If someone access a socket via read/write rather than send/recv 
 ; it's handled here. There are only four functions that can be done to
 ; a socket via the VFS interface.
-.isasocket
+isasocket
 	ld a, 0xCC		; Check for READ. Note the LSB addresses
 	cp l			; are +3 on the actual (because CALL put
 	jr z, .sockread		; the return address, not the actual

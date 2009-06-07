@@ -165,6 +165,7 @@ F_loader
 
 	; Receive the data.
 	ld de, 0x1000		; current address to write to
+	ld (buf_workspace), de	; save current pointer
 .recvloop
 	ld a, (v_connfd)
 	ld bc, 1024		; receive up to 1K at a time

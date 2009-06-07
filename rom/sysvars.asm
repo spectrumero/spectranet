@@ -127,12 +127,14 @@ v_dhcpreqaddr	defb 0,0,0,0	; Our requested address
 v_dhcplease	defb 0,0,0,0	; lease in seconds
 v_nspointer	defw 0		; nameserver address pointer
 
-; TNFS system variables
+; TNFS/VFS system variables
 v_tnfssock	defb 0		; socket descriptor
 v_tnfssockinfo	defb 0,0,0,0,0,0,0,0	; server address/port
 v_tnfs_sid	defw 0		; session identifier
 v_tnfs_seqno	defb 0		; sequence number
 v_tnfs_curfd	defb 0		; filehandle for current file IO operation
+v_vfs_curmount	defb 0		; mount point currently in use
+v_vfs_dirhandle	defb 0		; current directory handle in use
 
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM

@@ -4,9 +4,9 @@ F_hexdump
 	push hl
 	ld a, (hl)
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, ' '
-	call F_putc_5by8
+	call PUTCHAR42
 	pop hl
 	inc hl
 	djnz F_hexdump
@@ -48,48 +48,48 @@ F_regdump
 	push af
 
 	ld a, '\n'
-	call F_putc_5by8
+	call PUTCHAR42
 
 	push hl
 	ld a, h
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	pop hl
 	ld a, l
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, ','
-	call F_putc_5by8
+	call PUTCHAR42
 
 	ld a, d
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, e
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, ','
-	call F_putc_5by8
+	call PUTCHAR42
 	
 	ld a, b
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, c
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, ','
-	call F_putc_5by8
+	call PUTCHAR42
 
 	pop af
 	push af
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	pop bc
 	push bc
 	ld a, c
 	call F_inttohex8
-	call F_print
+	call PRINT42
 	ld a, '\n'
-	call F_putc_5by8
+	call PUTCHAR42
 
 	pop af
 	pop bc
