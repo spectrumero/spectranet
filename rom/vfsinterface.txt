@@ -31,7 +31,7 @@ read			A - file descriptor
 			BC - maximum bytes ot read
 			(on return BC = bytes read)
 write			A - file descriptor
-			DE - buffer to write
+			HL - buffer to write
 			BC - size of the buffer
 			(on return BC = bytes written)
 lseek			A - file descriptor

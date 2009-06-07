@@ -142,6 +142,9 @@ F_tnfs_read
 ; Returns with carry set on error and A = return code. BC = bytes
 ; written.
 F_tnfs_write
+	call F_fetchpage
+	ret c
+
 	ex af, af'
 	ld a, b			; cap write size at 512 bytes
 	cp 0x01
