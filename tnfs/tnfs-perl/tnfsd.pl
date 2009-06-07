@@ -222,6 +222,7 @@ sub umount
 sub readdir
 {
 	my ($session, $retry, $cmd, $message)=@_;
+	print("Reading dir...\n");
 
 	# Retrieve the directory handle
 	my $clientHandle=unpack("C", $message);

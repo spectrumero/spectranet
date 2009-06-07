@@ -103,45 +103,78 @@ F_close
 ; 		DE = buffer to fill
 ;		BC = max bytes
 F_read
-	ld a, 1
-	out (254), a
-	ld a, (v_pgb)		; find our page number
-	rla			; and find the offset to our 8 byte area
-	rla			; in sysvars.
-	rla
-	ld h, 0x39		; and conspire to make IX point at it.
-	ld l, a
-	push hl
-	pop ix
-	xor a
-	ld (ix+0), a
-	ld hl, STR_readstring	; address to "read"...
+	call F_fetchpage		; get our private SRAM page
+	call F_getfileptr		; HL now is the file pointer pointer
 .loop
-	ld a, (hl)
-	ld (de), a
-	dec bc
-	inc (ix+0)		; increment bytes read
-	inc hl
+	push hl
+	call F_readbyte
+	pop hl
+	jr c, .finish			; EOF reached
+	ld (de), a			; transfer data to buffer
 	inc de
-	and a			; end of record?
-	jr z, .done
+	dec bc
 	ld a, b
-	or c
+	or c				; check for exceeded max count
 	jr nz, .loop
-.done
-	ld b, 0			; return bytes read
-	ld c, (ix+0)		; which is in IX+0 (it won't be more than 255)
+.finish
+	call F_restorepage	
 	ret
 
-FILETABLE	defw STR_file1
-		defw STR_file2
-		defw STR_file3
+; Utility routine to fetch an fd's file pointer 
+F_getfileptr
+	push af
+	sub FDBASE % 256		; calculate the offset by subtracting
+	rlca				; the lowest FD number and multiplying
+	add a, v_fptr1 % 256		; by 2, then adding our vars base
+	ld h, 0x10			; address of our private SRAM
+	ld l, a				; (hl) = file pointer
+	pop af
+	ret
 
-STR_file1	defb "foo",0
-STR_file2	defb "bar",0
-STR_file3	defb "baz",0
+; HL = address of file pointer
+F_readbyte
+	push bc
+	ld c, (hl)			; get file pointer
+	inc l
+	ld b, (hl)
+	ld a, (de)			; get byte
+	inc bc				; inc file pointer
+	ld (hl), b			; save the pointer
+	dec l
+	ld (hl), c
+	ld bc, PTRCTROFFS
+	add hl, bc			; check bytes left
+	ld c, (hl)
+	inc l
+	ld b, (hl)
+	ex af, af'
+	ld a, b
+	or c
+	jr z, .eof			; EOF
+	dec bc
+	ld (hl), b			; save new bytes remaining
+	dec l
+	ld (hl), c
+	ex af, af'
+	pop bc
+	ret
+.eof
+	pop bc
+	ld a, 0x21			; EOF - TODO - errno
+	scf
+	ret
 
-NUMFILES	equ 3
-
+FILE1
 STR_readstring	defb "The Hello World of filesystems\n",0
+FILE1END
+FILE2
+STR_foobar	defb "Foo bar baz\n",0
+FILE2END
+FILE3
+STR_something	defb "Bamus batis bant\n",0
+FILE3END
+
+FILE1EOF	defw FILE1END
+FILE2EOF	defw FILE2END
+FILE3EOF	defw FILE3END
 
