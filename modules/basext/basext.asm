@@ -33,4 +33,5 @@ TNFS_PAGE	equ 0xFF
 	include "init.asm"		; initialization routines	
 	include "commands.asm"		; Command routines
 	include "loader.asm"		; Load/save routines
-	
+	include "tapetrap.asm"		; tape traps
+	include "regdump.asm"	

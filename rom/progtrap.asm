@@ -36,7 +36,11 @@
 ;         byte 5,6 - Address of the actual trap
 F_settrap
 	ld de, v_trappage	; Copy trap details to sysvars
+	ld a, (hl)		; check for 0xFF as the page
+	cp 0xFF			; since this indicates 'current page B rom'
+	jr z, .usecurrent
 	ldi			; copy page
+.cprest
 	ldi			; copy lsb of call address
 	ldi			; copy msb of call address
 	ldi			; call lsb of comefrom address
@@ -55,6 +59,13 @@ F_settrap
 	or MASK_PROGTRAP_EN	; enable the programmable trap
 	out (c), a		; write new register value
 	ret
+
+.usecurrent
+	ld a, (v_pgb)
+	ld (de), a
+	inc de
+	inc hl
+	jr .cprest
 
 ;--------------------------------------------------------------------------
 ; F_disabletrap

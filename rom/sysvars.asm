@@ -135,6 +135,8 @@ v_tnfs_seqno	defb 0		; sequence number
 v_tnfs_curfd	defb 0		; filehandle for current file IO operation
 v_vfs_curmount	defb 0		; mount point currently in use
 v_vfs_dirhandle	defb 0		; current directory handle in use
+v_trapfd	defb 0		; current tape trap fd
+v_trap_blklen	defw 0		; block length of next block
 
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM

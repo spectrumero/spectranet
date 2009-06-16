@@ -358,6 +358,22 @@ F_tbas_ls
 	jp nz, J_tbas_error		; everything else is bad, report it
 	jp EXIT_SUCCESS
 
+;---------------------------------------------------------------------------
+; F_tbas_tapein
+; Handle the %tapein command, which takes a filename as a parameter.
+F_tbas_tapein
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; expect a string expression
+	call STATEMENT_END
+	
+	;-------- runtime --------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; get the string
+	call F_settrap
+	jp c, J_tbas_error		; carry set = error
+	jp EXIT_SUCCESS
+	
+
 ;----------------------------------------------------------------------------
 ; F_tbas_zxprint
 ; Prints a C string to the current ZX channel
@@ -397,8 +413,6 @@ F_geterrstr
 	dec d			; decrement loop counter
 	jr nz, .findloop	; if Z is not set go for another run
 	ret z			; HL now points at error string
-
-	include "debug.asm"
 
 STR_proto	defb	"tnfs",0
 
