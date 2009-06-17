@@ -54,8 +54,8 @@ F_settrap
 TAPETRAPBLOCK
 	defb	0xFF		; this page
 	defw	F_loadbytes	; function to call
-	defw	0x0557		; address at time of NMI
-	defw	0x0556		; address to trap with NMI
+	defw	0x0564		; address at time of NMI
+	defw	0x0562		; address to trap with NMI
 
 ;---------------------------------------------------------------------------
 ; F_releasetrap: Closes the file associated with the tape trap and disables
@@ -99,12 +99,11 @@ F_loadbytes
 	jr c, .cleanuperror1
 
 	ld a, (INTERPWKSPC)	; compare the flag byte read with the flag
-	cp (ix+3)		; passed in A to LD-BYTES
+	cp (ix+1)		; passed in A to LD-BYTES
 	jr nz, .skip		; if they aren't the same skip the block
 
 	ld c, (ix+6)		; get the requested length into
 	ld b, (ix+7)		; BC
-	dec b			; reverse the effect of INC D in the ZX ROM
 	pop de			; and the address into DE
 	ld h, b			; remaining length in HL
 	ld l, c
