@@ -205,7 +205,16 @@ F_tbas_loadbasic
 	ld b, (ix+0x10)
 	add hl, bc
 	ld (ZX_VARS), hl
-				; TODO: Consider LINE number in header
+	ld h, (ix+0x0e)		; Check for LINE number
+	ld a, h
+	and 0xC0
+	jr nz, .loadblock	; No line number - skip to loader
+	ld l, (ix+0x0d)		; HL = line number
+	ld (ZX_NEWPPC), hl	; set line number to jump to
+	xor a
+	ld (ZX_NSPPC), a	; Statement number 0
+
+.loadblock
 	pop bc			; fetch the length
 	pop de			; fetch the start
 

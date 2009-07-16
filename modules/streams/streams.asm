@@ -20,20 +20,21 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
+; BASIC streams
+	include "../../rom/zxromdefs.asm"	; ZX ROM definitions
+	include "../../rom/spectranet.asm"	; Spectranet symbols
+	include "../../rom/sysvars.sym"		; System variable decs
+	include "../../rom/zxsysvars.asm"	; ZX system variables
 
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "regdump.asm"	
+	org 0x2000		; this is a module
+	include "vectors.asm"	; Vector table
+	include "init.asm"	; Initialization routines
+	include "commands.asm"	; BASIC commands
+	include "string_en.asm"	; English strings
+	include "memory.asm"	; Memory claim
+	include "chanmgr.asm"	; Channel manager
+	include "io.asm"	; IO routines
+
+; Our ROM ID
+STREAM_ROM_ID	equ 0x02
+

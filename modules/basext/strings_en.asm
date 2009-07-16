@@ -20,20 +20,22 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
+; Strings (English)
 
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "regdump.asm"	
+STR_filetype	defb	"File type: ",0
+STR_tap		defb	"TAP file",0
+STR_data	defb	"Data",0
+STR_basic	defb	"Program: ",0
+STR_numarray	defb	"Number array: ",0
+STR_strarray	defb	"String array: ",0
+STR_code	defb	"Bytes: ",0
+STR_unknown	defb	"Unknown: ",0
+STR_size	defb	"File size: ",0
+STR_blksize	defb	"Block size : ",0
+STR_param1	defb	"Paramater 1: ",0
+STR_param2	defb	"Parameter 2: ",0
+STR_directory	defb	"Directory: size ",0
+STR_bytes	defb	" bytes",0
+STR_headerless	defb	"Headerless block: ",0
+
+

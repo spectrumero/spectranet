@@ -372,8 +372,22 @@ F_tbas_tapein
 	call F_settrap
 	jp c, J_tbas_error		; carry set = error
 	jp EXIT_SUCCESS
-	
 
+;----------------------------------------------------------------------------
+; F_tbas_info
+; Handle the %info command
+F_tbas_info
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; expect a string
+	call STATEMENT_END
+
+	;-------- runtime ----------
+	rst CALLBAS
+	defw ZX_STK_FETCH
+	call F_showfileinfo		; Try to open the file and show
+	jp c, J_tbas_error		; the information.
+	jp EXIT_SUCCESS
+	
 ;----------------------------------------------------------------------------
 ; F_tbas_zxprint
 ; Prints a C string to the current ZX channel

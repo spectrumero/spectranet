@@ -1,4 +1,4 @@
-;The MIT License
+; The MIT License
 ;
 ;Copyright (c) 2009 Dylan Smith
 ;
@@ -20,20 +20,17 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
-
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "regdump.asm"	
+; BAISC streams support
+; Vector table
+	defb 0xAA		; This is a code ROM
+        defb STREAM_ROM_ID      ; Rom ID 0x01
+        defw F_init             ; RESET vector
+        defw 0xFFFF             ; the next few vectors are reserved
+        defw 0xFFFF
+        defw 0xFFFF
+        defw 0xFFFF
+        defw 0xFFFF
+        defw STR_ident          ; Pointer to a string that identifies this mod
+	jp J_modcall		; we have a module call routine
+STR_ident
+	defb "Streams 1.0",0

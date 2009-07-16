@@ -20,20 +20,10 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
+; English strings
 
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "regdump.asm"	
+STR_basicinit	defb	"BASIC streams support initialized\n",0
+STR_basinsterr	defb	"BASIC streams initialization failed\n",0
+STR_nomem	defb	"Out of memory pages",0
+STR_sockerr	defb	"Socket error",0
+STR_closeerr	defb	"Could not close socket",0

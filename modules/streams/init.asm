@@ -20,20 +20,39 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
 INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
+;-----------------------------------------------------------------------------
+; F_init: Initializes the interpreter
+F_init
+        ld hl, PARSETABLE
+        ld b, NUMCMDS
+.loop
+        push bc
+        call ADDBASICEXT
+        pop bc
+        jr c, .installerror
+        djnz .loop
+        ld hl, STR_basicinit
+        call PRINT42
+        ret
+.installerror
+        ld hl, STR_basinsterr
+        call PRINT42
+        ret
 
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "regdump.asm"	
+NUMCMDS		equ 2
+STREAMPAGE	equ 0xFF		; This ROM
+PARSETABLE
+P_connect	defb	0x0b
+		defw	CMD_CONNECT
+		defb	STREAMPAGE
+		defw	F_connect
+
+P_close		defb	0x0b
+		defw	CMD_CLOSE
+		defb	STREAMPAGE
+		defw	F_close
+
+CMD_CONNECT	defb	"%connect",0
+CMD_CLOSE	defb	"%close",0
+

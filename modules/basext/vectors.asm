@@ -20,20 +20,16 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
+; BASIC extensions vector table
+	defb 0xAA		; This is a code ROM
+	defb 0xFE		; type "generic" (no fncalls)
+	defw F_init		; RESET vector
+	defw 0xFFFF             ; the next few vectors are reserved
+        defw 0xFFFF
+        defw 0xFFFF
+        defw 0xFFFF
+        defw 0xFFFF
+        defw STR_ident          ; Pointer to a string that identifies this mod
+	ret			; no MODULECALL
+STR_ident	defb	"VFS BASIC extensions",0
 
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "regdump.asm"	

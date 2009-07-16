@@ -61,7 +61,6 @@ TAPETRAPBLOCK
 ; F_releasetrap: Closes the file associated with the tape trap and disables
 ; the trap itself.
 F_releasetrap
-	call F_regdump
 	push ix
 	ld a, 1
 	out (254), a
