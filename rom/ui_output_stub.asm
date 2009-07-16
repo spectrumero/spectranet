@@ -38,9 +38,16 @@ F_putc_5by8
 ; F_print: Prints a null terminated string.
 ; Parameters: HL = pointer to string
 F_print
-	call F_pr_getroutine
-	call F_print_impl
-	jp F_pr_restore
+.loop
+        ld a, (hl)
+        and a                   ; NULL?
+        jr z, .done
+        call F_putc_5by8	; print the char
+        inc hl
+        jr .loop
+.done
+        ret
+	
 
 ;--------------------------------------------------------------------------
 ; F_clear: Clears the screen to spectranet UI colours.

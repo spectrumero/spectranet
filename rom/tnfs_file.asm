@@ -246,7 +246,7 @@ F_tnfs_stat
 ; Seek to a position in a file.
 ; Parameters: 	A = file descriptor
 ;		C = operation 0x00 = SEEK_SET, 0x01 = SEEK_CUR, 0x02 = SEEK_END
-;		HLDE = 32 bit signed seek position
+;		DEHL = 32 bit signed seek position
 ; Returns with carry set and A=error code on error.
 F_tnfs_lseek
 	call F_fetchpage
@@ -265,11 +265,11 @@ F_tnfs_lseek
 	pop de			
 	pop hl
 	ld a, c			; Operation type
-	ld (buf_workspace+4), a
-	ld (buf_workspace+5), de ; 32 bit little endian seek position
-	ld (buf_workspace+7), hl
-	ld de, buf_workspace	; send message from workspace
-	ld bc, 9		; that is 9 bytes long
+	ld (buf_tnfs_wkspc+5), a
+	ld (buf_tnfs_wkspc+6), hl ; 32 bit little endian seek position
+	ld (buf_tnfs_wkspc+8), de ; is in DEHL
+	ld de, buf_tnfs_wkspc	; send message from workspace
+	ld bc, 10		; that is 10 bytes long
 	call F_tnfs_message
 	jp F_tnfs_simpleexit
 

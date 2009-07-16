@@ -293,17 +293,3 @@ F_clear_impl
 	ld (v_row), hl
 	ret
 
-;--------------------------------------------------------------------------
-; F_print: Prints a null terminated string.
-; Parameters: HL = pointer to string
-F_print_impl
-.loop
-	ld a, (hl)
-	and a			; NULL?
-	jr z, .done
-	call F_putc_5by8_impl	; print the char
-	inc hl
-	jr .loop
-.done
-	ret
-

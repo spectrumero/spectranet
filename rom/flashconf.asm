@@ -35,6 +35,40 @@
 
 CONFIGPAGE	equ 0x001F	; chip 0 page 0x1F (the last page)
 CONF_RAM	equ 0x1F00	; config area, when copied to RAM
+FS_CONF_RAM	equ 0x1D00	; config area for FS in RAM
+
+; Default filesystems - up to 4 can be mounted
+DEF_FS_MOUNT0	equ 0x0D00
+DEF_FS_MOUNTPT0	equ 0x0D00	; mount point (0-3)
+DEF_FS_PROTO0	equ 0x0D01	; Protocol (null terminated, max 6)
+DEF_FS_HOST0	equ 0x0D07	; Hostname (max 41)
+DEF_FS_SRCPTH0	equ 0x0D30	; Source path (max 48)
+DEF_FS_USER0	equ 0x0D60	; Username (max 16)
+DEF_FS_PASSWD0	equ 0x0D70	; Passord (max 16)
+
+DEF_FS_MOUNT1	equ 0x0D80
+DEF_FS_MOUNTPT1	equ 0x0D80	; mount point (0-3)
+DEF_FS_PROTO1	equ 0x0D81	; Protocol (null terminated, max 6)
+DEF_FS_HOST1	equ 0x0D87	; Hostname (max 41)
+DEF_FS_SRCPTH1	equ 0x0DB0	; Source path (max 48)
+DEF_FS_USER1	equ 0x0DE0	; Username (max 16)
+DEF_FS_PASSWD1	equ 0x0DF0	; Passord (max 16)
+
+DEF_FS_MOUNT2	equ 0x0E00
+DEF_FS_MOUNTPT2	equ 0x0E00	; mount point (0-3)
+DEF_FS_PROTO2	equ 0x0E01	; Protocol (null terminated, max 6)
+DEF_FS_HOST2	equ 0x0E07	; Hostname (max 41)
+DEF_FS_SRCPTH2	equ 0x0E30	; Source path (max 48)
+DEF_FS_USER2	equ 0x0E60	; Username (max 16)
+DEF_FS_PASSWD2	equ 0x0E70	; Passord (max 16)
+
+DEF_FS_MOUNT3	equ 0x0E80
+DEF_FS_MOUNTPT3	equ 0x0E80	; mount point (0-3)
+DEF_FS_PROTO3	equ 0x0E81	; Protocol (null terminated, max 6)
+DEF_FS_HOST3	equ 0x0E87	; Hostname (max 41)
+DEF_FS_SRCPTH3	equ 0x0EB0	; Source path (max 48)
+DEF_FS_USER3	equ 0x0EE0	; Username (max 16)
+DEF_FS_PASSWD3	equ 0x0EF0	; Passord (max 16)
 
 ; TCP/IP settings. These are in the same order as the W5100's hardware
 ; registers so they can just be LDIR'd in.

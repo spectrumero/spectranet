@@ -84,3 +84,8 @@ O_CREAT			equ 0x02
 O_EXCL			equ 0x04
 O_TRUNC			equ 0x08
 
+; Seek definitions
+SEEK_SET		equ 0x00
+SEEK_CUR		equ 0x01
+SEEK_END		equ 0x02
+

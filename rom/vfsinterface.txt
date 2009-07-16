@@ -23,6 +23,7 @@ rmdir			HL - pointer to directory name
 size			A  - mount point
 free			A  - mount point
 stat			HL - pointer to filename or directory name
+			DE - where to return the result
 			A  - mount point
 chmod			HL - pointer to filename, DE - filemode
 			A  - mount point

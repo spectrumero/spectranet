@@ -40,7 +40,7 @@ J_reset
 	ld hl, 0x3000		; Clear down the fixed RAM page.
 	ld de, 0x3001
 	ld bc, 0xFFF
-	ld (hl), 0
+	ld (hl), l
 	ldir
 
 	; Set up the VFS jump point
@@ -110,6 +110,7 @@ J_reset
 	ld (v_tabletop), hl
 	
 	call F_initroms		; Initialize any ROM modules we may have
+	call F_initfs
 	ld hl, STR_unpaging	
 	call F_print
 
@@ -164,6 +165,36 @@ F_initroms
 	jr .initloop
 
 ;-------------------------------------------------------------------------
+; F_initfs
+; Initializes filesystems.
+; TODO: Initialize multiple filesystems.
+F_initfs
+	ld a, CONFIGPAGE	; config page
+	call F_setpageA
+	ld a, (0x1000+DEF_FS_PROTO0)
+	and a			; empty string?
+	ret z
+	cp 0xFF			; nothing set?
+	ret z
+	ld hl, STR_mounting
+	call F_print
+	ld hl, 0x1D00
+	ld de, 0x3000
+	ld bc, 0x80
+	ldir
+	ld ix, FSTAB
+	ld a, 0
+	call F_mount
+	jr c, .error
+	ret
+.error
+	ld hl, 0x3000
+	call F_itoh8
+	ld hl, 0x3000
+	call F_print
+	ret
+
+;-------------------------------------------------------------------------
 ; F_w5100init
 ; Initialize the W5100 - MAC address and hardware registers.
 F_w5100init
@@ -195,3 +226,13 @@ STR_bootmsg
 	include "ver.asm"	; include the build number file
 STR_unpaging
 	defb "Unpaging\n",0
+STR_mounting
+	defb "FS mount\n",0
+FSTAB
+	defw 0x3001		; TODO - proper filesystem things
+	defw 0x3007
+	defw 0x3030
+	defw 0x3060
+	defw 0x3070
+MOUNT	equ  0x3EA8
+

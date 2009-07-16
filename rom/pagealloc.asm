@@ -46,6 +46,7 @@ F_reservepage
 	ld a, (hl)		; examine current page
 	and a			; is it zero (unallocated) ?
 	jr z, .pagefound
+	inc l			; advance to the next
 	djnz .searchloop
 	scf			; if we get here no free pages were found.
 	ret

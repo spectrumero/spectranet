@@ -127,7 +127,11 @@ J_moduledispatch
 	call F_pushpageB	; select the page and stack the existing
 	ex af, af'		; get original AF value
 	call 0x2010		; enter ROM module
+	ex af, af'
+	ld (v_hlsave), hl
 	call F_poppageB
+	ld hl, (v_hlsave)
+	ex af, af'
 	ret
 .notfound
 	pop bc

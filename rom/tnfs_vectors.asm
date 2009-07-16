@@ -47,7 +47,7 @@ modcall	ret			; No modcall code
 	jp F_tnfs_chmod		; Change mode (permissions)
 	jp F_tnfs_read		; Read a file
 	jp F_tnfs_write		; Write to a file
-	jp F_tnfs_seek		; Seek to a position in a file
+	jp F_tnfs_lseek		; Seek to a position in a file
 	jp F_tnfs_close		; Close a file
 	jp F_undef		; Poll - not implemented
 	jp F_tnfs_readdir	; Read a directory entry
@@ -61,7 +61,6 @@ STR_ident
 
 F_tnfs_size			; TODO functions
 F_tnfs_free
-F_tnfs_seek
 F_undef
 	ld a, ENOSYS		; Function not implemented
 	scf
