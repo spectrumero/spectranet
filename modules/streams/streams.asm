@@ -34,6 +34,7 @@
 	include "memory.asm"	; Memory claim
 	include "chanmgr.asm"	; Channel manager
 	include "io.asm"	; IO routines
+	include "buffer.asm"	; buffers
 
 ; Our ROM ID
 STREAM_ROM_ID	equ 0x02

@@ -43,9 +43,13 @@ F_input
 	ld c, a			; save it
 	rlca			; find metadata for stream
 	rlca
+	rlca
 	ld l, a
 	ld h, 0x10		; point HL at metadata
-	ld a, (hl)		; get buffer pointer
+	ld d, (hl)		; get tx buffer number
+	inc l			; point at tx buffer pointer
+	inc l
+	ld a, (hl)		; get tx buffer pointer
 	and a			; if nonzero, flush the buffer
 	call nz, .flush
 
@@ -62,19 +66,22 @@ F_input
 	jr nz, .doinkey
 
 .input
-	inc l			; point at socket descriptor
+	dec l			; HL points at RX buffer number
+	ld d, (hl)		; which is the MSB of the actual buffer...
+	inc l			; HL now points at the
+	inc l			; RX buffer current address
+	ld e, (hl)
+	push hl			; save this address
+	inc l			; and now it points at the socket handle
 	ld a, (hl)		; fetch it
 	ld (v_asave), a		; save it for the loop operation
-	inc l			; Test whether we need to unload more
-	push hl			; save the pointer
-	ld a, (hl)		; data from the buffer
-	and a			; Input buffer pos = 0?
-	jr z, .getdata		; Nothing remaining, get the data.
+	xor a			; Is the buffer pointer at 
+	cp e			; the start of the buffer?
+	jr z, .getdata		; Yes - so read more data from the network
 	
-	inc l			; Get the bytes remaining
-	ld b, (hl)		; parameter.
-	ld h, INTERPWKSPC / 256 ; MSB of buffer
-	ld l, a			; LSB of buffer
+	inc l			; HL points at bytes remaining in buffer...
+	ld b, (hl)		; ...parameter, fetch it
+	ex de, hl		; and put the buffer pointer in HL
 	jr .unloadloop
 
 .getdata
@@ -127,11 +134,13 @@ F_input
 	ex de, hl		; into HL
 	ld (hl), e		; save the current position
 	inc l
+	inc l
 	ld (hl), b		; save bytes remaining
 	jr .exitnopop
 .cleardown
 	pop hl			; get the metadata ptr
 	ld (hl), 0		; clear bufpos
+	inc l
 	inc l
 	ld (hl), 0		; clear bufsz
 	jr .exitnopop
@@ -147,9 +156,6 @@ F_input
 .flush
 	dec a			; make actual end position, not new char pos
 	ld e, a			; make buffer LSB
-	ld a, c			; retrieve stream number
-	or 0x10			; make buffer MSB
-	ld d, a
 	push hl
 	call F_flushbuffer
 	pop hl
@@ -200,78 +206,4 @@ F_debugA
 	pop de
 	ret
 
-
-;---------------------------------------------------------------------------
-; Dealing with buffers
-; Buffers start from 0x1100, with a 256 byte buffer for each possible
-; stream.
-; At 0x1000 there is buffer information which is formatted as follows:
-; Byte 0 - Current buffer pointer
-; Byte 1 - Current descriptor (a socket handle, perhaps)
-; Byte 2,3 - Data specific to the kind of stream
-
-;---------------------------------------------------------------------------
-; F_feedbuffer
-; Adds the byte in A to the buffer for the stream in L
-F_feedbuffer
-	ex af, af'		; save A
-	ld a, l			; calculate buffer offset
-	and 0x0F		; mask out any flags in the top nibble
-	ld c, a			; save this value
-	or 0x10			; now form the MSB
-	ld d, a			; and put it in the MSB of DE
-
-	ld a, c			; get the buffer number back
-	rlca			; multiply by 4 to find the buffer pointer
-	rlca
-	ld h, 0x10		; MSB = 0x10
-	ld l, a			; HL = buffer pointer
-	ld e, (hl)		; DE now is the full buffer pointer
-	ex af, af'		; get byte back
-	cp 0x0d			; Spectrum ENTER?
-	jr nz, .cont
-
-	ld (de), a		; Convert it to 0x0d 0x0a
-	inc e
-	ld a, 0x0a
-	ld (de), a
-	jr F_flushbuffer
-.cont
-	ld (de), a		; write the value into the buffer
-	ld a, 0xFE		; it would be easier to flush one byte later
-	cp e			; but we must leave enough room for CRLF
-	jr z, F_flushbuffer	; If the buffer is full flush it
-
-	inc e			; increment the buffer pointer
-	ld (hl), e		; save the buffer pointer
-	ret
-
-;---------------------------------------------------------------------------
-; F_flushbuffer
-; Flushes the given buffer
-;	DE = current buffer pointer
-;	HL = current buffer info pointer (points at the bufptr storage) 
-F_flushbuffer
-	; TODO
-	; This needs to work with all kinds of streams, not just SOCK_STREAM
-	ld (hl), 0		; reset buffer pointer
-	inc l			; point at descriptor
-	ld a, (hl)		; and get it
-
-	ld b, 0			; set BC to the size of the buffer to send
-	ld c, e			; inc BC to make the proper length
-	inc bc
-	ld e, 0			; set DE to the start of the buffer
-
-	; DE now = buffer start
-	; BC now = length
-	; A now = file descriptor
-	call SEND		; Send the data
-	jr c, .borked
-	ret
-	
-.borked
-	ld a, 2			; todo - proper error handling
-	out (254), a
-	ret
 

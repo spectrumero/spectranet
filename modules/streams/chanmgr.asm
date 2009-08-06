@@ -31,6 +31,13 @@
 ;	Second: BASIC string for hostname
 ;	Third: Port number
 ; This function must restore the stack.
+; It also initializes the stream's information structure. These are held
+; in 0x1000-0x10FF. The format is:
+;	byte 0:	write buffer number
+;	byte 1: read buffer number
+;	byte 2: write buffer pointer
+;	byte 3: read buffer pointer
+;	byte 4: file descriptor
 F_connect_impl
 	call F_fetchpage		; fetch our memory
 	call c, F_allocpage
@@ -66,11 +73,24 @@ F_connect_impl
 
 	; initialize the output buffer
 	ld a, (v_bcsave)
-	rlca				; multiply by 4
+	rlca				; multiply by 8
+	rlca
 	rlca
 	ld h, 0x10			; Address 0x10xx
 	ld l, a
-	ld (hl), 0			; Buffer pointer starts at 0
+
+	call F_findfreebuf		; create a write buffer
+	jr c, .nobufcleanup
+	ld (hl), a			; save the buffer number
+	inc l
+	call F_findfreebuf		; create a read buffer
+	jr c, .nobufcleanup
+	ld (hl), a
+	inc l
+
+	ld (hl), 0			; Set write buffer pointer
+	inc l
+	ld (hl), 0			; Set read buffer pointer
 	inc l				; Next address is the FD
 	ld a, (INTERPWKSPC+4)
 	ld (hl), a			; store the FD
@@ -99,6 +119,22 @@ F_connect_impl
 	ld hl, STR_sockerr
 	jp REPORTERR
 
+.nobufcleanup
+	ld a, (INTERPWKSPC+4)		; get the socket number back
+	call CLOSE			; and close it
+	ld a, (v_bcsave)		; clear down our data structure
+	rlca
+	rlca
+	rlca
+	ld h, 0x10
+	ld l, a
+	ld (hl), 0			; ensure any allocated bufs are freed
+	inc l
+	ld (hl), 0
+	call F_leave
+	ld hl, STR_nobuferr
+	jp REPORTERR
+
 ;------------------------------------------------------------------------
 ; F_close_impl
 ; Implementation of the close routine.
@@ -108,14 +144,20 @@ F_close_impl
 	call F_fetchpage
 	pop hl				; Channel number.
 	ld a, l
-	rlca				; multiply by 4 to find metadata
+	rlca				; multiply by 8 to find metadata
+	rlca
 	rlca
 	ld h, 0x10			; hl now points at metadata
 	ld l, a
-	inc l				; hl now points at fd
-	
+	push hl				; save it
+	add a, 4			; point at fd
+	ld l, a
 	ld a, (hl)			; fetch the FD
 	call CLOSE			; close the socket
+	pop hl
+	ld (hl), 0			; clear down buffer info
+	inc l
+	ld (hl), 0
 	jr c, .closeerr
 	call F_leave
 	call EXIT_SUCCESS

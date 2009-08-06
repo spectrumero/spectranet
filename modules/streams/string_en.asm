@@ -27,3 +27,5 @@ STR_basinsterr	defb	"BASIC streams initialization failed\n",0
 STR_nomem	defb	"Out of memory pages",0
 STR_sockerr	defb	"Socket error",0
 STR_closeerr	defb	"Could not close socket",0
+STR_nobuferr	defb	"Out of buffers",0
+
