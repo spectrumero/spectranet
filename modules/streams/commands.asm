@@ -68,8 +68,54 @@ F_connect
 	push bc				; save stream
         jp F_connect_impl
 
+;--------------------------------------------------------------------------
+; F_listen
+; Opens a socket that listens.
+; %listen #n,port
+F_listen
+        rst CALLBAS
+        defw ZX_NEXT_CHAR
+        cp '#'                          ; # means channel number
+        jp nz, PARSE_ERROR
 
-;-----s--------------------------------------------------------------------
+	rst CALLBAS
+	defw ZX_NEXT2_NUM		; test parameters
+	call STATEMENT_END
+
+	;-------------- runtime ------------
+	rst CALLBAS
+	defw ZX_FIND_INT2		; port number
+	push bc
+	
+	rst CALLBAS
+	defw ZX_FIND_INT2		; stream number
+	push bc
+	jp F_listen_impl
+
+;-------------------------------------------------------------------------
+; F_accept
+; Accepts an incoming connection
+F_accept
+	rst CALLBAS
+        defw ZX_NEXT_CHAR
+        cp '#'                          ; # means channel number
+        jp nz, PARSE_ERROR
+
+	rst CALLBAS
+	defw ZX_NEXT2_NUM		; test parameters
+	call STATEMENT_END
+
+	;-------------- runtime ------------
+	rst CALLBAS
+	defw ZX_FIND_INT2		; port number
+	push bc
+	
+	rst CALLBAS
+	defw ZX_FIND_INT2		; stream number
+	push bc
+	jp F_accept_impl
+
+;-------------------------------------------------------------------------
 ; F_close: Closes an open stream.
 ; Syntax is %close stream
 F_close

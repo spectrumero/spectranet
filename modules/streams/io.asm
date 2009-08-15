@@ -23,11 +23,12 @@
 ; IO routines for streams
 J_modcall
 	call F_fetchpage	; get our memory page
+	bit 6, l		; Control stream?
+	jp nz, F_ctrlstream
 	bit 7, l		; MSB set?
 	jr nz, F_input		; Call the input routine
 	call F_feedbuffer	; Pass writes to the buffer
 	jp F_leave
-
 
 ;----------------------------------------------------------------------------
 ; F_input
@@ -206,4 +207,35 @@ F_debugA
 	pop de
 	ret
 
+;--------------------------------------------------------------------------
+; F_ctrlstream
+; Handle a control stream (read only) - at the moment, only listening
+; sockets.
+F_ctrlstream
+	ld a, l			; convert the function
+	and 0x0F		; number to the stream number
+	rlca
+	rlca
+	rlca			; LSB of control stream metadata
+	ld h, 0x10		; MSB of metadata
+	add a, 4		; A=LSB of fd
+	ld l, a
+	ld a, (hl)		; get the socket descriptor
+	
+	call POLLFD		; Poll this fd and see if it's ready
+	
+	ld hl, ZX_TV_FLAG	; the mode is considered unchanged
+	res 3, (hl)
+
+	jr z, .nodata		; Socket has no events
+
+	ld a, '1'		; indicate event
+	ld l, 1			; signal "don't munge the stack"
+	scf			; signal 'character available'
+	ret
+	
+.nodata
+	xor a			; carry and zero reset - no data
+	ld l, 1			; signal "don't munge the stack"
+	jp F_leave
 

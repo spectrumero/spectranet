@@ -40,7 +40,7 @@ F_init
         call PRINT42
         ret
 
-NUMCMDS		equ 2
+NUMCMDS		equ 4
 STREAMPAGE	equ 0xFF		; This ROM
 PARSETABLE
 P_connect	defb	0x0b
@@ -53,6 +53,19 @@ P_close		defb	0x0b
 		defb	STREAMPAGE
 		defw	F_close
 
+P_listen	defb	0x0b
+		defw	CMD_LISTEN
+		defb	STREAMPAGE
+		defw	F_listen
+
+P_accept	defb	0x0b
+		defw	CMD_ACCEPT
+		defb	STREAMPAGE
+		defw	F_accept
+
+
 CMD_CONNECT	defb	"%connect",0
 CMD_CLOSE	defb	"%close",0
+CMD_LISTEN	defb	"%listen",0
+CMD_ACCEPT	defb	"%accept",0
 

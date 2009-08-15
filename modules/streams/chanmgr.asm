@@ -121,6 +121,7 @@ F_connect_impl
 
 .nobufcleanup
 	ld a, (INTERPWKSPC+4)		; get the socket number back
+NOBUFCLEANUP
 	call CLOSE			; and close it
 	ld a, (v_bcsave)		; clear down our data structure
 	rlca
@@ -167,6 +168,123 @@ F_close_impl
 	ld hl, STR_closeerr
 	jp REPORTERR
 
+;------------------------------------------------------------------------
+; F_listen_impl
+; Implementation of the listen command
+; Arguments on the stack: port number, channel number
+F_listen_impl
+	call F_fetchpage		; fetch our memory
+	call c, F_allocpage
+	jr c, .memerr			; one already
+
+	pop bc				; Get stream number
+	ld (v_bcsave), bc		; save it
+
+	; create the socket and make it listen.
+	ld c, SOCK_STREAM
+	call SOCKET
+	jr c, .sockerr
+	ld (INTERPWKSPC), a		; save the socket number
+	pop de				; get the port number
+	call BIND			; and bind to the socket
+	jr c, .sockerr
+	ld a, (INTERPWKSPC)		; fd
+	call LISTEN			; make it listen
+	jr c, .sockerr
+
+	; a listening socket has been created - now create the BASIC
+	; structures
+	ld a, (v_bcsave)		; create the metadata and buffers
+	rlca				; multiply by 8
+	rlca
+	rlca
+	ld h, 0x10			; Address 0x10xx
+	add a, 4			; A=LSB of fd storage
+	ld l, a
+
+	; a listen socket doesn't have buffers, just store the
+	; fd in the first byte of this stream's area
+	ld a, (INTERPWKSPC)		; get the socket descriptor
+	ld (hl), a
+
+	ld a, (v_bcsave)		; get the channel number
+	call F_createchan		; Create/open channel and stream
+	set 6, (ix+IORCHAN)		; set "control channel flag"
+	set 6, (ix+IOWCHAN)
+	call F_leave
+	jp EXIT_SUCCESS
+.sockerr
+	pop bc				; fix the stack
+	call F_leave
+	ld hl, STR_sockerr
+	jp REPORTERR
+.memerr
+	pop bc				; fix the stack
+	pop bc
+	ld hl, STR_nomem
+	jp REPORTERR			; Report "Out of memory"
+
+;------------------------------------------------------------------------
+; F_accept_impl
+; Accepts an incoming connection
+F_accept_impl
+	call F_fetchpage
+
+	pop bc				; Get stream number
+	ld (v_bcsave), bc		; save it
+
+	pop bc				; get the stream to accept
+	ld a, c
+	rlca				; get a pointer to the
+	rlca				; listening stream's metadata
+	rlca
+	add a, 4			; point at the listening fd
+	ld h, 0x10
+	ld l, a				; form the pointer in HL
+	ld a, (hl)			; get the fd and try to accept
+	call ACCEPT
+	jr c, .sockerr
+	ld (INTERPWKSPC), a		; save the fd
+
+	; Now create the metadata for this socket - like with connect,
+	; we need a BASIC channel and a read and write buffer
+	ld a, (v_bcsave)		; get the channel number
+	call F_createchan		; Create/open channel and stream
+
+	ld a, (v_bcsave)		; get the stream for the accepted skt
+	rlca				; multiply by 8
+	rlca
+	rlca
+	ld h, 0x10			; Address 0x10xx
+	ld l, a
+
+	call F_findfreebuf		; create a write buffer
+	jr c, .nobufcleanup
+	ld (hl), a			; save the buffer number
+	inc l
+	call F_findfreebuf		; create a read buffer
+	jr c, .nobufcleanup
+	ld (hl), a
+	inc l
+
+	ld (hl), 0			; Set write buffer pointer
+	inc l
+	ld (hl), 0			; Set read buffer pointer
+	inc l				; Next address is the FD
+	ld a, (INTERPWKSPC)
+	ld (hl), a			; store the FD
+
+	call F_leave			; restore memory page A
+	jp EXIT_SUCCESS
+.sockerr
+	ld hl, STR_sockerr
+	jp REPORTERR
+.memerr
+	ld hl, STR_nomem
+	jp REPORTERR
+.nobufcleanup
+	ld a, (INTERPWKSPC)		; clean up the socket
+	jp NOBUFCLEANUP
 
 ;------------------------------------------------------------------------
 ; F_createchan
@@ -236,6 +354,7 @@ IOWCHAN	equ ($+1)-IOROUTINE		; the byte to modify
 	ret
 IOWROUTINE_LEN	equ $-IOROUTINE
 
+IORROUTINE
 	ld h, STREAM_ROM_ID
 IORCHAN equ ($+1)-IOROUTINE
 	ld l, 0
@@ -252,4 +371,5 @@ IORCHAN equ ($+1)-IOROUTINE
 
 IOROUTINE_LEN 	equ $-IOROUTINE
 CHAN_LEN	equ (IOROUTINE_LEN * 2) + 5
+IORROUTINE_LEN	equ $-IORROUTINE
 
