@@ -31,15 +31,18 @@
 ; temporary!
 	define SOCK_DGRAM 2
 	define SOCK_STREAM 1
+UTILROM equ     0x02                    ; ROM page number
+
 	org 0x2000
 	include "utilromvectors.asm"	; Utility ROM vector table
 	include "inetinit.asm"		; Initializes inet settings
+	include "utility_impl.asm"	; utility functions
 	include "dhcpclient.asm"	; DHCP client
 	include "utilnmi.asm"		; NMI handler
 	include "utilnmi_es.asm"	; mesa de los strings en español
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"
-	include "sysvars.sym"
+;	include "sysvars.sym"
 	include "flashconf.asm"		; defines for configuration memory
 CONFIGUTIL_START
 	incbin "configutilrom_es.out"	; Configuration utility image

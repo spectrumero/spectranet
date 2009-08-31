@@ -30,6 +30,7 @@
 ;
 ; Until w5100_defines is changed to be equ instead of defines, this should
 ; be included before any of the network library code.
+UTILROM	equ 0x02
 
 	; Routines for ROM page 0 (chip 0 page 0, lower fixed page)
 	include "zeropage.asm"		; Restarts
@@ -68,4 +69,6 @@
 	include "zxromcalls.asm"	; Defines entry points into the ZX ROM
 	include "zxsysvars.asm"		; Defines for system vars and IO ports
 	include "datarom.sym"		; Addresses of bits of data
+	include "impl.sym"		; Addresses of functions we need
+
 

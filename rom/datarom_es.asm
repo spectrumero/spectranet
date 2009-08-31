@@ -27,9 +27,13 @@
 ;	include "ui_lookup.asm"
 	include "ui_charset.asm"
 	include "ui_keyscan.asm"
+	include "ui_output.asm"
+	include "sysvars.sym"
 ROMMODCONF_START
 	incbin "rommodconfig_es.out"
 ROMMODCONF_END
+	block 0x1FD5-$,0xFF
+	include "ui_lookup.asm"
 
 ; Note that the jump table gets included at 0x1F00 when the ROM image
 ; is built.

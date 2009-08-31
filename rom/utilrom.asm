@@ -31,10 +31,12 @@
 ; temporary!
 	define SOCK_DGRAM 2
 	define SOCK_STREAM 1
+UTILROM	equ	0x02			; ROM page number
 
 	org 0x2000
 	include "utilromvectors.asm"	; utility ROM vector table
 	include "inetinit.asm"		; Initializes inet settings
+	include "utility_impl.asm"	; Utility functions
 	include "dhcpclient.asm"	; DHCP client
 	include "utilnmi.asm"		; NMI handler
 	include "utilnmi_en.asm"	; English string table

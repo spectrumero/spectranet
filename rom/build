@@ -1,9 +1,8 @@
 #!/bin/sh
 # note, the order of ASMSOURCES is important.
 ASMSOURCES=( sysvars rommodconfig_en rommodconfig_es datarom datarom_es \
-             rom jumptable  \
-	     configutilrom configutilrom_es \
-	     configutil utilrom utilrom_es tnfs \
+             configutilrom configutilrom_es configutil utilrom utilrom_es \
+             rom jumptable tnfs \
 	     romimage romimage_es romprog \
 	     romprog_es )
 
@@ -32,6 +31,12 @@ do
       cat .output
       echo
       exit
+   fi
+
+   # should we generate the table ROM functions?
+   if [ "$src" == "utilrom" ]; then
+      echo "Generating dependent function symbol table for rom..."
+      grep u_impl utilrom.sym >impl.sym
    fi
 done
 

@@ -337,3 +337,31 @@ F_freedirhnd
 	ld (hl), 0
 	pop hl
 	ret
+
+;-----------------------------------------------------------------------
+; F_resolvemp
+; Resolve the mount point from a path.
+; The symbolic mount point can be 0:, 1:, 2:, 3:. Basically, the pattern
+; is ^[0-3]: in regexp terms.
+; HL = pointer to the string.
+; Returns with A = mount point handle.
+;F_resolvemp
+;	push hl
+;	inc hl			; check for the :
+;	ld a, (hl)
+;	cp ':'
+;	jr nz, .returncurrent	; Return the current mount point.
+;	dec hl
+;	ld a, (hl)		; Get the putative FS number
+;	sub a, '0'		; Subtract ascii '0' to make the actual number
+;	jr c, .returncurrent
+;	cp 4			; Greater than 3?
+;	jr nc, .returncurrent
+;	pop hl
+;	ret
+
+;.returncurrent
+;	pop hl
+;	ld a, (v_vfs_curmount)
+;	ret
+
