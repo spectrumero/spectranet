@@ -83,8 +83,10 @@ F_tnfs_strcat
 ;		DE = pointer to a buffer to store the resulting path
 ; On return DE points to the end of the new string.
 F_tnfs_abspath
-	ld a, (hl)		; is it already an absolute path?
-	cp '/'
+	ld a, (hl)		
+	and a			; Empty string?
+	jr z, .donothing	; Do nothing. 
+	cp '/'			; Absolute path?
 	ld b, 255
 	jp z, F_tnfs_strcpy	; yes, so just copy it verbatim.
 
@@ -133,6 +135,13 @@ F_tnfs_abspath
 	and a			; hit the NULL at the end?
 	ret z			; all done
 	jr .copypath
+
+.donothing			; simply advance DE to the end of
+	ld a, (de)		; the current path string
+	and a
+	ret z
+	inc de
+	jr .donothing
 
 .addnull
 	xor a
