@@ -36,7 +36,6 @@ F_settrap
 	ld hl, INTERPWKSPC	; try to open the file
 	ld d, 0x00		; no flags
 	ld e, O_RDONLY		; read only
-	ld a, (v_vfs_curmount)	; mount point
 	call OPEN
 	ret c			; exit now on error
 	ld (v_trapfd), a	; save the file descriptor

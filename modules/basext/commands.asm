@@ -93,7 +93,6 @@ F_tbas_mount
 .mount
 	ld ix, INTERPWKSPC		; mount structure address
 	xor a				; TODO: More mount points
-	ld (v_vfs_curmount), a
 	call MOUNT
 	jp c, J_tbas_error		; display the error message
 
@@ -143,7 +142,6 @@ F_tbas_chdir
 	ld hl, INTERPWKSPC
 	call F_basstrcpy		; convert to a C string
 	ld hl, INTERPWKSPC
-	ld a, (v_vfs_curmount)
 	call CHDIR
 	jp c, J_tbas_error		; carry set = error
 	jp EXIT_SUCCESS
@@ -329,7 +327,6 @@ F_tbas_ls
 	ld (INTERPWKSPC+1), a
 	ld hl, INTERPWKSPC
 .makecat
-	ld a, (v_vfs_curmount)
 	call OPENDIR			; open the directory
 	jp c, J_tbas_error
 	ld (v_vfs_dirhandle), a		; save the directory handle

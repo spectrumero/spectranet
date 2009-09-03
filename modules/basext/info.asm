@@ -64,7 +64,6 @@ F_showfileinfo
 
 	; Now see if it's a TAP file, in which case more information
 	; can be given. This means opening and reading the file.
-	ld a, (v_vfs_curmount)
 	ld hl, INTERPWKSPC	; filename
 	ld d, 0x00		; flags
 	ld e, O_RDONLY		; read only

@@ -32,7 +32,6 @@ F_tbas_readrawfile
 	push de			; save pointer
 	ld e, O_RDONLY		; LOADing is read only
 	ld d, 0x00		; No file flags
-	ld a, (v_vfs_curmount)	; mount point
 	call OPEN		; Filename pointer is already in HL
 	pop de
 	ret c
@@ -66,7 +65,6 @@ F_tbas_loader
 	ld (v_desave), de	; save address
 	ld e, O_RDONLY		; Open file read only
 	ld d, 0x00		; with no flags
-	ld a, (v_vfs_curmount)	; mount point
 	call OPEN
 	ret c			; return if the open operation fails
 	ld (v_tnfs_curfd), a	; save the returned filehandle
@@ -279,7 +277,6 @@ F_tbas_writefile
 	ld hl, INTERPWKSPC+21	; Open the file for write (the full C string
 	ld e, O_WRONLY		; for the filename is in mem after the header)
 	ld d, O_CREAT		; flags = CREATE
-	ld a, (v_vfs_curmount)	; mount point
 	call OPEN		; Open the file.
 	ret c
 	ld (v_tnfs_curfd), a	; store the file descriptor
