@@ -26,11 +26,11 @@
 ;---------------------------------------------------------------------------
 ; F_tbas_mount
 ; BASIC interpreter for "mount"
-; Syntax: %mount "user", "passwd", "host", "/path/to/mountpoint"
+; Syntax: %mount mountpoint, "url"
 F_tbas_mount
 	; Syntax and runtime
 	rst CALLBAS
-	defw ZX_EXPT_EXP		; string parameter - user
+	defw ZX_EXPT1_NUM
 	cp ','				; comma
 	jp nz, PARSE_ERROR
 	rst CALLBAS
@@ -38,65 +38,38 @@ F_tbas_mount
 
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; string parameter - passwd
-	cp ','				; comma
-	jp nz, PARSE_ERROR
-	rst CALLBAS
-	defw ZX_NEXT_CHAR
-
-	rst CALLBAS
-	defw ZX_EXPT_EXP		; string parameter - host
-	cp ','				; comma
-	jp nz, PARSE_ERROR
-	rst CALLBAS
-	defw ZX_NEXT_CHAR
-
-	rst CALLBAS
-	defw ZX_EXPT_EXP		; string parameter - path
 
 	call STATEMENT_END		; followed by statement end
 
 	; -------- Runtime only ---------
-	ld de, INTERPWKSPC+10		; where to put the strings
-	ld (INTERPWKSPC), de		; set pointer
-	ld hl, STR_proto		; TODO: take multiple protos
-	ld bc, 5			; length of "tnfs",0
+	ld hl, INTERPWKSPC		; clear space for the
+	ld de, INTERPWKSPC+1		; mount argument structure
+	ld bc, 9
+	ld (hl), 0
 	ldir
-	ex de, hl
 
-	push hl
 	rst CALLBAS
 	defw ZX_STK_FETCH		; path string
-	pop hl
-	ld (INTERPWKSPC+4), hl		; pointer to path string
+	ld hl, INTERPWKSPC+10
 	call F_basstrcpy		; copy string from BASIC
+	ld ix, INTERPWKSPC		; where to place the mount struct
+	ld hl, INTERPWKSPC+10		; location of the string to parse
+	call F_parseurl
+	jr c, .badurl
+
+	rst CALLBAS			; fetch the mount point
+	defw ZX_FIND_INT2
 	
-	push hl
-	rst CALLBAS
-	defw ZX_STK_FETCH
-	pop hl
-	ld (INTERPWKSPC+2), hl		; hostname
-	call F_basstrcpy		; copy the string
-
-	push hl
-	rst CALLBAS
-	defw ZX_STK_FETCH
-	pop hl
-	ld (INTERPWKSPC+8), hl		; passwd
-	call F_basstrcpy		; copy the hostname
-
-	push hl
-	rst CALLBAS
-	defw ZX_STK_FETCH
-	pop hl
-	ld (INTERPWKSPC+6), hl		; username
-	call F_basstrcpy		; done!
 .mount
-	ld ix, INTERPWKSPC		; mount structure address
-	xor a				; TODO: More mount points
+	ld a, c				; mount point in BC
 	call MOUNT
 	jp c, J_tbas_error		; display the error message
 
 	jp EXIT_SUCCESS
+
+.badurl
+	ld a, EBADURL
+	jp J_tbas_error
 
 	; Copy a BASIC string to a C string.
 	; BASIC string in DE, C string (dest) in HL
@@ -469,7 +442,9 @@ STR_BADLENGTH	defb	"Incorrect header length",0		; 0x24
 STR_BADTYPE	defb	"Incorrect block type",0		; 0x25
 STR_UNKTYPE	defb	"Unknown file type",0			; 0x26
 STR_MISMCHLEN	defb	"Data block length mismatch",0		; 0x27
+STR_EBADURL	defb	"Bad URL",0				; 0x28
 
 ERR_TABLE_END
 STR_UNKNOWN	defb	"Unknown error",0
 
+EBADURL		equ	0x28

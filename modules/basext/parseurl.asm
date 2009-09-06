@@ -157,3 +157,6 @@ F_findhost
 	inc hl
 	jr .loop
 
+STR_defaulttype
+	defb "tnfs",0
+deftypelen equ 5
