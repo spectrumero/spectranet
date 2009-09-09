@@ -25,13 +25,14 @@
 ;--------------------------------------------------------------------------
 ; F_tnfs_open
 ; Opens a file on the remote server.
-; Arguments	
+; Arguments	A  - mount point	
 ;		D  - File flags (POSIX)
 ;		E  - File mode (POSIX)
 ;		HL - Pointer to a string containing the full path to the file
 F_tnfs_open
 	call F_fetchpage
 	ret c
+	ld (v_curmountpt), a
 
 	push hl			; save filename pointer
 	push de			; and flags
@@ -61,6 +62,9 @@ F_tnfs_open
 	ld h, HANDLESPACE / 256	; now save the TNFS handle
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
 	ld (hl), a		; in our sysvars area.
+	inc h			; point at handle metadata
+	ld a, (v_curmountpt)
+	ld (hl), a
 	ld a, l			; FD is in L, needs to be returned in A
 	jp F_leave
 .nofds
@@ -102,8 +106,11 @@ F_tnfs_read
 	call F_tnfs_header_w
 	ex af, af'		; get the FD back
 	ld e, a			; get the address of the TNFS handle
-	ld d, HANDLESPACE / 256
-	ld a, (de)		; get the TNFS handle
+	ld d, HMETASPACE / 256	; get the mountpoint number
+	ld a, (de)		; and store it
+	ld (v_curmountpt), a	; in the curmountpt var
+	dec d			; point at the fd storage
+	ld a, (de)		; and fetch the fd
 	ld (hl), a		; add it to the request
 	inc hl
 	ld (hl), c		; add the length to the request
@@ -161,8 +168,11 @@ F_tnfs_write
 	call F_tnfs_header_w
 	ex af, af'
 	ld e, a			; get the TNFS handle for the file descriptor
-	ld d, HANDLESPACE / 256
+	ld d, HMETASPACE / 256	; get the FS number
 	ld a, (de)
+	ld (v_curmountpt), a
+	dec d			; point at the handle storage...
+	ld a, (de)		; and get it.
 	ld (hl), a		; insert the TNFS handle
 	inc hl
 	ld (hl), c		; insert LSB of size
@@ -196,7 +206,10 @@ F_tnfs_close
 	ld a, TNFS_OP_CLOSE
 	call F_tnfs_header_w
 	ld e, b			; make address of TNFS handle
-	ld d, HANDLESPACE / 256
+	ld d, HMETASPACE / 256
+	ld a, (de)		; get the filesystem mount point
+	ld (v_curmountpt), a	
+	dec d			; point at the handle storage
 	ld a, (de)		; get the TNFS handle
 	ld (hl), a		; insert it into the message
 	inc hl
@@ -220,6 +233,7 @@ F_tnfs_close
 F_tnfs_stat
 	call F_fetchpage
 	ret c
+	ld (v_curmountpt), a	; save the mount point
 
 	push de
 	ld a, TNFS_OP_STAT
@@ -259,7 +273,10 @@ F_tnfs_lseek
 	call F_tnfs_header_w	; Create the header in workspace
 	ex af, af'
 	ld e, a			; get the TNFS handle
-	ld d, HANDLESPACE / 256
+	ld d, HMETASPACE / 256	; find the filesystem number
+	ld a, (de)
+	ld (v_curmountpt), a
+	dec d			; find the tnfs handle
 	ld a, (de)
 	ld (hl), a		; Set the TNFS handle
 	pop de			
@@ -278,7 +295,7 @@ F_tnfs_lseek
 ; Unlink (delete) a file.
 ; Parameters		HL = pointer to filename
 F_tnfs_unlink
-	ld a, TNFS_OP_UNLINK
+	ld b, TNFS_OP_UNLINK
 	jp F_tnfs_simplepathcmd
 
 ;---------------------------------------------------------------------------
@@ -290,6 +307,8 @@ F_tnfs_unlink
 F_tnfs_chmod
 	call F_fetchpage
 	ret c
+
+	ld (v_curmountpt), a	; filesystem in use
 	ld a, TNFS_OP_CHMOD
 	push hl
 	push de

@@ -128,15 +128,14 @@ v_dhcplease	defb 0,0,0,0	; lease in seconds
 v_nspointer	defw 0		; nameserver address pointer
 
 ; TNFS/VFS system variables
-v_tnfssock	defb 0		; socket descriptor
-v_tnfssockinfo	defb 0,0,0,0,0,0,0,0	; server address/port
-v_tnfs_sid	defw 0		; session identifier
-v_tnfs_seqno	defb 0		; sequence number
-v_tnfs_curfd	defb 0		; filehandle for current file IO operation
 v_vfs_curmount	defb 0		; mount point currently in use
 v_vfs_dirhandle	defb 0		; current directory handle in use
+v_vfs_curfd	defb 0		; current file handle in use
 v_trapfd	defb 0		; current tape trap fd
 v_trap_blklen	defw 0		; block length of next block
+v_vfs_sockinfo	defw 0,0	; IP of last received packet
+		defw 0		; source port
+		defw 0		; dest port
 
 ; ZX state storage
 v_bankm		defb 0		; saved state of BANKM

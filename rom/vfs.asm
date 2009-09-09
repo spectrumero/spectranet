@@ -226,6 +226,7 @@ F_mount
 	jr nz, .testnext
 	ld de, .return		; simulate CALL instruction with JP (HL)
 	push de
+	ld a, (v_mountnumber)
 	jp (hl)
 .return
 	jr c, .mountfailed	; Tried but failed to mount?

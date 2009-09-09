@@ -31,6 +31,8 @@
 	include "tnfs_file.asm"		; File operations
 	include "tnfs_directory.asm"	; Directory operations
 
+	include "../modules/basext/regdump.asm"
+
 	; definitions
 	include "spectranet.asm"	; Base ROM definitions
 	include "sysvars.asm"		; Base system variables

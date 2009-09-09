@@ -32,6 +32,8 @@ F_tnfs_opendir
 	call F_fetchpage		; get our sysvars at 0x1000
 	ret c
 
+	ld (v_curmountpt), a		; save the mount point in use
+
 	ld a, TNFS_OP_OPENDIR
 	call F_tnfs_pathcmd		; send command, get reply
 	jp c, F_leave			; return on network error
@@ -47,6 +49,9 @@ F_tnfs_opendir
 	ld h, HANDLESPACE / 256		; create our private sysvar addr
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
 	ld (hl), a			; save TNFS handle
+	inc h				; point at metadata storage
+	ld a, (v_curmountpt)		; and save the mount point
+	ld (hl), a
 	ld a, l				; move dirhandle into A
 	jp F_leave			; return the directory handle
 .cleanupandexit
@@ -75,6 +80,9 @@ F_tnfs_readdir
 	ld l, a				; get the TNFS handle address
 	ld h, HANDLESPACE / 256
 	ld b, (hl)			; get the TNFS handle
+	inc h				; point at handle metadata
+	ld a, (hl)			; get the mountpoint
+	ld (v_curmountpt), a
 	push de
 	ld a, TNFS_OP_READDIR
 	call F_tnfs_header_w		; create the header
@@ -107,6 +115,9 @@ F_tnfs_closedir
 	ld l, a				; get the handle address
 	ld h, HANDLESPACE / 256
 	ld b, (hl)			; and fetch the TNFS handle
+	inc h
+	ld a, (hl)			; get the mount point
+	ld (v_curmountpt), a
 	ld a, TNFS_OP_CLOSEDIR
 	call F_tnfs_header_w
 	ld (hl), b			; message is just the dirhandle
@@ -131,6 +142,7 @@ F_tnfs_chdir
 	ret c
 
 	push hl
+	ld (v_curmountpt), a	; set the mount point being worked upon
 	ld a, TNFS_OP_STAT	
 	call F_tnfs_pathcmd	; stat the path
 	jr c, .error		; stat returned an error
@@ -139,7 +151,11 @@ F_tnfs_chdir
 	and (hl)		; AND it all together...
 	jr z, .notadir		; ...if zero, it wasn't a directory.
 	pop hl
-	ld de, v_cwd		; copy the path as the new working directory
+
+	ld a, (v_curmountpt)
+	add v_cwd0 / 256	; add the MSB of the CWD storage
+	ld d, a			; DE = pointer to this mount point's CWD
+	ld e, 0			; copy the directory we just got
 	call F_tnfs_abspath	; as an absolute path.
 	jp F_leave
 .notadir
@@ -155,7 +171,7 @@ F_tnfs_chdir
 ; Parameters		HL = pointer to directory name
 ; Returns with carry set on error and A=error code.
 F_tnfs_mkdir
-	ld a, TNFS_OP_MKDIR
+	ld b, TNFS_OP_MKDIR
 	jp F_tnfs_simplepathcmd
 
 ;------------------------------------------------------------------------
@@ -164,5 +180,5 @@ F_tnfs_mkdir
 ; Parameters		HL = pointer to the directory
 ; Returns with carry set on error and A=error code.
 F_tnfs_rmdir
-	ld a, TNFS_OP_RMDIR
+	ld b, TNFS_OP_RMDIR
 	jp F_tnfs_simplepathcmd

@@ -34,6 +34,15 @@ F_init
         ld l, a
         ld a, b
         ld (hl), a              ; put the page number in byte 0 of this area.
+
+	call F_fetchpage
+	ld hl, 0x1000
+	ld de, 0x1001
+	ld bc, 0xFFF
+	ld (hl), l
+	ldir
+	call F_restorepage
+	
         ld hl, STR_init
         call PRINT42
         ret

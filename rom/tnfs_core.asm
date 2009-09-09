@@ -81,6 +81,7 @@ F_tnfs_strcat
 ; Make an absolute path from a supplied relative path.
 ; Parameters	HL = pointer to path string
 ;		DE = pointer to a buffer to store the resulting path
+; In use mountpoint must be in v_curmountpt
 ; On return DE points to the end of the new string.
 F_tnfs_abspath
 	ld a, (hl)		
@@ -92,7 +93,10 @@ F_tnfs_abspath
 
 	push hl
 	ld (v_desave), de	; save start of buffer
-	ld hl, v_cwd		; first copy the working directory
+	ld a, (v_curmountpt)	; get the mount point we're working on
+	add v_cwd0 / 256	; calculate the MSB
+	ld h, a
+	ld l, 0			; set HL to the cwd
 .cploop
 	ld a, (hl)
 	and a			; zero?
@@ -214,8 +218,17 @@ F_tnfs_abspath
 ; Creates a TNFS header at a fixed address, buf_tnfs_wkspc, with the
 ; extant session id
 F_tnfs_header_w
+	push af
+	ld a, (v_curmountpt)	; find the SID for this mount point
+	rlca			; mutiply by two
+	add v_tnfs_sid0 % 256	; and add the offset
+	ld h, v_tnfs_sid0 / 256	; set HL = pointer to SID
+	ld l, a
+	ld e, (hl)		; set DE to the SID
+	inc l
+	ld d, (hl)
 	ld hl, buf_tnfs_wkspc
-	ld de, (v_tnfs_sid)
+	pop af
 ; F_tnfs_header
 ; Creates a TNFS header. Session ID in DE. Command in A. HL is a pointer
 ; to the buffer to fill.
@@ -226,10 +239,14 @@ F_tnfs_header
 	ld (hl), d
 	inc hl
 	push af
-	ld a, (v_tnfs_seqno)
+	ld a, (v_curmountpt)	; calculate the sequence number storage
+	add v_tnfs_seqno0 % 256
+	ld e, a
+	ld d, v_tnfs_seqno0 / 256
+	ld a, (de)
 	inc a			; pre-increment the sequence number
 	ld (hl), a
-	ld (v_tnfs_seqno), a	; so that the seqno in memory = current seq
+	ld (de), a		; so that the seqno in memory = current seq
 	pop af
 	inc hl
 	ld (hl), a		; command
@@ -242,19 +259,32 @@ F_tnfs_header
 ; Returns with carry set and A=error on error.
 ; HL=pointer to 4 byte IP address
 F_tnfs_opensock
-	ld de, v_tnfssockinfo	; copy IP address information into sock
-	ldi			; info structure.
+	ld a, (v_curmountpt)	; calculate the offset to the socket info
+	rlca			; multiply by 8
+	rlca
+	rlca
+	add v_tnfs_sockinfo0 % 256
+	ld e, a			; set DE to the address of the sockinfo
+	ld d, v_tnfs_sockinfo0 / 256
+	
+	ldi			; copy the IP data into the
+	ldi			; sockinfo structure.
 	ldi
 	ldi
-	ldi
-	ld hl, 16384		; dest port
-	ld (v_tnfssockinfo+4), hl
-	ld hl, 0x7890		; blank source port
-	ld (v_tnfssockinfo+6), hl
-	ld c, SOCK_DGRAM
+	ex de, hl
+	ld (hl), 0x00		; dest port = 16384
+	inc l
+	ld (hl), 0x40
+	inc l
+	ld a, (v_curmountpt)
+	ld (hl), a		; LSB of source port = mount point
+	inc l
+	ld (hl), 0x78		; MSB of source port
+
+	ld c, SOCK_DGRAM	; Request a datagram socket.
 	call SOCKET		; open a UDP socket.
 	ret c
-	ld (v_tnfssock), a
+	ld (v_tnfs_sock), a
 	ret
 
 ;------------------------------------------------------------------------
@@ -276,10 +306,16 @@ F_tnfs_message
 	ld (v_tnfs_retriesleft), a	; into memory
 
 .retryloop
-	ld a, (v_tnfssock)	; socket descriptor
-	ld hl, v_tnfssockinfo	; info structure
+	ld a, (v_curmountpt)	; current mount point
+	rlca			; multiply by 8 to find the sockinfo
+	rlca
+	rlca
+	add v_tnfs_sockinfo0 % 256	; LSB
+	ld h, v_tnfs_sockinfo0 / 256	; MSB
+	ld l, a
 	push de			; stack the parameters
 	push bc
+	ld a, (v_tnfs_sock)	; socket descriptor
 	call SENDTO		; send the data
 	jr nc, .pollstart
 	pop bc			; error, leave now after restoring stack
@@ -304,15 +340,21 @@ F_tnfs_message
 .continue
 	pop bc			; restore stack
 	pop de
-	ld a, (v_tnfssock)
-	ld hl, v_tnfssockinfo	; current connection info
+	
+	ld hl, v_vfs_sockinfo	; Address to receive remote datagram IP/port
 	ld de, tnfs_recv_buffer	; Address to receive data
 	ld bc, 1024		; max message size
+	ld a, (v_tnfs_sock)	; The tnfs socket
 	call RECVFROM
 	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
+
 	push bc
 	ld b, a
-	ld a, (v_tnfs_seqno)
+	ld a, (v_curmountpt)	; find the sequence number storage
+	add v_tnfs_seqno0 % 256
+	ld l, a
+	ld h, v_tnfs_seqno0 / 256
+	ld a, (hl)
 	cp b			; sequence number match? if not
 	pop bc
 	jr nz, .pollstart	; see if the real message is still to come
@@ -326,7 +368,7 @@ F_tnfs_poll
 	ld bc, tnfs_polltime
 .loop
 	push bc
-	ld a, (v_tnfssock)
+	ld a, (v_tnfs_sock)
 	call POLLFD
 	pop bc
 	ret nz			; done - fd is ready
@@ -342,7 +384,7 @@ F_tnfs_poll
 ; Ask if a volume is mounted. Returns with carry reset if so, and
 ; carry set if not, with A set to the error number.
 F_tnfs_mounted
-	ld a, (v_tnfssock)
+	ld a, (v_tnfs_sock)
 	and a
 	ret nz			; valid handle exists, return
 	scf			; no valid handle - set carry flag
@@ -365,9 +407,13 @@ F_tnfs_pathcmd
 	ret
 
 ; As above but handles the return code too.
+; A = current mount point
+; B = command
 F_tnfs_simplepathcmd
 	call F_fetchpage
 	ret c
+	ld (v_curmountpt), a
+	ld b, a
 	call F_tnfs_pathcmd
 ; Entry point for simple exit handler
 F_tnfs_simpleexit

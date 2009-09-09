@@ -39,6 +39,7 @@
 ; Parameters:  H = High order of socket hardware register address
 ;             DE = Address of the buffer to fill.
 F_sockinfo
+	call F_checkpageA
 	ld l, Sn_DIPR0 % 256	; remote IP address register
 	ldi
 	ldi
@@ -60,6 +61,9 @@ F_sockinfo
 	inc de
 	ld a, (hl)
 	ld (de), a
+	ld a, (v_buf_pgb)
+	and a
+	jp nz, F_setpageB
 	ret
 
 ;========================================================================
@@ -69,6 +73,7 @@ F_sockinfo
 ; Parameters:  H = MSB of W5100 socket register area
 ;             DE = address of the 8 byte socket info structure.
 F_setsockinfo
+	call F_checkpageA
 	ex de, hl
 	ld e, Sn_DIPR0 % 256	; destination IP address
 	ldi
@@ -97,13 +102,13 @@ F_setsockinfo
 	dec de
 	ld a, (de)
 	ld (hl), a		; set LSB
-	ret
+	jr .leave
 .checkset
 	ld l, Sn_PORT0 % 256	; port MSB
 	ld a, (hl)
 	inc l			; port LSB
 	or (hl)			; is it zero?
-	ret nz			; no - nothing to do
+	jr nz, .leave		; no - nothing to do
 	ex de, hl		; yes - set the local port
 	ld hl, v_localport
 	ld e, Sn_PORT1 % 256	; set local port LSB
@@ -114,6 +119,10 @@ F_setsockinfo
 	inc hl
 	ld (v_localport), hl
 	ex de, hl
+.leave
+	ld a, (v_buf_pgb)
+	and a
+	jp nz, F_setpageB
 	ret
 
 ;---------------------------------------------------------------------------
@@ -124,7 +133,8 @@ F_setsockinfo
 F_remoteaddress
 	call F_gethwsock
 	jp c, J_leavesockfn	; invalid socket
-
+	
+	call F_checkpageA
 	inc de			; increment past int sin_family
 	inc de
 	ld l, Sn_DPORT1 % 256	; destination port LSB
@@ -137,5 +147,8 @@ F_remoteaddress
 	ldi	
 	ldi
 	ldi
+	ld a, (v_buf_pgb)
+	and a
+	call nz, F_setpageB
 	jp J_leavesockfn
 		

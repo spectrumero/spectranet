@@ -46,7 +46,7 @@ F_tnfs_mount
 	ld bc, 5
 .cploop
         ld a, (de)              ; Effectively this is a "strncmp" to check
-        cpi                     ; that the passed protocol is "dev" plus
+        cpi                     ; that the passed protocol is "tnfs" plus
         jp nz, .notourfs        ; a null.
         inc de
         jp pe, .cploop
@@ -100,12 +100,25 @@ F_tnfs_mount
 	ld a, (tnfs_recv_buffer + tnfs_err_offset)
 	and a			; zero = no error
 	jr nz, .mounterr	; clean up on error
+
 	ld hl, (tnfs_recv_buffer + tnfs_sid_offset)
-	ld (v_tnfs_sid), hl	; save the session identifier
-	ld a, '/'		; set the CWD to /
-	ld (v_cwd), a
-	xor a
-	ld (v_cwd+1), a
+	ld d, v_tnfs_sid0 / 256	; start with the lowest SID storage offset
+	ld a, (v_curmountpt)	; get the intended mount point number
+	rlca			; multiply by two
+	add v_tnfs_sid0 % 256	; calculate the offset
+	ld e, a			; DE = storage for the session id
+	ex de, hl
+	ld (hl), e		; save the session identifier
+	inc l
+	ld (hl), d
+
+	ld a, (v_curmountpt)	; now calculate the address of the CWD
+	add v_cwd0 / 256	; storage area (A=MSB)
+	ld h, a			; and point HL there
+	ld l, 0
+	ld (hl), '/'
+	inc l
+	ld (hl), 0
 
 	; set up mount point in VFS mount table
 	ld a, (v_curmountpt)	; get the mount point
@@ -119,7 +132,7 @@ F_tnfs_mount
 
 .mounterr
 	push af			; save the error code
-	ld a, (v_tnfssock)	; close the socket
+	ld a, (v_tnfs_sock)	; close the socket
 	call CLOSE
 	pop af
 	scf			; set the carry flag
@@ -133,6 +146,7 @@ STR_tnfstype defb "tnfs",0
 ; F_tnfs_umount
 ; Unmounts the TNFS filesystem and closes the socket.
 F_tnfs_umount
+	call F_fetchpage
 	ld a, TNFS_OP_UMOUNT
 	call F_tnfs_header_w		; create the header
 	call F_tnfs_message_w_hl	; not much to do here at all
@@ -140,13 +154,13 @@ F_tnfs_umount
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; no error?
 	jr nz, .error
-	ld a, (v_tnfssock)		; close the socket
+	ld a, (v_tnfs_sock)		; close the socket
 	call CLOSE
 	xor a
-	ld (v_tnfssock), a		; clear socket number
-	ld (v_tnfs_sid), a		; clear session id
-	ld (v_tnfs_sid+1), a
-	ret
+	ld (v_tnfs_sock), a		; clear socket number
+	;ld (v_tnfs_sid), a		; clear session id
+	;ld (v_tnfs_sid+1), a
+	jp F_leave
 .error
 	scf				; flag the error condition
-	ret
+	jp F_leave
