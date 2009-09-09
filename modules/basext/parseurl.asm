@@ -151,11 +151,21 @@ F_findhost
 .loop
 	ld a, (hl)
 	and a
-	jr z, J_notfound
+	jr z, .addpath
 	cp '/'
 	jr z, J_found
 	inc hl
 	jr .loop
+	
+	; if we hit the end of the string while parsing the hostname
+	; we can assume the user wants to mount the root.
+.addpath
+	inc hl
+	ld (hl), '/'
+	inc hl
+	ld (hl), 0
+	pop de
+	ret
 
 STR_defaulttype
 	defb "tnfs",0

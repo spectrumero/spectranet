@@ -69,7 +69,7 @@ F_showfileinfo
 	ld e, O_RDONLY		; read only
 	call OPEN
 	ret c			; failed top open the file!
-	ld (v_tnfs_curfd), a	; save the FD
+	ld (v_vfs_curfd), a	; save the FD
 
 .gethdrinfo
 	ld de, INTERPWKSPC	; we no longer need the filename
@@ -84,14 +84,14 @@ F_showfileinfo
 .getblocks
 	ld de, INTERPWKSPC
 	ld bc, 2		; read the length value
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	call READ
 	jr c, .cleanuperr	; shouldn't die here.
 
 	ld hl, (INTERPWKSPC)	; get the length of the block
 .seeknextblock
 	ld de, 0		; and make dehl = 32 bit version of it
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	ld c, SEEK_CUR		; and seek forwards that many bytes
 	call LSEEK
 	jr c, .cleanuperr
@@ -126,7 +126,7 @@ F_showfileinfo
 	jr .seeknextblock	; smaller than a standard header!
 
 .done
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	call CLOSE	
 	ret
 .nottap
@@ -136,7 +136,7 @@ F_showfileinfo
 	jr z, .data
 .cleanuperr
 	push af			; store original error
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	call CLOSE
 	pop af
 	ret

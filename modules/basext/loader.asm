@@ -35,19 +35,19 @@ F_tbas_readrawfile
 	call OPEN		; Filename pointer is already in HL
 	pop de
 	ret c
-	ld (v_tnfs_curfd), a	; save the filehandle
+	ld (v_vfs_curfd), a	; save the filehandle
 .readloop
-	ld a, (v_tnfs_curfd)	; restore filehandle
+	ld a, (v_vfs_curfd)	; restore filehandle
 	ld bc, 512		; read max 512 bytes
 	call READ
 	jr nc, .readloop	; keep going until nothing more can be read
 	cp EOF			; End of file?
 	jr nz, .failed		; No - something went wrong
-	ld a, (v_tnfs_curfd)	; Close the file
+	ld a, (v_vfs_curfd)	; Close the file
 	jp VCLOSE
 .failed
 	push af			; preserve return code
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	call VCLOSE		; close the file
 	pop af			; but let the earlier return code have
 	scf			; precedence over any errors that close throws
@@ -67,7 +67,7 @@ F_tbas_loader
 	ld d, 0x00		; with no flags
 	call OPEN
 	ret c			; return if the open operation fails
-	ld (v_tnfs_curfd), a	; save the returned filehandle
+	ld (v_vfs_curfd), a	; save the returned filehandle
 	ld de, INTERPWKSPC	; set destination pointer to workspace
 	call F_tbas_getheader	; Fetch the header
 	jp c, J_cleanuperror	; on error, clean up and return
@@ -80,7 +80,7 @@ F_tbas_loader
 	call F_tbas_loadbasic	; Load a BASIC program
 	jp c, J_cleanuperror	; handle errors
 .cleanup
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	call VCLOSE
 	ret
 .testcode
@@ -101,7 +101,7 @@ F_tbas_loader
 
 ;--------------------------------------------------------------------------
 ; F_tbas_getheader
-; Reads a block header into memory from the file handle in v_tnfs_curfd.
+; Reads a block header into memory from the file handle in v_vfs_curfd.
 ; Spectranet files are the same format as TAP files, so each block has
 ; a 2 byte length, followed by data. This function reads the length
 ; and places the complete header into the memory address specified 
@@ -109,7 +109,7 @@ F_tbas_loader
 ; number. On success, the file type is returned in A.
 F_tbas_getheader
 	push de			; save pointer
-	ld a, (v_tnfs_curfd)	; get the current file descriptor
+	ld a, (v_vfs_curfd)	; get the current file descriptor
 	ld bc, TNFS_HDR_LEN	; 19 bytes (length + ZX header block)
 	call READ
 	pop hl			; get the pointer back but in hl
@@ -142,13 +142,13 @@ F_tbas_getheader
 ; Loads a TAP block
 ; Parameters: DE = where to copy in memory
 ;	      BC = expected length
-;             v_tnfs_curfd contains the file descriptor
+;             v_vfs_curfd contains the file descriptor
 F_tbas_loadblock
 	push de			; save destination ptr
 	push bc			; save length
 	ld de, INTERPWKSPC	; get the length from TAP block
 	ld bc, 3		; 3 bytes long (length + flags)
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	call READ		; read the TAP header
 	pop bc			; get the length
 	pop de			; and destination pointer
@@ -161,7 +161,7 @@ F_tbas_loadblock
 	ld h, b			; copy length remaining into HL
 	ld l, c
 .loadloop
-	ld a, (v_tnfs_curfd)	; get file descriptor
+	ld a, (v_vfs_curfd)	; get file descriptor
 	push hl			; save length remaining
 	call READ
 	pop hl			; get current length back into HL
@@ -180,7 +180,7 @@ F_tbas_loadblock
 ; F_tbas_loadbasic
 ; Load a program written in BASIC.
 ; Parameters: IX points to the "tape" header (i.e. TAP block + 2)
-;             v_tnfs_curfd contains the file descriptor
+;             v_vfs_curfd contains the file descriptor
 ; Much of this is modelled on the ZX ROM loader.
 F_tbas_loadbasic
 	ld hl, (ZX_E_LINE)	; End marker of current variables area
@@ -279,7 +279,7 @@ F_tbas_writefile
 	ld d, O_CREAT		; flags = CREATE
 	call OPEN		; Open the file.
 	ret c
-	ld (v_tnfs_curfd), a	; store the file descriptor
+	ld (v_vfs_curfd), a	; store the file descriptor
 
 	ld hl, INTERPWKSPC+OFFSET_TYPE	; checksum the header
 	ld bc, ZX_HEADERLEN
@@ -287,7 +287,7 @@ F_tbas_writefile
 	call F_tbas_mkchecksum
 	ld (INTERPWKSPC+OFFSET_CHKSUM), a
 	ld hl, INTERPWKSPC	; write the 21 byte TAP block
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	ld bc, 21
 	call WRITE
 	jp c, J_cleanuperror
@@ -298,7 +298,7 @@ F_tbas_writefile
 	ld (INTERPWKSPC), hl	; create TAP header and ZX data block
 	ld a, 0xFF		; which consists of a 16 bit length 
 	ld (INTERPWKSPC+2), a	; followed by 0xFF
-	ld a, (v_tnfs_curfd)
+	ld a, (v_vfs_curfd)
 	ld hl, INTERPWKSPC
 	ld bc, 3
 
@@ -322,7 +322,7 @@ F_tbas_writefile
 .saveloop
 	push bc
 	push hl			; save current position and length
-	ld a, (v_tnfs_curfd)	; get file descriptor
+	ld a, (v_vfs_curfd)	; get file descriptor
 	call WRITE
 	pop hl			; retrieve start
 	pop de			; retrieve length
@@ -341,12 +341,12 @@ F_tbas_writefile
 	ld a, 0xFF		; start with 0xFF for data block
 	call F_tbas_mkchecksum
 	ld (INTERPWKSPC), a	; store result
-	ld a, (v_tnfs_curfd)	; TODO: checksum saving could do with
+	ld a, (v_vfs_curfd)	; TODO: checksum saving could do with
 	ld hl, INTERPWKSPC	; being optimized!
 	ld bc, 1
 	call WRITE
 	jp c, J_cleanuperror	
-	ld a, (v_tnfs_curfd)	; close the file.
+	ld a, (v_vfs_curfd)	; close the file.
 	call VCLOSE
 	ret
 .badtype
@@ -381,7 +381,7 @@ F_tbas_mkchecksum
 ; Generic 'clean up and leave'
 J_cleanuperror
 	push af			; save error code
-	ld a, (v_tnfs_curfd)	; and attempt to close the file
+	ld a, (v_vfs_curfd)	; and attempt to close the file
 	call VCLOSE
 	pop af			; restore error and return with it.
 	ret
