@@ -64,17 +64,18 @@ my $sock=IO::Socket::INET->new(LocalPort 	=> 16384,
 my $msg;
 my $port;
 my $ipaddr;
+my $hname;
 while($sock->recv($msg, $MAXSIZE))
 {
 	($port, $ipaddr) = sockaddr_in($sock->peername);
-	my $host = gethostbyaddr($ipaddr, AF_INET);
+	$hname=$sock->peerhost();
 
 	my ($session, $retry, $cmd)=unpack("SCC", $msg);
 	my $payload=substr($msg, 4);
 
 	if($cmd != 0x00 && $ipaddr ne $SESSION{$session})
 	{
-		printf("$host: Session ID %x invalid\n", $session);
+		printf("$hname: Session ID %x invalid\n", $session);
 		sendMsg(0x00, $cmd, 0xFF);
 		next;
 	}
@@ -87,7 +88,7 @@ while($sock->recv($msg, $MAXSIZE))
 	else
 	{
 		# reply ENOSYS 'operation not implemented'
-		printf("$host: Operation %x not implemented\n", $cmd);
+		printf("$hname: Operation %x not implemented\n", $cmd);
 		sendMsg($session, $cmd, 0x16);
 	}
 }
@@ -121,14 +122,14 @@ sub mount
 		$SESSION{$session}=$ipaddr;
 		$MOUNTPOINT{$session}=$mountpoint;
 
-		print("Mount: $mountpoint from $ipaddr\n");
+		print("Mount: $mountpoint from $hname\n");
 		sendMsg($session, 0x00, 0x00, "\x00\x01\x00\x00");
 	}
 	else
 	{
 		# session is null, cmd is 0, error is ENOENT (0x02)
 		# version is 1.0
-		print("Mount: FAILED for $mountpoint from $ipaddr\n");
+		print("Mount: FAILED for $mountpoint from $hname\n");
 		sendMsg(0, 0x00, 0x02, "\x00\x01");
 	}
 }
@@ -176,7 +177,7 @@ sub opendir
 			}
 				
 		}
-		print("Opendir: $message\n");
+		print("Opendir: $message from $hname\n");
 		sendMsg($session, 0x10, 0x00, pack("C", $clientHandle));
 	}
 	else
@@ -193,8 +194,6 @@ sub umount
 {
 	my ($session, $retry, $cmd, $message)=@_;
 
-	delete $SESSION{$session};
-	delete $SEQNO{$session};
 	my $dirhandles=$DIRHANDLE{$session};
 	if(defined($dirhandles))
 	{
@@ -214,15 +213,20 @@ sub umount
 		}
 		delete $FILEHANDLE{$session}
 	}
+
+	# tell the client we're done before deleting
+	# the important stuff needed to actually return the msg...
+	sendMsg($session, 0x01, 0x00);	
+
+	delete $SESSION{$session};
+	delete $SEQNO{$session};
 	delete $MOUNTPOINT{$session};
-	sendMsg($session, 0x11, 0x00);	
 }
 
 # readdir: Reads the next directory entry.
 sub readdir
 {
 	my ($session, $retry, $cmd, $message)=@_;
-	print("Reading dir...\n");
 
 	# Retrieve the directory handle
 	my $clientHandle=unpack("C", $message);
@@ -275,7 +279,7 @@ sub openFile
 	my $filename=substr($msg, 2);
 	$filename =~ s/\x0//g;
 	my $path="$MOUNTPOINT{$session}" . $filename;
-	print("Open request: $path\n");
+	print("Open request: $path from $hname\n");
 
 	# use sysopen to do, well, a sysopen.
 	my $fhnd;
@@ -313,6 +317,7 @@ sub openFile
 			}
 				
 		}
+		print("Handle=$clientHandle\n");
 		sendMsg($session, 0x20, 0x00, pack("C", $clientHandle));
 
 	}
@@ -370,7 +375,6 @@ sub writeBlock
 	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
 	if(defined $fhnd)
 	{
-		print("Writing $blocksize bytes\n");
 		my $bytes=syswrite($fhnd, $block, $blocksize);
 		if($bytes > 0)
 		{
@@ -419,17 +423,20 @@ sub seekFile
 	my ($session, $cmd, $status, $msg)=@_;
 	
 	my ($clientHandle, $seektype, $seekloc)=unpack("CCl", $msg);
+	#print("seekFile: handle=$clientHandle type=$seektype loc=$seekloc\n");
 	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
 	if(defined $fhnd)
 	{
 		# this assumes posix definitions of SEEK_CUR, SYS_END etc.
-		if(sysseek($fhnd, $seektype, $seekloc))
+		if(sysseek($fhnd, $seekloc, $seektype))
 		{
 			# success
+			print("Seek OK\n");
 			sendMsg($session, 0x25, 0x00);
 		}
 		else
 		{
+			print("Oops: $!\n");
 			sendMsg($session, 0x25, int($!));
 		}
 	}
@@ -448,7 +455,7 @@ sub statFile
 	# the message contains the file to stat, remove the terminator
 	$msg=~s/\x00//g;
 	my $filename=$MOUNTPOINT{$session} . $msg;
-	print("Statting $filename\n");
+	print("Statting $filename from $hname\n");
 	if(my @st=stat($filename))
 	{
 		# perms in big endian, rest in "vax order" - little
@@ -507,6 +514,7 @@ sub sendMsg
 {
 	my ($session, $cmd, $status, $msg)=@_;
 	my $seq=$SEQNO{$session};
+#	print("message: Session $session cmd $cmd status $status seq $seq\n");
 	my $dgram=pack("SCCC", $session, $seq, $cmd, $status);
 	$dgram .= $msg;
 	$LASTMSG{$session}=$dgram;
