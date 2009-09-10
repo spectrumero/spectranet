@@ -137,6 +137,7 @@
 	jp F_freefd		; Free fd
 	jp F_allocdirhnd	; Allocate dir handle
 	jp F_freedirhnd		; Free dhnd
+	jp F_freemountpoint	; Free a mount point
 	
 
 	block 0x1FF8-$,0xFF

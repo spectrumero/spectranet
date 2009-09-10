@@ -257,6 +257,16 @@ F_mount
 	ld a, 0xFE		; TODO: proper return code here
 	scf
 	ret
+
+;--------------------------------------------------------------------------
+; F_freemountpoint
+; Frees a mount point, passed in A
+F_freemountpoint
+	add VFSVECBASE % 256	; calculate the address in sysvars
+	ld h, 0x3F		; sysvars page
+	ld l, a
+	ld (hl), 0		; clear it down
+	ret
 	
 ;--------------------------------------------------------------------------
 ; F_allocfd

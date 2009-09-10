@@ -254,11 +254,12 @@ F_tnfs_header
 	ret
 
 ;------------------------------------------------------------------------
-; F_tnfs_opensock
-; Open the socket for TNFS datagrams.
+; F_tnfs_prepsock
+; Open the socket for TNFS datagrams if not already open, otherwise
+; just set up the connection data for the datagrams.
 ; Returns with carry set and A=error on error.
 ; HL=pointer to 4 byte IP address
-F_tnfs_opensock
+F_tnfs_prepsock
 	ld a, (v_curmountpt)	; calculate the offset to the socket info
 	rlca			; multiply by 8
 	rlca
@@ -280,7 +281,10 @@ F_tnfs_opensock
 	ld (hl), a		; LSB of source port = mount point
 	inc l
 	ld (hl), 0x78		; MSB of source port
-
+	
+	ld a, (v_tnfs_sock)
+	and a			; if it's zero we need to open the socket
+	ret nz			; socket is already open
 	ld c, SOCK_DGRAM	; Request a datagram socket.
 	call SOCKET		; open a UDP socket.
 	ret c
@@ -424,3 +428,30 @@ F_tnfs_simpleexit
 	scf
 	jp F_leave
 
+;---------------------------------------------------------------------------
+; F_tnfs_checkclose
+; Checks to see if the socket should be closed, and if so, closes it.
+F_tnfs_checkclose
+	push hl
+	push bc
+	push af
+	ld b,4
+	ld hl, v_tnfs_sid0
+.loop
+	ld a, (hl)
+	inc hl
+	or (hl)
+	jr nz, .done
+	inc hl
+	djnz .loop
+	
+	; no SIDs were found, so the socket isn't needed; close it.
+	ld a, (v_tnfs_sock)
+	call CLOSE
+	xor a
+	ld (v_tnfs_sock), a		; clear down the socket storage
+.done
+	pop af
+	pop bc
+	pop hl
+	ret

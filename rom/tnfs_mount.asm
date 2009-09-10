@@ -60,7 +60,7 @@ F_tnfs_mount
 
 	; create the socket that will be used for tnfs communications
 	ld hl, buf_tnfs_wkspc	; IP address is here
-	call F_tnfs_opensock
+	call F_tnfs_prepsock	; Open the socket if necessary
 	jp c, F_leave		; unable to open socket
 
 	; We've successfully looked up a host so create the datagram
@@ -131,10 +131,7 @@ F_tnfs_mount
 	jp F_leave
 
 .mounterr
-	push af			; save the error code
-	ld a, (v_tnfs_sock)	; close the socket
-	call CLOSE
-	pop af
+	call F_tnfs_checkclose	; close the socket if necessary
 	scf			; set the carry flag
 	jp F_leave
 .notourfs
@@ -147,19 +144,31 @@ STR_tnfstype defb "tnfs",0
 ; Unmounts the TNFS filesystem and closes the socket.
 F_tnfs_umount
 	call F_fetchpage
+	ret c
+	ld (v_curmountpt), a
+
 	ld a, TNFS_OP_UMOUNT
 	call F_tnfs_header_w		; create the header
+	inc hl				; advance past end
 	call F_tnfs_message_w_hl	; not much to do here at all
 	ret c				; communications error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; no error?
 	jr nz, .error
-	ld a, (v_tnfs_sock)		; close the socket
-	call CLOSE
-	xor a
-	ld (v_tnfs_sock), a		; clear socket number
-	;ld (v_tnfs_sid), a		; clear session id
-	;ld (v_tnfs_sid+1), a
+
+	ld a, (v_curmountpt)
+	rlca				; calculate the SID address
+	add v_tnfs_sid0 % 256
+	ld h, v_tnfs_sid0 / 256		; hl points at the sid
+	ld l, a
+	ld (hl), 0			; clear down the sid
+	inc l
+	ld (hl), 0
+
+	ld a, (v_curmountpt)
+	call FREEMOUNTPOINT		; clear down the mount point
+
+	call F_tnfs_checkclose		; close the socket if necessary
 	jp F_leave
 .error
 	scf				; flag the error condition
