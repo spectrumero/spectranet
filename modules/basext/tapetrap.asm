@@ -56,6 +56,12 @@ TAPETRAPBLOCK
 	defw	0x0564		; address at time of NMI
 	defw	0x0562		; address to trap with NMI
 
+DEFAULTTRAPBLOCK
+	defb	0xFF		; this page
+	defw	F_bootfile	; function to call
+	defw	0x0564		; address at time of NMI
+	defw	0x0562		; address to trap with NMI
+
 ;---------------------------------------------------------------------------
 ; F_releasetrap: Closes the file associated with the tape trap and disables
 ; the trap itself.
@@ -83,6 +89,7 @@ F_releasetrap
 ; an error.
 F_loadbytes
 	push ix			; store address
+F_loadbytes_nopush		; (if IX has already been pushed)
 	ld ix, 4		; point IX at the stacked registers
 	add ix, sp
 	ld (ix+10), 0x3F	; and set the return address to
@@ -98,6 +105,7 @@ F_loadbytes
 
 	ld a, (INTERPWKSPC)	; compare the flag byte read with the flag
 	cp (ix+1)		; passed in A to LD-BYTES
+
 	jr nz, .skip		; if they aren't the same skip the block
 
 	ld c, (ix+6)		; get the requested length into
@@ -162,4 +170,53 @@ J_cleanup_traperr
 	ld a, (v_trapfd)
 	call VCLOSE
 	pop af
-	ret	
+	ret
+
+;--------------------------------------------------------------------------
+; F_initbootfile: Sets up LOAD ""
+F_initbootfile
+	ld hl, DEFAULTTRAPBLOCK	; Program the CPLD NMI trap
+	call SETTRAP
+	ret
+
+;--------------------------------------------------------------------------
+; F_bootfile
+; Handles the case of an unsolicited LOAD "". It will try to load the file
+; "boot" in the current working directory. If the file doesn't exist, it
+; releases the trap and returns control to the tape loader.
+F_bootfile
+	push ix
+	ld hl, DEFAULTFILE	; first copy the filename into memory
+	ld de, INTERPWKSPC	; that's accessable by the FS module
+	ld bc, DEFAULTFILELEN
+	ldir
+
+	ld hl, INTERPWKSPC	; try to open the file
+	ld d, 0x00		; no flags
+	ld e, O_RDONLY		; read only
+	call OPEN
+	jr c, .usetape		; On error, simply pass control back to the
+				; ROM tape loader.
+	ld (v_trapfd), a	; save the file descriptor
+	
+	ld de, v_trap_blklen	; read the TAP block length to "prime the
+	ld bc, 2		; system" as it were.
+	call READ
+	jr c, .cleanupusetape	; any errors, then clean up and use tape. (EOF 
+				; considered an error at this point too)
+	
+	ld hl, TAPETRAPBLOCK	; Reprogram the NMI trap.
+	call SETTRAP
+	jp F_loadbytes_nopush	; and go to loadbytes to do the work.
+
+.cleanupusetape
+	ld a, (v_trapfd)
+	call VCLOSE		; close the file
+.usetape
+	pop ix
+	jp PAGETRAPRETURN
+
+DEFAULTFILE
+	defb	"boot",0
+DEFAULTFILELEN equ 5
+

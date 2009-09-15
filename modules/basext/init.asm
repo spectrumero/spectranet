@@ -31,6 +31,10 @@ F_init
         pop bc
         jr c, .installerror
         djnz .loop
+
+	; Install the default LOAD "" trap.
+	call F_initbootfile
+
         ld hl, STR_basicinit
         call PRINT42
         ret
