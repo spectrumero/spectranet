@@ -130,9 +130,9 @@
 	call F_fd_dispatch	; poll
 	call F_dir_dispatch	; readdir
 	call F_dir_dispatch	; closedir
+	call F_vfs_dispatch	; chdir
 	call F_vfs_dispatch	; reserved
-	call F_vfs_dispatch	; reserved
-	call F_vfs_dispatch	; reserved
+	jp F_setmountpoint	; Set the current mount point in use
 	jp F_allocfd		; Allocate fd
 	jp F_freefd		; Free fd
 	jp F_allocdirhnd	; Allocate dir handle

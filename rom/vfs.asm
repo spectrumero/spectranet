@@ -267,6 +267,16 @@ F_freemountpoint
 	ld l, a
 	ld (hl), 0		; clear it down
 	ret
+
+;--------------------------------------------------------------------------
+; F_setmountpoint
+; Sets the default mountpoint in use, passed in A
+F_setmountpoint
+	cp 4			; mount point must be <= 3
+	ccf			; flip the carry flag
+	ret c			; so if there's an error we return with C
+	ld (v_vfs_curmount), a
+	ret
 	
 ;--------------------------------------------------------------------------
 ; F_allocfd

@@ -41,7 +41,7 @@ F_init
 STR_basicinit   defb    "BASIC extensions installed\n",0
 STR_basinsterr  defb    "Failed to install BASIC extensions\n",0
 
-NUMCMDS         equ     9
+NUMCMDS         equ     10
 PARSETABLE      
 P_mount         defb    0x0b
                 defw    CMD_MOUNT
@@ -79,6 +79,10 @@ F_info		defb	0x0b
 		defw	CMD_INFO	; Give information on a file
 		defb	TNFS_PAGE
 		defw	F_tbas_info
+F_fs		defb	0x0b
+		defw	CMD_FS
+		defb	TNFS_PAGE
+		defw	F_tbas_fs
 
 CMD_MOUNT       defb    "%mount",0
 CMD_UMOUNT      defb    "%umount",0
@@ -89,4 +93,5 @@ CMD_LOAD        defb    "%load",0
 CMD_SAVE        defb    "%save",0
 CMD_TAPEIN	defb	"%tapein",0
 CMD_INFO	defb	"%info",0
+CMD_FS		defb	"%fs",0
 

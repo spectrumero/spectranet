@@ -37,7 +37,7 @@ F_tbas_mount
 	defw ZX_NEXT_CHAR
 
 	rst CALLBAS
-	defw ZX_EXPT_EXP		; string parameter - passwd
+	defw ZX_EXPT_EXP		; string parameter - an URL
 
 	call STATEMENT_END		; followed by statement end
 
@@ -93,10 +93,14 @@ F_basstrcpy
 ; F_tbas_umount
 ; Umount the mounted filesystem.
 F_tbas_umount
-	call STATEMENT_END		; no parameters
+	rst CALLBAS
+	defw ZX_EXPT1_NUM		; 1 parameter - mount point number
+	call STATEMENT_END
 
 	;--------- runtime ---------
-	ld a, (v_vfs_curmount)
+	rst CALLBAS
+	defw ZX_FIND_INT2
+	ld a, c				; mount point is in BC	
 	call UMOUNT
 	jp c, J_tbas_error
 	jp EXIT_SUCCESS	
@@ -357,6 +361,23 @@ F_tbas_info
 	call F_showfileinfo		; Try to open the file and show
 	jp c, J_tbas_error		; the information.
 	jp EXIT_SUCCESS
+
+;----------------------------------------------------------------------------
+; F_tbas_fs
+; Sets the current filesystem.
+F_tbas_fs
+	rst CALLBAS
+	defw ZX_EXPT1_NUM		; expect one number - the FS number
+	call STATEMENT_END
+
+	;-------- runtime ----------
+	rst CALLBAS
+	defw ZX_FIND_INT2		; get the fs number
+	ld a, c				; get it from BC
+	call SETMOUNTPOINT
+	jp nc, EXIT_SUCCESS		; No carry = FS change OK
+	ld a, EBADFS
+	jp J_tbas_error
 	
 ;----------------------------------------------------------------------------
 ; F_tbas_zxprint
@@ -443,8 +464,11 @@ STR_BADTYPE	defb	"Incorrect block type",0		; 0x25
 STR_UNKTYPE	defb	"Unknown file type",0			; 0x26
 STR_MISMCHLEN	defb	"Data block length mismatch",0		; 0x27
 STR_EBADURL	defb	"Bad URL",0				; 0x28
+STR_EBADFS	defb	"Bad filesystem number",0		; 0x29
 
 ERR_TABLE_END
 STR_UNKNOWN	defb	"Unknown error",0
 
 EBADURL		equ	0x28
+EBADFS		equ	0x29
+
