@@ -33,6 +33,10 @@
 
 	include "../modules/basext/regdump.asm"
 
+	; These are not really anything to do with TNFS, but there's not
+	; enough space in any other "core" ROM page to put them elsewhere!
+	include "machinetype.asm"
+
 	; definitions
 	include "spectranet.asm"	; Base ROM definitions
 	include "sysvars.asm"		; Base system variables

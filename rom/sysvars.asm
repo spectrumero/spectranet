@@ -208,5 +208,8 @@ ROMVECOFFS	equ (vectors-2)%256
 ; Page storage
 v_util_pgb	defb 0
 
+; Machine type
+v_plusthree	defb 0
+
 ; Reserve memory above 0x3FF8 for the jump table.
 		block 0x3FF8-$,0xff

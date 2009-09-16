@@ -2,7 +2,7 @@
 # note, the order of ASMSOURCES is important.
 ASMSOURCES=( sysvars rommodconfig_en rommodconfig_es datarom datarom_es \
              configutilrom configutilrom_es configutil utilrom utilrom_es \
-             rom jumptable tnfs \
+             tnfs rom jumptable \
 	     romimage romimage_es romprog \
 	     romprog_es )
 
@@ -37,6 +37,11 @@ do
    if [ "$src" == "utilrom" ]; then
       echo "Generating dependent function symbol table for rom..."
       grep u_impl utilrom.sym >impl.sym
+   fi
+
+   if [ "$src" == "tnfs" ]; then
+      echo "Generating dependent function symbol table for rom..."
+      grep F_machinetype tnfs.sym >>impl.sym
    fi
 done
 
