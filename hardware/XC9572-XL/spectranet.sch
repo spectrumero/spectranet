@@ -157,7 +157,6 @@ BEGIN SCHEMATIC
         SIGNAL XLXN_651
         SIGNAL XLXN_652
         SIGNAL MATCH_LO
-        SIGNAL MATCH_HI
         SIGNAL XLXN_659
         SIGNAL TRAPMATCH
         SIGNAL XLXN_628
@@ -182,6 +181,9 @@ BEGIN SCHEMATIC
         SIGNAL XLXN_683
         SIGNAL XLXN_684
         SIGNAL XLXN_685
+        SIGNAL XLXN_686
+        SIGNAL XLXN_687
+        SIGNAL XLXN_689
         PORT Input M1_L
         PORT Input CLK
         PORT Output PA12
@@ -557,6 +559,17 @@ BEGIN SCHEMATIC
             LINE N 112 -144 48 -144 
             LINE N 112 -240 48 -240 
             ARC N 28 -320 204 -144 112 -144 192 -192 
+        END BLOCKDEF
+        BEGIN BLOCKDEF and2b1
+            TIMESTAMP 2000 1 1 10 10 10
+            LINE N 64 -48 64 -144 
+            LINE N 64 -144 144 -144 
+            LINE N 144 -48 64 -48 
+            ARC N 96 -144 192 -48 144 -48 144 -144 
+            LINE N 256 -96 192 -96 
+            LINE N 0 -128 64 -128 
+            LINE N 0 -64 40 -64 
+            CIRCLE N 40 -76 64 -52 
         END BLOCKDEF
         BEGIN BLOCK XLXI_30 m2_1e
             PIN D0 FFA(0)
@@ -1020,7 +1033,7 @@ BEGIN SCHEMATIC
         BEGIN BLOCK XLXI_277 comp8
             PIN A(7:0) A(15:8)
             PIN B(7:0) XLXN_631(7:0)
-            PIN EQ MATCH_HI
+            PIN EQ XLXN_686
         END BLOCK
         BEGIN BLOCK XLXI_280 fd8ce
             PIN C XLXN_651
@@ -1059,7 +1072,7 @@ BEGIN SCHEMATIC
         BEGIN BLOCK XLXI_298 and5b2
             PIN I0 MREQ_L
             PIN I1 M1_L
-            PIN I2 MATCH_HI
+            PIN I2 XLXN_689
             PIN I3 MATCH_LO
             PIN I4 INT_ENABLE
             PIN O TRAPMATCH
@@ -1207,6 +1220,11 @@ BEGIN SCHEMATIC
             PIN I7 A(7)
             PIN I8 XLXN_684
             PIN O XLXN_685
+        END BLOCK
+        BEGIN BLOCK XLXI_311 and2b1
+            PIN I0 HLDROMCS
+            PIN I1 XLXN_686
+            PIN O XLXN_689
         END BLOCK
     END NETLIST
     BEGIN SHEET 1 3520 2720
@@ -2865,7 +2883,8 @@ BEGIN SCHEMATIC
             WIRE 1968 592 2176 592
         END BRANCH
         BEGIN BRANCH XLXN_631(7:0)
-            WIRE 1968 1408 2176 1408
+            WIRE 1968 1408 1984 1408
+            WIRE 1984 1408 2176 1408
         END BRANCH
         BEGIN BRANCH D(7:0)
             WIRE 1392 592 1584 592
@@ -2882,7 +2901,8 @@ BEGIN SCHEMATIC
             END DISPLAY
         END BRANCH
         BEGIN BRANCH A(15:8)
-            WIRE 1968 1216 2176 1216
+            WIRE 1968 1216 1984 1216
+            WIRE 1984 1216 2176 1216
             BEGIN DISPLAY 1968 1216 ATTR Name
                 ALIGNMENT SOFT-RIGHT
             END DISPLAY
@@ -2952,11 +2972,6 @@ BEGIN SCHEMATIC
             WIRE 2560 496 2592 496
             WIRE 2592 496 2896 496
         END BRANCH
-        BEGIN BRANCH MATCH_HI
-            WIRE 2560 1312 2592 1312
-            WIRE 2592 560 2896 560
-            WIRE 2592 560 2592 1312
-        END BRANCH
         BEGIN BRANCH M1_L
             WIRE 2768 624 2896 624
             BEGIN DISPLAY 2768 624 ATTR Name
@@ -2987,5 +3002,25 @@ BEGIN SCHEMATIC
         BEGIN DISPLAY 136 140 TEXT "Programmable Traps"
             FONT 40 "Arial"
         END DISPLAY
+        INSTANCE XLXI_311 2656 1440 R0
+        BEGIN BRANCH XLXN_686
+            WIRE 2560 1312 2640 1312
+            WIRE 2640 1312 2656 1312
+        END BRANCH
+        BEGIN BRANCH XLXN_689
+            WIRE 2608 560 2896 560
+            WIRE 2608 560 2608 848
+            WIRE 2608 848 3056 848
+            WIRE 3056 848 3056 1344
+            WIRE 2912 1344 3056 1344
+        END BRANCH
+        BEGIN BRANCH HLDROMCS
+            WIRE 2576 1376 2656 1376
+            WIRE 2576 1376 2576 1616
+            WIRE 2576 1616 2576 1664
+            BEGIN DISPLAY 2576 1616 ATTR Name
+                ALIGNMENT SOFT-TVCENTER
+            END DISPLAY
+        END BRANCH
     END SHEET
 END SCHEMATIC
