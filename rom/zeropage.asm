@@ -66,6 +66,9 @@ INTERRUPT
 
 	block 0x66-$,0xFF
 NMI
+	ld (NMISTACK), sp	; save SP
+	ld sp, NMISTACK-4	; set up new stack
+
 	; stack everything that will be changed.
 	push hl
 	push de
@@ -73,8 +76,7 @@ NMI
 	push af
 	ex af, af'
 	push af
-	ld hl, 10
-	add hl, sp	; hl now points at return address
+	ld hl, (NMISTACK)	; HL = address of the return address
 	jr NMI2
 
 	block 0x7C-$,0xFF
@@ -94,6 +96,8 @@ NMI2
 	ld a, (v_trapcomefrom+1) ; comefrom MSB
 	cp (hl)			; equal to high order?
 	jr nz, .nmimenu		; no
+	ld a, 6
+	out (254), a
 
 	; Set up the environment ready to handle the trap.
 	ld a, (v_trappage)	; get the page to page in
@@ -118,7 +122,10 @@ NMI2
 	pop af
 	pop bc
 	pop de
-	ld hl, UNPAGE		; munge the stack so that RETN goes via unpage
+	pop hl
+	ld sp, (NMISTACK)	; restore stack pointer
+	push hl			; munge the stack
+	ld hl, UNPAGE		; so that RETN goes via unpage
 	ex (sp), hl
 	retn
 

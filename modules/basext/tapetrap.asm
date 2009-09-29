@@ -92,8 +92,11 @@ F_loadbytes
 F_loadbytes_nopush		; (if IX has already been pushed)
 	ld ix, 4		; point IX at the stacked registers
 	add ix, sp
-	ld (ix+10), 0x3F	; and set the return address to
-	ld (ix+11), 0x05	; 0x053F SA/LD-RET in the Spectrum ROM
+
+	ld hl, (NMISTACK)	; get the old stack pointer
+	ld (hl), 0x3F		; and set the return address to
+	inc hl
+	ld (hl), 0x05		; 0x053F SA/LD-RET in the Spectrum ROM
 
 	ld a, (v_trapfd)	; this could be better optimized...
 	ld bc, 1

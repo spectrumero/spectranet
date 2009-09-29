@@ -35,6 +35,16 @@ UPPER_ENTRYPT_SIZE	equ 0x08
 ; to do next.
 ;
 J_reset
+	; a delay loop to allow the rubber key machine's very slow reset
+	; circuit to become quiescent.
+	ld bc, 0xFFFF
+.delay	
+	ld (ix+7), a		; a nice long instruction
+	dec bc
+	ld a, b
+	or c
+	jr nz, .delay
+	
 	; Clear upper page.
 	;ld sp, INITSTACK	; temporary stack when booting
 	ld hl, 0x3000		; Clear down the fixed RAM page.

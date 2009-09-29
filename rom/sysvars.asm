@@ -20,6 +20,14 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+NMISTACK	equ 0x38FE
+
+; General purpose small workspace for ROM modules. Each ROM page gets 8 bytes
+; of workspace here. Work out the ROM's workspace location by taking the
+; page number and multiplying by 8 (page number left shifted 3 times).
+		org 0x3900
+buf_moduleworkspace
+
 ; A table of BASIC extensions starts here.
 ; Entries should be structured as:
 ;  byte 0   - ZX error code that's relevant
@@ -40,12 +48,6 @@ buf_message
 ; It is used as a 256-byte buffer for functions such as DNS query strings.
 		org 0x3D00
 buf_workspace
-
-; General purpose small workspace for ROM modules. Each ROM page gets 8 bytes
-; of workspace here. Work out the ROM's workspace location by taking the
-; page number and multiplying by 8 (page number left shifted 3 times).
-		org 0x3E00
-buf_moduleworkspace
 
 ; The system variables live in chip 4 page 0 which is permanently mapped
 ; to 0x3000-0x3FFF. Specifically, they live in the upper part of this memory,

@@ -102,8 +102,10 @@ J_trapreturn
 	pop af
 	pop bc
 	pop de
-	ld hl, UNPAGE		; the page out address
+	pop hl
+	ld sp, (NMISTACK)	; restore SP
+	push hl			; swap HL with the stack to put
+	ld hl, UNPAGE		; the page out address there for RETN
 	ex (sp), hl		; restore hl, put page out on stack
 	retn
-
 
