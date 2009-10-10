@@ -20,14 +20,15 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; English strings
+; Definitions for streams.
 
-STR_basicinit	defb	"BASIC streams support initialized\n",0
-STR_basinsterr	defb	"BASIC streams initialization failed\n",0
-STR_nomem	defb	"Out of memory pages",0
-STR_sockerr	defb	"Socket error",0
-STR_closeerr	defb	"Could not close socket",0
-STR_nobuferr	defb	"Out of buffers",0
-STR_fileerr	defb	"Error opening file",0
-STR_direrr	defb	"Error opening directory",0
+; Flags that describe what kind of stream we have.
+ISFILE		equ 1
+RDONLY		equ 2 
+ISDIR		equ 4
+
+; Bit positions for the above
+BIT_ISFILE	equ 0
+BIT_RDONLY	equ 1
+BIT_ISDIR	equ 2
 

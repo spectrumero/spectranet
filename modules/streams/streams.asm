@@ -25,6 +25,9 @@
 	include "../../rom/spectranet.asm"	; Spectranet symbols
 	include "../../rom/sysvars.sym"		; System variable decs
 	include "../../rom/zxsysvars.asm"	; ZX system variables
+	include "../../rom/fs_defs.asm"		; filesystem defs
+	include "streamvars.asm"		; our local sysvars
+	include "streamdefs.asm"		; defines
 
 	org 0x2000		; this is a module
 	include "vectors.asm"	; Vector table
@@ -35,6 +38,7 @@
 	include "chanmgr.asm"	; Channel manager
 	include "io.asm"	; IO routines
 	include "buffer.asm"	; buffers
+	include "fileio.asm"	; file open functions
 
 ; Our ROM ID
 STREAM_ROM_ID	equ 0x02

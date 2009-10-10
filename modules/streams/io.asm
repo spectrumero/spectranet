@@ -64,11 +64,12 @@ F_input
 	ld hl, 0x107F		; Compare with ED_ERROR
 	sbc hl, de
 	pop hl
-	jr nz, .doinkey
+	jp nz, .doinkey
 
 .input
 	dec l			; HL points at RX buffer number
-	ld d, (hl)		; which is the MSB of the actual buffer...
+;	ld d, (hl)		; which is the MSB of the actual buffer...
+	ld d, INTERPWKSPC/256	; TODO: use our private buffers
 	inc l			; HL now points at the
 	inc l			; RX buffer current address
 	ld e, (hl)
@@ -76,6 +77,8 @@ F_input
 	inc l			; and now it points at the socket handle
 	ld a, (hl)		; fetch it
 	ld (v_asave), a		; save it for the loop operation
+	inc l
+	ld (flagaddr), hl	; save the address of the flags byte
 	xor a			; Is the buffer pointer at 
 	cp e			; the start of the buffer?
 	jr z, .getdata		; Yes - so read more data from the network
@@ -89,9 +92,15 @@ F_input
 	ld a, (v_asave)		; Get the descriptor
 	ld de, INTERPWKSPC
 	ld bc, 255		; read up to 255 chars
+	ld hl, (flagaddr)	; check flags bit
+	bit BIT_ISFILE, (hl)	; is a file?
+	jr nz, .readfromfile
+	bit BIT_ISDIR, (hl)	; is a directory?
+	jr nz, .readdir
 	call RECV
-	jr c, .readerr
-
+.readdone
+	jp c, .readerrpop
+.readdirdone
 	ld hl, INTERPWKSPC
 	ld b, c			; get the length returned into B for djnz
 
@@ -110,7 +119,25 @@ F_input
 	inc l
 	djnz .unloadloop
 	jr .getdata		; go get it
-	
+
+.readfromfile
+	call READ
+	jr .readdone
+.readdir
+	call READDIR
+	jp c, .readerrpop
+	ld hl, INTERPWKSPC	; directly load INPUT with data as we can
+.readdirloop
+	ld a, (hl)		; never have a partial read doing READDIR.
+	and a			; End of string?
+	jr z, .exit		; Return to BASIC
+	push hl
+	rst CALLBAS		; Feed INPUT
+	defw 0x0F85
+	pop hl
+	inc hl
+	jr .readdirloop
+
 .exit
 	pop hl			; restore stack
 .exitnopop
@@ -134,6 +161,7 @@ F_input
 	pop de			; fetch the metadata pointer
 	ex de, hl		; into HL
 	ld (hl), e		; save the current position
+	inc l
 	inc l
 	inc l
 	ld (hl), b		; save bytes remaining
@@ -185,6 +213,8 @@ F_input
 	ld l, 1			; signal "don't munge the stack"
 	jp F_leave
 
+.readerrpop
+	pop hl			; fix the stack
 .readerr			; TODO error handling
 	ld hl, INTERPWKSPC
 	call ITOH8
@@ -193,19 +223,6 @@ F_input
 	or 1			; reset carry, reset zero: EOF
 	ld l, 1			; signal "don't munge the stack"
 	jp F_leave
-
-F_debugA
-	push de
-	push bc
-	push af
-	ld hl, INTERPWKSPC
-	call ITOH8
-	ld hl, INTERPWKSPC
-	call PRINT42
-	pop af
-	pop bc
-	pop de
-	ret
 
 ;--------------------------------------------------------------------------
 ; F_ctrlstream

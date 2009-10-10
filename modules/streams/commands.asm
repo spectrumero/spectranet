@@ -116,6 +116,86 @@ F_accept
 	jp F_accept_impl
 
 ;-------------------------------------------------------------------------
+; F_fopen: Opens a file
+; Syntax is %fopen #stream, "filename","filemode"
+F_fopen
+        rst CALLBAS
+        defw ZX_NEXT_CHAR
+        cp '#'                          ; # means channel number
+        jp nz, PARSE_ERROR
+        rst CALLBAS
+        defw ZX_NEXT_CHAR               ; advance to channel number
+
+        rst CALLBAS
+        defw ZX_EXPT1_NUM               ; stream number to open
+        cp ','
+        jp nz, PARSE_ERROR
+        rst CALLBAS
+        defw ZX_NEXT_CHAR
+
+        rst CALLBAS
+        defw ZX_EXPT_EXP                ; string parameter - filename
+        cp ','
+        jp nz, PARSE_ERROR
+        rst CALLBAS
+        defw ZX_NEXT_CHAR
+
+        rst CALLBAS
+        defw ZX_EXPT_EXP		; string parameter - file mode
+
+        call STATEMENT_END
+
+	;---------- runtime ---------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; file mode and flags
+	push bc
+	push de
+
+	rst CALLBAS
+	defw ZX_STK_FETCH		; filename
+	push bc				; save length
+	push de				; and source
+
+        rst CALLBAS
+        defw ZX_FIND_INT2		; stream
+	push bc				; save stream
+	jp F_fileopen_impl
+
+;------------------------------------------------------------------------
+; F_opendir: Opens a directory
+; Syntax is %opendir #stream, "dirname"
+F_opendir
+	rst CALLBAS
+        defw ZX_NEXT_CHAR
+        cp '#'                          ; # means channel number
+        jp nz, PARSE_ERROR
+        rst CALLBAS
+        defw ZX_NEXT_CHAR               ; advance to channel number
+
+        rst CALLBAS
+        defw ZX_EXPT1_NUM               ; stream number to open
+        cp ','
+        jp nz, PARSE_ERROR
+        rst CALLBAS
+        defw ZX_NEXT_CHAR
+
+        rst CALLBAS
+        defw ZX_EXPT_EXP                ; string parameter - directory
+
+	call STATEMENT_END
+
+	;---------- runtime ----------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; directory name
+	push bc				; save length and string ptr
+	push de
+	
+	rst CALLBAS
+	defw ZX_FIND_INT2		; stream
+	push bc
+	jp F_opendir_impl
+	
+;-------------------------------------------------------------------------
 ; F_close: Closes an open stream.
 ; Syntax is %close stream
 F_close

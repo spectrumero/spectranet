@@ -34,8 +34,8 @@
 ; byte 2 - Write buffer pointer
 ; byte 3 - read buffer pointer
 ; Byte 4 - Current descriptor (a socket handle, perhaps)
-; Byte 5-7 - Data specific to the kind of stream
-
+; Byte 5-7 - Data specific to the kind of stream:
+; Byte 5 - Flag bits (bit 0 = socket or file)
 
 ;--------------------------------------------------------------------------
 ; F_findfreebuf - Returns the number of the first free buffer found.
@@ -81,7 +81,13 @@ F_feedbuffer
         rlca
         rlca
         ld h, 0x10              ; MSB = 0x10
+	add 5			; first check the flags bit
         ld l, a                 ; HL = info pointer
+
+	bit BIT_RDONLY, (hl)	; if read only do nothing
+	ret nz
+	sub 5
+	ld l, a			;:point hl at the start of the info block
         ld d, (hl)              ; D = buffer number (happens to be the MSB)
         inc l
         inc l                   ; advance to write buffer pointer
@@ -127,6 +133,9 @@ F_flushbuffer
         ; DE now = buffer start
         ; BC now = length
         ; A now = file descriptor
+	inc l
+	bit 0, (hl)		; Check "is a file" flag
+	jr nz, .filewrite
         call SEND               ; Send the data
         jr c, .borked
         ret
@@ -135,4 +144,19 @@ F_flushbuffer
         ld a, 2                 ; todo - proper error handling
         out (254), a
         ret
+
+.filewrite
+	; TODO: File I/O does not yet handle writing a buffer in page A
+	; because that's where the VFS mods put their data. So copy the
+	; data first. However, VFS modules ought to be able to cope with
+	; this.
+	ex de, hl
+	ld de, INTERPWKSPC	; where to copy
+	push bc
+	ldir			; copy the buffer
+	pop bc			; restore the length
+	ld hl, INTERPWKSPC	; start of new buffer
+	call WRITE
+	jr c, .borked
+	ret
 

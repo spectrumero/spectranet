@@ -38,6 +38,7 @@
 ;	byte 2: write buffer pointer
 ;	byte 3: read buffer pointer
 ;	byte 4: file descriptor
+;	byte 5: flags (bit 0 = socket or file)
 F_connect_impl
 	call F_fetchpage		; fetch our memory
 	call c, F_allocpage
@@ -94,6 +95,8 @@ F_connect_impl
 	inc l				; Next address is the FD
 	ld a, (INTERPWKSPC+4)
 	ld (hl), a			; store the FD
+	inc l
+	ld (hl), 0			; clear flags bits
 
 	call F_leave			; restore memory page A
 	jp EXIT_SUCCESS
@@ -154,7 +157,13 @@ F_close_impl
 	add a, 4			; point at fd
 	ld l, a
 	ld a, (hl)			; fetch the FD
-	call CLOSE			; close the socket
+	inc l				; get the flags
+	bit BIT_ISFILE, (hl)		; is a file?
+	jr nz, .isfile
+	bit BIT_ISDIR, (hl)		; is a directory?
+	jr nz, .isdir
+	call CLOSE			; close the socketA
+.closedone
 	pop hl
 	ld (hl), 0			; clear down buffer info
 	inc l
@@ -167,6 +176,13 @@ F_close_impl
 	call F_leave
 	ld hl, STR_closeerr
 	jp REPORTERR
+
+.isfile
+	call VCLOSE
+	jr .closedone	
+.isdir
+	call CLOSEDIR
+	jr .closedone
 
 ;------------------------------------------------------------------------
 ; F_listen_impl
