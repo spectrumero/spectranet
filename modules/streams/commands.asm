@@ -216,6 +216,31 @@ F_close
 	push bc			; save it on the stack
 	jp F_close_impl		; Jump to the meat of the routine
 
+;------------------------------------------------------------------------
+; F_oneof: Sets the line number to go to on EOF.
+; Syntax is %oneof linenumber
+F_oneof
+	rst CALLBAS
+	defw ZX_EXPT1_NUM	; Line number
+	call STATEMENT_END
+
+	; Runtime
+	call F_fetchpage
+	jr c, .memerr
+	rst CALLBAS
+	defw ZX_FIND_INT2	; get the line number
+	ld (oneof_line), bc	; set the line number
+	ld a, (v_pgb)		; get our page number
+	ld (v_eofrom), a	; and set the sysvar
+	ld hl, F_eofhandler
+	ld (v_eofaddr), hl	; and the address to call
+	call F_leave
+	jp EXIT_SUCCESS
+.memerr
+	call F_leave
+	ld hl, STR_nomem
+	jp REPORTERR
+
 ;--------------------------------------------------------------------------
 ; Copy a BASIC string to a C string.
 ; BASIC string in DE, C string (dest) in HL

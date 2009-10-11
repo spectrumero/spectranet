@@ -213,5 +213,9 @@ v_util_pgb	defb 0
 ; Machine type
 v_plusthree	defb 0
 
+; EOF handling
+v_eofaddr	defw 0
+v_eofrom	defb 0
+
 ; Reserve memory above 0x3FF8 for the jump table.
 		block 0x3FF8-$,0xff

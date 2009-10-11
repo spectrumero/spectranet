@@ -20,27 +20,14 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; BASIC streams
-	include "../../rom/zxromdefs.asm"	; ZX ROM definitions
-	include "../../rom/spectranet.asm"	; Spectranet symbols
-	include "../../rom/sysvars.sym"		; System variable decs
-	include "../../rom/zxsysvars.asm"	; ZX system variables
-	include "../../rom/fs_defs.asm"		; filesystem defs
-	include "streamvars.asm"		; our local sysvars
-	include "streamdefs.asm"		; defines
+; Handle BASIC flow control
 
-	org 0x2000		; this is a module
-	include "vectors.asm"	; Vector table
-	include "init.asm"	; Initialization routines
-	include "commands.asm"	; BASIC commands
-	include "string_en.asm"	; English strings
-	include "memory.asm"	; Memory claim
-	include "chanmgr.asm"	; Channel manager
-	include "io.asm"	; IO routines
-	include "buffer.asm"	; buffers
-	include "fileio.asm"	; file open functions
-	include "flowcontrol.asm" ; BASIC flow control
-
-; Our ROM ID
-STREAM_ROM_ID	equ 0x02
+F_eofhandler
+	call F_fetchpage
+	ld hl, (oneof_line)
+	ld (ZX_NEWPPC), hl	; set line number
+	xor a
+	ld (ZX_NSPPC), a	; reset NSPPC
+	call F_leave
+	jp EXIT_SUCCESS
 
