@@ -202,33 +202,19 @@ F_tbas_save
 	jr z, .savecode
 	cp TOKEN_SCREEN			; for SCREEN$
 	jr z, .savescreen	
-;	cp TOKEN_LINE			; then for LINE
-;	jr z, .savebasline
+	cp TOKEN_LINE			; then for LINE
+	jr z, .savebasline
 
 	call STATEMENT_END		; a basic BASIC save.
 
 	;------- runtime for simple BASIC save -------
+	xor a
+	call F_tbas_mktapheader
+	ld hl, 0xFFFF			; set param1 to >32767
+	ld (INTERPWKSPC+OFFSET_PARAM1), hl
 	rst CALLBAS
 	defw ZX_STK_FETCH		; There is only a filename.
-	push de				; save params
-	push bc
-	xor a				; type = 0
-	call F_tbas_mktapheader		; Create the header
-
-	; Fill in the header, length and length without vars
-	ld hl, (ZX_E_LINE)		; get the length of the BASIC prog
-	ld de, (ZX_PROG)		; by calculating it
-	scf
-	sbc hl, de		
-	ld (INTERPWKSPC+OFFSET_LENGTH), hl	; prog + vars
-	ld hl, (ZX_VARS)		; now save the length - vars
-	sbc hl, de			; calculate it...
-	ld (INTERPWKSPC+OFFSET_PARAM2), hl
-	pop bc				; retrieve the filename
-	pop de
-	call F_tbas_writefile		; Write it out.
-	jp c, J_tbas_error
-	jp EXIT_SUCCESS
+	jr .makebasicblock
 
 	; Deal with SAVE "filename" CODE
 .savecode
@@ -267,9 +253,40 @@ F_tbas_save
 	ld hl, 16384			; followed by the start address
 	push hl
 	jr .savecodemain		; and do as for CODE
+
 .savebasline
-	ld a, TBADTYPE			; TODO - code etc.
-	jp J_tbas_error
+	rst CALLBAS
+	defw ZX_NEXT_CHAR
+	rst CALLBAS
+	defw ZX_EXPT1_NUM		; 1 number - the line number
+	call STATEMENT_END
+
+	; Runtime for save "x" LINE y
+	xor a				; type = 0
+	call F_tbas_mktapheader		; Create the header
+	rst CALLBAS
+	defw ZX_FIND_INT2		; Fetch the number
+	ld (INTERPWKSPC+OFFSET_PARAM1), bc ; Put it into parameter 1
+	rst CALLBAS
+	defw ZX_STK_FETCH		; Fetch the file name
+.makebasicblock
+	push de				; save params
+	push bc
+
+	; Fill in the header, length and length without vars
+	ld hl, (ZX_E_LINE)		; get the length of the BASIC prog
+	ld de, (ZX_PROG)		; by calculating it
+	scf
+	sbc hl, de		
+	ld (INTERPWKSPC+OFFSET_LENGTH), hl	; prog + vars
+	ld hl, (ZX_VARS)		; now save the length - vars
+	sbc hl, de			; calculate it...
+	ld (INTERPWKSPC+OFFSET_PARAM2), hl
+	pop bc				; retrieve the filename
+	pop de
+	call F_tbas_writefile		; Write it out.
+	jp c, J_tbas_error
+	jp EXIT_SUCCESS
 
 ;----------------------------------------------------------------------------
 ; F_tbas_ls
