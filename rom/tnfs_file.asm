@@ -202,6 +202,8 @@ F_tnfs_close
 	call F_fetchpage
 	ret c
 
+	call FREEFD		; always free the FD even if there's an error
+
 	ld b, a
 	ld a, TNFS_OP_CLOSE
 	call F_tnfs_header_w

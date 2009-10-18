@@ -112,6 +112,8 @@ F_tnfs_closedir
 	call F_fetchpage
 	ret c
 
+	call FREEDIRHND			; The dirhandle should always be
+					; cleared, even if there's an error.
 	ld l, a				; get the handle address
 	ld h, HANDLESPACE / 256
 	ld b, (hl)			; and fetch the TNFS handle
