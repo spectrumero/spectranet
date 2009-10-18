@@ -216,6 +216,11 @@ F_input
 .readerrpop
 	pop hl			; fix the stack
 .readerr			; TODO error handling
+	ld hl, (oneof_line)	; see if we have a line number to go to
+	ld a, h
+	or l
+	jr nz, .eof_jump
+
 	ld hl, INTERPWKSPC
 	call ITOH8
 	ld hl, INTERPWKSPC
@@ -223,6 +228,12 @@ F_input
 	or 1			; reset carry, reset zero: EOF
 	ld l, 1			; signal "don't munge the stack"
 	jp F_leave
+
+.eof_jump
+	ld (ZX_NEWPPC), hl	; set the line number
+	xor a
+	ld (ZX_NSPPC), a	; and statement number to 0
+	jp .exitnopop		; exit *without* error
 
 ;--------------------------------------------------------------------------
 ; F_ctrlstream

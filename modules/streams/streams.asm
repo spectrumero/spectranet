@@ -39,7 +39,7 @@
 	include "io.asm"	; IO routines
 	include "buffer.asm"	; buffers
 	include "fileio.asm"	; file open functions
-	include "flowcontrol.asm" ; BASIC flow control
+;	include "flowcontrol.asm" ; BASIC flow control
 
 ; Our ROM ID
 STREAM_ROM_ID	equ 0x02

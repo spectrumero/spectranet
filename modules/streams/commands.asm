@@ -230,10 +230,6 @@ F_oneof
 	rst CALLBAS
 	defw ZX_FIND_INT2	; get the line number
 	ld (oneof_line), bc	; set the line number
-	ld a, (v_pgb)		; get our page number
-	ld (v_eofrom), a	; and set the sysvar
-	ld hl, F_eofhandler
-	ld (v_eofaddr), hl	; and the address to call
 	call F_leave
 	jp EXIT_SUCCESS
 .memerr
