@@ -148,6 +148,7 @@ F_close_impl
 	call F_fetchpage
 	pop hl				; Channel number.
 	ld a, l
+	push af				; save the channel number
 	rlca				; multiply by 8 to find metadata
 	rlca
 	rlca
@@ -169,10 +170,14 @@ F_close_impl
 	inc l
 	ld (hl), 0
 	jr c, .closeerr
+	pop af				; get channel number
+	call F_freemem			; Mark memory as free
 	call F_leave
 	call EXIT_SUCCESS
 
 .closeerr
+	pop af				; get channel number
+	call F_freemem			; Mark memory as free
 	call F_leave
 	ld hl, STR_closeerr
 	jp REPORTERR
@@ -307,13 +312,8 @@ F_accept_impl
 ; Creates the channel in BASIC and connects it to a stream
 F_createchan
 	ld (v_asave), a			; Save the argument
-	ld hl, (ZX_PROG)		; get the start of the program area
-	dec hl				; pointer to where to make space
-	ld bc, CHAN_LEN			; request this many bytes
-	rst CALLBAS
-	defw ZX_MAKE_ROOM		; allocate memory
-	inc hl				; point at 1st byte of channel area
-	push hl
+	call F_allocmem			; Allocate memory in ZX RAM
+	push hl				; save the returned address
 	ld de, 5			; calculate routine start addr
 	add hl, de
 	ex de, hl
@@ -361,6 +361,80 @@ F_createchan
 	inc hl
 	ld (hl), d			; MSB of 2nd byte of channel data
 	ret
+
+;---------------------------------------------------------------------------
+; F_allocmem
+; Allocates memory for the new stream.
+; Stream number should be in v_asave.
+; Returns the address of the memory block in HL
+F_allocmem
+	ld hl, (stream_memptr)		; look for a free memory slot
+	ld a, h
+	or l
+	jr z, .makeroom			; Make a new one
+	dec l				; Point at the top most entry
+	dec l				; on the list of free blocks.
+	ld e, (hl)			; We have a slot, get its
+	inc l				; address into DE
+	ld d, (hl)
+	dec l				; rewind HL to point at current entry
+	ld a, memptr_bottom % 256	; have we hit the bottom?
+	cp l
+	jr nz, .updatememptr
+	ld hl, 0			; no free blocks - clear the pointer
+.updatememptr
+	ld (stream_memptr), hl		; zero it, since there's no slots
+	ex de, hl
+	jr .setusedblock
+
+.makeroom
+	ld hl, (ZX_PROG)		; get the start of the program area
+	dec hl				; pointer to where to make space
+	ld bc, CHAN_LEN			; request this many bytes
+	rst CALLBAS
+	defw ZX_MAKE_ROOM		; allocate memory
+	inc hl				; point at 1st byte of channel area
+
+.setusedblock
+	ld a, (v_asave)			; get stream number
+	rlca				; multiply by 2
+	add chmemptr_bottom % 256	; and add the bottom offset
+	ex hl, de			; move block address to DE
+	ld h, chmemptr_bottom / 256	; get address to save the block
+	ld l, a				; address into HL
+	ld (hl), e			; save it
+	inc l
+	ld (hl), d
+	ex de, hl
+
+	ret
+
+;--------------------------------------------------------------------------
+; F_freemem
+; Puts the block associated with this stream in the free block list.
+F_freemem
+	rlca				; multiply by 2 the stream number
+	add chmemptr_bottom % 256	; add the offset
+	ld h, chmemptr_bottom / 256
+	ld l, a				; HL = address
+	ld e, (hl)
+	inc l
+	ld d, (hl)			; DE = address of block now free
+	
+	ld hl, (stream_memptr)
+	ld a, h
+	or l
+	jr nz, .saveblockaddr
+	ld hl, memptr_bottom		; First entry
+.saveblockaddr
+	ld (hl), e			; save the address of the free
+	inc l				; block.
+	ld (hl), d
+	inc l
+	ld (stream_memptr), hl		; save the free block pointer
+	ret
+
+;--------------
 
 IOROUTINE
 	ld h, STREAM_ROM_ID		; our ROM ID
