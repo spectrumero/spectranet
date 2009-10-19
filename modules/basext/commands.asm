@@ -208,12 +208,14 @@ F_tbas_save
 	call STATEMENT_END		; a basic BASIC save.
 
 	;------- runtime for simple BASIC save -------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; Fetch the file name
+	push de				; save the filename
+	push bc
 	xor a
 	call F_tbas_mktapheader
 	ld hl, 0xFFFF			; set param1 to >32767
 	ld (INTERPWKSPC+OFFSET_PARAM1), hl
-	rst CALLBAS
-	defw ZX_STK_FETCH		; There is only a filename.
 	jr .makebasicblock
 
 	; Deal with SAVE "filename" CODE
@@ -262,16 +264,18 @@ F_tbas_save
 	call STATEMENT_END
 
 	; Runtime for save "x" LINE y
-	xor a				; type = 0
-	call F_tbas_mktapheader		; Create the header
 	rst CALLBAS
 	defw ZX_FIND_INT2		; Fetch the number
-	ld (INTERPWKSPC+OFFSET_PARAM1), bc ; Put it into parameter 1
+	ld (v_bcsave), bc
 	rst CALLBAS
 	defw ZX_STK_FETCH		; Fetch the file name
-.makebasicblock
-	push de				; save params
+	push de
 	push bc
+	xor a				; type = 0
+	call F_tbas_mktapheader		; Create the header
+	ld hl, (v_bcsave)		; get LINE parameter
+	ld (INTERPWKSPC+OFFSET_PARAM1), hl ; Put it into parameter 1
+.makebasicblock
 
 	; Fill in the header, length and length without vars
 	ld hl, (ZX_E_LINE)		; get the length of the BASIC prog
@@ -282,7 +286,7 @@ F_tbas_save
 	ld hl, (ZX_VARS)		; now save the length - vars
 	sbc hl, de			; calculate it...
 	ld (INTERPWKSPC+OFFSET_PARAM2), hl
-	pop bc				; retrieve the filename
+	pop bc				; retrieve filename
 	pop de
 	call F_tbas_writefile		; Write it out.
 	jp c, J_tbas_error
