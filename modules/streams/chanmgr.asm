@@ -389,10 +389,18 @@ F_allocmem
 
 .makeroom
 	ld hl, (ZX_PROG)		; get the start of the program area
+	ld bc, (original_zx_prog)
+	ld a, b
+	or c
+	jr nz, .makeroom1
+	ld (original_zx_prog), hl	; save the original PROG variable
+.makeroom1
 	dec hl				; pointer to where to make space
 	ld bc, CHAN_LEN			; request this many bytes
 	rst CALLBAS
 	defw ZX_MAKE_ROOM		; allocate memory
+	ld de, (ZX_PROG)
+	ld (current_zx_prog), de	; save current PROG address
 	inc hl				; point at 1st byte of channel area
 
 .setusedblock
@@ -432,6 +440,19 @@ F_freemem
 	ld (hl), d
 	inc l
 	ld (stream_memptr), hl		; save the free block pointer
+	ret
+
+;------------------------------------------------------------------------
+; F_reclaim_strmem
+; Gets the ZX ROM to reclaim all the memory we used for channel stubs.
+F_reclaim_strmem
+	ld de, (original_zx_prog)	; First byte to reclaim
+	ld hl, (current_zx_prog)	; First byte to leave untouched
+	rst CALLBAS
+	defw ZX_RECLAIM_1		; move the BASIC program back
+	ld hl, 0
+	ld (current_zx_prog), hl	; clear down the variables
+	ld (original_zx_prog), hl
 	ret
 
 ;--------------

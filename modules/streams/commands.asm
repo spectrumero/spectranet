@@ -226,16 +226,29 @@ F_oneof
 
 	; Runtime
 	call F_fetchpage
-	jr c, .memerr
+	jr c, J_memerr
 	rst CALLBAS
 	defw ZX_FIND_INT2	; get the line number
 	ld (oneof_line), bc	; set the line number
 	call F_leave
 	jp EXIT_SUCCESS
-.memerr
+J_memerr
 	call F_leave
 	ld hl, STR_nomem
 	jp REPORTERR
+
+;--------------------------------------------------------------------------
+; F_reclaim: Reclaims stream memory
+; Syntax is %reclaim
+F_reclaim
+	call STATEMENT_END	; No arguments.
+
+	; Runtime
+	call F_fetchpage
+	jr c, J_memerr
+	call F_reclaim_strmem
+	call F_leave
+	jp EXIT_SUCCESS
 
 ;--------------------------------------------------------------------------
 ; Copy a BASIC string to a C string.
