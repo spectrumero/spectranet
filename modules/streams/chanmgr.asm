@@ -455,6 +455,24 @@ F_reclaim_strmem
 	ld (original_zx_prog), hl
 	ret
 
+; debugging
+F_debugA
+	push af
+	push hl
+	push de
+	push bc
+	ld hl, 0x3600
+	call ITOH8
+	ld hl, 0x3600
+	call PRINT42
+	ld a, '\n'
+	call PUTCHAR42
+	pop bc
+	pop de
+	pop hl
+	pop af
+	ret
+
 ;--------------
 
 IOROUTINE

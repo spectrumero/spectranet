@@ -32,3 +32,12 @@ BIT_ISFILE	equ 0
 BIT_RDONLY	equ 1
 BIT_ISDIR	equ 2
 
+; Offsets for stream metadata.
+STRM_WRITEBUF	equ 0		; Write buffer number
+STRM_READBUF	equ 1		; Read buffer number
+STRM_WRITEPTR	equ 2		; Write pointer
+STRM_READPTR	equ 3		; Read pointer
+STRM_FD		equ 4		; File/socket/dir handle
+STRM_FLAGS	equ 5		; Flags bitfield
+STRM_REMAINING	equ 6		; Remaining buffer size
+

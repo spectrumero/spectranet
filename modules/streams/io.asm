@@ -171,6 +171,7 @@ F_input
 	ld (hl), 0		; clear bufpos
 	inc l
 	inc l
+	inc l
 	ld (hl), 0		; clear bufsz
 	jr .exitnopop
 
