@@ -48,6 +48,7 @@ ZX_X_PTR_HI	equ 23648	; MSB of X_PTR
 ZX_FLAGS2	equ 23658	; 1 - More flags
 ZX_FLAGX	equ 23665
 ZX_E_LINE	equ 23641	; 2 - address of line being typed in
+ZX_RAMTOP	equ 23730	
 
 ; Displacements
 D_ERR_NR	equ 0

@@ -79,6 +79,7 @@ J_notopen
 	ret
 
 F_vfs_dispatch
+	call F_cleanpath	; remove leading/trailing space
 	call F_resolvemp	; See if a mount point is specified
 	ex (sp), hl
 	push de
@@ -315,12 +316,14 @@ F_allocfd
 ; Frees the file descriptor passed in A.
 F_freefd
 	push hl
+	push af
 	ld h, v_fd1hwsock / 256
 	ld l, a
 	ld (hl), 0x80		; Set bit 7 to mark the fd as freed.
 	add VECOFFS		; add the vector table offset
 	ld l, a			; and point HL to it
 	ld (hl), 0x00		; clear it down
+	pop af
 	pop hl
 	ret
 
@@ -387,5 +390,25 @@ F_resolvemp
 .returncurrent
 	pop hl
 	ld a, (v_vfs_curmount)
+	ret
+
+;----------------------------------------------------------------------
+; F_cleanpath
+; Gets rid of leading/trailing white spaces
+F_cleanpath
+	push hl
+	ld bc, 256
+	xor a
+	cpir			; find the argument's end
+	dec hl			; end - 1
+.spaceloop
+	dec hl			
+	ld a, (hl)
+	cp ' '
+	jr nz, .done
+	ld (hl), 0		; remove trailing white space
+	jr .spaceloop
+.done
+	pop hl
 	ret
 
