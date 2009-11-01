@@ -405,7 +405,8 @@ sub closeFile
 	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
 	if(defined $fhnd)
 	{
-		closedir($fhnd);
+		print("Closed handle $clientHandle\n");
+		close($fhnd);
 		delete $FILEHANDLE{$session}->[$clientHandle];
 		sendMsg($session, 0x23, 0x00);
 	}

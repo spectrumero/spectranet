@@ -19,17 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
-; BASIC extensions vector table
-	defb 0xAA		; This is a code ROM
-	defb 0xFD		; ROM ID = 0xFD
-	defw F_init		; RESET vector
-	defw 0xFFFF             ; the next few vectors are reserved
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw STR_ident          ; Pointer to a string that identifies this mod
-	jp F_snaptest		; Modulecall
-STR_ident	defb	"VFS BASIC extensions",0
+	include "../../rom/spectranet.asm"
+	org 0x2000
+	include "vectors.asm"
+	include "messages_en.asm"
+	include "getmsg.asm"
 

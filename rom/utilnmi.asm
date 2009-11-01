@@ -217,6 +217,11 @@ F_printxfinfo
 	call PUTCHAR42
 	ret
 
+F_snapshot
+	ld hl, 0xFD00		; ROM ID 0xFD call 0x00
+	rst MODULECALL_NOPAGE
+	ret
+
 ;---------------------------------------------------------------------
 ; F_exit
 ; A very short routine for the menu to be able to set the zero flag.	
@@ -228,6 +233,7 @@ MENU_nmi
 	defw	STR_config,F_config
 	defw	STR_rom,F_rom
 	defw	STR_loader,F_loader
+	defw	STR_snapshot,F_snapshot
 	defw	STR_exit,F_exit
 	defw	0,0
 

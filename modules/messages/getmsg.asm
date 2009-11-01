@@ -20,16 +20,33 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; BASIC extensions vector table
-	defb 0xAA		; This is a code ROM
-	defb 0xFD		; ROM ID = 0xFD
-	defw F_init		; RESET vector
-	defw 0xFFFF             ; the next few vectors are reserved
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw STR_ident          ; Pointer to a string that identifies this mod
-	jp F_snaptest		; Modulecall
-STR_ident	defb	"VFS BASIC extensions",0
+; Get an error message.
+F_getmessage
+	ld a, l			; Get message ID from caller.
 
+        ld hl, STR_SUCCESS      ; pointer at start of table
+        and a                   ; code 0 (success?)
+        ret z                   ; return now.
+	push de			; Save destination address
+        ld d, a                 ; set counter
+        xor a                   ; reset A to search for terminator
+        ld bc, ERR_TABLE_END - STR_SUCCESS
+.findloop
+        cpir                    ; find next null
+        jp po, .nomsg           ; cpir ran out of data?
+        dec d                   ; decrement loop counter
+        jr nz, .findloop        ; if Z is not set go for another run
+
+	pop de			; get destination address back
+	xor a
+.strcpy
+	ldi
+	cp (hl)			; End of the string?
+	jr nz, .strcpy
+	ld (de), a		; stick the null on the end
+	ret
+
+.nomsg
+	pop de
+	scf
+	ret

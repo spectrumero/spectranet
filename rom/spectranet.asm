@@ -25,6 +25,7 @@
 
 ; Hardware page-in entry points
 MODULECALL	equ 0x3FF8
+MODULECALL_NOPAGE	equ 0x28
 PAGEIN		equ 0x3FF9
 PAGEOUT		equ 0x007C
 HLCALL		equ 0x3FFA

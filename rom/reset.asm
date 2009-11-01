@@ -123,9 +123,9 @@ J_reset
 	call F_initfs
 
 	; Detect machine type
-	ld a, 0x03		; ROM with detect routine
-	call F_setpageB
-	call F_machinetype
+;	ld a, 0x03		; ROM with detect routine
+;	call F_setpageB
+;	call F_machinetype
 
 	ld hl, STR_unpaging	
 	call F_print

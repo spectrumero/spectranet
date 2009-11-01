@@ -20,16 +20,27 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; BASIC extensions vector table
-	defb 0xAA		; This is a code ROM
-	defb 0xFD		; ROM ID = 0xFD
-	defw F_init		; RESET vector
-	defw 0xFFFF             ; the next few vectors are reserved
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw STR_ident          ; Pointer to a string that identifies this mod
-	jp F_snaptest		; Modulecall
-STR_ident	defb	"VFS BASIC extensions",0
+;------------------------------------------------------------------------
+
+; Snapshot handler routines.
+
+;------------------------------------------------------------------------
+; F_detectsnap
+; Determine if the filename passed in HL is a snapshot file we can handle
+; and call the correct routine to handle it. On error, it returns.
+; If no error is encountered, the snapshot is run.
+F_detectsnap
+	ld d, 0			; no flags
+	ld e, O_RDONLY		; file mode = RO
+	call OPEN		; open the snapshot
+	ret c			; and return on error.
+	ld (v_snapfd), a	; save the FD
+
+	ld (v_stacksave), sp	; Save the current stack pointer
+	ld sp, v_snapstack	; Set the stack for snapshot loading.
+
+	call F_loadsna48	; Test
+
+	ld sp, (v_stacksave)	; Restore the stack
+	ret
 

@@ -20,15 +20,15 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Definitions.
-TNFS_HDR_LEN            equ 21          ; 3 byte TAP + 17 bytes ZX + check byte
-OFFSET_HDRBYTE          equ 2           ; 0x00 = header, 0xFF = data
-OFFSET_TYPE             equ 3           ; Type ID, 0=bas, 3=code
-OFFSET_FILENAME         equ 4           ; 10 bytes of filename
-OFFSET_LENGTH           equ 14          ; 2 byte little endian length
-OFFSET_PARAM1           equ 16          ; 2 byte little endian
-OFFSET_PARAM2           equ 18          ; 2 byte little endian
-OFFSET_CHKSUM           equ 20          ; "checksum" byte
-ZX_HEADERLEN            equ 17          ; Length of ZX header excl. check byte
 
+; Temporary storage
+v_snapfd		equ 0x32FF	; Snapshot FD
+v_stacksave		equ 0x32FD	; Save the stack pointer
+v_snapstack		equ 0x32FB	; Start of snapshot stack
+
+STACK_AFALT		equ NMISTACK-12
+STACK_AF		equ NMISTACK-10
+STACK_BC		equ NMISTACK-8
+STACK_DE		equ NMISTACK-6
+STACK_HL		equ NMISTACK-4
 

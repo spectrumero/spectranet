@@ -77,8 +77,8 @@ J_rst8handler
 	defw ZX_GET_ERR		; get the error code (which may be in ZX ROM)
 	cp 0x0B			; Nonsense in BASIC?
 	jr z, .handled
-	cp 0x07			; End of file?
-	jp z, J_handleeof
+;	cp 0x07			; End of file?
+;	jp z, J_handleeof
 	jp J_rst8done
 .handled
 	ld (ZX_ERR_NR), a	; Save the error number in ZX sysvars
@@ -215,24 +215,6 @@ J_rst8done
 	ex (sp), hl		; put it on the stack, discarding old value
 	ld hl, (ZX_CH_ADD)	; 1st instruction in ZX ROM RST8 routine
 	jp UNPAGE
-
-;---------------------------------------------------------------------------
-J_handleeof
-	ld hl, (v_eofaddr)	; what address to jump to
-	ld a, h			; if it's zero then
-	or l			; return to BASIC
-	jr z, J_rst8done
-	ld a, (v_eofrom)	; Page the right ROM if we need to
-	and a
-	jr z, .nopage
-	ex af, af'
-	ld a, (v_pgb)		; get current page B 
-	ld (v_origpageb), a	; and save it
-	ex af, af'
-	call F_setpageB		; page the specified ROM
-.nopage
-	pop de			; remove stack entry
-	jp (hl)	
 
 ;---------------------------------------------------------------------------
 ; J_zxrom_exit

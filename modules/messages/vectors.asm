@@ -22,14 +22,14 @@
 
 ; BASIC extensions vector table
 	defb 0xAA		; This is a code ROM
-	defb 0xFD		; ROM ID = 0xFD
-	defw F_init		; RESET vector
+	defb 0xFC		; ROM ID = 0xFC
+	defw 0xFFFF		; RESET vector
 	defw 0xFFFF             ; the next few vectors are reserved
         defw 0xFFFF
         defw 0xFFFF
         defw 0xFFFF
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
-	jp F_snaptest		; Modulecall
-STR_ident	defb	"VFS BASIC extensions",0
+	jp F_getmessage
+STR_ident	defb	"String table",0
 

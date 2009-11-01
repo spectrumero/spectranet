@@ -61,8 +61,13 @@ MODULECALL
 	jr UNPAGE		; unpage and return to caller
 	block 0x38-$,0xFF
 INTERRUPT
+	push hl
+	ld hl, (v_intcount)	; really, just to indicate that an
+	inc hl			; interrupt took place
+	ld (v_intcount), hl
+	pop hl
 	ei
-	reti		; TODO - do something!
+	reti			; TODO - do something!
 
 	block 0x66-$,0xFF
 NMI

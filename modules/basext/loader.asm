@@ -88,7 +88,8 @@ F_tbas_loader
 	jr nz, .unktype		; not a type we know
 	ld de, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
 	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; and the expected length
-	jp F_tbas_loadblock	; and load the TAP block
+	call F_tbas_loadblock	; and load the TAP block
+	jr .cleanup
 .wrongtype
 	; TODO: handle CODE files
 	ld a, TBADTYPE

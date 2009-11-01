@@ -25,6 +25,7 @@
 STR_config	defb "Configure network settings",0
 STR_rom		defb "Add and remove ROM modules",0
 STR_loader	defb "Load arbitrary data to RAM",0
+STR_snapshot	defb "Take snapshot",0
 STR_exit	defb "Exit",0
 STR_nmimenu	defb "Spectranet NMI menu\n\n",0
 STR_send	defb "Listening on ",0

@@ -25,6 +25,7 @@
 	include "../../rom/sysvars.sym"
 	include "../../rom/zxsysvars.asm"
 	include "../../rom/fs_defs.asm"
+	include "defs.asm"
 INTERPWKSPC	equ 0x3000
 TNFS_PAGE	equ 0xFF
 
@@ -37,4 +38,8 @@ TNFS_PAGE	equ 0xFF
 	include "info.asm"		; %info command
 	include "strings_en.asm"	; Strings
 	include "parseurl.asm"		; Mount point URL parser
+	include "loadsna.asm"		; Load .SNA files
+	include "snaphandler.asm"	; Detect type of snapshot
+	include "savesna.asm"		; Saves snapshots
 	include "regdump.asm"	
+

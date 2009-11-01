@@ -45,7 +45,7 @@ F_init
 STR_basicinit   defb    "BASIC extensions installed\n",0
 STR_basinsterr  defb    "Failed to install BASIC extensions\n",0
 
-NUMCMDS         equ     10
+NUMCMDS         equ     11
 PARSETABLE      
 P_mount         defb    0x0b
                 defw    CMD_MOUNT
@@ -79,14 +79,18 @@ P_tapein	defb	0x0b
 		defw	CMD_TAPEIN	; Set up a tape trap for a TAP file
 		defb	TNFS_PAGE
 		defw	F_tbas_tapein
-F_info		defb	0x0b
+P_info		defb	0x0b
 		defw	CMD_INFO	; Give information on a file
 		defb	TNFS_PAGE
 		defw	F_tbas_info
-F_fs		defb	0x0b
+P_fs		defb	0x0b
 		defw	CMD_FS
 		defb	TNFS_PAGE
 		defw	F_tbas_fs
+P_loadsnap	defb	0x0b
+		defw	CMD_LOADSNAP
+		defb	TNFS_PAGE
+		defw	F_loadsnap
 
 CMD_MOUNT       defb    "%mount",0
 CMD_UMOUNT      defb    "%umount",0
@@ -98,4 +102,5 @@ CMD_SAVE        defb    "%save",0
 CMD_TAPEIN	defb	"%tapein",0
 CMD_INFO	defb	"%info",0
 CMD_FS		defb	"%fs",0
+CMD_LOADSNAP	defb	"%loadsnap",0
 
