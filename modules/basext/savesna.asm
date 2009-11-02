@@ -25,6 +25,7 @@
 ;--------------------------------------------------------------------------
 ; F_savesna48
 ; Save a 48K snapshot. Null terminated filename pointed to by HL.
+UNPAGE	equ	0x007C
 F_snaptest
 	ld hl, STR_saving
 	call PRINT42
@@ -42,17 +43,38 @@ F_snaptest
 	call F_savesna48
 	jr c, .borked
 
-	ld hl, STR_done
-	call PRINT42
-	ret
+	ld a, (SNA_EIDI)		; Re.enable interrupts?
+	and a				; No
+	jr nz, .retei			; If yes, then EI on ret
+	ld sp, NMISTACK-14		; Set SP to where the stack was
+	pop af
+	ex af, af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp, (NMISTACK)
+	jp UNPAGE			; RET
 .borked
 	ld a, 2
 	out (254), a
 	ret
 
+.retei
+	ld sp, NMISTACK-14
+	pop af
+	ex af, af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp, (NMISTACK)
+	jp UNPAGE-1			; EI; RET
+
+
 STR_saving defb "Saving snapshot.sna...\n",0
-STR_done   defb "Done\n",0
 STR_filename defb "snapshot.sna",0
+
 
 ;
 ; Entry to the NMI saves the folowing at NMISTACK-4:
@@ -155,6 +177,10 @@ F_savesna48
 	; Now it's all over bar the shouting.
 .donewithinterrupts
 	di
+
+	; Restore the I register
+	ld a, (SNA_I)
+	ld i, a
 
 	; TODO: Something ought to be done with the R register, really.
 	; Save the interrupts-and-stuff block.
