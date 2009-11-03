@@ -135,10 +135,10 @@ F_savesna48
 .continue	
 	ld a, 4				; posit that interrupts are
 	ld (SNA_EIDI),a			; enabled.
-	ld hl, 0xFFFF			; Waste enough T-states so
+	ld hl, 3000			; Waste enough T-states so
 .loop	dec hl				; that at least one interrupt
-	ld a, h				; will occur.
-	or l
+	ld a, h				; will occur. (26 T-states per
+	or l				; iteration)
 	jr nz, .loop
 
 	ld hl, (v_intcount)		; did the counter increase?
@@ -160,7 +160,7 @@ F_savesna48
 	xor a
 	ld (SNA_EIDI), a		; interrupts weren't enabled
 	ei
-	ld hl, 0xFFFF			; Waste enough T-states so
+	ld hl, 3000			; Waste enough T-states so
 .loop2	dec hl				; that at least one interrupt
 	ld a, h				; will occur.
 	or l
