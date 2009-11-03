@@ -120,10 +120,10 @@ F_savesna48
 	; Make an IM2 vector table.
 	ld hl, 0x3600
 	ld de, 0x3601
-	ld bc, 0xFF			; table is actually 0x100 bytes
+	ld bc, 258			; table is actually 0x100 bytes
 	ld (hl), F_im2 % 256		; LSB of IM 2 routine.
 	ldir
-	ld a, F_im2 / 256
+	ld a, 0x36			; MSB of the table
 	ld i, a				; set the vector table
 
 	ld hl, 0
@@ -247,12 +247,3 @@ F_saveblock
 	jr .writeloop
 	ret
 
-;-----------------------------------------------------------------------
-; F_im2 - Detect interrupt mode 2 ISR
-F_im2
-	push af
-	ld a, 2
-	ld (SNA_IM), a
-	pop af
-	reti
-	
