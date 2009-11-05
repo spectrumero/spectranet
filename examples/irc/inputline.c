@@ -123,9 +123,9 @@ void handleKey(uchar key)
 char *checkKey()
 {
 	uchar k;
-#asm
-	di
-#endasm
+//#asm
+//	di
+//#endasm
 	if(readoffset != bufoffset)
 	{
 		k=*(kbuf+readoffset);
