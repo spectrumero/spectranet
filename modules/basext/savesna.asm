@@ -113,7 +113,12 @@ F_savesna48
 	exx
 	ld a, i
 	ld (SNA_I), a
-	
+
+	ld bc, CTRLREG			; read the border colour
+	in a, (c)			; from the CPLD.
+	and 0x07			; mask out all the high bits.
+	ld (SNA_BORDER), a
+
 	; Now something must be done to detect whether interrups were
 	; enabled, and what interrupt mode we're in. Only IM1 and IM2
 	; can really be used.
