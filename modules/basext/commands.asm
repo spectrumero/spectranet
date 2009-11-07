@@ -411,9 +411,9 @@ F_loadsnap
 	;---------- runtime -----------
 	rst CALLBAS
 	defw ZX_STK_FETCH		; get the filename
-	ld hl, INTERPWKSPC
+	ld hl, INTERPWKSPC+256
 	call F_basstrcpy		; copy filename as a C string
-	ld hl, INTERPWKSPC
+	ld hl, INTERPWKSPC+256
 	call F_detectsnap		; Detect type and load snapshot
 	jp J_tbas_error			; If we get here, an error occurred
 	

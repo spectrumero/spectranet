@@ -30,6 +30,13 @@
 ; and call the correct routine to handle it. On error, it returns.
 ; If no error is encountered, the snapshot is run.
 F_detectsnap
+	; simple detection - look at the size to see if it's 48K or 128K
+	push hl			; save the filename pointer
+	ld de, INTERPWKSPC	; where to put the data from stat
+	call STAT
+	pop hl
+	ret c			; can't stat the file
+
 	ld d, 0			; no flags
 	ld e, O_RDONLY		; file mode = RO
 	call OPEN		; open the snapshot
@@ -39,8 +46,17 @@ F_detectsnap
 	ld (v_stacksave), sp	; Save the current stack pointer
 	ld sp, v_snapstack	; Set the stack for snapshot loading.
 
-	call F_loadsna48	; Test
+	ld hl, (INTERPWKSPC+8)	; Less than 64K in size?
+	ld a, h
+	or l
+	jr z, .fortyeight
 
+	call F_loadsna128	; Load a 128K snapshot
 	ld sp, (v_stacksave)	; Restore the stack
 	ret
+.fortyeight
+	call F_loadsna48
+	ld sp, (v_stacksave)
+	ret
+
 
