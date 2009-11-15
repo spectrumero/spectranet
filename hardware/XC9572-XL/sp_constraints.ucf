@@ -48,7 +48,7 @@ net PA13 loc=p77;
 net PA14 loc=p78;
 net PA15 loc=p79;
 net PA16 loc=p81;
-net PA17 loc=p82;
+#net PA17 loc=p82;
 
 net RST8EN loc=p90;
 net TRAPENABLE_L loc=p91;
