@@ -23,6 +23,19 @@
 ; Utility ROM - NMI handler
 F_nmihandler
 	call F_savescreen	; save frame buffer contents
+	ld bc, CTRLREG		; save border colour
+	in a, (c)
+	and 7
+	ld (v_border), a
+	ld hl, 0xFE00		; MODULECALL 0xFE00 - save port 0x7FFD
+	rst MODULECALL_NOPAGE
+	ld a, (v_machinetype)
+	cp 1			; 128K machine?
+	jr nz, .menuloop	; If not, continue
+	ld a, (v_port7ffd)	; If so, make sure the normal screen
+	res 3, a		; is in use.
+	ld bc, 0x7ffd
+	out (c), a
 .menuloop
 	call CLEAR42
 	ld hl, STR_nmimenu	; title
@@ -32,7 +45,11 @@ F_nmihandler
 	ld hl, MENU_nmi
 	call F_getmenuopt	; act on user keypress
 	jr nz, .menuloop	; routines set Z if they want to exit
+
 	call F_restorescreen
+	ld a, (v_port7ffd)	; Restore port 0x7FFD
+	ld bc, 0x7ffd
+	out (c), a
 	ret
 
 

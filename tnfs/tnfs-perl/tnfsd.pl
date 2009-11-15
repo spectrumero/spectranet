@@ -432,7 +432,8 @@ sub seekFile
 		if(sysseek($fhnd, $seekloc, $seektype))
 		{
 			# success
-			print("Seek OK\n");
+			printf("Seek OK - seeking %x bytes type %d\n",
+				$seekloc, $seektype);
 			sendMsg($session, 0x25, 0x00);
 		}
 		else

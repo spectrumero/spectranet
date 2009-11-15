@@ -84,9 +84,10 @@ NMI
 	ld hl, (NMISTACK)	; HL = address of the return address
 	jr NMI2
 
-	block 0x7C-$,0xFF
+	block 0x7B-$,0xFF
 	; When unpaging, put the address where you want to end up on
 	; the stack, and the RET instruction will set the PC to this address.
+	ei
 UNPAGE
 	ret
 NMI2

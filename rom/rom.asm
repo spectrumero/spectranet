@@ -31,6 +31,7 @@
 ; Until w5100_defines is changed to be equ instead of defines, this should
 ; be included before any of the network library code.
 UTILROM	equ 0x02
+CTRLREG equ 0x80EF
 
 	; Routines for ROM page 0 (chip 0 page 0, lower fixed page)
 	include "zeropage.asm"		; Restarts

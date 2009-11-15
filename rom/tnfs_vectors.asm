@@ -29,8 +29,7 @@ mount	defw F_tnfs_mount	; The mount routine
 	defw 0xFFFF
 	defw 0xFFFF
 idstr	defw STR_ident		; ROM identity string
-modcall	ret			; No modcall code
-	defw 0			; pad out to start of...
+modcall	jp F_modcall		; No modcall code
 
 ; The VFS table. This is a jump table for all the VFS entry points.
 ; Only some are implemented, the rest point to a routine that returns

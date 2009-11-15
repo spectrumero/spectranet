@@ -31,6 +31,9 @@ PAGEOUT		equ 0x007C
 HLCALL		equ 0x3FFA
 IXCALL		equ 0x3FFD
 
+; Port defines
+CTRLREG		equ 0x80EF
+
 ; Jump table entry points
 SOCKET		equ 0x3E00	; Allocate a socket
 CLOSE		equ 0x3E03	; Close a socket

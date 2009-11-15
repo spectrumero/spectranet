@@ -210,8 +210,10 @@ ROMVECOFFS	equ (vectors-2)%256
 ; Page storage
 v_util_pgb	defb 0
 
-; Machine type
-v_plusthree	defb 0
+; Values of 0x7ffd and the border colour
+v_port7ffd	defb 0
+v_border	defb 0
+v_machinetype	defb 0
 
 ; Interrupt counter
 v_intcount	defw 0

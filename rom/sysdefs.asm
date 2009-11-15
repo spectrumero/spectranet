@@ -27,7 +27,7 @@
 TRAPSET		equ 0x80ED	; CPLD programmable trap (write only)
 PAGEA		equ 0x80E9	; CPLD page area A 4k page (8 bit) (wo)
 PAGEB		equ 0x80EB	; CPLD page area B 4k page (8 bit) (wo)
-CTRLREG		equ 0x80EF	; CPLD control register (rw)
+;CTRLREG		equ 0x80EF	; CPLD control register (rw)
 
 ; Control register bit mask
 MASK_PAGEIN	equ 1		; I/O pagein (read/write)

@@ -81,7 +81,7 @@ F_showaddr
 	call PUTCHAR42
 	ret
 
-STR_staticip	defb "IP address   : ",0
-STR_staticmask	defb "Netmask      : ",0
-STR_staticgw	defb "Gateway      : ",0
+STR_staticip	defb "I:",0
+STR_staticmask	defb "M:",0
+STR_staticgw	defb "G:",0
 
