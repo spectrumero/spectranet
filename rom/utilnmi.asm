@@ -37,6 +37,8 @@ F_nmihandler
 	ld bc, 0x7ffd
 	out (c), a
 .menuloop
+	ld a, 7
+	out (254), a		; border = white
 	call CLEAR42
 	ld hl, STR_nmimenu	; title
 	call PRINT42
@@ -50,6 +52,8 @@ F_nmihandler
 	ld a, (v_port7ffd)	; Restore port 0x7FFD
 	ld bc, 0x7ffd
 	out (c), a
+	ld a, (v_border)	; Restore the border colour
+	out (254), a
 	ret
 
 
