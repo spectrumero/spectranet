@@ -141,19 +141,15 @@ F_savesna
 	retn				; takes us just to the next addr.
 
 .continue
+	xor a
+	ld (SNA_IM), a			; clear IM x
 	ei
-	ld hl, 3000			; Waste enough T-states so
-.loop2	dec hl				; that at least one interrupt
-	ld a, h				; will occur. The IM 2 routine will
-	or l				; set "this is IM 2" itself, if
-	jr nz, .loop2			; not we'll need to set it.
+	halt				; wait for an interrupt
+	ld a, (SNA_IM)			; Did the IM 2 routine update
+	and a				; the interrupt mode?
+	jr nz, .donewithinterrupts	; Done.
 
-	ld hl, (v_intcount)		; did intcount update?
-	ld a, h
-	or l
-	jr z, .donewithinterrupts	; Done.
-
-	ld a, 1				; Not IM 2 if intcount increased,
+	inc a				 
 	ld (SNA_IM), a			; set interrupt mode 1
 
 	; Now it's all over bar the shouting.
