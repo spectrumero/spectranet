@@ -23,7 +23,8 @@
 ; The Utility ROM vector table
 	defb 0xAA
 	defb 0x01			; ROM ID 0x01
-	defw F_inetinit			; RESET vector
+;	defw F_inetinit			; RESET vector
+	defw 0xFFFF
 	defw 0xFFFF			; CANMOUNT vector
 	defw 0xFFFF			; MOUNT vector
 	defw F_nmihandler		; NMI vector

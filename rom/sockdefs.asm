@@ -34,9 +34,9 @@ SOCKMASK	equ 0x1F
 
 ; Error return codes - base socket library
 EBUGGERED	equ 0xFF
-ENFILE		equ 0xFE
-EBADF		equ 0xFD
-ECONNRESET	equ 0xFC
+ESNFILE		equ 0xFE	; TODO: Rationalize these and make
+ESBADF		equ 0xFD	; compatible with filesystem
+ECONNRESET	equ 0xFC	
 ETIMEDOUT	equ 0xFB
 ECONNREFUSED	equ 0xFA
 

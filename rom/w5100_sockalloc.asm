@@ -56,7 +56,7 @@ F_socket
 	call F_hwallocsock	; carry is set when no hw sockets left.
 	jr nc, .foundsock
 .nosockets
-	ld a, ENFILE		; no more hardware sockets, sorry
+	ld a, ESNFILE		; no more hardware sockets, sorry
 	jp J_leavesockfn
 .foundsock
 	ld de, v_fd1hwsock	; (de) = fd map first entry

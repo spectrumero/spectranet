@@ -22,6 +22,10 @@
 
 ; Initialization routines
 F_init
+	call F_inetinit		; Initialize the interface - note not a
+				; TNFS function but in this area for practical
+				; reasons.
+
         ld a, (v_pgb)           ; Who are we?
         call RESERVEPAGE        ; Reserve a page of static RAM.
         jr c, .failed

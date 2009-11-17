@@ -43,7 +43,7 @@ F_gethwsock
 	and NOTSOCKMASK		; is this not a hardware socket?
 	ret z			; OK - return with hw sock register in H
 .nohwsock
-	ld a, EBADF
+	ld a, ESBADF
 	scf
 	ret
 
