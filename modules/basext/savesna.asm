@@ -47,6 +47,8 @@ F_snaptest
 	call F_savesna
 	jr c, .borked
 
+	ld a, (v_border)		; Restore the border
+	out (254), a
 	ld a, (SNA_EIDI)		; Re.enable interrupts?
 	and a				; No
 	jr nz, .retei			; If yes, then EI on ret
@@ -119,11 +121,9 @@ F_savesna
 	ld a, i				; also sets P/V flag if IFF2 is
 	ld (SNA_I), a			; set (interrupts enabled)
 	call pe, .setei
-
-	ld bc, CTRLREG			; read the border colour
-	in a, (c)			; from the CPLD.
-	and 0x07			; mask out all the high bits.
-	ld (SNA_BORDER), a
+	
+	ld a, (v_border)		; Copy the border colour into
+	ld (SNA_BORDER), a		; the snapshot header.
 
 	; Now something must be done to detect interrupt mode
 	ld hl, 0x3600
