@@ -23,10 +23,6 @@
 ; Utility ROM - NMI handler
 F_nmihandler
 	call F_savescreen	; save frame buffer contents
-	ld bc, CTRLREG		; save border colour
-	in a, (c)
-	and 7
-	ld (v_border), a
 	ld hl, 0xFE00		; MODULECALL 0xFE00 - save port 0x7FFD
 	rst MODULECALL_NOPAGE
 	ld a, (v_machinetype)
@@ -61,6 +57,11 @@ F_nmihandler
 ; F_savescreen
 ; Save the current Spectrum frame buffer into our static memory.
 F_savescreen
+	ld bc, CTRLREG		; save border colour
+	in a, (c)
+	and 7
+	ld (v_border), a
+
 	ld a, 0xDA		; Use pages 0xDA, 0xDB of RAM
 	call SETPAGEA
 	ld hl, 0x4000		; Spectrum screen buffer

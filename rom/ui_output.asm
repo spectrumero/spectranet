@@ -278,12 +278,14 @@ F_backspace_impl
 ;--------------------------------------------------------------------------
 ; F_clear: Clears the screen to spectranet UI colours.
 F_clear_impl
+	ld a, 1
+	out (254), a	; border
 	ld hl, 16384
 	ld de, 16385
 	ld bc, 6144
-	ld (hl), 0
+	ld (hl), l
 	ldir
-	ld (hl), 56	; attribute for white
+	ld (hl), 15	; blue/white
 	ld bc, 767
 	ldir
 	xor a
