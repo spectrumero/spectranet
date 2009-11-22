@@ -136,8 +136,13 @@ F_tnfs_read
 	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)
 	push bc
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset+2
+	ld a, d
+	and 0xF0			; mask out bottom nibble
+	cp 0x10				; Is the buffer in page A?
+	call z, F_restorepage		; switch in original page A
 	ldir
 	pop bc
+	ret z				; no need to restore page if Z is set
 	jp F_leave
 
 ;--------------------------------------------------------------------------
@@ -181,7 +186,12 @@ F_tnfs_write
 	inc hl
 	ex de, hl		; prepare for buffer copy
 	pop hl			; source
+	ld a, h			; Is the data in 0x1000-0x1FFF?
+	and 0xF0		; mask out bottom nibble
+	cp 0x10			; 0x10-0x1F...
+	call z, F_restorepage	; Flip page A to its original value
 	ldir
+	call z, F_fetchpage	; get our page back if we paged
 	call F_tnfs_message_w	; write the command and get the reply
 	jp c, F_leave		; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)

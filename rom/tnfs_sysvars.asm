@@ -52,5 +52,5 @@ v_cwd1			equ 0x1900	; for mount points 0 to 4
 v_cwd2			equ 0x1A00
 v_cwd3			equ 0x1B00
 
-tnfs_recv_buffer	equ 0x1C00	; up to 1kb
-buf_tnfs_wkspc		equ 0x1E00	; Workspace
+tnfs_recv_buffer	equ 0x3B00	; up to 768 bytes
+buf_tnfs_wkspc		equ 0x3B00	; General network workspace
