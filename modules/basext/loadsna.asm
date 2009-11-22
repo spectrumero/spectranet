@@ -57,8 +57,11 @@ F_loadsna48
 	call READ		; read it
 	jp c, J_snapdie
 
-	ld de, 16384		; Now fill memory from the frame buffer on
-	ld bc, 49152		; size of RAM
+	call F_readscreen	; Read the screen memory
+	jp c, J_snapdie
+
+	ld de, 23296		; Now fill memory from the frame buffer on
+	ld bc, 42240		; size of RAM
 	call F_readblock
 	jp c, J_snapdie
 	
@@ -67,6 +70,9 @@ F_loadsna48
 
 J_unloadheader
 	; At this point we've successfully loaded the snapshot file.
+	; First deal with the screen.
+	call F_restorescreen
+
 	; Set register values.
 	ld sp, 0x3100		; Temporary stack
 	ld hl, (SNA_AFALT)	; Load alternate registers
@@ -141,6 +147,24 @@ F_readblock
 	ret
 
 ;-------------------------------------------------------------------------
+; F_readscreen: Read the screen memory into Spectranet RAM
+F_readscreen
+	ld a, 0xDA		; first page
+	call PUSHPAGEA		; switch and store page number
+	ld de, 0x1000
+	ld bc, 0x1000
+	call F_readblock
+	jr c, .restoreerr
+	ld a, 0xDB
+	call SETPAGEA
+	ld de, 0x1000
+	ld bc, 0xB00
+	call F_readblock
+.restoreerr
+	call POPPAGEA
+	ret
+
+;-------------------------------------------------------------------------
 ; F_loadsna128 - Loads a 128K snapshot.
 ; File descriptor in (v_snapfd)
 ; On error carry is set and A=errno
@@ -155,8 +179,10 @@ F_loadsna128
 	ld a, 0			; reset port 7FFD
 	ld bc, 0x7FFD
 	out (c), a
-	ld de, 16384		; load the first 32K
-	ld bc, 32768
+	call F_readscreen
+	jp c, J_snapdie
+	ld de, 23296		; load the remainder of the lowest 32K 
+	ld bc, 25856		; of RAM
 	call F_readblock
 	jp c, J_snapdie
 

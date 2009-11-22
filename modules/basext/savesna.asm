@@ -49,6 +49,7 @@ F_snaptest
 
 	ld a, (v_border)		; Restore the border
 	out (254), a
+	call F_restorescreen		; Restore the screen
 	ld a, (SNA_EIDI)		; Re.enable interrupts?
 	and a				; No
 	jr nz, .retei			; If yes, then EI on ret
@@ -253,23 +254,11 @@ F_savesna
 	call WRITE
 	ret c
 
-	; Save memory. First, restore screen memory so that it can be
-	; saved to the file.
-	ld a, 0xDA
-        call SETPAGEA
-        ld hl, 0x1000
-        ld de, 0x4000
-        ld bc, 0x1000
-        ldir
-        ld a, 0xDB
-        call SETPAGEA
-        ld hl, 0x1000
-        ld de, 0x5000
-        ld bc, 0xB00
-        ldir
+	; Save screen RAM.
+	call F_savesavedscreen
 
-	ld hl, 16384			; Start saving from this address
-	ld bc, 49152			; For this many bytes
+	ld hl, 23296			; Start saving from this address
+	ld bc, 42240			; For this many bytes
 	call F_saveblock
 	ret
 
@@ -297,4 +286,39 @@ F_saveblock
 	ld c, e				; to write out.
 	jr .writeloop
 	ret
+
+;----------------------------------------------------------------------
+; F_savesavedscreen
+; Save the screen that was copied to 0xDA:000 to 0xDB:AFF
+F_savesavedscreen
+	ld a, 0xDA			; first page
+	call PUSHPAGEA			; set it and save current page
+	ld hl, 0x1000
+	ld bc, 0x1000
+	call F_saveblock
+	jr c, .restoreerr
+	ld a, 0xDB
+	call SETPAGEA
+	ld hl, 0x1000
+	ld bc, 0xB00
+	call F_saveblock
+.restoreerr
+	call POPPAGEA			; restore original page
+	ret
+
+F_restorescreen
+	ld a, 0xDA
+	call PUSHPAGEA
+	ld hl, 0x1000
+	ld de, 0x4000
+        ld bc, 0x1000
+        ldir
+        ld a, 0xDB
+        call SETPAGEA
+        ld hl, 0x1000
+        ld de, 0x5000
+        ld bc, 0xB00
+        ldir
+	call POPPAGEA
+        ret
 
