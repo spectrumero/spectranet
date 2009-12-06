@@ -47,3 +47,13 @@ S_IROTH		equ	0x0004
 S_IWOTH		equ	0x0002
 S_IXOTH		equ	0x0001
 
+; Stat structure offsets
+STAT_MODE	equ 	0x00
+STAT_UID	equ	0x02
+STAT_GID	equ	0x04
+STAT_SIZE	equ	0x06
+STAT_ATIME	equ	0x0A
+STAT_MTIME	equ	0x0E
+STAT_CTIME	equ	0x12
+STAT_STRINGS	equ	0x16
+
