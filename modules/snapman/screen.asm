@@ -27,16 +27,13 @@
 ; C = maximum column number (32 cols)
 ; DE = address of first item to show
 F_makeselection
-	ld (v_selstart), hl	; save start address
-	ld (v_maxcolumn), bc	; and save the num lines + end column
-	push hl			; TODO: optimize
-	push bc
-	push de
+	ld (v_selstart), hl	; initialize variables
+	ld (v_maxcolumn), bc	
+	ld (v_stringtable), de
+	dec a			; numitems-1 = last item index
+	ld (v_lastitemidx), a
+
 	call F_bytesperline	; initialize line length
-	call F_cleararea
-	pop de
-	pop bc
-	pop hl
 		
 	ld a, l			; calculate start column
 	and 0x1F		; by masking out top 3 bits
@@ -53,46 +50,25 @@ F_makeselection
 	add a, b		; and add to the number of 8 px columns
 	inc a
 	ld (v_42colsperln),a	; then save.
-	ld a, l			; Initialize the position of the 42 col
-	and 0xE0		; print routine to the top of the box.
-	ld l, a
-	ld (v_row), hl		; Spectranet sysvar
+
+	call F_cleararea	; clear the box
+	ld hl, (v_selstart)
+	ld de, (v_stringtable)
+	call F_puttext		; Fill the box with text.
+
 	xor a
 	ld (v_selrow), a	; reset row counter
 	ld (v_selecteditem), a	; reset selected item number
 
-	ex de, hl		; get first item to print
-	ld a, (v_sellines)	; number of lines we can fit
-	ld b, a
-.printloop
-	ld e, (hl)		; low order of string lookup
-	inc hl
-	ld d, (hl)		; high order of string lookup
-	inc hl
-	ld a, d
-	or e			; is it zero?
-	jr z, .doneprinting
-	ex de, hl		; move string's address to HL
-	push de			; save string pointer table address
-	push bc			; save counter
-	call F_cprint		; print the string
-	pop bc
-	pop de
-	ex de, hl
-	djnz .printloop
-.doneprinting
-
 	ld hl, (v_selstart)	; initialize the selection bar
 	call F_fbuf2attr	; find address of attr cell
-	ld (v_baraddr), hl
+	ld (v_baraddr), hl	; initialize selection bar vars
+	ld (v_barstart), hl
 	xor a			; initialize bar position
 	ld (v_barpos), a
 	call F_putbar
 	call F_inputloop
 	ret
-
-;------------------------------------------------------------------------
-; F_
 
 ;------------------------------------------------------------------------
 ; F_cprint
@@ -286,6 +262,8 @@ F_scrollreverse
 ; HL = Start address
 ; B = Number of lines to clear
 F_cleararea
+	ld hl, (v_selstart)	; start of area
+	ld bc, (v_maxcolumn)	; counter into B
 	push bc			; save counter
 	push hl
 	ld b, 8			; clear 8 scanlines
@@ -365,20 +343,8 @@ F_clearline
 ; A = 0 - move bar down
 ; Otherwise, it moves up.
 F_movebar
-	push af
-	ld hl, (v_baraddr)	; current start address of bar
-	ld a, (v_barlen)	; how long the bar is
-	ld b, 0
-	ld c, a
-	ld d, h
-	ld e, l
-	inc e
-	push hl
-	ld (hl), NORMAL_ATTR	; Clear current line to normal attr colour
-	ldir
-	pop hl
+	call F_clearbar
 	ld de, 32		; Next row
-	pop af
 	and a			; Is A = 0?
 	jr z, .down
 	sbc hl, de
@@ -396,6 +362,21 @@ F_putbar_impl
 	ld b, 0
 	ld (hl), SELECTED_ATTR	; Colour to draw
 	ldir
+	ret
+F_clearbar
+	push af
+	ld hl, (v_baraddr)	; current start address of bar
+	ld a, (v_barlen)	; how long the bar is
+	ld b, 0
+	ld c, a
+	ld d, h
+	ld e, l
+	inc e
+	push hl
+	ld (hl), NORMAL_ATTR	; Clear current line to normal attr colour
+	ldir
+	pop hl
+	pop af
 	ret
 
 ;------------------------------------------------------------------------
@@ -456,11 +437,16 @@ F_inputloop
 	ld a, (v_barpos)
 	cp b
 	jr z, .scrolldown
+	ld a, (v_lastitemidx)	; check we're not at the end
+	ld b, a
+	ld a, (v_selecteditem)	
+	cp b
+	jr z, .inputloop	; selection is at the end
+	inc a			; increment selection
+	ld (v_selecteditem), a
+	ld a, (v_barpos)	
 	inc a
 	ld (v_barpos), a	; update position
-	ld a, (v_selecteditem)	; increment the selected item index
-	inc a
-	ld (v_selecteditem), a
 	xor a
 	call F_movebar
 	jr .inputloop
@@ -542,4 +528,123 @@ F_inputloop
 	pop hl			; get the string pointer
 	call F_cprint
 	jp .inputloop
+
+;--------------------------------------------------------------------------
+; F_setbarloc
+; Sets the bar location to a determined point in the list (which must
+; already be initialized, along with the selection box)
+; A = index of string to select
+F_setbarloc
+	ld b, a			; save 'goto' location
+
+	; first find out whether the bar is going to remain within
+	; what can be seen already.
+	ld hl, v_sellines
+	ld a, (v_barpos)	; get the current position of the bar
+	ld c, a
+	ld a, (hl)		; number of lines in the selection box
+	sub c			; subtract the current bar position
+	ld c, a			; save this value
+	ld a, (v_selecteditem)	; get the selected item index
+	add a, c		; and calculate the index of the bottom item
+	cp b			; Is the request for an item past what
+	jr c, .newselection	; we can see on the screen?
+	jr z, .newselection
+	ld c, (hl)		; get the number of lines in the box
+	sub c			; and calculate index of top item
+	cp b			; is out of bounds low.
+	jr c, .movebar
+
+.newselection
+	push bc			; save desired index
+	call F_cleararea	; clear the box ready to repaint it
+	ld hl, (v_stringtable)	; calculate new position in the string
+	pop bc
+	ld a, b			
+	ld (v_selecteditem), a	; (first save the new selected item)
+	rlca			; by doubling the index
+	ld e, a			; and adding it to the table start
+	ld d, 0
+	add hl, de
+	ex de, hl		; put string pointer in DE
+	ld hl, (v_selstart)	; first line of selection box
+	call F_puttext
+	xor a			; move bar to the top
+	jp F_putbarat		; (only need this if putbarat is moved)
+
+.movebar
+	; The item is actually visible already - select it.
+	ld c, a			; then calculate where the bar actually
+	ld a, b			; should be relative to the top
+	sub c			; of the box.
+	ld hl, v_selecteditem	; save the selected item
+	ld (hl), b
+;	jp F_putbarat		; and move the bar to its proper place.
+
+;-------------------------------------------------------------------------
+; F_putbarat: Draws the bar at the specified relative location in A
+F_putbarat
+	call F_clearbar		; clear the existing bar
+	
+	ld (v_barpos), a	; save the bar position
+	ld l, a			; get the offset by
+	ld h, 0
+	add hl, hl		; multiplying the relative bar
+	add hl, hl		; position by 32.
+	add hl, hl
+	add hl, hl
+	add hl, hl
+	ex de, hl
+	ld hl, (v_barstart)	; get the bar's start address
+	add hl, de		; and add the offset
+	ld (v_baraddr), hl	; set current address
+	jp F_putbar_impl	; and paint it
+
+;--------------------------------------------------------------------------
+; F_puttext
+; Puts the text in the selection box.
+; HL = address of first character cell
+; DE = pointer to the first item in the string table to print
+F_puttext
+	ld a, l			; Initialize the position of the 42 col
+	and 0xE0		; print routine to the top of the box.
+	ld l, a
+	ld (v_row), hl		; Spectranet sysvar
+
+	ex de, hl		; get first item to print
+	ld a, (v_sellines)	; number of lines we can fit
+	ld b, a
+.printloop
+	ld e, (hl)		; low order of string lookup
+	inc hl
+	ld d, (hl)		; high order of string lookup
+	inc hl
+	ld a, d
+	or e			; is it zero?
+	ret z
+	ex de, hl		; move string's address to HL
+	push de			; save string pointer table address
+	push bc			; save counter
+	call F_cprint		; print the string
+	pop bc
+	pop de
+	ex de, hl
+	djnz .printloop
+	ret
+
+;--------------------------------------------------------------------------
+; F_getselected
+; Returns a pointer to the selected item in HL
+F_getselected
+	ld hl, (v_stringtable)	; start address of the current string table
+	ld a, (v_selecteditem)	; get what's under the selection
+	rlca			; muliply by 2
+	ld e, a
+	ld d, 0
+	add hl, de		; point at the entry
+	ld e, (hl)		; address of the string itself
+	inc hl
+	ld d, (hl)
+	ex de, hl
+	ret
 
