@@ -50,7 +50,8 @@ F_makeselection
 	add a, b		; and add to the number of 8 px columns
 	inc a
 	ld (v_42colsperln),a	; then save.
-
+F_reinitselection
+	call F_clearattrs
 	call F_cleararea	; clear the box
 	ld hl, (v_selstart)
 	ld de, (v_stringtable)
@@ -364,8 +365,9 @@ F_putbar_impl
 	ldir
 	ret
 F_clearbar
-	push af
 	ld hl, (v_baraddr)	; current start address of bar
+F_clearbar2
+	push af
 	ld a, (v_barlen)	; how long the bar is
 	ld b, 0
 	ld c, a
@@ -417,11 +419,33 @@ F_fbuf2attr
 	ret
 
 ;------------------------------------------------------------------------
+; F_clearattrs
+; Clears the entire background area
+F_clearattrs
+	ld hl, (v_selstart)
+	call F_fbuf2attr
+	ld a, (v_sellines)
+.clearloop
+	push hl
+	call F_clearbar2
+	ld bc, 32
+	pop hl
+	add hl, bc
+	dec a
+	and a
+	jr nz, .clearloop
+	ret
+
+;------------------------------------------------------------------------
 ; F_inputloop
 ; Deal with keyboard input.
 F_inputloop
 .inputloop
+	ei
 	call GETKEY		; get the actual key
+	halt			; make sure we wait long enough for
+	halt			; Spectrum+/+2/+3 'multikey' membrane switches
+	call GETKEY		; to close all the contacts...
 	push af			; save it
 	call KEYUP		; and wait for keyup
 	pop af
@@ -646,5 +670,83 @@ F_getselected
 	inc hl
 	ld d, (hl)
 	ex de, hl
+	ret
+
+;-------------------------------------------------------------------------
+; F_addstringtotop
+; Adds a string to the top of the selection and redraws.
+F_addstring
+	push hl			; save pointer
+	ld a, (v_lastitemidx)	; Make room in the string table
+	cp 0x7E			; but make sure there is room.
+	jr z, .noroom
+	inc a
+	rlca			; - find the end and shift it all down
+	ld hl, (v_stringtable)
+	ld e, a
+	ld d, 0
+	add hl, de		; point at end of the string table
+	ld d, h
+	ld e, l
+	inc de
+	inc de
+	push hl			; save last entry
+	ld b, 0			
+	ld c, a			; repeat this many times
+	inc bc
+	inc bc
+	lddr
+
+	pop hl			; find the end of the last string
+	xor a
+	cpir
+
+	pop de			; get original param.
+	push de
+.cp
+	ld a, (de)
+	ld (hl), a
+	and a
+	jr z, .continue
+	inc hl
+	inc de
+	jr .cp
+.continue
+	ld hl, (v_stringtable)	; add the item to the front of the string
+	pop de			; table.
+	ld (hl), e
+	inc hl
+	ld (hl), d
+
+	ld a, (v_lastitemidx)
+	inc a
+	ld (v_lastitemidx), a
+	jp F_reinitselection
+
+.noroom
+	pop hl	
+	scf
+	ret
+
+;-------------------------------------------------------------------------
+; F_printat: Move PRINT42 location.
+; B = row
+; C = column
+F_printat
+	ld a, b	
+	and 0x18		; find the third of the screen
+	add 0x40		; add MSB of the screen address
+	ld h, a
+	ld a, b
+	and 0x07		; find where we are within that 1/3rd
+	rlca			; multiply by 32
+	rlca
+	rlca
+	rlca
+	rlca
+	ld l, a			; MSB of framebuffer address
+	ld (v_row), hl		; set row address
+	ld a, c
+	ld (v_column), a	; set column address
 	ret
 
