@@ -68,7 +68,6 @@ F_reinitselection
 	xor a			; initialize bar position
 	ld (v_barpos), a
 	call F_putbar
-	call F_inputloop
 	ret
 
 ;------------------------------------------------------------------------
@@ -320,6 +319,11 @@ F_cleararea
 ; F_clearline
 ; Clears a line. HL = start address.
 F_clearline
+	ld bc, (v_movebytes)	; put current box width in
+
+; ...clears a line BC bytes long.
+F_clearline2
+	ld (v_clearbytes), bc	; our "how much to clear" var.
 	ld b, 8
 .clearloop
 	push bc
@@ -327,7 +331,7 @@ F_clearline
 	ld e, l
 	inc e
 	push hl
-	ld bc, (v_movebytes)
+	ld bc, (v_clearbytes)
 	dec bc
 	xor a
 	ld (hl), a
@@ -673,55 +677,58 @@ F_getselected
 	ret
 
 ;-------------------------------------------------------------------------
-; F_addstringtotop
-; Adds a string to the top of the selection and redraws.
+; F_addstring
+; Adds a string to the selection
 F_addstring
 	push hl			; save pointer
 	ld a, (v_lastitemidx)	; Make room in the string table
 	cp 0x7E			; but make sure there is room.
 	jr z, .noroom
-	inc a
-	rlca			; - find the end and shift it all down
+	rlca			; - find the last entry
+
 	ld hl, (v_stringtable)
-	ld e, a
 	ld d, 0
-	add hl, de		; point at end of the string table
-	ld d, h
-	ld e, l
-	inc de
-	inc de
-	push hl			; save last entry
-	ld b, 0			
-	ld c, a			; repeat this many times
-	inc bc
-	inc bc
-	lddr
-
-	pop hl			; find the end of the last string
-	xor a
-	cpir
-
-	pop de			; get original param.
-	push de
-.cp
-	ld a, (de)
-	ld (hl), a
-	and a
-	jr z, .continue
+	ld e, a
+	add hl, de		; HL = last table entry
+	ld e, (hl)
 	inc hl
-	inc de
-	jr .cp
-.continue
-	ld hl, (v_stringtable)	; add the item to the front of the string
-	pop de			; table.
+	ld d, (hl)
+	inc hl			; de now has the last string address
+	
+	push hl
+	ex de, hl
+	xor a			; find the end of the string
+	ld b, a
+	ld c, a
+	cpir			; hl now equals the end of the string
+
+	ex de, hl
+	pop hl			; new string table entry
 	ld (hl), e
 	inc hl
 	ld (hl), d
+	inc hl
+	ld (hl), a		; put the null on the end
+	inc hl
+	ld (hl), a
 
+	pop hl			; get string pointer
+.strcpy
+	ld a, (hl)
+	ld (de), a
+	and a
+	jr z, .redraw
+	inc hl
+	inc de
+	jr .strcpy
+.redraw
 	ld a, (v_lastitemidx)
 	inc a
-	ld (v_lastitemidx), a
-	jp F_reinitselection
+	ld (v_lastitemidx), a	; update last item index
+	call F_reinitselection	; TODO - just repaint the end
+	ld a, (v_lastitemidx)
+	call F_setbarloc
+	ret
 
 .noroom
 	pop hl	
@@ -749,4 +756,49 @@ F_printat
 	ld a, c
 	ld (v_column), a	; set column address
 	ret
+
+;------------------------------------------------------------------------
+; F_loading
+; Show "Loading..."
+F_loading
+	ld bc, 0x1600
+	call F_printat
+	ld hl, STR_loading
+	call PRINT42
+	ret
+F_clearloading
+	ld bc, 0x1600
+	call F_printat
+	ld bc, 32
+	call F_clearline2
+	ret
+F_saving
+	ld bc, 0x1600
+	call F_printat
+	ld hl, STR_saving
+	call PRINT42
+	ret
+
+;------------------------------------------------------------------------
+; F_makestaticUI
+F_makestaticui
+	ld hl, UI_STRINGS
+.loop
+	ld b, (hl)		; get screen position to print at
+	inc hl
+	ld c, (hl)
+	inc hl
+	ld a, c
+	and b
+	cp 0xFF			; end of table?
+	ret z
+
+	push hl
+	call F_printat		; position the 42 col print routine
+	pop hl
+	call PRINT42		; print the string
+	inc hl			; point HL at the start of the next item
+	jr .loop
+
+
 

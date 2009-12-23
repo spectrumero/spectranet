@@ -27,6 +27,7 @@
 ; F_loaddir
 ; Load the contents of a directory into memory.
 F_loaddir
+	call F_loading
 	xor a			; initialize vars
 	ld (v_numdirs), a
 	ld (v_numsnas), a
@@ -41,7 +42,7 @@ F_loaddir
 
 	ld hl, STR_cwd		; current working directory
 	call OPENDIR
-	ret c
+	jr c, .err
 	ld (v_dhnd), a		; save the directory handle
 .readloop
 	ld de, v_dirwkspc
@@ -53,7 +54,11 @@ F_loaddir
 .readdone
 	ld a, (v_dhnd)
 	call CLOSEDIR
+	call F_clearloading
 	ret
+.err
+	call F_clearloading
+	ret			; TODO - report errors
 
 ;------------------------------------------------------------------------
 ; F_filterdir
