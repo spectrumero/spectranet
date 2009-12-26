@@ -52,7 +52,7 @@ modcall	jp F_modcall		; No modcall code
 	jp F_tnfs_readdir	; Read a directory entry
 	jp F_tnfs_closedir	; Close a directory
 	jp F_tnfs_chdir		; Change directory
-	jp F_undef		; reserved1
+	jp F_tnfs_getcwd	; get current directory
 	jp F_undef		; reserved2
 
 STR_ident

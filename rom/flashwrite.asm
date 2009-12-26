@@ -33,6 +33,7 @@
 ; erases a 16k sector)
 ; Carry flag is set if an error occurs.
 F_FlashEraseSector
+
 	; Page in the appropriate sector first 4k into page area B.
 	; Page to start the erase from is in A.
 	call F_setpageB	; page into page area B

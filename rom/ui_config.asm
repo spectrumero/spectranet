@@ -284,6 +284,7 @@ F_saveconfig
 	ld hl, STR_saving
 	call PRINT42
 	ld a, 0x1C		; page that belongs to last 16k of flash
+	di
 	call F_FlashEraseSector
 	jr c, .eraseborked
 	ld a, 0x1C		; page to start writing from

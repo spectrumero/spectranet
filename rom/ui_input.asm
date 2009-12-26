@@ -84,6 +84,7 @@ F_keyup
 ; Parameters: DE = pointer to memory to store the string.
 ;              C = size of buffer (string length + 1, for the null terminator)
 F_inputstring
+	ei
 	ld b, c			; save length in b
 	ld (v_stringptr), de	; save the pointer
 	ld (v_stringlen), bc	; save the string lengths
@@ -93,6 +94,9 @@ F_inputstring
 .keyloop
 	call F_keyup		; wait for keyup before doing anything
 	call F_getkey		; wait for a key to be pressed.
+	halt			; and do it for long enough that all the
+	halt			; contacts on multilayer membranes are
+	call F_getkey		; closed.
 	cp KEY_ENTER		; enter pressed?
 	jr z, .enter		; handle enter
 	cp KEY_BACKSPACE	; backspace pressed?

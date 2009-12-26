@@ -184,3 +184,24 @@ F_tnfs_mkdir
 F_tnfs_rmdir
 	ld b, TNFS_OP_RMDIR
 	jp F_tnfs_simplepathcmd
+
+;------------------------------------------------------------------------
+; F_tnfs_getcwd
+; Gets the current working directory
+; Parameters		DE = pointer to memory to copy result
+F_tnfs_getcwd
+	call F_fetchpage
+	ret c
+
+	add v_cwd0 / 256	; add the MSB of the CWD storage
+	ld h, a			; 
+	ld l, 0			; HL = pointer to CWD
+.cploop
+	ld a, (hl)
+	ld (de), a
+	and a			; null terminator?
+	jp z, F_leave
+	inc hl
+	inc de
+	jr .cploop
+
