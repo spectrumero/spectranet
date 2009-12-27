@@ -40,7 +40,9 @@ F_loaddir
 	ld hl, v_snastrings
 	ld (v_snanextentry), hl
 
-	ld hl, STR_cwd		; current working directory
+	ld hl, 0x002E		; "." followed by a NULL terminator
+	ld (WORKSPACE), hl	; put it somewhere the FS module can see
+	ld hl, WORKSPACE	; and set this as the param to OPENDIR
 	call OPENDIR
 	jr c, .err
 	ld (v_dhnd), a		; save the directory handle

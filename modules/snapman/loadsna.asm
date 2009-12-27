@@ -43,7 +43,42 @@ SNA_BORDER	equ HEADER+26
 HEADERSZ	equ 27
 SNA_PC		equ HEADER+27		; 128K .SNA file - program counter
 SNA_7FFD	equ HEADER+29		; value of port 0x7FFD
-SNA_TRDOS	equ HEADER+30		; TR-DOS flag
+SNA_TRDOS	equ HEADER+30		; TR-DOS flagm
+
+;------------------------------------------------------------------------
+; F_loadsnap
+; Determine if the filename passed in HL is a snapshot file we can handle
+; and call the correct routine to handle it. On error, it returns.
+; If no error is encountered, the snapshot is run.
+F_loadsnap
+        ; simple detection - look at the size to see if it's 48K or 128K
+        push hl                 ; save the filename pointer
+        ld de, v_statinfo       ; where to put the data from stat
+        call STAT
+        pop hl
+        ret c                   ; can't stat the file
+
+        ld d, 0                 ; no flags
+        ld e, O_RDONLY          ; file mode = RO
+        call OPEN               ; open the snapshot
+        ret c                   ; and return on error.
+        ld (v_snapfd), a        ; save the FD
+
+        ld (v_stacksave), sp    ; Save the current stack pointer
+        ld sp, v_snapstack      ; Set the stack for snapshot loading.
+
+        ld hl, (v_statinfo+8)	; Less than 64K in size?
+        ld a, h
+        or l
+        jr z, .fortyeight
+
+        call F_loadsna128       ; Load a 128K snapshot
+        ld sp, (v_stacksave)    ; Restore the stack
+        ret
+.fortyeight
+        call F_loadsna48
+        ld sp, (v_stacksave)
+        ret
 
 ;---------------------------------------------------------------------------
 ; F_loadsna48: Load a 48K snapshot. File handle is in (v_snapfd)

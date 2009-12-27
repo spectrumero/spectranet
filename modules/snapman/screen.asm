@@ -664,6 +664,9 @@ F_puttext
 ; F_getselected
 ; Returns a pointer to the selected item in HL
 F_getselected
+	ld a, (v_lastitemidx)	; check there's something there
+	and a
+	ret z			; if nothing return with Z set
 	ld hl, (v_stringtable)	; start address of the current string table
 	ld a, (v_selecteditem)	; get what's under the selection
 	rlca			; muliply by 2
@@ -779,6 +782,60 @@ F_saving
 	call PRINT42
 	ret
 
+;------------------------------------------------------------------------
+; F_printcwd
+; Prints the current working directory
+F_printcwd
+	ld bc, 0x1404
+	call F_printat
+	ld bc,  MAXDIRSTR
+	inc l
+	inc l
+	inc l			; put HL in the right place for clearline
+	call F_clearline2	; clear out the existing string
+	ld de, WORKSPACE
+	call GETCWD		; ask the filesystem where we are
+	ld hl, WORKSPACE
+	call F_strlen
+	cp MAXDIRSTR		; too long to fit in the bit of screen?
+	jr nc, .truncstr
+	call PRINT42		; no, so just print it
+	ret
+.truncstr
+	sub MAXDIRSTR
+	ld c, a			; should be starting form.
+	ld b, 0
+	add hl, bc
+	add a, 3
+	cp MAXDIRSTR		; still too long with the ... added?
+	call nc, .truncmore
+	push hl
+	ld hl, STR_dotdotdot
+	call PRINT42
+	pop hl
+	call PRINT42
+	ret
+.truncmore
+	sub MAXDIRSTR
+	ld c, a
+	add hl, bc
+	ret
+STR_dotdotdot	defb "...",0
+
+;------------------------------------------------------------------------
+; F_strlen
+; String length returned in A for the string at HL
+F_strlen
+	push hl
+	xor a
+	ld bc, 0x100
+.loop
+	cpir
+	ld a, c
+	cpl
+	pop hl
+	ret
+	
 ;------------------------------------------------------------------------
 ; F_makestaticUI
 F_makestaticui

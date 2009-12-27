@@ -25,7 +25,23 @@
 
 ; Create the user interface and enter the input loop.
 F_startui
+	call F_fetchpage
+	jp c, F_nopage
+	call CLEAR42
+	xor a
+	ld (v_viewflags), a	; reset view flags
+	ld (v_inputflags), a	; and input flags
+	call F_makestaticui	; create the static user interface
+	call F_printcwd		; initialize the CWD line
+	call F_loaddir		; get the contents of the current dir
+	ld a, (v_numsnas)
+	ld hl, BOXSTARTADDR
+	ld bc, BOXDIMENSIONS
+	ld de, v_snatable	; start with the snapshot view
+	call F_makeselection	
 
+;----------------------------------------------------------------------
+; Main UI loop
 F_mainloop
 	call F_inputloop	; call UI control input loop, wait for a key
 	ld b, a			; save the keypress in B
@@ -38,6 +54,7 @@ F_mainloop
 	cp b			; See if the key press is recognised.
 	jr z, .handlekey
 	inc c			; inc. counter
+	inc hl
 	jr .getactionloop
 .handlekey
 	rlc c			; double the counter to form the offset
@@ -57,7 +74,7 @@ F_mainloop
 	jr z, F_mainloop	; ...no, so continue
 	res 0, a
 	ld (v_inputflags), a	; reset the flag
-	ret
+	jp F_leave		; restore memory and leave
 
 ;------------------------------------------------------------------------
 ; F_exit
@@ -68,6 +85,94 @@ F_exit
 	ld (v_inputflags), a
 	ret
 
+;------------------------------------------------------------------------
+; F_enterpressed
+F_enterpressed
+	call F_getselected
+	ld a, (v_viewflags)
+	and 1			; bit 1 set - directory mode
+	jr z, .loadsnap
+	ld de, WORKSPACE	; copy directory name to where the
+	call F_strcpy		; FS module will be able to see it
+	ld hl, WORKSPACE
+	call CHDIR
+	jp c, F_error
+	call F_printcwd
+	call F_loaddir
+	ld hl, BOXSTARTADDR	; start address of the box
+	ld bc, BOXDIMENSIONS	; box dimensions
+	ld de, v_dirtable
+	ld a, (v_numdirs)
+	jp F_makeselection 	; make the selection and return.
+.loadsnap
+	ld de, WORKSPACE
+	push hl
+	call F_strcpy		; copy the filename into common workspace
+	pop hl
+	ld de, v_curfilename	; copy the filename to our "current file"
+	call F_strcpy
+	ld hl, WORKSPACE	; filename pointed to by HL
+	call F_loadsnap		; load the snapshot
+F_error				; ends up here if there is an error
+	ld a, 2
+	out (254), a
+	ret
+
+;------------------------------------------------------------------------
+; F_saveas
+F_saveas
+	ld hl, STR_filename
+	ld de, v_strbuf
+	ld c, FNAMESZ
+	call F_userinput
+	ret z			; nothing entered, continue
+
+	ld de, v_curfilename	; copy the string entered to the current
+	ld hl, v_strbuf
+	call F_strcpy		; filename.
+	ld hl, v_strbuf
+F_saveas2
+	ld de, WORKSPACE	; and copy it to the workspace
+	call F_strcpy		; so the FS module can see it too
+	ld hl, WORKSPACE
+	call F_savesna
+	jp c, F_error
+
+	ret
+
+;------------------------------------------------------------------------
+; F_save
+F_save
+	ld a, (v_viewflags)	; directory view or file view?
+	and 1
+	jr nz, .needfilename
+	call F_getselected
+	jr z, F_saveas
+	ld (v_hlsave), hl	; save the pointer but don't disturb stack
+	ld de, v_curfilename
+	call F_strcmp		; selected = current?
+	jr nz, .confirm
+.save
+	ld hl, (v_hlsave)
+	jp F_saveas2
+.confirm
+	ld hl, STR_cfoverwrite
+	ld de, v_strbuf
+	ld c, 2
+	call F_userinput
+	ret z			; nothing entered, nothing to do
+	ld a, (v_strbuf)	
+	cp CHAR_YES
+	ret nz			; user didn't answer "yes"
+	ld hl, (v_hlsave)
+	ld de, v_curfilename
+	call F_strcpy		; set this as the current file
+	jr .save
+.needfilename
+	ld a, (v_curfilename)	; Already have a filename?
+	and a			; if zero, no
+	jr z, F_saveas
+			
 ;------------------------------------------------------------------------
 ; F_userinput
 ; HL = pointer to prompt string
@@ -100,13 +205,22 @@ F_switchdirview
 	xor 1			; flip "dir view" bit
 	ld (v_viewflags), a	; and save
 	rra			; push lsb into the carry flag
-	jr nc, .showdir		; switch from file to dir view
-	ld de, v_filetable
+	jr c, .showdir		; switch from file to dir view
+	ld de, v_snatable
+	ld a, (v_numsnas)
 .makesel
-	ld hl, UI_BOXSTART	; start address of the box
-	ld bc, UI_BOXDIMENSION	; box dimensions
+	ld hl, BOXSTARTADDR	; start address of the box
+	ld bc, BOXDIMENSIONS	; box dimensions
 	jp F_makeselection 	; make the selection and return.
 .showdir
 	ld de, v_dirtable
+	ld a, (v_numdirs)
 	jr .makesel
+
+; We end up here if the allocated page wasn't found.
+F_nopage
+	ld hl, STR_nomempage
+	call PRINT42
+	ret
+
 	

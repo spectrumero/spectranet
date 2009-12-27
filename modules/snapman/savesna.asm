@@ -78,11 +78,6 @@ F_snaptest
 	ld sp, (NMISTACK)
 	jp UNPAGE-1			; EI; RET
 
-
-STR_saving defb "Saving snapshot.sna...\n",0
-STR_filename defb "snapshot.sna",0
-
-
 ;------------------------------------------------------------------------
 ; HL = pointer to filename string
 ; Entry to the NMI saves the folowing at NMISTACK-4:
