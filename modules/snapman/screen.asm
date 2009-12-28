@@ -444,10 +444,14 @@ F_clearattrs
 ; Deal with keyboard input.
 F_inputloop
 .inputloop
-	ei
 	call GETKEY		; get the actual key
-	halt			; make sure we wait long enough for
-	halt			; Spectrum+/+2/+3 'multikey' membrane switches
+        ld hl, 0x1000           ; wait some more time so that 
+.loop                           ; multi key contacts on Spectrum + / 128
+        dec hl                  ; membranes all make. Use a delay loop
+        ld a, h                 ; rather than halt so this routine works
+        or l                    ; with interrupts disabled.
+        jr nz, .loop
+
 	call GETKEY		; to close all the contacts...
 	push af			; save it
 	call KEYUP		; and wait for keyup
