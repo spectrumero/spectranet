@@ -240,7 +240,7 @@ F_printxfinfo
 	ret
 
 F_snapshot
-	ld hl, 0xFD00		; ROM ID 0xFD call 0x00
+	ld hl, 0xFB00		; ROM ID 0xFB call 0x00
 	rst MODULECALL_NOPAGE
 	ret
 

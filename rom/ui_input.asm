@@ -84,7 +84,6 @@ F_keyup
 ; Parameters: DE = pointer to memory to store the string.
 ;              C = size of buffer (string length + 1, for the null terminator)
 F_inputstring
-	ei
 	ld b, c			; save length in b
 	ld (v_stringptr), de	; save the pointer
 	ld (v_stringlen), bc	; save the string lengths
@@ -94,8 +93,15 @@ F_inputstring
 .keyloop
 	call F_keyup		; wait for keyup before doing anything
 	call F_getkey		; wait for a key to be pressed.
-	halt			; and do it for long enough that all the
-	halt			; contacts on multilayer membranes are
+	push hl
+	ld hl, 0x1000		; wait some more time so that 
+.loop				; multi key contacts on Spectrum + / 128
+	dec hl			; membranes all make. Use a delay loop
+	ld a, h			; rather than halt so this routine works
+	or l			; with interrupts disabled.
+	jr nz, .loop
+	pop hl
+
 	call F_getkey		; closed.
 	cp KEY_ENTER		; enter pressed?
 	jr z, .enter		; handle enter
@@ -135,6 +141,7 @@ F_inputstring
 	call F_backspace	; remove last character
 	jr .inputloop
 .enter
+	call F_keyup		; wait until keyup
 	call F_backspace	; erase the cursor
 	ld hl, (v_stringptr)	; get the string pointer
 	ld (hl), 0		; put the null terminator on the string
