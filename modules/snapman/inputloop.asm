@@ -89,6 +89,7 @@ F_exit
 ; F_enterpressed
 F_enterpressed
 	call F_getselected
+	ret z			; nothing to do - no entries
 	ld a, (v_viewflags)
 	and 1			; bit 1 set - directory mode
 	jr z, .loadsnap

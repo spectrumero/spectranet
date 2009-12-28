@@ -30,8 +30,7 @@ F_makeselection
 	ld (v_selstart), hl	; initialize variables
 	ld (v_maxcolumn), bc	
 	ld (v_stringtable), de
-	dec a			; numitems-1 = last item index
-	ld (v_lastitemidx), a
+	ld (v_numitems), a
 
 	call F_bytesperline	; initialize line length
 		
@@ -465,7 +464,10 @@ F_inputloop
 	ld a, (v_barpos)
 	cp b
 	jr z, .scrolldown
-	ld a, (v_lastitemidx)	; check we're not at the end
+	ld a, (v_numitems)	; check we're not at the end
+	and a
+	jr z, .inputloop	; no items
+	dec a
 	ld b, a
 	ld a, (v_selecteditem)	
 	cp b
@@ -493,7 +495,10 @@ F_inputloop
 
 
 .scrolldown
-	ld a, (v_lastitemidx)	
+	ld a, (v_numitems)	
+	and a
+	jr z, .inputloop	; no items
+	dec a
 	ld b, a			; compare the last item index
 	ld a, (v_selecteditem)	; with the current
 	cp b
@@ -664,7 +669,7 @@ F_puttext
 ; F_getselected
 ; Returns a pointer to the selected item in HL
 F_getselected
-	ld a, (v_lastitemidx)	; check there's something there
+	ld a, (v_numitems)	; check there's something there
 	and a
 	ret z			; if nothing return with Z set
 	ld hl, (v_stringtable)	; start address of the current string table
@@ -684,8 +689,8 @@ F_getselected
 ; Adds a string to the selection
 F_addstring
 	push hl			; save pointer
-	ld a, (v_lastitemidx)	; Make room in the string table
-	cp 0x7E			; but make sure there is room.
+	ld a, (v_numitems)	; Make room in the string table
+	cp 0x7F			; but make sure there is room.
 	jr z, .noroom
 	rlca			; - find the last entry
 
@@ -725,11 +730,12 @@ F_addstring
 	inc de
 	jr .strcpy
 .redraw
-	ld a, (v_lastitemidx)
+	ld a, (v_numitems)
 	inc a
-	ld (v_lastitemidx), a	; update last item index
+	ld (v_numitems), a	; update last item index
 	call F_reinitselection	; TODO - just repaint the end
-	ld a, (v_lastitemidx)
+	ld a, (v_numitems)
+	dec a
 	call F_setbarloc
 	ret
 

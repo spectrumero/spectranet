@@ -56,6 +56,14 @@ F_loaddir
 .readdone
 	ld a, (v_dhnd)
 	call CLOSEDIR
+	ld hl, (v_snaptr)	; terminate lists
+	ld (hl), 0
+	inc hl
+	ld (hl), 0
+	ld hl, (v_dirptr)
+	ld (hl), 0
+	inc hl
+	ld (hl), 0	
 	call F_clearloading
 	ret
 .err
@@ -121,22 +129,13 @@ F_addentry
 	push hl
 	push de
 	ld hl, v_dirwkspc	; point at filename to copy
-.strcpy
-	ldi
-	ld a, (hl)
-	and a			; end of string?
-	jr nz, .strcpy
-	ld (de), a		; make sure the NULL is added
+	call F_strcpy
 	pop bc 
 	pop hl
 	ld (hl), c		; put the string pointer in the table
 	inc hl
 	ld (hl), b
-	inc hl
-	ld (hl), 0		; cap the table
-	inc hl
-	ld (hl), 0
-	dec hl
+	inc hl			; hl = next entry in table
 	inc de			; de = next free byte
 	ret
 

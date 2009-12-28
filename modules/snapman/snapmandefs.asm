@@ -54,7 +54,7 @@ v_selrow		equ	0x1042	; Selection row
 v_curtopstring		equ	0x1043	; Current top string ptr
 v_curbotstring		equ	0x1045	; Current bottom string ptr
 v_selecteditem		equ	0x1047	; Selected item
-v_lastitemidx		equ	0x1048	; Last item's index
+v_numitems		equ	0x1048	; selection box item count
 v_stringtable		equ	0x1049	; Pointer to the string table
 v_viewflags		equ 	0x104B	; Current box view flags
 v_inputflags		equ	0x104C	; Input routine flags
