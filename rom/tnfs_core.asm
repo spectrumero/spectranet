@@ -417,7 +417,7 @@ F_tnfs_simplepathcmd
 	call F_fetchpage
 	ret c
 	ld (v_curmountpt), a
-	ld b, a
+	ld a, b
 	call F_tnfs_pathcmd
 ; Entry point for simple exit handler
 F_tnfs_simpleexit
