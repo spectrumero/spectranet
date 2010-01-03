@@ -50,6 +50,12 @@ SNA_TRDOS	equ HEADER+30		; TR-DOS flagm
 ; Determine if the filename passed in HL is a snapshot file we can handle
 ; and call the correct routine to handle it. On error, it returns.
 ; If no error is encountered, the snapshot is run.
+F_loadsnap_modcall
+	ex de, hl
+	push hl			; if called from another program set the
+	ld de, v_curfilename	; current filename in case the user enters
+	call F_strcpy		; the UI.
+	pop hl
 F_loadsnap
         ; simple detection - look at the size to see if it's 48K or 128K
         push hl                 ; save the filename pointer

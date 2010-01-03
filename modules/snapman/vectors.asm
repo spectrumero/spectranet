@@ -30,7 +30,7 @@
         defw 0xFFFF
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
-        jp F_startui	        ; Modulecall
+        jp F_modulecall
         block 0x2020-$,0xFF
 
 ;-----------------------------------------------------------------------
@@ -41,4 +41,13 @@ F_im2
         ld (SNA_IM), a
         pop af
         reti
+
+F_modulecall
+	ld a, l
+	and a			; call 0 = start UI
+	jp z, F_startui
+	cp 1
+	jp z, F_loadsnap_modcall
+	scf
+	ret	
 

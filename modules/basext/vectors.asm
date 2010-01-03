@@ -30,17 +30,9 @@
         defw 0xFFFF
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
-	jp F_snaptest		; Modulecall
+	ret
+	;jp F_snaptest		; Modulecall
 	block 0x2020-$,0xFF
-
-;-----------------------------------------------------------------------
-; F_im2 - Detect interrupt mode 2 ISR
-F_im2
-        push af
-        ld a, 2
-        ld (SNA_IM), a
-        pop af
-        reti
 
 STR_ident	defb	"VFS BASIC extensions",0
 

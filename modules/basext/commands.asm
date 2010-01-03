@@ -413,8 +413,9 @@ F_loadsnap
 	defw ZX_STK_FETCH		; get the filename
 	ld hl, INTERPWKSPC+256
 	call F_basstrcpy		; copy filename as a C string
-	ld hl, INTERPWKSPC+256
-	call F_detectsnap		; Detect type and load snapshot
+	ld de, INTERPWKSPC+256
+	ld hl, 0xFB01			; Module ID = 0xFB, call ID = 0x01
+	rst MODULECALL_NOPAGE
 	jp J_tbas_error			; If we get here, an error occurred
 	
 ;----------------------------------------------------------------------------

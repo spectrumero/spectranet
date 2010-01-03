@@ -48,4 +48,6 @@ STR_ident	defb	"Snapshot manager 1.0",0
 STR_initialized	defb	"Snapshot manager initialized\n",0
 STR_failed	defb	"Snapmgr. failed to alloc memory\n",0
 STR_nomempage	defb	"No page was allocated!\n",0
+STR_curfile	defb	"Current: ",0
+STR_nofile	defb	"(none)",0
 

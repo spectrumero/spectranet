@@ -67,7 +67,10 @@ F_reinitselection
 	xor a			; initialize bar position
 	ld (v_barpos), a
 	call F_putbar
-	ret
+	call F_findstr		; is the current filename in the box?
+	ret nc			; no
+	call F_setbarloc	; (TODO: Refine so that we can go direct
+	ret			; to the location)
 
 ;------------------------------------------------------------------------
 ; F_cprint
@@ -792,6 +795,27 @@ F_saving
 	call PRINT42
 	ret
 
+;-----------------------------------------------------------------------
+; F_putcurfile
+; Prints the currently file name.
+F_printcurfile
+	ld bc, 0x1500
+	call F_printat
+	ld bc, 32
+	call F_clearline2
+	ld hl, STR_curfile
+	call PRINT42
+	ld hl, v_curfilename
+	ld a, (hl)
+	and a
+	jr z, .none
+	call PRINT42
+	ret
+.none
+	ld hl, STR_nofile
+	call PRINT42
+	ret
+
 ;------------------------------------------------------------------------
 ; F_printcwd
 ; Prints the current working directory
@@ -867,5 +891,34 @@ F_makestaticui
 	inc hl			; point HL at the start of the next item
 	jr .loop
 
-
-
+;-----------------------------------------------------------------------
+; F_findstring
+; Finds the index of a string in the box, returns it in A.
+; Carry flag set if the string was found.
+F_findstr
+	ld hl, (v_stringtable)
+	ld c, 0			; counter
+.findloop
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	inc hl
+	ld (v_hlsave), hl
+	ld a, e
+	or d
+	ret z
+	ld hl, v_curfilename	; string to find
+	ld a, (hl)		; unset?
+	and a
+	ret z
+	push bc
+	call F_strcmp		; is this the string?
+	pop bc
+	jr z, .found
+	inc c
+	ld hl, (v_hlsave)
+	jr .findloop
+.found
+	ld a, c
+	scf
+	ret

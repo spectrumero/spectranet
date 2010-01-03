@@ -33,6 +33,7 @@ F_startui
 	ld (v_inputflags), a	; and input flags
 	call F_makestaticui	; create the static user interface
 	call F_printcwd		; initialize the CWD line
+	call F_printcurfile	; show the current file
 	call F_loaddir		; get the contents of the current dir
 	ld a, (v_numsnas)
 	ld hl, BOXSTARTADDR
@@ -138,6 +139,7 @@ F_saveas2
 	ld hl, WORKSPACE
 	call F_savesna
 	jp c, F_error
+	call F_printcurfile
 
 	ret
 
