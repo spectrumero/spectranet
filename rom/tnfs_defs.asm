@@ -52,6 +52,7 @@ TNFS_OP_STAT		equ 0x24
 TNFS_OP_LSEEK		equ 0x25
 TNFS_OP_UNLINK		equ 0x26
 TNFS_OP_CHMOD		equ 0x27
+TNFS_OP_RENAME		equ 0x28
 
 ; Utility group
 TNFS_OP_SIZE		equ 0x30

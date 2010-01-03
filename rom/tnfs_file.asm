@@ -55,7 +55,8 @@ F_tnfs_open
 	jp F_leave
 .gethandle
 	ld a, (v_pgb)		; Allocate a new file descriptor
-	call ALLOCFD		; for this TNFS handle
+	ld c, ALLOCFD		
+	call RESALLOC		; for this TNFS handle
 	jr c, .nofds
 	ld a, 0x20		; indicate "not a socket"
 	ld (hl), a		; and update the FD table
@@ -166,7 +167,7 @@ F_tnfs_write
 	and a			; compare with zero
 	jr z, .continue		; less than 512 bytes if zero
 .sizecap
-	ld bc, 256		; cap at 512 bytes
+	ld bc, 512		; cap at 512 bytes
 .continue
 	push hl			; save buffer pointer
 	ld a, TNFS_OP_WRITE
@@ -212,7 +213,8 @@ F_tnfs_close
 	call F_fetchpage
 	ret c
 
-	call FREEFD		; always free the FD even if there's an error
+	ld c, FREEFD
+	call RESALLOC		; always free the FD even if there's an error
 
 	ld b, a
 	ld a, TNFS_OP_CLOSE
@@ -266,6 +268,29 @@ F_tnfs_stat
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ldir			; de is already the dest, bc is size
 	jp F_leave
+
+;---------------------------------------------------------------------------
+; F_tnfs_rename
+; Renames a file.
+; Arguments		HL = pointer to null terminated source filename
+;			DE = pointer to null terminated destination filename
+;			A = mount point
+F_tnfs_rename
+	call F_fetchpage
+	ret c
+	ld (v_curmountpt), a
+
+	push de
+	push hl
+	ld a, TNFS_OP_RENAME
+	call F_tnfs_header_w	; create the header
+	ex de, hl
+	pop hl			; get source argument
+	call F_tnfs_abspath
+	pop hl			; get destination argument
+	call F_tnfs_abspath
+	call F_tnfs_message_w	; Send the message
+	jp F_tnfs_simpleexit
 
 ;---------------------------------------------------------------------------
 ; F_tnfs_lseek

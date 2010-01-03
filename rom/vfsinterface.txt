@@ -1,5 +1,5 @@
 Standard parameters for all VFS calls. All strings are null terminated C
-strings.
+strings. This is the public interface:
 
 mount			IX - pointer to an 10 byte structure that contains:
 			byte 0,1 - pointer to null terminated protocol
@@ -13,20 +13,14 @@ opendir			HL - pointer to directory name
 open			HL - pointer to filename
 			D  - Flags (POSIX style)
 			E  - Mode (POSIX style)
-			A  - mount point handle
 unlink			HL - pointer to filename
-			A  - mount point
 mkdir			HL - pointer to directory name
-			A  - mount point
 rmdir			HL - pointer to directory name
-			A  - mount point
 size			A  - mount point
 free			A  - mount point
 stat			HL - pointer to filename or directory name
 			DE - where to return the result
-			A  - mount point
 chmod			HL - pointer to filename, DE - filemode
-			A  - mount point
 read			A - file descriptor
 			DE - buffer to return data into
 			BC - maximum bytes ot read
@@ -42,7 +36,9 @@ readdir			A - directory handle
 			DE - Buffer to fill with the directory entry
 closedir		A - directory handle
 chdir			HL - directory name
-			A - mount point
+getcwd			DE - pointer to buffer where result should go
+rename			HL - pointer to source path
+			DE - pointer to destination path
 
 On success, functions return something meaningful in A (such as a file
 handle or directory handle, where required) and carry reset. On error,
@@ -52,8 +48,12 @@ is not recognised, it should return with Z set and C reset. If the protocol
 was recognised but mounting failed, it should return with C set and A
 as the error number.
 
-The mount point handle allows filesystem modules to know which mounted
-filesystem the operation is being carried out on - since there can be up
-to 4 mounted filesystems and it is possible that they are all the same type.
-It is up to the module to decide how to deal with them.
+Filesystem module interface:
+As above, but most functions will receive the mount point handle in A
+where applicable (all filesystem level functions - rename, getcwd, chdir,
+opendir, open, chmod, stat, free, size, mkdir, rmdir, unlink). The FS
+module must determine what it needs to do for handle based functions
+(read, write, lseek, readdir, poll, close, closedir) since the file/dir handle
+should be associated with some sort of internal data that allows the
+operation to take place.
 

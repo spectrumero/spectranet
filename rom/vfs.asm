@@ -278,7 +278,17 @@ F_setmountpoint
 	ret c			; so if there's an error we return with C
 	ld (v_vfs_curmount), a
 	ret
-	
+
+;--------------------------------------------------------------------------
+; F_resalloc
+; Resource allocator/deallocator for file and directory descriptors.
+; Parameters: FD param in A
+;             Flags in C
+; C bit 0 = Set=Allocate, reset=free
+; C bit 1 = Set=Directory, reset=File
+F_resalloc
+	bit 1, c
+	jr nz, F_allocdirhnd
 ;--------------------------------------------------------------------------
 ; F_allocfd
 ; Allocates a file descriptor. 
@@ -287,6 +297,8 @@ F_setmountpoint
 ; to a value that means something (and bit 7 must be reset). L = actual
 ; fd number.
 F_allocfd
+	bit 0, c
+	jr z, F_freefd
 	push bc
 	ld hl, v_fd1hwsock	; lowest address in fd table
 	ld b, MAX_FDS
@@ -333,6 +345,8 @@ F_freefd
 ; Parameters	A = ROM number for the handle
 ; On return HL = address of the handle, L is the handle itself
 F_allocdirhnd
+	bit 0, c
+	jr z, F_freedirhnd
 	push bc
 	ld hl, v_dhnd1page
 	ld b, MAX_DIRHNDS

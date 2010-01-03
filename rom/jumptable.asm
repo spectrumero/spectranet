@@ -132,12 +132,10 @@
 	call F_dir_dispatch	; closedir
 	call F_vfs_dispatch	; chdir
 	call F_vfs_dispatch	; getcwd
+	call F_vfs_dispatch	; rename
 	jp F_setmountpoint	; Set the current mount point in use
-	jp F_allocfd		; Allocate fd
-	jp F_freefd		; Free fd
-	jp F_allocdirhnd	; Allocate dir handle
-	jp F_freedirhnd		; Free dhnd
 	jp F_freemountpoint	; Free a mount point
+	jp F_resalloc		; Allocate/free directory and file handles
 	
 
 	block 0x1FF8-$,0xFF

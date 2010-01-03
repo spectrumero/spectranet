@@ -44,7 +44,8 @@ F_tnfs_opendir
 	jp F_leave
 .gethandle
 	ld a, (v_pgb)			; allocate a
-	call ALLOCDIRHND		; directory handle.
+	ld c, ALLOCDIRHND
+	call RESALLOC			; directory handle.
 	jr c, .cleanupandexit
 	ld h, HANDLESPACE / 256		; create our private sysvar addr
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
@@ -112,8 +113,9 @@ F_tnfs_closedir
 	call F_fetchpage
 	ret c
 
-	call FREEDIRHND			; The dirhandle should always be
-					; cleared, even if there's an error.
+	ld c, FREEDIRHND		; The dirhandle should always be
+	call RESALLOC			; cleared, even if there's an error.
+
 	ld l, a				; get the handle address
 	ld h, HANDLESPACE / 256
 	ld b, (hl)			; and fetch the TNFS handle

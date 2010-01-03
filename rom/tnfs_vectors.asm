@@ -53,7 +53,7 @@ modcall	jp F_modcall		; No modcall code
 	jp F_tnfs_closedir	; Close a directory
 	jp F_tnfs_chdir		; Change directory
 	jp F_tnfs_getcwd	; get current directory
-	jp F_undef		; reserved2
+	jp F_tnfs_rename	; rename
 
 STR_ident
 	defb "TNFS 1.0",0
