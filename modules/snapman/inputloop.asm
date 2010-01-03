@@ -201,6 +201,80 @@ F_userinput
         ret
 
 ;----------------------------------------------------------------------
+; F_rename
+; Renames a snapshot file.
+F_rename
+	ld a, (v_viewflags)	; check we are in snapshot view
+	rra			; if LSB = 1 we are in directory view
+	ret c			; so leave.
+
+	call F_getselected
+	ret z			; nothing to do - no entries
+	ld de, WORKSPACE+0x100
+	call F_strcpy		; copy the selected name to workspace
+	ld hl, WORKSPACE
+	ld de, v_curfilename
+	call F_strcpy		; copy to current filename so we can
+	call F_printcurfile	; update the "current file" UI
+
+	ld hl, STR_newname	
+	ld de, WORKSPACE
+	ld c, 0x10		; max filename size
+	call F_userinput	; Prompt for the new name
+	ld a, (WORKSPACE)
+	and a
+	ret z			; no filename entered
+
+	ld hl, WORKSPACE	; copy the filename
+	ld de, v_curfilename	; to the "current selected" filename
+	call F_strcpy
+
+	ld hl, WORKSPACE+0x100	; source filename
+	ld de, WORKSPACE	; destination
+	call RENAME
+	jp c, F_error		
+
+	call F_loaddir		; Update the directory listing
+	call F_printcurfile	; show the current file
+	jp F_snapview		; and update the window
+
+;----------------------------------------------------------------------
+; F_erase
+; Erases a snapshot file.
+F_erase
+	ld a, (v_viewflags)	; check we are in snapshot view
+	rra			; if LSB = 1 we are in directory view
+	ret c			; so leave.
+
+	call F_getselected
+	ret z			; nothing to do - no entries
+
+	ld de, WORKSPACE
+	call F_strcpy		; copy the filename into workspace
+	ld hl, WORKSPACE
+	ld de, v_curfilename	; copy the filename into the current file
+	call F_strcpy
+	call F_printcurfile	; update the current filename
+
+	ld hl, STR_cferase
+	ld de, v_strbuf
+	ld c, 2
+	call F_userinput
+	ret z			; nothing entered, nothing to do
+	ld a, (v_strbuf)	
+	cp CHAR_YES
+	ret nz			; user didn't answer "yes"
+
+	ld hl, WORKSPACE
+	call UNLINK		; erase the file
+	jp c, F_error
+	xor a
+	ld (v_curfilename), a	; clear the current filename
+	call F_loaddir		; reload the dir
+	call F_printcurfile
+	jp F_snapview		; update the UI
+
+;----------------------------------------------------------------------
 ; F_switchdirview
 ; Switch between directory and file views.
 F_switchdirview
@@ -208,17 +282,18 @@ F_switchdirview
 	xor 1			; flip "dir view" bit
 	ld (v_viewflags), a	; and save
 	rra			; push lsb into the carry flag
-	jr c, .showdir		; switch from file to dir view
+	jr c, showdir		; switch from file to dir view
+F_snapview
 	ld de, v_snatable
 	ld a, (v_numsnas)
-.makesel
+makesel
 	ld hl, BOXSTARTADDR	; start address of the box
 	ld bc, BOXDIMENSIONS	; box dimensions
 	jp F_makeselection 	; make the selection and return.
-.showdir
+showdir
 	ld de, v_dirtable
 	ld a, (v_numdirs)
-	jr .makesel
+	jr makesel
 
 ; We end up here if the allocated page wasn't found.
 F_nopage

@@ -31,12 +31,14 @@ UI_STRINGS      defb    0,5,"- SPECTRANET SNAPSHOT MANAGER -",0
                 defb    18,28,"[Q] Quit",0
                 defb    20,0,"Dir: ",0
                 defb    0xFF,0xFF
-INPUTTABLE      defb    "qd",0x0d,"cs",0
+INPUTTABLE      defb    "qd",0x0d,"csre",0
 INPUTADDRS      defw    F_exit
                 defw    F_switchdirview
                 defw    F_enterpressed
                 defw    F_saveas
                 defw    F_save
+		defw	F_rename
+		defw	F_erase
 
 CHAR_YES        equ     'y'
 STR_filename    defb    "Filename: ",0
@@ -50,4 +52,5 @@ STR_failed	defb	"Snapmgr. failed to alloc memory\n",0
 STR_nomempage	defb	"No page was allocated!\n",0
 STR_curfile	defb	"Current: ",0
 STR_nofile	defb	"(none)",0
-
+STR_newname	defb	"New name> ",0
+STR_cferase	defb	"Erase the selected file? (y/n): ",0
