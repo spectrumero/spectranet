@@ -108,7 +108,7 @@ F_showcurrent
 	ld a, (hl)		; has it ever been set?
 	cp 0xFF
 	jr nz, .printhost
-	ld hl, STR_unset
+	ld hl, STR_vunset
 .printhost
 	ld hl, 0x1000 + HOSTNAME 
 	call PRINT42
@@ -283,22 +283,14 @@ F_sethostname
 F_saveconfig
 	ld hl, STR_saving
 	call PRINT42
-	ld a, 0x1C		; page that belongs to last 16k of flash
-	di
-	call F_FlashEraseSector
-	jr c, .eraseborked
-	ld a, 0x1C		; page to start writing from
-	call F_writesector
-	jr c, .writeborked
-	ld hl, STR_done
-	call PRINT42
-	or 1			; clear zero flag
-	ret
-.eraseborked
-	ld hl, STR_erasebork
-	jr .bork
-.writeborked
-	ld hl, STR_writebork
+
+        ; copy flash writer into RAM
+        ld hl, FLASHPROGSTART
+        ld de, 0x3000
+        ld bc, FLASHPROGLEN
+        ldir
+        call 0x3000
+	ret nc
 .bork
 	call PRINT42
 	call GETKEY		; give the user a chance to see the msg

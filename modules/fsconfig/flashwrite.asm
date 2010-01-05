@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2008 Dylan Smith
+;Copyright (c) 2009 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,30 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM
+FLASHPROGSTART
+        ; Flash writer. This *MUST* be at the end because we change ORG
+        org 0x3000
+F_updateflash
+        di
+        ld a, (v_pga)
+        push af
+        ld a, (v_pgb)
+        push af
+        ld a, 0x1C              ; last sector of flash
+        call F_FlashEraseSector
+        jr c, .cleanup
+        ld a, 0x1C              ; start page to write
+        call F_writesector
+.cleanup
+        ex af, af'              ; preserve flags
+        pop af
+        call SETPAGEB
+        pop af
+        call SETPAGEA
+        ex af, af'
+        ei
+        ret
 
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
-
-	org 0x2000
-	include "spectranet.asm"
-
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-UTILROM	equ	0x02			; ROM page number
-
-	org 0x2000
-	include "utilromvectors.asm"	; utility ROM vector table
-;	include "inetinit.asm"		; Initializes inet settings
-	include "utility_impl.asm"	; Utility functions
-;	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_en.asm"	; English string table
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-;	include "sysvars.sym"		; now dragged in by datarom.sym
-	include "ui_menu.asm"		; simple menu generator
-	include "datarom.sym"		; Datarom symbol file
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
+        include "../../rom/flashwrite.asm"
+FLASHPROGLEN    equ $-0x3000
 

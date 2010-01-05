@@ -43,11 +43,6 @@ UTILROM equ     0x02                    ; ROM page number
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"
 ;	include "sysvars.sym"
-	include "flashconf.asm"		; defines for configuration memory
-CONFIGUTIL_START
-	incbin "configutilrom_es.out"	; Configuration utility image
-CONFIGUTIL_END
-;	include "ui_config.asm"		; configuration user interface
 	include "ui_menu.asm"		; simple menu generator
 	include "datarom_es.sym"	; Symbolos para datarom
 

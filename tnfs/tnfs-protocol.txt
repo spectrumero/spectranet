@@ -529,6 +529,17 @@ Example: Set permissions to 755 on /foo/bar/baz.bas:
 
 The reply is the standard header plus the return code of the chmod operation.
 
+RENAME - Moves a file within a filesystem - Command 0x28
+--------------------------------------------------------
+Renames a file (or moves a file within a filesystem - it must be possible
+to move a file to a different directory within the same FS on the
+server using this command).
+The request consists of the header, followed by the null terminated
+source path, and the null terminated destination path.
+
+Example: Move file "foo.txt" to "bar.txt"
+0xBEEF 0x00 0x28 foo.txt 0x00 bar.txt 0x00
+
 DEVICE OPERATIONS
 =================
 These operations get information about the device that is mounted.

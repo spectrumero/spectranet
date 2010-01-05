@@ -22,9 +22,9 @@
 
 ; English strings for the configuration utility.
 
-STR_ident	defb	"FS config 1.0",0
-STR_basicinit	defb	"fsconfig initialized\n",0
-STR_basinsterr	defb	"Failed to initialize fsconfig\n",0
+STR_ident	defb	"Configtool  1.0",0
+STR_basicinit	defb	"configtool initialized\n",0
+STR_basinsterr	defb	"Failed to initialize configtool\n",0
 
 STR_curfs	defb	"Current settings for FS",0
 STR_under	defb	"\n========================\n\n",0

@@ -46,7 +46,7 @@ STR_currsecdns	defb "Secondary DNS    : ",0
 STR_no		defb "No\n",0
 STR_yes		defb "Yes\n",0
 STR_bydhcp	defb "Set by DHCP",0
-STR_unset	defb "[unset]",0
+STR_vunset	defb "[unset]",0
 
 STR_abort	defb "Enter on a blank line aborts\n",0
 STR_invalidip	defb "\nSorry, that wasn't a valid address.\n",0
@@ -61,6 +61,4 @@ STR_asksecdns	defb "\nSecondary DNS: ",0
 
 STR_saving	defb "\nSaving configuration...",0
 STR_done	defb "Done\n",0
-STR_erasebork	defb "Erase failed\n",0
-STR_writebork	defb "Write failed\n",0
 

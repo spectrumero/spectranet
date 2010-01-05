@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2008 Dylan Smith
+;Copyright (c) 2009 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,36 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM
+; Initialize the module - install our BASIC command
+F_init
+        ld hl, PARSETABLE
+        ld b, numcmds
+.loop
+	push bc
+        call ADDBASICEXT
+	pop bc
+        jr c, .installerror
+	djnz .loop
 
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
+        ld hl, STR_basicinit
+        call PRINT42
+        ret
+.installerror
+        ld hl, STR_basinsterr
+        call PRINT42
+        ret
 
-	org 0x2000
-	include "spectranet.asm"
+PARSETABLE
+numcmds		equ 2
+P_fsconfig      defb 0x0b       ; Trap C Nonsense in BASIC
+                defw CMD_FSCONFIG
+                defb 0xFF       ; this page
+                defw F_start
+P_ifconfig      defb 0x0b       ; Trap C Nonsense in BASIC
+                defw CMD_IFCONFIG
+                defb 0xFF       ; this page
+                defw F_ifconfig
+CMD_FSCONFIG    defb "%fsconfig",0
+CMD_IFCONFIG	defb "%ifconfig",0
 
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-UTILROM	equ	0x02			; ROM page number
-
-	org 0x2000
-	include "utilromvectors.asm"	; utility ROM vector table
-;	include "inetinit.asm"		; Initializes inet settings
-	include "utility_impl.asm"	; Utility functions
-;	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_en.asm"	; English string table
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-;	include "sysvars.sym"		; now dragged in by datarom.sym
-	include "ui_menu.asm"		; simple menu generator
-	include "datarom.sym"		; Datarom symbol file
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
 

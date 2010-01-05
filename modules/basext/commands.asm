@@ -417,7 +417,54 @@ F_loadsnap
 	ld hl, 0xFB01			; Module ID = 0xFB, call ID = 0x01
 	rst MODULECALL_NOPAGE
 	jp J_tbas_error			; If we get here, an error occurred
-	
+
+;----------------------------------------------------------------------------
+; F_tbas_mv
+; Moves (renames) a file.
+F_tbas_mv
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; source filename
+	cp ','				; and a comma	
+	jp nz, PARSE_ERROR
+	rst CALLBAS
+	defw ZX_NEXT_CHAR		; advance past ,
+
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; destination filename
+	call STATEMENT_END		; then the end of statement
+
+	;------- runtime ---------
+	rst CALLBAS
+	defw ZX_STK_FETCH		; destination filename
+	ld hl, INTERPWKSPC+256
+	call F_basstrcpy		; copy to workspace as C string
+	rst CALLBAS
+	defw ZX_STK_FETCH		; source filename
+	ld hl, INTERPWKSPC
+	call F_basstrcpy		; copy to workspace
+	ld hl, INTERPWKSPC		; source and dest filename pointers
+	ld de, INTERPWKSPC+256
+	call RENAME
+	jp nc, EXIT_SUCCESS
+	jp J_tbas_error
+
+;---------------------------------------------------------------------------
+; F_tbas_rm: Removes a file
+F_tbas_rm
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; file to remove
+	call STATEMENT_END
+
+	;-------- runtime ---------
+	rst CALLBAS
+	defw ZX_STK_FETCH
+	ld hl, INTERPWKSPC
+	call F_basstrcpy
+	ld hl, INTERPWKSPC
+	call UNLINK			; remove the file
+	jp nc, EXIT_SUCCESS
+	jp J_tbas_error
+
 ;----------------------------------------------------------------------------
 ; F_tbas_zxprint
 ; Prints a C string to the current ZX channel

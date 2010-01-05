@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2008 Dylan Smith
+;Copyright (c) 2010 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -19,34 +19,8 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
-; The Utility ROM
-
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
-
-	org 0x2000
-	include "spectranet.asm"
-
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-UTILROM	equ	0x02			; ROM page number
-
-	org 0x2000
-	include "utilromvectors.asm"	; utility ROM vector table
-;	include "inetinit.asm"		; Initializes inet settings
-	include "utility_impl.asm"	; Utility functions
-;	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_en.asm"	; English string table
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-;	include "sysvars.sym"		; now dragged in by datarom.sym
-	include "ui_menu.asm"		; simple menu generator
-	include "datarom.sym"		; Datarom symbol file
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
+;
+; Interface configuration defs
+buf_hex		equ	buf_workspace
+buf_addr	equ	buf_workspace+0x80
 

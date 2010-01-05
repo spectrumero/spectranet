@@ -20,33 +20,26 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM
+; The configuration utility main routine.
+F_ifconfig
+	call STATEMENT_END	; no args
 
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
+	;--- runtime ---
+	call F_if_configmain
+	jp EXIT_SUCCESS
 
-	org 0x2000
-	include "spectranet.asm"
+F_if_configmain
+	call F_copyconfig
+.menuloop
+	call F_showcurrent
+	ld hl, STR_choose
+	call PRINT42
+	ld hl, MENU_config
+	call F_genmenu
 
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-UTILROM	equ	0x02			; ROM page number
+	ld hl, MENU_config
+	call F_getmenuopt
+	jr z, .menuloop
 
-	org 0x2000
-	include "utilromvectors.asm"	; utility ROM vector table
-;	include "inetinit.asm"		; Initializes inet settings
-	include "utility_impl.asm"	; Utility functions
-;	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_en.asm"	; English string table
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-;	include "sysvars.sym"		; now dragged in by datarom.sym
-	include "ui_menu.asm"		; simple menu generator
-	include "datarom.sym"		; Datarom symbol file
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
+	ret
 

@@ -97,14 +97,9 @@ F_restorescreen
 ;---------------------------------------------------------------------
 ; F_config
 ; Invokes the configuration program
-F_config	
-	call CLEAR42
-	ld hl, CONFIGUTIL_START	; start of the configuration utility
-	ld de, 0x3000		; start of fixed RAM page
-	ld bc, CONFIGUTIL_END-CONFIGUTIL_START
-	ldir			; copy utility to RAM
-	call 0x3000		; call it
-	or 1			; reset Z
+F_config
+	ld hl, 0xFE00		; module FE (configuration) call 0x00
+	rst MODULECALL_NOPAGE
 	ret
 
 ;-----------------------------------------------------------------------

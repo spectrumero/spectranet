@@ -45,7 +45,7 @@ F_init
 STR_basicinit   defb    "BASIC extensions installed\n",0
 STR_basinsterr  defb    "Failed to install BASIC extensions\n",0
 
-NUMCMDS         equ     11
+NUMCMDS         equ     13
 PARSETABLE      
 P_mount         defb    0x0b
                 defw    CMD_MOUNT
@@ -91,6 +91,14 @@ P_loadsnap	defb	0x0b
 		defw	CMD_LOADSNAP
 		defb	TNFS_PAGE
 		defw	F_loadsnap
+P_mv		defb	0x0b
+		defw	CMD_MV		; Rename a file
+		defb	TNFS_PAGE
+		defw	F_tbas_mv
+P_rm		defb	0x0b
+		defw	CMD_RM		; Remove a file
+		defb	TNFS_PAGE
+		defw	F_tbas_rm
 
 CMD_MOUNT       defb    "%mount",0
 CMD_UMOUNT      defb    "%umount",0
@@ -103,4 +111,6 @@ CMD_TAPEIN	defb	"%tapein",0
 CMD_INFO	defb	"%info",0
 CMD_FS		defb	"%fs",0
 CMD_LOADSNAP	defb	"%loadsnap",0
+CMD_MV		defb	"%mv",0
+CMD_RM		defb	"%rm",0
 

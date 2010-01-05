@@ -1,7 +1,7 @@
 #!/bin/sh
 # note, the order of ASMSOURCES is important.
 ASMSOURCES=( sysvars rommodconfig_en rommodconfig_es datarom datarom_es \
-             configutilrom configutilrom_es configutil utilrom utilrom_es \
+             utilrom utilrom_es \
              tnfs rom jumptable \
 	     romimage romimage_es romprog \
 	     romprog_es )

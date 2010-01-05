@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2008 Dylan Smith
+;Copyright (c) 2009 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,33 +20,18 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; The Utility ROM
-
-; These routines live in page 1 of flash, and run when page 1 is paged
-; into paging area B (0x2000-0x2FFF)
-
+; Filesystem Configuration Utility module
 	org 0x2000
-	include "spectranet.asm"
-
-; temporary!
-	define SOCK_DGRAM 2
-	define SOCK_STREAM 1
-UTILROM	equ	0x02			; ROM page number
-
-	org 0x2000
-	include "utilromvectors.asm"	; utility ROM vector table
-;	include "inetinit.asm"		; Initializes inet settings
-	include "utility_impl.asm"	; Utility functions
-;	include "dhcpclient.asm"	; DHCP client
-	include "utilnmi.asm"		; NMI handler
-	include "utilnmi_en.asm"	; English string table
-	include "dhcpdefs.asm"
-	include "sockdefs.asm"
-;	include "sysvars.sym"		; now dragged in by datarom.sym
-	include "ui_menu.asm"		; simple menu generator
-	include "datarom.sym"		; Datarom symbol file
-
-;fwstart
-;	incbin "flashwrite.out"		; this gets LDIR'd to RAM
-;fwend
+	include "vectors.asm"			; Vector table
+	include "init.asm"			; Initialization routines
+	include "fs_strings_en.asm"		; English strings
+	include "fs_config_ui.asm"		; User interface
+	include	"if_configmain.asm"		; Interface configuration
+	include "if_config_ui.asm"		; Interface cf. UI
+	include "if_strings_en.asm"		; English strings
+	include "../../rom/spectranet.asm"	; spectranet lib defs
+	include "../../rom/sysvars.sym"		; system vars defs
+	include "../../rom/flashconf.asm"	; flash config defs
+	include "if_defs.asm"			; defines
+	include "flashwrite.asm"		; must be the last included
 

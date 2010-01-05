@@ -41,7 +41,8 @@ my %TNFSCMDS=(	0x00	=> \&mount,
 		0x24	=> \&statFile,
 		0x25	=> \&seekFile,
 		0x26	=> \&unlinkFile,
-		0x27	=> \&chmodFile );
+		0x27	=> \&chmodFile,
+       		0x28	=> \&renameFile	);
 
 # File modes
 my %MODE=(	0x01	=> O_RDONLY,
@@ -423,7 +424,11 @@ sub seekFile
 {
 	my ($session, $cmd, $status, $msg)=@_;
 	
-	my ($clientHandle, $seektype, $seekloc)=unpack("CCl", $msg);
+	my ($clientHandle, $seektype, $seekloc)=unpack("CCV", $msg);
+	if($seekloc & 8000000)
+	{
+		$seekloc = -$seekloc;
+	}
 	#print("seekFile: handle=$clientHandle type=$seektype loc=$seekloc\n");
 	my $fhnd=$FILEHANDLE{$session}->[$clientHandle];
 	if(defined $fhnd)
@@ -509,6 +514,26 @@ sub chmodFile
 	else
 	{
 		sendMsg($session, 0x27, int($!));
+	}
+}
+
+# renameFile - moves a file within the filesystem (0x28)
+sub renameFile
+{
+	my ($session, $cmd, $status, $msg)=@_;
+
+	# separate out "from" and "to" paths.
+	my ($from, $to)=split(/\x00/, $msg);
+	$from = $MOUNTPOINT{$session} . $from;
+	$to = $MOUNTPOINT{$session} . $to;
+	print("rename: $from => $to\n");
+	if(rename($from, $to))
+	{
+		sendMsg($session, 0x28, 0x00);
+	}
+	else
+	{
+		sendMsg($session, 0x28, int($!));
 	}
 }
 

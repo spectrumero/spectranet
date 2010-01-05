@@ -23,70 +23,15 @@
 ; Filesystem Configuration Utility module
 
 ; This is a ROM module.
-	org 0x2000		; module in page B
 sig     defb 0xAA               ; This is a ROM module
-romid   defb 0xFE               ; for a filesystem only.
+romid   defb 0xFE               ; ID = 0xFE
 reset   defw F_init             ; reset vector
-mount   defw 0xFFFF		; not a filesystem
+mount   defw 0xFFFF             ; not a filesystem
         defw 0xFFFF
         defw 0xFFFF
         defw 0xFFFF
         defw 0xFFFF
 idstr   defw STR_ident          ; ROM identity string
-modcall ret                     ; No modcall code
-        defw 0                  ; pad out to start of...
+modcall jp F_if_configmain	; TODO: modcalls other than this
 
-	include "strings_en.asm"	; English strings
-	include "config_ui.asm"		; User interface
-	include "../../rom/spectranet.asm"	; spectranet lib defs
-	include "../../rom/sysvars.sym"		; system vars defs
-	include "../../rom/flashconf.asm"	; flash config defs
-
-; Initialize the module - install our BASIC command
-F_init
-	ld hl, PARSETABLE
-	ld b, 1			; just 1 command
-	call ADDBASICEXT
-	jr c, .installerror
-	ld hl, STR_basicinit
-	call PRINT42
-	ret
-.installerror
-	ld hl, STR_basinsterr
-	call PRINT42
-	ret
-
-PARSETABLE
-P_fsconfig	defb 0x0b	; Trap C Nonsense in BASIC
-		defw CMD_FSCONFIG
-		defb 0xFF	; this page
-		defw F_start
-CMD_FSCONFIG	defb "%fsconfig",0
-
-FLASHPROGSTART
-	; Flash writer. This *MUST* be at the end because we change ORG
-	org 0x3000
-F_updateflash
-	di
-	ld a, (v_pga)
-	push af
-	ld a, (v_pgb)
-	push af
-	ld a, 0x1C		; last sector of flash
-	call F_FlashEraseSector
-	jr c, .cleanup
-	ld a, 0x1C		; start page to write
-	call F_writesector
-.cleanup
-	ex af, af'		; preserve flags
-	pop af
-	call SETPAGEB
-	pop af
-	call SETPAGEA
-	ex af, af'
-	ei
-	ret
-	
-	include "../../rom/flashwrite.asm"
-FLASHPROGLEN	equ $-0x3000
 
