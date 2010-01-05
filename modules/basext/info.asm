@@ -127,7 +127,7 @@ F_showfileinfo
 
 .done
 	ld a, (v_vfs_curfd)
-	call CLOSE	
+	call VCLOSE	
 	ret
 .nottap
 	cp TBADLENGTH
