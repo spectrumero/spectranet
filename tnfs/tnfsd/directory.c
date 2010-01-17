@@ -152,7 +152,6 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	struct dirent *entry;
 	char reply[MAX_FILENAME_LEN];
 
-	fprintf(stderr, "datasz=%d *databuf=%d\n", datasz, *databuf);
 	if(datasz != 1 || 
 	  *databuf > MAX_DHND_PER_CONN || 
 	  s->dhnd[*databuf] == NULL)
