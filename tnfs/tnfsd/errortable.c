@@ -28,7 +28,7 @@
 
 #include "errortable.h"
 
-#ifdef OSX
+#ifdef NEED_ERRTABLE
 unsigned char etable[256];
 
 void tnfs_init_errtable()
