@@ -35,6 +35,7 @@
 #include "directory.h"
 #include "datagram.h"
 #include "errortable.h"
+#include "bsdcompat.h"
 
 char root[MAX_ROOT];	/* root for all operations */
 

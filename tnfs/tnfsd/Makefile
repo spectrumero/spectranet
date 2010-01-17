@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -DDEBUG -DOSX
-OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o
+CFLAGS=-Wall -DDEBUG -DBSD
+OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o strlcpy.o strlcat.o
 LIBS=
 EXEC=tnfsd
 

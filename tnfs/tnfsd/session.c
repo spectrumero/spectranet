@@ -37,6 +37,7 @@
 #include "directory.h"
 #include "datagram.h"
 #include "errortable.h"
+#include "bsdcompat.h"
 
 /* List of sessions */
 Session *slist[MAX_CLIENTS];
@@ -47,8 +48,10 @@ void tnfs_init()
 	for(i=0; i<MAX_CLIENTS; i++)
 		slist[i]=NULL;
 
+#ifdef BSD
 	/* initialize prng */
 	srandomdev();
+#endif
 }
 
 /* TODO: This is the "simple" TNFS server that won't do authentication.
@@ -253,7 +256,11 @@ uint16_t tnfs_newsid()
 
 	for(tries=0; tries<255; tries++)
 	{
+#ifdef BSD
 		newsid=random() & 0xFFFF;
+#else
+		newsid=rand() & 0xFFFF;
+#endif
 		if(!tnfs_findsession_sid(newsid, &sindex))
 			return newsid;
 	}
