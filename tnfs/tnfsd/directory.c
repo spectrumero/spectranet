@@ -81,7 +81,14 @@ int validate_dir(Session *s, const char *path)
 /* get the root directory for the given session */
 void get_root(Session *s, char *buf, int bufsz)
 {
-	snprintf(buf, bufsz, "%s/%s/", root, s->root);
+	if(s->root == NULL)
+	{
+		snprintf(buf, bufsz, "%s/", root);
+	}
+	else
+	{
+		snprintf(buf, bufsz, "%s/%s/", root, s->root);
+	}
 }
 
 /* Open a directory */

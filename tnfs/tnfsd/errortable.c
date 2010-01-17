@@ -58,9 +58,17 @@ void tnfs_init_errtable()
 	etable[ENAMETOOLONG]=TNFS_ENAMETOOLONG;
 	etable[ENOTEMPTY]=TNFS_ENOTEMPTY;
 	etable[ELOOP]=TNFS_ELOOP;
+#ifdef ENODATA
 	etable[ENODATA]=TNFS_ENODATA;
+#endif
+#ifdef ENOSTR
 	etable[ENOSTR]=TNFS_ENOSTR;
+#endif
+#ifdef EPROTO
 	etable[EPROTO]=TNFS_EPROTO;
+#elif EPROTOTYPE
+	etable[EPROTOTYPE]=TNFS_EPROTO;
+#endif
 	etable[EALREADY]=TNFS_EALREADY;
 	etable[ESTALE]=TNFS_ESTALE;
 }

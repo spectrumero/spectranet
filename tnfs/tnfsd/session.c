@@ -41,6 +41,7 @@
 
 /* List of sessions */
 Session *slist[MAX_CLIENTS];
+char *DEFAULT_ROOT="/";
 
 void tnfs_init()
 {
@@ -67,6 +68,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	int sindex;
 	Session *s;
 	unsigned char repbuf[4];
+	char *cliroot;
 
 #ifdef DEBUG
 	TNFSMSGLOG(hdr, "Mounting FS");
@@ -97,10 +99,17 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	}
 
 	/* find out how much to allocate for the mount point */
+	cliroot=buf;
 	mplen=strlen((char *)buf);
-	if((s->root=(char *)malloc(mplen)) != NULL)
+	if(mplen < 1)
 	{
-		strlcpy((char *)s->root, (char *)buf, mplen);
+		mplen=1;
+		cliroot=DEFAULT_ROOT;
+	}
+
+	if((s->root = (char *)malloc(mplen+1)) != NULL)
+	{
+		strlcpy((char *)s->root, cliroot, mplen);
 	}
 	else
 	{
