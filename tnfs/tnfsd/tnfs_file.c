@@ -54,7 +54,7 @@ void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	  tnfs_valid_filename(s, fnbuf, (char *)buf+2, bufsz-2) < 0)
 	{
 		/* filename could not be constructed */
-		hdr->status=TNFS_ENOENT;
+		hdr->status=TNFS_EINVAL;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
@@ -63,7 +63,11 @@ void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	{
 		if(s->fd[i] == 0)
 		{
-			fd=open(fnbuf, tnfs_make_mode(*buf, *(buf+1)));
+			/* mode 0666 ensures that for O_CREAT files
+			 * get created with the process's umask (except
+			 * for the executable bit, which remains unset)
+			 * See open(2) and umask(2) */
+			fd=open(fnbuf, tnfs_make_mode(*buf, *(buf+1)), 0666);
 #ifdef DEBUG
 			fprintf(stderr, "open: fd=%d\n", fd);
 #endif
@@ -204,7 +208,7 @@ void tnfs_stat(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	  tnfs_valid_filename(s, fnbuf, (char *)buf, bufsz) < 0)
 	{
 		/* filename could not be constructed */
-		hdr->status=TNFS_ENOENT;
+		hdr->status=TNFS_EINVAL;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
@@ -240,6 +244,25 @@ void tnfs_stat(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 
 void tnfs_unlink(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
+	if(*(buf+bufsz-1) != 0 ||
+	   tnfs_valid_filename(s, fnbuf, (char *)buf, bufsz) < 0)
+	{
+		hdr->status=TNFS_EINVAL;
+		tnfs_send(s, hdr, NULL, 0);
+	}
+	else
+	{
+		if(unlink(fnbuf) == 0)
+		{
+			hdr->status=TNFS_SUCCESS;
+			tnfs_send(s, hdr, NULL, 0);
+		}
+		else
+		{
+			hdr->status=tnfs_error(errno);
+			tnfs_send(s, hdr, NULL, 0);
+		}
+	}
 }
 
 void tnfs_chmod(Header *hdr, Session *s, unsigned char *buf, int bufsz)
@@ -248,6 +271,41 @@ void tnfs_chmod(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 
 void tnfs_rename(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
+	char tobuf[MAX_FILEPATH];
+	char *to=memchr(buf, 0x00, bufsz);
+	if(to == NULL || to == (char *)buf+bufsz-1 || *(buf+bufsz-1) != 0)
+	{
+		hdr->status=TNFS_EINVAL;
+		tnfs_send(s, hdr, NULL, 0);
+		return;
+	}
+
+	/* point at byte after the NULL */
+	to++;
+	if(tnfs_valid_filename(s, fnbuf, (char *)buf, bufsz) < 0 ||
+	   tnfs_valid_filename(s, tobuf, to, 
+		   (buf+bufsz)-(unsigned char *)to) < 0)
+	{
+		hdr->status=TNFS_EINVAL;
+		tnfs_send(s, hdr, NULL, 0);
+		return;
+	}
+
+	if(rename((char *)fnbuf, tobuf) < 0)
+	{
+		hdr->status=tnfs_error(errno);
+		tnfs_send(s, hdr, NULL, 0);
+#ifdef DEBUG
+		fprintf(stderr,
+		 "rename: errno=%d status=%d from=%s to=%s\n",
+		 errno, hdr->status, buf, to);
+#endif
+	}
+	else
+	{
+		hdr->status=TNFS_SUCCESS;
+		tnfs_send(s, hdr, NULL, 0);
+	}
 }
 
 int tnfs_valid_filename(Session *s,

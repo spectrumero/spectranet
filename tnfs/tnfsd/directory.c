@@ -97,7 +97,7 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		fprintf(stderr,"Invalid dirname: no NULL\n");
 #endif
 		/* no null terminator */
-		hdr->status=TNFS_ENOENT;
+		hdr->status=TNFS_EINVAL;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
