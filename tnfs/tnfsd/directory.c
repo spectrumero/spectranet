@@ -51,9 +51,9 @@ int tnfs_setroot(char *rootdir)
 /* validates a path points to an actual directory */
 int validate_dir(Session *s, const char *path)
 {
-	char fullpath[MAX_PATH];
+	char fullpath[MAX_TNFSPATH];
 	struct stat dirstat;
-	get_root(s, fullpath, MAX_PATH);
+	get_root(s, fullpath, MAX_TNFSPATH);
 #ifdef DEBUG
 	fprintf(stderr, "validate_dir: Path='%s'\n", fullpath);
 #endif
@@ -95,7 +95,7 @@ void get_root(Session *s, char *buf, int bufsz)
 void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
 	DIR *dptr;
-	char path[MAX_PATH];
+	char path[MAX_TNFSPATH];
 	unsigned char reply[2];
 	int i;
 
@@ -119,7 +119,7 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	{
 		if(s->dhnd[i]==NULL)
 		{
-			snprintf(path, MAX_PATH, "%s/%s/%s", 
+			snprintf(path, MAX_TNFSPATH, "%s/%s/%s", 
 					root, s->root, databuf);
 			if((dptr=opendir(path)) != NULL)
 			{

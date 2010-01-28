@@ -26,7 +26,18 @@
  * */
 
 #include <sys/types.h>
+
+#ifdef UNIX
 #include <arpa/inet.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#endif
+
+#ifndef in_addr_t
+#define in_addr_t uint32_t
+#endif
 
 #include "tnfs.h"
 

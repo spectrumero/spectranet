@@ -25,11 +25,18 @@ TNFS daemon datagram handler
 */
 
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#ifdef UNIX
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #include "tnfs.h"
 #include "datagram.h"
@@ -51,6 +58,12 @@ tnfs_cmdfunc filecmd[NUM_FILECMDS]=
 void tnfs_sockinit()
 {
 	struct sockaddr_in servaddr;
+
+#ifdef WIN32
+	WSADATA wsaData;
+    	if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) 
+        	die("WSAStartup() failed");
+#endif
 
 	sockfd=socket(AF_INET, SOCK_DGRAM, 0);
 	if(sockfd < 0)

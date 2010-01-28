@@ -28,8 +28,22 @@
  * */
 
 #include <stdint.h>
-#include <arpa/inet.h>
 #include <dirent.h>
+
+#ifdef UNIX
+#include <arpa/inet.h>
+#endif
+#ifdef WIN32
+#include <windows.h>
+#endif
+
+#ifndef in_addr_t
+#define in_addr_t uint32_t
+#endif
+
+#ifndef socklen_t
+#define socklen_t int
+#endif
 
 #include "config.h"
 

@@ -30,9 +30,16 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/uio.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#ifdef UNIX
+#include <sys/uio.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #include "tnfs.h"
 #include "errortable.h"

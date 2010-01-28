@@ -28,7 +28,7 @@
 #define MAX_DHND_PER_CONN 8	/* max open directories per client */
 #define MAX_CLIENTS	256	/* maximum number of clients */
 #define TNFS_HEADERSZ	4	/* minimum header size */
-#define MAX_PATH	256	/* maximum path length */
+#define MAX_TNFSPATH	256	/* maximum path length */
 #define MAX_FILEPATH	384	/* Maximum path + filename */
 #define MAX_ROOT	128	/* maximum root dir length */
 #define PROTOVERSION_LSB 0x00	/* Protocol version, LSB */
