@@ -39,6 +39,7 @@ UTILROM	equ	0x02			; ROM page number
 	include "utility_impl.asm"	; Utility functions
 ;	include "dhcpclient.asm"	; DHCP client
 	include "utilnmi.asm"		; NMI handler
+	include "save7ffd.asm"		; Routine to save port 0x7FFD
 	include "utilnmi_en.asm"	; English string table
 	include "dhcpdefs.asm"
 	include "sockdefs.asm"

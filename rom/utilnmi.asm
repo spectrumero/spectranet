@@ -23,8 +23,7 @@
 ; Utility ROM - NMI handler
 F_nmihandler
 	call F_savescreen	; save frame buffer contents
-	ld hl, 0xFE00		; MODULECALL 0xFE00 - save port 0x7FFD
-	rst MODULECALL_NOPAGE
+	call F_detectpages	; Detect 128K mode and value of port 0x7ffd
 	ld a, (v_machinetype)
 	cp 1			; 128K machine?
 	jr nz, .menuloop	; If not, continue

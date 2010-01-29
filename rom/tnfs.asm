@@ -36,7 +36,6 @@
 	; These are not really anything to do with TNFS, but there's not
 	; enough space in any other "core" ROM page to put them elsewhere!
 ;	include "machinetype.asm"
-	include "save7ffd.asm"		; Finds and saves port 0x7FFD
 	include "flashconf.asm"		; Flash location defs
 	include "dhcpdefs.asm"		; DHCP definitions
 	include "sockdefs.asm"		; Socket definitions
