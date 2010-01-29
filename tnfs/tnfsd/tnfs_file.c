@@ -348,7 +348,13 @@ int tnfs_valid_filename(Session *s,
 
 int tnfs_make_mode(unsigned char mode, unsigned char flags)
 {
+#ifndef WIN32
 	int mflags=0;
+#else
+	/* the python guys seem to have run into this one too, with
+	 * win32... */
+	int mflags=O_BINARY;
+#endif
 	if(mode & TNFS_O_RDONLY)
 		mflags |= O_RDONLY;
 	if(mode & TNFS_O_WRONLY)

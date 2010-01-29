@@ -43,6 +43,9 @@ void TNFSMSGLOG(Header *hdr, const char *msg)
 	fprintf(stderr, "Cli: %d.%d.%d.%d Session: %x : %s\n",
 			ip[0], ip[1], ip[2], ip[3],
 			hdr->sid, msg);
+#ifdef WIN32
+	fflush(stderr);
+#endif
 }
 
 void MSGLOG(in_addr_t ipaddr, const char *msg)
@@ -51,4 +54,7 @@ void MSGLOG(in_addr_t ipaddr, const char *msg)
 	fprintf(stderr, "Cli: %d.%d.%d.%d: %s\n",
 			ip[0], ip[1], ip[2], ip[3],
 			msg);
+#ifdef WIN32
+	fflush(stderr);
+#endif
 }
