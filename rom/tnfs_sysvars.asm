@@ -31,6 +31,7 @@ v_tnfs_sid0		equ 0x1002	; Session identifiers
 v_tnfs_sid1		equ 0x1004
 v_tnfs_sid2		equ 0x1006
 v_tnfs_sid3		equ 0x1008
+v_read_destination	equ 0x100A	; address for read to return data
 
 v_tnfs_seqno0		equ 0x101A	; Sequence number storage
 v_tnfs_seqno1		equ 0x101B

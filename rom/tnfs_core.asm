@@ -343,12 +343,15 @@ F_tnfs_message
 
 .continue
 	pop bc			; restore stack
-	pop de
+	pop ix			; start of the block we sent
+	ld a, (ix+tnfs_cmd_offset)	; check the command
+	cp TNFS_OP_READ		; and see if it's a read operation
 	
 	ld hl, v_vfs_sockinfo	; Address to receive remote datagram IP/port
 	ld de, tnfs_recv_buffer	; Address to receive data
-	ld bc, 1024		; max message size
 	ld a, (v_tnfs_sock)	; The tnfs socket
+	jr z, .read		; ...if the command was READ, handle it
+	ld bc, 1024		; max message size
 	call RECVFROM
 	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
 
@@ -363,6 +366,43 @@ F_tnfs_message
 	pop bc
 	jr nz, .pollstart	; see if the real message is still to come
 	ret
+
+	; read is done in two phases - first get the header, then
+	; once we've got that copy the data directly to the required
+	; memory address instead of via the tnfs buffer.
+.read
+	ld bc, TNFS_READHEADERSZ ; just pull out the header
+	call RECVFROM
+	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
+	ld b, a
+	ld a, (v_curmountpt)	; find the sequence number storage
+	add v_tnfs_seqno0 % 256
+	ld l, a
+	ld h, v_tnfs_seqno0 / 256
+	ld a, (hl)		; (TODO) Consume rest of packet when no match
+	cp b			; sequence number match? if not
+	jr nz, .pollstart	; see if the real message is still to come
+
+	; check for error conditions
+	ld a, (tnfs_recv_buffer+tnfs_err_offset)
+	and a
+	jr nz, .leaveread
+
+	ld de, (v_read_destination)	; get destination address
+	push de
+	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)	; length
+	ld a, (v_tnfs_sock)
+	call F_restorepage	; restore original RAM
+	call RECV		; use recv, not recvfrom for the remains
+	pop hl			; calculate the new value
+	ret c			; exit on error
+	add hl, bc		; that DE should have on exit.
+	ex de, hl
+	or a			; ensure carry is reset
+	ret
+.leaveread
+	scf
+	jp F_leave		; restore original RAM page and leave
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_poll

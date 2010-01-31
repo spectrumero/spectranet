@@ -91,6 +91,7 @@ F_tnfs_read
 	call F_fetchpage
 	ret c
 
+	ld (v_read_destination), de	; save destination
 	ex af, af'		; save FD
 	ld a, b			; cap read size at 512 bytes
 	cp 0x02
@@ -102,7 +103,6 @@ F_tnfs_read
 .sizecap
 	ld bc, 512		; cap at 512 bytes
 .continue
-	push de			; save buffer pointer
 	ld a, TNFS_OP_READ
 	call F_tnfs_header_w
 	ex af, af'		; get the FD back
@@ -119,32 +119,11 @@ F_tnfs_read
 	ld (hl), b
 	inc hl
 
-	; TODO: Not yet optimised. This means that two buffer copies
-	; get done, one from the ethernet buffer when reading the datagram
-	; then one from our workspace into the supplied buffer pointer.
-	; This should be done in two calls to recvfrom to optimise, one
-	; to get the header data, and one to get the proper data directly
-	; into the supplied buffer.
+	; v_read_destination contains address of buffer.
 	call F_tnfs_message_w_hl	; send it, and get the reply
-	pop de
-	jp c, F_leave			; network error, return now
-	ld a, (tnfs_recv_buffer+tnfs_err_offset)
-	and a				; check for tnfs error
-	jr z, .copybuf
-	scf
-	jp F_leave
-.copybuf
-	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)
-	push bc
-	ld hl, tnfs_recv_buffer+tnfs_msg_offset+2
-	ld a, d
-	and 0xF0			; mask out bottom nibble
-	cp 0x10				; Is the buffer in page A?
-	call z, F_restorepage		; switch in original page A
-	ldir
-	pop bc
-	ret z				; no need to restore page if Z is set
-	jp F_leave
+	ret			; note: for TNFS_OP_READ, the function
+				; above restores memory and copies data
+				; to its final destination.
 
 ;--------------------------------------------------------------------------
 ; F_tnfs_write

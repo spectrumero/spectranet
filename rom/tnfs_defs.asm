@@ -31,6 +31,7 @@ tnfs_seqno_offset	equ 2
 tnfs_cmd_offset		equ 3
 tnfs_err_offset		equ 4
 tnfs_msg_offset		equ 5
+TNFS_READHEADERSZ	equ 7
 
 ; Mount group
 TNFS_OP_MOUNT		equ 0
