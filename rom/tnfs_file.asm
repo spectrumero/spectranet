@@ -90,16 +90,29 @@ F_tnfs_open
 F_tnfs_read
 	call F_fetchpage
 	ret c
+	ld (v_curfd), a			; store the FD
 
+	ld h, b				; store bytes requested in HL
+	ld l, c
+.readloop
+	ld a, (v_curfd)
+	push hl
+	call F_tnfs_read_blk		; note: returns with our memory
+	pop hl				; page paged out always.
+	ret c				; so no need to jp F_leave here
+	call F_fetchpage		; restore our sysvars
+	sbc hl, bc			; calculate bytes remaining
+	ld b, h				; and set BC
+	ld c, l
+	jr nz, .readloop
+	jp F_leave			; read complete
+	
+F_tnfs_read_blk
 	ld (v_read_destination), de	; save destination
 	ex af, af'		; save FD
 	ld a, b			; cap read size at 512 bytes
 	cp 0x02
 	jr c, .continue		; less than 512 bytes if < 0x02
-	jr nz, .sizecap		; if msb > 0x02 cap the size
-	ld a, c
-	and a			; compare with zero
-	jr z, .continue		; less than 512 bytes if zero
 .sizecap
 	ld bc, 512		; cap at 512 bytes
 .continue
