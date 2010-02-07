@@ -103,7 +103,8 @@ F_loadsna48
 
 	ld de, 23296		; Now fill memory from the frame buffer on
 	ld bc, 42240		; size of RAM
-	call F_readblock
+	ld a, (v_snapfd)
+	call READ
 	jp c, J_snapdie
 	
 	ld a, (v_snapfd)	; close the fd
@@ -168,39 +169,21 @@ J_snapdie
 	ret
 
 ;-------------------------------------------------------------------------
-; F_readblock: Read a big block of data into memory
-; DE = address to start putting data
-; BC = number of bytes
-; On error returns with carry set.
-F_readblock
-	ld h, b			; Use hl as a bytes remaining counter
-	ld l, c
-.readloop
-	ld a, (v_snapfd)
-	push hl
-	call READ
-	pop hl
-	ret c
-	sbc hl, bc		; calculate bytes remaining
-	ld b, h			; set requested bytes to remaining
-	ld c, l
-	jr nz, .readloop
-	ret
-
-;-------------------------------------------------------------------------
 ; F_readscreen: Read the screen memory into Spectranet RAM
 F_readscreen
 	ld a, 0xDA		; first page
 	call PUSHPAGEA		; switch and store page number
 	ld de, 0x1000
 	ld bc, 0x1000
-	call F_readblock
+	ld a, (v_snapfd)
+	call READ
 	jr c, .restoreerr
 	ld a, 0xDB
 	call SETPAGEA
 	ld de, 0x1000
 	ld bc, 0xB00
-	call F_readblock
+	ld a, (v_snapfd)
+	call READ
 .restoreerr
 	call POPPAGEA
 	ret
@@ -224,7 +207,8 @@ F_loadsna128
 	jp c, J_snapdie
 	ld de, 23296		; load the remainder of the lowest 32K 
 	ld bc, 25856		; of RAM
-	call F_readblock
+	ld a, (v_snapfd)
+	call READ
 	jp c, J_snapdie
 
 	; I think it was a bit pointless making 128K snapshots compatible
@@ -263,7 +247,8 @@ F_loadsna128
 	push de
 	ld de, 0xC000		; the pageable area starts at 0xC000
 	ld bc, 16384		; for 16K
-	call F_readblock
+	ld a, (v_snapfd)
+	call READ
 	pop de
 	jp c, J_snapdie
 .next
@@ -287,7 +272,8 @@ F_loadsna128
 	out (c), a
 	ld de, 0xC000		; load the remaining page
 	ld bc, 16384
-	call F_readblock
+	ld a, (v_snapfd)
+	call READ
 	jp c, J_snapdie
 
 	ld a, (v_snapfd)	; Close the file, nothing more to

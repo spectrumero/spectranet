@@ -221,7 +221,8 @@ F_savesna
 	push de
 	ld hl, 0xC000
 	ld bc, 0x4000
-	call F_saveblock
+	ld a, (v_snapfd)
+	call WRITE
 	jr c, .writeerr128
 	pop de
 	pop af
@@ -254,32 +255,8 @@ F_savesna
 
 	ld hl, 23296			; Start saving from this address
 	ld bc, 42240			; For this many bytes
-	call F_saveblock
-	ret
-
-;-----------------------------------------------------------------------
-; F_saveblock
-; Save a block of memory.
-; HL = start address, BC = bytes to write, v_snapfd = fd to write to
-F_saveblock
-	ld d, b				; Set bytes remaining
-	ld e, c				; in DE
-.writeloop
 	ld a, (v_snapfd)
-	push hl
-	push de
 	call WRITE
-	ret c
-	pop de
-	pop hl
-	ex de, hl			; Calculate remaining bytes
-	sbc hl, bc
-	ret z				; and if none are left, leave.
-	ex de, hl
-	add hl, bc			; Calculate next address
-	ld b, d				; set requested number of bytes
-	ld c, e				; to write out.
-	jr .writeloop
 	ret
 
 ;----------------------------------------------------------------------
@@ -290,13 +267,15 @@ F_savesavedscreen
 	call PUSHPAGEA			; set it and save current page
 	ld hl, 0x1000
 	ld bc, 0x1000
-	call F_saveblock
+	ld a, (v_snapfd)
+	call WRITE
 	jr c, .restoreerr
 	ld a, 0xDB
 	call SETPAGEA
 	ld hl, 0x1000
 	ld bc, 0xB00
-	call F_saveblock
+	ld a, (v_snapfd)
+	call WRITE
 .restoreerr
 	call POPPAGEA			; restore original page
 	ret

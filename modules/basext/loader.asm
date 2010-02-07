@@ -159,18 +159,9 @@ F_tbas_loadblock
 	dec hl
 	sbc hl, bc		; zero flag is set if length is correct
 	jr nz, .lengtherr
-	ld h, b			; copy length remaining into HL
-	ld l, c
 .loadloop
 	ld a, (v_vfs_curfd)	; get file descriptor
-	push hl			; save length remaining
 	call READ
-	pop hl			; get current length back into HL
-	ret c			; bale out if we've got an error condition
-	sbc hl, bc		; decrement length remaining
-	ld b, h			; and update data request
-	ld c, l
-	jr nz, .loadloop	; continue until 0 bytes left
 	ret
 .lengtherr
 	ld a, TMISMCHLENGTH	; Length of data block doesn't match header
@@ -321,21 +312,9 @@ F_tbas_writefile
 	push hl			; save values so we can calculate the
 	push bc			; checksum (TODO optimize)
 .saveloop
-	push bc
-	push hl			; save current position and length
 	ld a, (v_vfs_curfd)	; get file descriptor
 	call WRITE
-	pop hl			; retrieve start
-	pop de			; retrieve length
 	jr c, .cleanuperror	; exit on error
-	add hl, bc		; increment the pointer
-	ex de, hl
-	sbc hl, bc		; decrement the bytes remaining
-	jr z, .done		; and leave if we're finished.
-	ld b, h			; and move to bc
-	ld c, l
-	ex de, hl
-	jr .saveloop
 .done
 	pop bc			; retrieve original size
 	pop hl			; and start address
