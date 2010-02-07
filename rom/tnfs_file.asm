@@ -21,7 +21,7 @@
 ;THE SOFTWARE.
 
 ; TNFS file operations - open, read, write, close
-
+;	include "regdump.asm"
 ;--------------------------------------------------------------------------
 ; F_tnfs_open
 ; Opens a file on the remote server.
@@ -128,7 +128,7 @@ F_tnfs_read
 ;--------------------------------------------------------------------------
 ; F_tnfs_write
 ; Writes to an open file descriptor.
-; Arguments:		A = directory handle
+; Arguments:		A = file handle
 ; 			HL = pointer to buffer to write
 ;			BC = number of bytes to write
 ; Returns with carry set on error and A = return code. BC = bytes
@@ -136,15 +136,29 @@ F_tnfs_read
 F_tnfs_write
 	call F_fetchpage
 	ret c
+	ld (v_curfd), a
+.writeloop
+	push hl
+	push bc
+	ld a, (v_curfd)		; load current file handle
+	call F_tnfs_write_blk	; write up to maximum block size
+	pop hl			; get original length
+	pop de
+	jp c, F_leave		; error - exit
+	sbc hl, bc		; subtract bytes written from bytes to write
+	jp z, F_leave		; if zero, leave now.
+	ex de, hl		; get pointer into HL
+	add hl, bc		; advance pointer
+	ld b, d			; bytes remaining into BC
+	ld c, e
+	jr nz, .writeloop	; next block if bytes remain
+	jp F_leave
 
+F_tnfs_write_blk
 	ex af, af'
 	ld a, b			; cap write size at 512 bytes
-	cp 0x01
+	cp 0x02
 	jr c, .continue		; less than 512 bytes if < 0x02
-	jr nz, .sizecap		; if msb > 0x02 cap the size
-	ld a, c
-	and a			; compare with zero
-	jr z, .continue		; less than 512 bytes if zero
 .sizecap
 	ld bc, 512		; cap at 512 bytes
 .continue
@@ -173,7 +187,7 @@ F_tnfs_write
 	ldir
 	call z, F_fetchpage	; get our page back if we paged
 	call F_tnfs_message_w	; write the command and get the reply
-	jp c, F_leave		; network error
+	ret c			; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a			; check for tnfs error
 	jr z, .getsize
@@ -181,7 +195,7 @@ F_tnfs_write
 	ret			
 .getsize
 	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)
-	jp F_leave
+	ret
 
 ;------------------------------------------------------------------------
 ; F_tnfs_close
