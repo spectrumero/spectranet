@@ -56,6 +56,9 @@ F_copyrxbuf
 	; The datasheet doesn't of course guarantee that the socket
 	; is actually ready to read even if the interrupt is set :-)
 .testzero
+	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
+	bit BIT_IR_DISCON, (hl)
+	jp nz, J_resetbypeer
 	ld l, Sn_RX_RSR0 % 256	; (hl) = RSR's MSB
 	ld d, (hl)
 	inc l
@@ -190,8 +193,11 @@ F_copytxbuf
 	; (note: will use page B if this is the case)
 	call F_checkpageA
 
-	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
 .waitformsb
+	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
+	bit BIT_IR_DISCON, (hl)
+	jp nz, J_resetbypeer
+	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
 	ld a, b			; MSB of argment
 	cp (hl)			; compare with FSR
 	jr c, .getoffset	; definitely enough free space
@@ -199,6 +205,10 @@ F_copytxbuf
 				; Buffer MSB = FSR MSB, check LSB value
 	inc l			; (hl) = LSB of hw register
 .waitforlsb
+	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
+	bit BIT_IR_DISCON, (hl)
+	jp nz, J_resetbypeer
+	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
 	ld a, (hl)		; get LSB of FSR
 	cp c			; and compare with LSB of passed value
 	jr c, .waitforlsb	; if C > (hl) wait until it's not.
@@ -293,6 +303,11 @@ F_copytxbuf
 	ldir			; transfer remainder
 	jr .completetx		; done
 
+J_resetbypeer
+	ld a, ECONNRESET
+	scf
+	ret
+
 ;============================================================================
 ; F_getbaseaddr:
 ; This routine sets HL to the base address.
@@ -341,3 +356,4 @@ F_checkpageA
 	ld a, (v_buf_pga)	; get page A value
 	call F_setpageB		; page it in
 	ret	
+
