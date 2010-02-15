@@ -261,20 +261,17 @@ F_pollall
 	jr .noneready
 .poll
 	ld h, a			; (hl) = socket register
-	ld l, Sn_IR % 256	; interrupt register
-	ld a, (hl)
-	and S_IR_CON|S_IR_RECV|S_IR_DISCON
-	jr nz, .ready
-	jr .nextsock		; advance to next socket fd
-.noneready
-	xor a			; A=0, zero flag set
-	jp J_leavesockfn
+	call F_checksock
+	jr z, .nextsock		; advance to next socket fd
 .ready
 	ld c, a			; copy flags into C
 	ld a, e			; ready fd in e
 	inc a
 	ld (v_lastpolled), a	; save last polled sockfd+1
 	dec a			; restore A to proper value
+	jp J_leavesockfn
+.noneready
+	xor a			; A=0, zero flag set
 	jp J_leavesockfn
 
 ;-------------------------------------------------------------------------
@@ -291,9 +288,27 @@ F_pollfd
 	call F_gethwsock	; H is socket reg MSB
 	jp c, J_leavesockfn	; carry is set if the fd is not valid
 
-	ld l, Sn_IR % 256	; interrupt register
-	ld a, (hl)		; read its value
-	and S_IR_CON|S_IR_RECV|S_IR_DISCON
+	call F_checksock
 	ld c, a			; copy flags into C
 	jp J_leavesockfn
 
+; Check a socket's interrupt and status register. Register bank must
+; be set in H prior to entry.
+F_checksock
+	ld l, Sn_IR % 256	; check interrupt register
+	ld a, (hl)
+	and S_IR_CON|S_IR_RECV|S_IR_DISCON
+	ret nz			; there is status to report now
+	ld l, Sn_SR % 256	; check status register for closedness
+	ld a, (hl)
+	cp S_SR_SOCK_CLOSE_WAIT
+	jr z, .closed
+	and a			; 0 = S_SR_SOCK_CLOSED
+	jr z, .closed
+	xor a			; return with Z set (and no status flags)
+	ret	
+.closed
+	ld a, S_IR_DISCON	; set "disconnect" flag
+	or a			; ensure Z flag is reset
+	ret
+	

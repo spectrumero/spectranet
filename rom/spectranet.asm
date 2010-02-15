@@ -128,3 +128,8 @@ FREEFD		equ 0
 ALLOCDIRHND	equ 3
 FREEDIRHND	equ 2
 
+; POLL status bits
+BIT_RECV	equ 2
+BIT_DISCON	equ 1
+BIT_CONN	equ 0
+

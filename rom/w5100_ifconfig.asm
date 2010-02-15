@@ -33,28 +33,22 @@
 F_ifconfig_gw
 	call F_regpage
 	ld de, GAR0	; gateway address register
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 
 F_ifconfig_inet
 	call F_regpage
 	ld de, SIPR0
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 
 F_ifconfig_netmask
 	call F_regpage
 	ld de, SUBR0
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 
 ;-------------------------------------------------------------------------
@@ -64,28 +58,22 @@ F_ifconfig_netmask
 F_get_ifconfig_gw
 	call F_regpage
 	ld hl, GAR0
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 
 F_get_ifconfig_inet
 	call F_regpage
 	ld hl, SIPR0
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 
 F_get_ifconfig_netmask
 	call F_regpage
 	ld hl, SUBR0
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 	
 F_regpage
@@ -146,9 +134,7 @@ F_deconfig
 	ldir
 	ld hl, GAR0
 	ld de, SIPR0
-	ldi
-	ldi
-	ldi
-	ldi
+	ld bc, 4
+	ldir
 	jp J_leavesockfn
 
