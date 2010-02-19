@@ -26,11 +26,13 @@
 ISFILE		equ 1
 RDONLY		equ 2 
 ISDIR		equ 4
+ISCTRL		equ 8
 
 ; Bit positions for the above
 BIT_ISFILE	equ 0
 BIT_RDONLY	equ 1
 BIT_ISDIR	equ 2
+BIT_ISCTRL	equ 3
 
 ; Offsets for stream metadata.
 STRM_WRITEBUF	equ 0		; Write buffer number
@@ -40,4 +42,18 @@ STRM_READPTR	equ 3		; Read pointer
 STRM_FD		equ 4		; File/socket/dir handle
 STRM_FLAGS	equ 5		; Flags bitfield
 STRM_REMAINING	equ 6		; Remaining buffer size
+
+; State variables - offsets (note offset 5 is STRM_FLAGS)
+OFS_FLAGS       equ 0
+OFS_CURCMD      equ 1
+OFS_CURSTATE    equ 2
+OFS_STREAM      equ 3
+OFS_CURDATA     equ 4
+
+; Definitions.
+BUFMETADATA     equ 0x1000
+BUFDATASZ       equ 8
+
+; Command definitions for the control channel
+CMD_POLLALL	equ 'p'
 

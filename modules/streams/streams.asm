@@ -39,6 +39,7 @@
 	include "io.asm"	; IO routines
 	include "buffer.asm"	; buffers
 	include "fileio.asm"	; file open functions
+	include "ctrlchan.asm"	; Control channel
 ;	include "flowcontrol.asm" ; BASIC flow control
 
 ; Our ROM ID

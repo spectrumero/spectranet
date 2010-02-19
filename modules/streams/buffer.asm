@@ -74,24 +74,12 @@ F_findfreebuf
 ; Adds the byte in A to the buffer for the stream in L
 F_feedbuffer
         ex af, af'              ; save A
-        ld a, l                 ; calculate buffer offset
-        and 0x0F                ; mask out any flags in the top nibble
+	call F_findmetadata	; IX = pointer to metadata
 
-        rlca                    ; multiply by 8 to find the stream data
-        rlca
-        rlca
-        ld h, 0x10              ; MSB = 0x10
-	add 5			; first check the flags bit
-        ld l, a                 ; HL = info pointer
-
-	bit BIT_RDONLY, (hl)	; if read only do nothing
+	bit BIT_RDONLY, (ix+STRM_FLAGS)	; if read only do nothing
 	ret nz
-	sub 5
-	ld l, a			;:point hl at the start of the info block
-        ld d, (hl)              ; D = buffer number (happens to be the MSB)
-        inc l
-        inc l                   ; advance to write buffer pointer
-        ld e, (hl)              ; DE = current buffer pointer
+        ld d, (ix+STRM_WRITEBUF); D = buffer number (happens to be the MSB)
+        ld e, (ix+STRM_WRITEPTR); DE = current buffer pointer
         ex af, af'              ; get byte back
         cp 0x0d                 ; Spectrum ENTER?
         jr nz, .cont
@@ -108,22 +96,19 @@ F_feedbuffer
         jr z, F_flushbuffer     ; If the buffer is full flush it
 
         inc e                   ; increment the buffer pointer
-        ld (hl), e              ; save the buffer pointer
+        ld (ix+STRM_WRITEPTR), e ; save the buffer pointer
         ret
 
 ;---------------------------------------------------------------------------
 ; F_flushbuffer
 ; Flushes the given buffer
 ;       DE = current buffer pointer
-;       HL = current buffer info pointer (points at the bufptr storage,
-;               i.e. metadata base address + 2) 
+;       IX = current buffer info pointer 
 F_flushbuffer
         ; TODO
         ; This needs to work with all kinds of streams, not just SOCK_STREAM
-        ld (hl), 0              ; reset buffer pointer
-        inc l                   ; point at descriptor (advance past read
-        inc l                   ; buffer pointer)
-        ld a, (hl)              ; and get it
+        ld (ix+STRM_WRITEPTR), 0 ; reset buffer pointer
+        ld a, (ix+STRM_FD)	; get the file descriptor
 
         ld b, 0                 ; set BC to the size of the buffer to send
         ld c, e                 ; inc BC to make the proper length
@@ -133,8 +118,7 @@ F_flushbuffer
         ; DE now = buffer start
         ; BC now = length
         ; A now = file descriptor
-	inc l
-	bit 0, (hl)		; Check "is a file" flag
+	bit 0, (ix+STRM_FLAGS)	; Check "is a file" flag
 	jr nz, .filewrite
         call SEND               ; Send the data
         jr c, .borked

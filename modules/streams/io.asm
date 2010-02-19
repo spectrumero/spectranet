@@ -23,7 +23,9 @@
 ; IO routines for streams
 J_modcall
 	call F_fetchpage	; get our memory page
-	bit 6, l		; Control stream?
+	bit 5, l		; Control stream?
+	jp nz, F_control
+	bit 6, l		; Listen stream?
 	jp nz, F_ctrlstream
 	bit 7, l		; MSB set?
 	jr nz, F_input		; Call the input routine
@@ -39,18 +41,9 @@ F_input
 	res 3, (hl)
 	pop hl
 
-	ld a, l			; fetch the function number
-	and 0x0f		; clear flag bits
-	ld c, a			; save it
-	rlca			; find metadata for stream
-	rlca
-	rlca
-	ld l, a
-	ld h, 0x10		; point HL at metadata
-	ld d, (hl)		; get tx buffer number
-	inc l			; point at tx buffer pointer
-	inc l
-	ld a, (hl)		; get tx buffer pointer
+	call F_findmetadata	; get a pointer to metadata in IX
+	ld d, (ix+STRM_WRITEBUF); get tx buffer number
+	ld a, (ix+STRM_WRITEPTR); get tx buffer pointer
 	and a			; if nonzero, flush the buffer
 	call nz, .flush
 
@@ -67,41 +60,32 @@ F_input
 	jp nz, .doinkey
 
 .input
-	dec l			; HL points at RX buffer number
-;	ld d, (hl)		; which is the MSB of the actual buffer...
-	ld d, INTERPWKSPC/256	; TODO: use our private buffers
-	inc l			; HL now points at the
-	inc l			; RX buffer current address
-	ld e, (hl)
-	push hl			; save this address
-	inc l			; and now it points at the socket handle
-	ld a, (hl)		; fetch it
+	ld d, (ix+STRM_READBUF)	; get the read buffer number
+	ld e, (ix+STRM_READPTR)	; and the pointer
+	ld a, (ix+STRM_FD)	; get the fd
 	ld (v_asave), a		; save it for the loop operation
-	inc l
-	ld (flagaddr), hl	; save the address of the flags byte
 	xor a			; Is the buffer pointer at 
 	cp e			; the start of the buffer?
 	jr z, .getdata		; Yes - so read more data from the network
 	
-	inc l			; HL points at bytes remaining in buffer...
-	ld b, (hl)		; ...parameter, fetch it
+	ld b, (ix+STRM_REMAINING) ; remaining bytes in buffer
 	ex de, hl		; and put the buffer pointer in HL
 	jr .unloadloop
 
 .getdata
 	ld a, (v_asave)		; Get the descriptor
-	ld de, INTERPWKSPC
 	ld bc, 255		; read up to 255 chars
-	ld hl, (flagaddr)	; check flags bit
-	bit BIT_ISFILE, (hl)	; is a file?
+	ld l, (ix+STRM_FLAGS)	; check flags bit
+	bit BIT_ISFILE, l	; is a file?
 	jr nz, .readfromfile
-	bit BIT_ISDIR, (hl)	; is a directory?
+	bit BIT_ISDIR, l	; is a directory?
 	jr nz, .readdir
+	push de			; save bufptr
 	call RECV
+	pop hl			; retrieve bufptr into hl
 .readdone
-	jp c, .readerrpop
+	jp c, .readerr
 .readdirdone
-	ld hl, INTERPWKSPC
 	ld b, c			; get the length returned into B for djnz
 
 .unloadloop
@@ -110,6 +94,8 @@ F_input
 	jr z, .checkformore	; Either a CR
 	cp 0x0a
 	jr z, .checkformore	; or a linefeed
+	cp '"'		
+	call z, .addquote	; Escape the " character to prevent error C
 	push hl
 	push bc
 	rst CALLBAS
@@ -118,7 +104,21 @@ F_input
 	pop hl
 	inc l
 	djnz .unloadloop
+	ld d, (ix+STRM_READBUF)	; reset everything to get the next set
+	ld e, 0			; of bytes
+	ld (ix+STRM_READPTR), e	
+	ld (ix+STRM_REMAINING), e
 	jr .getdata		; go get it
+
+.addquote			; small routine to add an extra "
+	push hl			; character to the input stream to
+	push bc			; prevent C Nonsense in BASIC
+	rst CALLBAS
+	defw 0x0F85
+	pop bc
+	pop hl
+	ld a, '"'
+	ret
 
 .readfromfile
 	call READ
@@ -130,7 +130,7 @@ F_input
 .readdirloop
 	ld a, (hl)		; never have a partial read doing READDIR.
 	and a			; End of string?
-	jr z, .exit		; Return to BASIC
+	jr z, .exitnopop	; Return to BASIC
 	push hl
 	rst CALLBAS		; Feed INPUT
 	defw 0x0F85
@@ -138,8 +138,6 @@ F_input
 	inc hl
 	jr .readdirloop
 
-.exit
-	pop hl			; restore stack
 .exitnopop
 	ld a, 0x0d		; BASIC expects this to end INPUT
 	ld l, 0			; signal "munge the stack"
@@ -158,21 +156,12 @@ F_input
 	cp 0x0a
 	jr z, .checklastcr
 .saveposition
-	pop de			; fetch the metadata pointer
-	ex de, hl		; into HL
-	ld (hl), e		; save the current position
-	inc l
-	inc l
-	inc l
-	ld (hl), b		; save bytes remaining
+	ld (ix+STRM_READPTR), l	; save the current position
+	ld (ix+STRM_REMAINING), b	; save bytes remaining
 	jr .exitnopop
 .cleardown
-	pop hl			; get the metadata ptr
-	ld (hl), 0		; clear bufpos
-	inc l
-	inc l
-	inc l
-	ld (hl), 0		; clear bufsz
+	ld (ix+STRM_READPTR), 0	; clear bufpos
+	ld (ix+STRM_REMAINING), 0	; clear bufsz
 	jr .exitnopop
 
 .checklastcr
@@ -186,14 +175,11 @@ F_input
 .flush
 	dec a			; make actual end position, not new char pos
 	ld e, a			; make buffer LSB
-	push hl
 	call F_flushbuffer
-	pop hl
 	ret
 
 .doinkey
-	inc l
-	ld a, (hl)		; get the socket
+	ld a, (ix+STRM_FD)	; get the socket
 	ld (v_asave), a		; save it
 	call POLLFD		; anything to receive?
 	jr c, .readerr		; Read error?
@@ -267,4 +253,20 @@ F_ctrlstream
 	xor a			; carry and zero reset - no data
 	ld l, 1			; signal "don't munge the stack"
 	jp F_leave
+
+;-------------------------------------------------------------------------
+; F_findmetadata
+; Finds the data block for the stream in L
+F_findmetadata
+	ld a, l			; convert the function number to the 
+F_findmetadata_a		; stream number.
+	and 0x0F
+	rlca
+	rlca
+	rlca			; A now = LSB
+	ld h, 0x10		; H now = MSB
+	ld l, a
+	push hl
+	pop ix			; transfer the address to IX
+	ret
 

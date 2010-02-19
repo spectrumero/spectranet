@@ -238,6 +238,27 @@ J_memerr
 	jp REPORTERR
 
 ;--------------------------------------------------------------------------
+; F_ctrt: Opens a control channel.
+; Syntax is: %control #n
+F_ctrl
+	rst CALLBAS
+	defw ZX_NEXT_CHAR
+	cp '#'			; expect channel number
+	jp nz, PARSE_ERROR
+	rst CALLBAS
+	defw ZX_NEXT_CHAR	; advance to channel number
+
+	rst CALLBAS
+	defw ZX_EXPT1_NUM	; Check for a number
+	call STATEMENT_END	; followed by the end of the command
+
+	; Runtime
+	rst CALLBAS
+	defw ZX_FIND_INT2	; Get the 16 bit integer (stream number)
+	ld a, c			; transfer channel number to A
+	jp F_ctrl_impl		; Jump to the meat of the routine
+
+;--------------------------------------------------------------------------
 ; F_reclaim: Reclaims stream memory
 ; Syntax is %reclaim
 F_reclaim

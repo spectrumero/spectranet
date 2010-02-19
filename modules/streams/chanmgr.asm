@@ -163,12 +163,17 @@ F_close_impl
 	jr nz, .isfile
 	bit BIT_ISDIR, (hl)		; is a directory?
 	jr nz, .isdir
-	call CLOSE			; close the socketA
+	bit BIT_ISCTRL, (hl)		; control channel?
+	jr nz, .closedone		; nothing to do.
+	call CLOSE			; close the socket
 .closedone
 	pop hl
+	ld d, h
+	ld e, l
+	inc de
+	ld bc, BUFDATASZ-1
 	ld (hl), 0			; clear down buffer info
-	inc l
-	ld (hl), 0
+	ldir
 	jr c, .closeerr
 	pop af				; get channel number
 	call F_freemem			; Mark memory as free
@@ -244,6 +249,28 @@ F_listen_impl
 	pop bc
 	ld hl, STR_nomem
 	jp REPORTERR			; Report "Out of memory"
+
+;------------------------------------------------------------------------
+; F_ctrl_impl
+; Set up a control channel. Desired stream in A.
+F_ctrl_impl
+	call F_fetchpage		; fetch our memory
+	call c, F_allocpage
+	jr c, .memerr			; one already
+
+	ex af, af'
+	call F_findmetadata		; find the metadata area
+	ex af, af'
+	set BIT_ISCTRL, (ix+STRM_FLAGS)
+
+	call F_createchan		; Create/open channel and stream
+	set 5, (ix+IORCHAN)		; set the "is control" bit
+	set 5, (ix+IOWCHAN)
+	call F_leave
+	jp EXIT_SUCCESS
+.memerr
+	ld hl, STR_nomem
+	jp REPORTERR
 
 ;------------------------------------------------------------------------
 ; F_accept_impl
