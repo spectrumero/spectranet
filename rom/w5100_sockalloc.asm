@@ -207,8 +207,11 @@ F_accept
 	ld l, Sn_SR % 256	; (hl) = socket's SR
 .waitforestablished
 	ld a, (hl)
-	cp S_SR_SOCK_ESTABLISHED
+	cp S_SR_SOCK_CLOSE_WAIT	; a really short connection can mean we
+	jr z, .continue		; are in CLOSE_WAIT before we ever got
+	cp S_SR_SOCK_ESTABLISHED ; an opportunity to accept...
 	jr nz, .waitforestablished
+.continue
 	ld l, Sn_IR % 256	; clear the interrupt flag for this socket
 	ld (hl), S_IR_CON
 
