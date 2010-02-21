@@ -100,8 +100,8 @@ F_tnfs_readdir
 .copybuf
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ld b, 255			; max filename length
-	call F_tnfs_strcpy		; copy then exit
-	jp F_leave
+	call F_restorepage		; ... in case it's 0x1000-0x1FFF
+	jp F_tnfs_strcpy		; copy then exit (page already restored)
 
 ;===========================================================================
 ; F_tnfs_closedir

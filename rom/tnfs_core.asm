@@ -21,7 +21,6 @@
 ;THE SOFTWARE.
 
 ; General TNFS core utility functions.
-
 ;------------------------------------------------------------------------
 ; F_tnfs_strcpy
 ; Copy a null terminated string in HL to the buffer in DE, up to B bytes long
@@ -401,8 +400,8 @@ F_tnfs_message
 	or a			; ensure carry is reset
 	ret
 .leaveread
-	scf
-	jp F_leave		; restore original RAM page and leave
+	scf			; indicate error
+	ret
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_poll

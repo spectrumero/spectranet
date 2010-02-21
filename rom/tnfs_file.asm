@@ -19,7 +19,6 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
 ; TNFS file operations - open, read, write, close
 ;	include "regdump.asm"
 ;--------------------------------------------------------------------------
@@ -91,6 +90,9 @@ F_tnfs_read
 	call F_fetchpage
 	ret c
 	ld (v_curfd), a			; store the FD
+	xor a
+	ld (v_bytesread), a		; reset bytesread counter
+	ld (v_bytesread+1), a
 
 	ld h, b				; store bytes requested in HL
 	ld l, c
@@ -98,13 +100,21 @@ F_tnfs_read
 	ld a, (v_curfd)
 	push hl
 	call F_tnfs_read_blk		; note: returns with our memory
-	pop hl				; page paged out always.
-	ret c				; so no need to jp F_leave here
+	push af				; preserve flags
 	call F_fetchpage		; restore our sysvars
+	ld hl, (v_bytesread)		; update read counter
+	add hl, bc
+	ld (v_bytesread), hl
+	pop af				; restore flags
+	pop hl
+	jr nz, .readdone		; fewer bytes read than requested
+	jr c, .readdone			; or an error occurred
 	sbc hl, bc			; calculate bytes remaining
 	ld b, h				; and set BC
 	ld c, l
-	jr nz, .readloop
+	jr nz, .readloop		; still more to read
+.readdone
+	ld bc, (v_bytesread)		; return bytes read in BC
 	jp F_leave			; read complete
 	
 F_tnfs_read_blk
@@ -116,6 +126,7 @@ F_tnfs_read_blk
 .sizecap
 	ld bc, 512		; cap at 512 bytes
 .continue
+	push bc			; save requested bytes
 	ld a, TNFS_OP_READ
 	call F_tnfs_header_w
 	ex af, af'		; get the FD back
@@ -134,6 +145,13 @@ F_tnfs_read_blk
 
 	; v_read_destination contains address of buffer.
 	call F_tnfs_message_w_hl	; send it, and get the reply
+	pop hl			; get requested bytes back
+	ret c			; return immediately on message error
+	ld a, h			; compare high order of requested 
+	cp b			; versus received...
+	ret nz			; not equal.
+	ld a, l			; do the same with the low order.
+	cp c
 	ret			; note: for TNFS_OP_READ, the function
 				; above restores memory and copies data
 				; to its final destination.
