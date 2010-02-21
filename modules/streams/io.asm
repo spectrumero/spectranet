@@ -124,9 +124,10 @@ F_input
 	call READ
 	jr .readdone
 .readdir
-	call READDIR
-	jp c, .readerrpop
-	ld hl, INTERPWKSPC	; directly load INPUT with data as we can
+	ld de, INTERPWKSPC	; %opendir does not allocate a buffer
+	call READDIR		; so use temporary workspace.
+	jp c, .readerr		; 
+	ld hl, INTERPWKSPC
 .readdirloop
 	ld a, (hl)		; never have a partial read doing READDIR.
 	and a			; End of string?
