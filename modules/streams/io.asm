@@ -19,7 +19,6 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
 ; IO routines for streams
 J_modcall
 	call F_fetchpage	; get our memory page
@@ -121,7 +120,11 @@ F_input
 	ret
 
 .readfromfile
+	push de
+	push ix
 	call READ
+	pop ix
+	pop hl			; unloadloop uses hl as pointer
 	jr .readdone
 .readdir
 	ld de, INTERPWKSPC	; %opendir does not allocate a buffer
@@ -270,4 +273,30 @@ F_findmetadata_a		; stream number.
 	push hl
 	pop ix			; transfer the address to IX
 	ret
+
+;F_debugprint
+;	ld (0x3200), ix
+;	pop ix
+;	inc ix
+;	inc ix
+;	push ix
+;	push af
+;	push bc
+;	push de
+;	push hl
+;	ld h, (ix-1)
+;	ld l, (ix-2)
+;	call PRINT42
+;	pop hl
+;	pop de
+;	pop bc
+;	pop af
+;	ld ix, (0x3200)
+;	ret
+;STR_CHECKFORMORE defb "checkformore\n",0
+;STR_READDONE	defb "readdone\n",0
+;STR_INPUT	defb "input\n",0
+;STR_CLEARDOWN	defb "cleardown\n",0
+;STR_SAVEPOS	defb "savepos\n",0
+
 
