@@ -100,12 +100,11 @@ F_tnfs_read
 	ld a, (v_curfd)
 	push hl
 	call F_tnfs_read_blk		; note: returns with our memory
-	push af				; preserve flags
-	call F_fetchpage		; restore our sysvars
+	ex af, af'			; preserve any flags
 	ld hl, (v_bytesread)		; update read counter
 	add hl, bc
 	ld (v_bytesread), hl
-	pop af				; restore flags
+	ex af, af'
 	pop hl
 	jr nz, .readdone		; fewer bytes read than requested
 	jr c, .readdone			; or an error occurred

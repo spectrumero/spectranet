@@ -372,6 +372,7 @@ F_tnfs_message
 .read
 	ld bc, TNFS_READHEADERSZ ; just pull out the header
 	call RECVFROM
+	ret c			; leave on error
 	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
 	ld b, a
 	ld a, (v_curmountpt)	; find the sequence number storage
@@ -394,6 +395,9 @@ F_tnfs_message
 	call F_restorepage	; restore original RAM
 	call RECV		; use recv, not recvfrom for the remains
 	pop hl			; calculate the new value
+	push af
+	call F_fetchpage	; get our page back
+	pop af
 	ret c			; exit on error
 	add hl, bc		; that DE should have on exit.
 	ex de, hl
