@@ -313,7 +313,7 @@ F_tbas_ls
 	ld hl, INTERPWKSPC
 	call F_basstrcpy		; convert it to a C string
 	ld hl, INTERPWKSPC
-	jr .makecat
+	jp F_listdir
 
 .noargs
 	call STATEMENT_END
@@ -325,33 +325,7 @@ F_tbas_ls
 	ld (INTERPWKSPC+1), a
 	ld hl, INTERPWKSPC
 .makecat
-	call OPENDIR			; open the directory
-	jp c, J_tbas_error
-	ld (v_vfs_dirhandle), a		; save the directory handle
-	ld a, 2	
-	rst CALLBAS			; set channel to 2
-	defw 0x1601
-.catloop
-	ld a, (v_vfs_dirhandle)		; get the dir handle back
-	ld de, INTERPWKSPC		; location for result
-	call READDIR			; read dir
-	jr c, .readdone			; read is probably at EOF
-	ld hl, INTERPWKSPC
-	call F_tbas_zxprint		; print a C string to #2
-	ld a, '\r'			; newline
-	rst CALLBAS
-	defw 0x10
-	jr .catloop
-.readdone
-	push af				; save error code while
-	ld a, (v_vfs_dirhandle)		; we close the dir handle
-	call CLOSEDIR
-	pop hl				; pop into hl to not disturb flags
-	jp c, J_tbas_error		; report any error
-	ld a, h				; get original error code
-	cp EOF				; EOF is good
-	jp nz, J_tbas_error		; everything else is bad, report it
-	jp EXIT_SUCCESS
+	jp F_listdir
 
 ;---------------------------------------------------------------------------
 ; F_tbas_tapein

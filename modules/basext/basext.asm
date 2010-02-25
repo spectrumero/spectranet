@@ -38,5 +38,5 @@ TNFS_PAGE	equ 0xFF
 	include "info.asm"		; %info command
 	include "strings_en.asm"	; Strings
 	include "parseurl.asm"		; Mount point URL parser
-	include "regdump.asm"	
+	include "listdir.asm"		; List directory
 
