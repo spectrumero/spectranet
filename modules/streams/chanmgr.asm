@@ -480,6 +480,7 @@ F_reclaim_strmem
 	ld hl, 0
 	ld (current_zx_prog), hl	; clear down the variables
 	ld (original_zx_prog), hl
+	ld (stream_memptr), hl
 	ret
 
 ; debugging
