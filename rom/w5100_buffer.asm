@@ -56,17 +56,22 @@ F_copyrxbuf
 	; The datasheet doesn't of course guarantee that the socket
 	; is actually ready to read even if the interrupt is set :-)
 .testzero
-	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
-	bit BIT_IR_DISCON, (hl)
-	jp nz, J_resetbypeer
 	ld l, Sn_RX_RSR0 % 256	; (hl) = RSR's MSB
 	ld d, (hl)
 	inc l
 	ld e, (hl)
 	ld a, d
 	or e
-	jr z, .testzero
+	jr nz, .continue
 
+	; note that if there's a buffer to unload, unload it. Only
+	; check for RST when there's no data pending.
+	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
+	bit BIT_IR_DISCON, (hl)
+	jp nz, J_resetbypeer_pop
+	jr .testzero
+
+.continue
 	; check whether it exceeds the buffer. If so just use value of
 	; BC as number of bytes to copy. If not, use the RSR as number
 	; of bytes to copy.
@@ -303,7 +308,12 @@ F_copytxbuf
 	ldir			; transfer remainder
 	jr .completetx		; done
 
+J_resetbypeer_pop
+	pop de
 J_resetbypeer
+	ld a, (v_buf_pgb)	; check to see whether to re-page area B
+	and a			; zero?
+	call nz, F_setpageB	; yes - restore page B and return.
 	ld a, ECONNRESET
 	scf
 	ret

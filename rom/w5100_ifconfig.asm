@@ -33,20 +33,19 @@
 F_ifconfig_gw
 	call F_regpage
 	ld de, GAR0	; gateway address register
-	ld bc, 4
-	ldir
-	jp J_leavesockfn
+	jr J_copy_cfg
 
 F_ifconfig_inet
 	call F_regpage
 	ld de, SIPR0
-	ld bc, 4
-	ldir
-	jp J_leavesockfn
+	jr J_copy_cfg
 
 F_ifconfig_netmask
 	call F_regpage
 	ld de, SUBR0
+	jr J_copy_cfg
+
+J_copy_cfg
 	ld bc, 4
 	ldir
 	jp J_leavesockfn
@@ -58,23 +57,17 @@ F_ifconfig_netmask
 F_get_ifconfig_gw
 	call F_regpage
 	ld hl, GAR0
-	ld bc, 4
-	ldir
-	jp J_leavesockfn
+	jr J_copy_cfg
 
 F_get_ifconfig_inet
 	call F_regpage
 	ld hl, SIPR0
-	ld bc, 4
-	ldir
-	jp J_leavesockfn
+	jr J_copy_cfg
 
 F_get_ifconfig_netmask
 	call F_regpage
 	ld hl, SUBR0
-	ld bc, 4
-	ldir
-	jp J_leavesockfn
+	jr J_copy_cfg
 	
 F_regpage
 	ld a, (v_pga)		; copy original page A value
