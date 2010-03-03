@@ -146,50 +146,50 @@ NOBUFCLEANUP
 ; the stack.
 F_close_impl
 	call F_fetchpage
-	pop hl				; Channel number.
+	pop hl				; Get channel number from stack.
 	ld a, l
-	push af				; save the channel number
-	rlca				; multiply by 8 to find metadata
-	rlca
-	rlca
-	ld h, 0x10			; hl now points at metadata
-	ld l, a
-	push hl				; save it
-	add a, 4			; point at fd
-	ld l, a
-	ld a, (hl)			; fetch the FD
-	inc l				; get the flags
-	bit BIT_ISFILE, (hl)		; is a file?
+	ld (v_curchan), a		; store current channel value
+	call F_close_main
+	jr c, .closeerr
+	call F_leave
+	call EXIT_SUCCESS
+
+.closeerr
+	call F_leave
+	ld hl, STR_closeerr
+	jp REPORTERR
+
+F_close_main
+	call F_findmetadata_a
+F_close_ix
+	ld a, (ix+STRM_FD)		; fetch the FD
+	and a				; Valid FD?
+	ret z				; Stream not open, do nothing.
+	ld l, (ix+STRM_FLAGS)		; get the flags
+	push ix	
+	bit BIT_ISFILE, l		; is a file?
 	jr nz, .isfile
-	bit BIT_ISDIR, (hl)		; is a directory?
+	bit BIT_ISDIR, l		; is a directory?
 	jr nz, .isdir
-	bit BIT_ISCTRL, (hl)		; control channel?
+	bit BIT_ISCTRL, l		; control channel?
 	jr nz, .closedone		; nothing to do.
 	call CLOSE			; close the socket
 .closedone
-	pop hl
+	pop hl				; get chan metadata start address
 	ld d, h
 	ld e, l
 	inc de
 	ld bc, BUFDATASZ-1
 	ld (hl), 0			; clear down buffer info
 	ldir
-	jr c, .closeerr
-	pop af				; get channel number
+	push af				; save flags in case of error
+	ld a, (v_curchan)		; get channel number
 	call F_freemem			; Mark memory as free
-	call F_leave
-	call EXIT_SUCCESS
-
-.closeerr
-	pop af				; get channel number
-	call F_freemem			; Mark memory as free
-	call F_leave
-	ld hl, STR_closeerr
-	jp REPORTERR
-
+	pop af
+	ret
 .isfile
 	call VCLOSE
-	jr .closedone	
+	jr .closedone
 .isdir
 	call CLOSEDIR
 	jr .closedone
@@ -259,9 +259,10 @@ F_ctrl_impl
 	jr c, .memerr			; one already
 
 	ex af, af'
-	call F_findmetadata		; find the metadata area
+	call F_findmetadata_a		; find the metadata area
 	ex af, af'
-	set BIT_ISCTRL, (ix+STRM_FLAGS)
+	ld (ix+STRM_FLAGS), ISCTRL
+	ld (ix+STRM_FD), 1		; set FD value so close works
 
 	call F_createchan		; Create/open channel and stream
 	set 5, (ix+IORCHAN)		; set the "is control" bit
@@ -395,6 +396,7 @@ F_createchan
 ; Stream number should be in v_asave.
 ; Returns the address of the memory block in HL
 F_allocmem
+	call F_has_zxprog_fallen	; check local vars are valid
 	ld hl, (stream_memptr)		; look for a free memory slot
 	ld a, h
 	or l
@@ -477,11 +479,38 @@ F_reclaim_strmem
 	ld hl, (current_zx_prog)	; First byte to leave untouched
 	rst CALLBAS
 	defw ZX_RECLAIM_1		; move the BASIC program back
+J_resetvars
 	ld hl, 0
 	ld (current_zx_prog), hl	; clear down the variables
 	ld (original_zx_prog), hl
 	ld (stream_memptr), hl
 	ret
+
+;-----------------------------------------------------------------------
+; F_has_zxprog_fallen
+; If ZX_PROG is smaller than current_zx_prog it is likely the user
+; has done NEW. At this point we should reset everything.
+F_has_zxprog_fallen
+	or a				; make sure carry is cleared
+	ld hl, (ZX_PROG)
+	ld de, (current_zx_prog)
+	sbc hl, de
+	ret nc				; ZX_PROG has not fallen - OK.
+	
+	; ZX_PROG has fallen so something (NEW, likely) has just
+	; killed all of our streams.
+	ld a, 1
+.closeall
+	ld (v_curchan), a
+	call F_findmetadata_a
+	ld a, (ix+STRM_FD)		; open stream?
+	and a				; nonzero = open
+	call nz, F_close_ix		; close the stream...
+	ld a, (v_curchan)
+	inc a
+	cp 0x10				; last possible stream is 0x0F
+	jr nz, .closeall
+	jr J_resetvars			; reset our sysvars
 
 ; debugging
 F_debugA

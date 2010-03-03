@@ -48,7 +48,7 @@ OFS_FLAGS       equ 0
 OFS_CURCMD      equ 1
 OFS_CURSTATE    equ 2
 OFS_STREAM      equ 3
-OFS_CURDATA     equ 4
+OFS_CURDATA     equ 6		
 
 ; Definitions.
 BUFMETADATA     equ 0x1000
