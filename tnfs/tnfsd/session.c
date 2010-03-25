@@ -1,6 +1,7 @@
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
+ * Other contributors: Edward Cree
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -99,8 +100,8 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	}
 
 	/* find out how much to allocate for the mount point */
-	cliroot=buf;
-	mplen=strlen((char *)buf);
+	cliroot=buf+2;
+	mplen=strlen((char *)cliroot);
 	if(mplen < 1)
 	{
 		mplen=1;
@@ -109,7 +110,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 
 	if((s->root = (char *)malloc(mplen+1)) != NULL)
 	{
-		strlcpy((char *)s->root, cliroot, mplen);
+		strlcpy((char *)s->root, cliroot, mplen+1);
 	}
 	else
 	{
