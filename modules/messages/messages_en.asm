@@ -71,3 +71,19 @@ STR_EBADFS      defb    "Bad filesystem number",0               ; 0x29
 ERR_TABLE_END
 STR_UNKNOWN     defb    "Unknown error",0
 
+; Base rom messages
+STR_HITABLE
+HITABLE_LOWEST	equ 0xEC
+STR_DNS_TIMEOUT	defb	"DNS timeout",0				; 0xEC
+STR_NO_ADDRESS	defb	"No address",0				; 0xED
+STR_NO_RECOVERY	defb	"No recovery",0				; 0xEE
+STR_HOST_NOT_FOUND defb	"Host not found",0			; 0xEF
+		defb 0,0,0,0,0,0,0,0,0,0			; 0xF0-0xF9
+STR_ECONNREFUSED defb	"Connection refused",0			; 0xFA
+STR_ETIMEDOUT	defb	"Socket timeout",0			; 0xFB
+STR_ECONNRESET	defb	"Connection reset by peer",0		; 0xFC
+STR_ESBADF	defb	"Bad socket descriptor",0		; 0xFD
+STR_ESNFILE	defb	"Invalid socket descriptor",0		; 0xFE
+STR_EUNK	defb	"General socket error",0		; 0xFF
+HITABLE_END
+

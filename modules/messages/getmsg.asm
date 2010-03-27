@@ -23,14 +23,21 @@
 ; Get an error message.
 F_getmessage
 	ld a, l			; Get message ID from caller.
-
+	bit 7, a		; MSB set?
+	jr z, .lowtable
+	ld hl, STR_HITABLE
+        ld bc, HITABLE_END - STR_HITABLE
+	sub HITABLE_LOWEST
+	jr .continue
+.lowtable
         ld hl, STR_SUCCESS      ; pointer at start of table
+        ld bc, ERR_TABLE_END - STR_SUCCESS
+.continue
         and a                   ; code 0 (success?)
         ret z                   ; return now.
 	push de			; Save destination address
         ld d, a                 ; set counter
         xor a                   ; reset A to search for terminator
-        ld bc, ERR_TABLE_END - STR_SUCCESS
 .findloop
         cpir                    ; find next null
         jp po, .nomsg           ; cpir ran out of data?
