@@ -249,10 +249,11 @@ F_mount
 	jr .findrom
 
 .mountfailed
+	ex af, af'
 	call F_poppageB		; restore stack and page
-	pop af
+	pop af			; unwind stack	
 	pop hl			; restore HL
-	ld a, 0xFF		; TODO: proper return code here
+	ex af, af'
 	ret
 .notfound
 	ld a, 0xFE		; TODO: proper return code here
