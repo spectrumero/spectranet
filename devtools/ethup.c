@@ -2,6 +2,7 @@
 ;The MIT License
 ;
 ;Copyright (c) 2008 Dylan Smith
+; Other contributors: Miguel Angel Rodríguez Jódar
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +39,7 @@
 #include <netdb.h>
 #else
 #include <windows.h>
+#define SHUT_RDWR	2
 #endif
 
 int main(int argc, char **argv);
@@ -158,6 +160,7 @@ WSADATA wsaData;
 	}
 	printf("\n");
 
+	shutdown(sockfd, SHUT_RDWR);
 	close(sockfd);
 	fclose(stream);
 	return 0;
