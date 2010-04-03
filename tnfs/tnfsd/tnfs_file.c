@@ -343,6 +343,7 @@ int tnfs_valid_filename(Session *s,
 	}
 	get_root(s, fullpath, MAX_FILEPATH);
 	strlcat(fullpath, filename, MAX_FILEPATH);
+	normalize_path(fullpath, fullpath, MAX_FILEPATH);
 	return 0;
 }
 

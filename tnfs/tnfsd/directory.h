@@ -33,6 +33,7 @@ int tnfs_setroot(char *rootdir);
 
 /* validates a path points to an actual directory */
 int validate_dir(Session *s, const char *path);
+void normalize_path(char *dst, char *src, int pathsz);
 
 /* get the root directory for the given session */
 void get_root(Session *s, char *buf, int bufsz);

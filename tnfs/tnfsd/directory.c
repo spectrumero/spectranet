@@ -54,13 +54,15 @@ int validate_dir(Session *s, const char *path)
 	char fullpath[MAX_TNFSPATH];
 	struct stat dirstat;
 	get_root(s, fullpath, MAX_TNFSPATH);
-#ifdef DEBUG
-	fprintf(stderr, "validate_dir: Path='%s'\n", fullpath);
-#endif
 
 	/* relative paths are always illegal in tnfs messages */
 	if(strstr(fullpath, "../") != NULL)
 		return -1;
+
+	normalize_path(fullpath, fullpath, MAX_TNFSPATH);
+#ifdef DEBUG
+	fprintf(stderr, "validate_dir: Path='%s'\n", fullpath);
+#endif
 
 	/* check we have an actual directory */
 	if(stat(fullpath, &dirstat) == 0)
@@ -89,6 +91,50 @@ void get_root(Session *s, char *buf, int bufsz)
 	{
 		snprintf(buf, bufsz, "%s/%s/", root, s->root);
 	}
+}
+
+/* normalize paths, remove multiple delimiters 
+ * the new path at most will be exactly the same as the old
+ * one, and if the path is modified it will be shorter so
+ * doing "normalize_path(buf, buf, sizeof(buf)) is fine */
+void normalize_path(char *newbuf, char *oldbuf, int bufsz)
+{
+	/* normalize the directory delimiters. Windows of course
+	 * has problems with multiple delimiters... */
+	int count=0;
+	int slash=0;
+	char *nbstart=newbuf;
+
+	while(*oldbuf && count < bufsz-1)
+	{
+		/* ...convert backslashes, too */
+		if(*oldbuf != '/')
+		{
+			slash=0;
+			*newbuf++ = *oldbuf++;
+		}
+		else if(!slash && (*oldbuf == '/' || *oldbuf == '\\'))
+		{
+			*newbuf++ = '/';
+			oldbuf++;
+			slash=1;
+		}
+		else if(slash)
+		{
+			oldbuf++;
+		}
+	}
+
+	/* guarantee null termination */
+	*newbuf=0;
+
+	/* remove a standalone trailing slash, it can cause problems
+	 * with Windows, except for cases of "C:/" where it is
+	 * mandatory */
+#ifdef WIN32
+	if(*(newbuf-1) == '/' && strlen(nbstart) > 3) 
+		*(newbuf-1)=0;
+#endif
 }
 
 /* Open a directory */
@@ -121,6 +167,7 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		{
 			snprintf(path, MAX_TNFSPATH, "%s/%s/%s", 
 					root, s->root, databuf);
+			normalize_path(path, path, MAX_TNFSPATH);
 			if((dptr=opendir(path)) != NULL)
 			{
 				s->dhnd[i]=dptr;
