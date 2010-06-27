@@ -178,6 +178,8 @@
         <signal name="XLXN_716" />
         <signal name="XLXN_717" />
         <signal name="XLXN_718" />
+        <signal name="XLXN_720" />
+        <signal name="XLXN_722" />
         <port polarity="Input" name="M1_L" />
         <port polarity="Input" name="CLK" />
         <port polarity="Output" name="PA12" />
@@ -1218,8 +1220,8 @@
             <blockpin signalname="A(3)" name="I3" />
             <blockpin signalname="A(4)" name="I4" />
             <blockpin signalname="A(5)" name="I5" />
-            <blockpin signalname="A(6)" name="I6" />
-            <blockpin signalname="A(7)" name="I7" />
+            <blockpin signalname="XLXN_722" name="I6" />
+            <blockpin signalname="XLXN_720" name="I7" />
             <blockpin signalname="XLXN_716" name="O" />
         </block>
         <block symbolname="inv" name="XLXI_328">
@@ -1232,6 +1234,14 @@
             <blockpin signalname="XLXN_716" name="I2" />
             <blockpin signalname="XLXN_684" name="I3" />
             <blockpin signalname="XLXN_718" name="O" />
+        </block>
+        <block symbolname="inv" name="XLXI_331">
+            <blockpin signalname="A(7)" name="I" />
+            <blockpin signalname="XLXN_720" name="O" />
+        </block>
+        <block symbolname="inv" name="XLXI_332">
+            <blockpin signalname="A(6)" name="I" />
+            <blockpin signalname="XLXN_722" name="O" />
         </block>
     </netlist>
     <sheet sheetnum="1" width="3520" height="2720">
@@ -1308,12 +1318,6 @@
         <branch name="UNPAGE">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1936" y="2480" type="branch" />
             <wire x2="2064" y1="2480" y2="2480" x1="1936" />
-        </branch>
-        <branch name="A(7)">
-            <wire x2="752" y1="928" y2="928" x1="304" />
-        </branch>
-        <branch name="A(6)">
-            <wire x2="752" y1="992" y2="992" x1="304" />
         </branch>
         <branch name="A(5)">
             <wire x2="752" y1="1056" y2="1056" x1="304" />
@@ -1562,6 +1566,20 @@
             <wire x2="1248" y1="960" y2="960" x1="1216" />
             <wire x2="1360" y1="960" y2="960" x1="1248" />
             <wire x2="1312" y1="1184" y2="1184" x1="1296" />
+        </branch>
+        <instance x="416" y="960" name="XLXI_331" orien="R0" />
+        <instance x="416" y="1024" name="XLXI_332" orien="R0" />
+        <branch name="A(7)">
+            <wire x2="416" y1="928" y2="928" x1="304" />
+        </branch>
+        <branch name="XLXN_720">
+            <wire x2="752" y1="928" y2="928" x1="640" />
+        </branch>
+        <branch name="A(6)">
+            <wire x2="416" y1="992" y2="992" x1="304" />
+        </branch>
+        <branch name="XLXN_722">
+            <wire x2="752" y1="992" y2="992" x1="640" />
         </branch>
     </sheet>
     <sheet sheetnum="2" width="3520" height="2720">
