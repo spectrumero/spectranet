@@ -32,7 +32,7 @@ HLCALL		equ 0x3FFA
 IXCALL		equ 0x3FFD
 
 ; Port defines
-CTRLREG		equ 0x80EF
+CTRLREG		equ 0x03FB
 
 ; Jump table entry points
 SOCKET		equ 0x3E00	; Allocate a socket

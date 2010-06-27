@@ -46,7 +46,7 @@ J_reset
 	jr nz, .delay
 	
 	; Clear upper page.
-	;ld sp, INITSTACK	; temporary stack when booting
+	ld sp, NMISTACK		; use our own memory for the stack
 	ld hl, 0x3000		; Clear down the fixed RAM page.
 	ld de, 0x3001
 	ld bc, 0xFFF
@@ -130,6 +130,7 @@ J_reset
 	ld hl, STR_unpaging	
 	call F_print
 
+	ld sp, 32767		; lowest guaranteed stack addr
 	ld hl, 0		; We're done so put 0x0000 
 	push hl			; on the stack
 	jp UNPAGE		; unpage (a ret instruction)
