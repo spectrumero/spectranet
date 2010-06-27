@@ -64,7 +64,7 @@ STR_syn defb "Syntax"
 	xor a			; reset 0x7ffd
 	out (c), a
 
-	ld bc, 0x80EF		; Spectranet CPLD register
+	ld bc, 0x033B		; Spectranet CPLD register
 	in a, (c)		; Read register
 	set 0, a		; set pagein bit
 	out (c), a		; page in

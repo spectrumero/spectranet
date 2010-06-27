@@ -24,10 +24,10 @@
 ;
 ; Miscellaneous system defines.
 ;
-TRAPSET		equ 0x02FB	; CPLD programmable trap (write only)
-PAGEA		equ 0x00FB	; CPLD page area A 4k page (8 bit) (wo)
-PAGEB		equ 0x01FB	; CPLD page area B 4k page (8 bit) (wo)
-;CTRLREG		equ 0x03FB	; CPLD control register (rw)
+TRAPSET		equ 0x023B	; CPLD programmable trap (write only)
+PAGEA		equ 0x003B	; CPLD page area A 4k page (8 bit) (wo)
+PAGEB		equ 0x013B	; CPLD page area B 4k page (8 bit) (wo)
+;CTRLREG		equ 0x033B	; CPLD control register (rw)
 
 ; Control register bit mask
 MASK_PAGEIN	equ 1		; I/O pagein (read/write)
