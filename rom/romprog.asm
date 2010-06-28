@@ -1,6 +1,6 @@
 	org 0x8000
 	di
-	ld bc, 0x03FB
+	ld bc, 0x033B
 	ld a, 1
 	out (c), a
 
@@ -48,7 +48,7 @@
 	ld hl, STR_writedone
 	call F_print
 .exit
-	ld bc, 0x03FB
+	ld bc, 0x033B
 	xor a
 	out (c), a
 	ei
@@ -100,9 +100,9 @@ v_pgb		defb 0
 v_chipsel	defb 0
 
 ; various definitions
-PAGEA		equ 0x00FB
-PAGEB		equ 0x01FB
-PAGERPORT	equ 0x03FB
+PAGEA		equ 0x003B
+PAGEB		equ 0x013B
+PAGERPORT	equ 0x033B
 
 PAYLOAD
 	incbin "romimage.out"
