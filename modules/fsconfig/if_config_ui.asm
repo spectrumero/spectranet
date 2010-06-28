@@ -278,26 +278,6 @@ F_sethostname
 	ret	
 
 ;-----------------------------------------------------------------------
-; F_saveconfig
-; Saves the configuration the user just entered.
-F_saveconfig
-	ld hl, STR_saving
-	call PRINT42
-
-        ; copy flash writer into RAM
-        ld hl, FLASHPROGSTART
-        ld de, 0x3000
-        ld bc, FLASHPROGLEN
-        ldir
-        call 0x3000
-	ret nc
-.bork
-	call PRINT42
-	call GETKEY		; give the user a chance to see the msg
-	or 1
-	ret
-
-;-----------------------------------------------------------------------
 ; F_cancelconfig:
 ; Bale out of the menu.
 F_cancelconfig

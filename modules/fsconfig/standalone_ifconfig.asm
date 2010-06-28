@@ -20,20 +20,24 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Filesystem Configuration Utility module
-	org 0x2000
-	include "vectors.asm"			; Vector table
-	include "init.asm"			; Initialization routines
-	include "gen_copycfg.asm"		; Config copier
-	include "fs_strings_en.asm"		; English strings
-	include "fs_config_ui.asm"		; User interface
-	include	"if_configmain.asm"		; Interface configuration
-	include "if_config_ui.asm"		; Interface cf. UI
-	include "if_strings_en.asm"		; English strings
-	include "if_saveconfig.asm"
-	include "../../rom/spectranet.asm"	; spectranet lib defs
-	include "../../rom/sysvars.sym"		; system vars defs
-	include "../../rom/flashconf.asm"	; flash config defs
-	include "if_defs.asm"			; defines
-	include "flashwrite.asm"		; must be the last included
+; Standalone configuration utility.
+
+	org 0x8000
+	di
+	call PAGEIN
+	call F_if_configmain
+	ei
+	jp PAGEOUT
+
+	include "gen_copycfg.asm"
+	include "if_configmain.asm"
+	include "if_config_ui.asm"
+	include "if_menu_ui.asm"
+	include "if_strings_en.asm"
+	include "sa_if_saveconfig.asm"
+	include "sa_flashwrite.asm"
+	include "../../rom/spectranet.asm"
+	include "../../rom/sysvars.asm"
+	include "../../rom/flashconf.asm"
+	include "if_defs.asm"
 

@@ -220,6 +220,6 @@ F_bootfile
 	jp PAGETRAPRETURN
 
 DEFAULTFILE
-	defb	"boot",0
-DEFAULTFILELEN equ 5
+	defb	"boot.zx",0
+DEFAULTFILELEN equ $-DEFAULTFILE
 

@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2009 Dylan Smith
+;Copyright (c) 2008 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,23 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Filesystem Configuration Utility module
-	org 0x2000
-	include "vectors.asm"			; Vector table
-	include "init.asm"			; Initialization routines
-	include "gen_copycfg.asm"		; Config copier
-	include "fs_strings_en.asm"		; English strings
-	include "fs_config_ui.asm"		; User interface
-	include	"if_configmain.asm"		; Interface configuration
-	include "if_config_ui.asm"		; Interface cf. UI
-	include "if_strings_en.asm"		; English strings
-	include "if_saveconfig.asm"
-	include "../../rom/spectranet.asm"	; spectranet lib defs
-	include "../../rom/sysvars.sym"		; system vars defs
-	include "../../rom/flashconf.asm"	; flash config defs
-	include "if_defs.asm"			; defines
-	include "flashwrite.asm"		; must be the last included
+;-----------------------------------------------------------------------
+; F_saveconfig
+; Saves the configuration the user just entered.
+F_saveconfig
+        ld hl, STR_saving
+        call PRINT42
+
+        ; copy flash writer into RAM
+        ld hl, FLASHPROGSTART
+        ld de, 0x3000
+        ld bc, FLASHPROGLEN
+        ldir
+        call 0x3000
+        ret nc
+.bork
+        call PRINT42
+        call GETKEY             ; give the user a chance to see the msg
+        or 1
+        ret
 

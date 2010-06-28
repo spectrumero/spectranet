@@ -23,6 +23,14 @@
 ;------------------------------------------------------------------------
 ; F_init: Initializes the interpreter
 F_init
+	; force USR 0 mode on 128K machines (due to +2a/+3 BASIC
+	; incompatibilities)
+	ld bc, 0x7FFD
+	ld a, 0x10
+	out (c), a
+	ld b, 0x1F
+	ld a, 0x04
+	out (c), a
         ld hl, PARSETABLE
         ld b, NUMCMDS
 .loop

@@ -171,9 +171,18 @@ F_tbas_load
 	push af				; save type
 	rst CALLBAS
 	defw ZX_STK_FETCH		; fetch the filename
+	ld a, b				; check for empty string
+	or c
+	jr nz, .havefilename
+	ld hl, STR_BOOTDOTZX
+	ld de, INTERPWKSPC
+	ld bc, STR_BOOTDOTZXLEN
+	ldir
+	jr .loadbasic
+.havefilename
 	ld hl, INTERPWKSPC
 	call F_basstrcpy		; copy + convert to C string
-
+.loadbasic
 	; Now call the loader routine with the filename in HL
 	ld hl, INTERPWKSPC
 	pop af				; get type id
@@ -476,6 +485,8 @@ F_geterrstr
 	ret
 
 STR_proto	defb	"tnfs",0
+STR_BOOTDOTZX	defb	"boot.zx",0
+STR_BOOTDOTZXLEN equ	$-STR_BOOTDOTZX
 
 EBADURL		equ	0x28
 EBADFS		equ	0x29

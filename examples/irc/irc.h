@@ -88,8 +88,9 @@ extern int parseUserCmd(char *cmd);
 int parseSlashCmd(char *cmd);
 
 /* OpenBSD string functions */
+/*
 extern size_t strlcat(char *dst, char *src, size_t siz);
-extern size_t strlcpy(char *dst, char *src, size_t siz);
+extern size_t strlcpy(char *dst, char *src, size_t siz); */
 
 /* Globals */
 #ifndef __MAIN__C
