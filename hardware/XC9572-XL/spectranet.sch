@@ -70,7 +70,6 @@
         <signal name="CS3" />
         <signal name="UAZERO" />
         <signal name="MREQ_L" />
-        <signal name="XLXN_241" />
         <signal name="UNPAGE" />
         <signal name="XLXN_328" />
         <signal name="XLXN_228" />
@@ -104,8 +103,6 @@
         <signal name="RD_SREG" />
         <signal name="XLXN_537" />
         <signal name="HLDROMCS" />
-        <signal name="XLXN_552" />
-        <signal name="HLDROMCS_ODL" />
         <signal name="XLXN_553" />
         <signal name="NMIOUT_L" />
         <signal name="XLXN_561" />
@@ -118,9 +115,6 @@
         <signal name="XLXN_275" />
         <signal name="XLXN_279" />
         <signal name="INT_ENABLE" />
-        <signal name="A15OUT" />
-        <signal name="XLXN_595" />
-        <signal name="ROMCS_SENSE" />
         <signal name="XLXN_159" />
         <signal name="XLXN_630(7:0)" />
         <signal name="XLXN_631(7:0)" />
@@ -156,11 +150,19 @@
         <signal name="XLXN_720" />
         <signal name="XLXN_722" />
         <signal name="RD_L" />
+        <signal name="ENTRYPT" />
         <signal name="XLXN_724" />
         <signal name="XLXN_725" />
         <signal name="XLXN_726" />
         <signal name="XLXN_735" />
-        <signal name="ENTRYPT" />
+        <signal name="XLXN_595" />
+        <signal name="XLXN_552" />
+        <signal name="ROMCS_SENSE" />
+        <signal name="XLXN_776" />
+        <signal name="MEMACTIVE" />
+        <signal name="A15OUT" />
+        <signal name="HLDROMCS_ODL" />
+        <signal name="XLXN_781" />
         <port polarity="Input" name="M1_L" />
         <port polarity="Input" name="CLK" />
         <port polarity="Output" name="PA12" />
@@ -178,14 +180,14 @@
         <port polarity="BiDirectional" name="D(7:0)" />
         <port polarity="Input" name="IORQ_L" />
         <port polarity="Input" name="WR_L" />
-        <port polarity="Output" name="HLDROMCS_ODL" />
         <port polarity="Output" name="NMIOUT_L" />
-        <port polarity="Output" name="A15OUT" />
-        <port polarity="Input" name="ROMCS_SENSE" />
         <port polarity="Input" name="TRAPENABLE_L" />
         <port polarity="Input" name="A(15:0)" />
         <port polarity="Input" name="RESET_L" />
         <port polarity="Input" name="RD_L" />
+        <port polarity="Input" name="ROMCS_SENSE" />
+        <port polarity="Output" name="A15OUT" />
+        <port polarity="Output" name="HLDROMCS_ODL" />
         <blockdef name="d2_4e">
             <timestamp>2000-1-1T10:10:10</timestamp>
             <rect width="256" x="64" y="-384" height="320" />
@@ -627,7 +629,7 @@
         <block symbolname="d2_4e" name="XLXI_52">
             <blockpin signalname="XLXN_203" name="A0" />
             <blockpin signalname="XLXN_202" name="A1" />
-            <blockpin signalname="XLXN_241" name="E" />
+            <blockpin signalname="MEMACTIVE" name="E" />
             <blockpin signalname="XLXN_205" name="D0" />
             <blockpin signalname="XLXN_206" name="D1" />
             <blockpin signalname="XLXN_207" name="D2" />
@@ -659,7 +661,7 @@
             <blockpin signalname="MREQ_L" name="I1" />
             <blockpin signalname="A(14)" name="I2" />
             <blockpin signalname="A(15)" name="I3" />
-            <blockpin signalname="XLXN_241" name="O" />
+            <blockpin signalname="MEMACTIVE" name="O" />
         </block>
         <block symbolname="nor8" name="XLXI_109">
             <blockpin signalname="A(0)" name="I0" />
@@ -809,9 +811,6 @@
             <blockpin signalname="XLXN_521" name="I1" />
             <blockpin signalname="RD_SREG" name="O" />
         </block>
-        <block symbolname="gnd" name="XLXI_215">
-            <blockpin signalname="XLXN_552" name="G" />
-        </block>
         <block symbolname="obufe" name="XLXI_221">
             <blockpin signalname="NMIEVT" name="E" />
             <blockpin signalname="XLXN_553" name="I" />
@@ -871,21 +870,6 @@
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(3)" name="D" />
             <blockpin signalname="INT_ENABLE" name="Q" />
-        </block>
-        <block symbolname="or2" name="XLXI_83">
-            <blockpin signalname="HLDROMCS" name="I0" />
-            <blockpin signalname="A(15)" name="I1" />
-            <blockpin signalname="A15OUT" name="O" />
-        </block>
-        <block symbolname="or2" name="XLXI_248">
-            <blockpin signalname="HLDROMCS" name="I0" />
-            <blockpin signalname="ROMCS_SENSE" name="I1" />
-            <blockpin signalname="XLXN_595" name="O" />
-        </block>
-        <block symbolname="obufe" name="XLXI_249">
-            <blockpin signalname="XLXN_595" name="E" />
-            <blockpin signalname="XLXN_552" name="I" />
-            <blockpin signalname="HLDROMCS_ODL" name="O" />
         </block>
         <block symbolname="and2" name="XLXI_49">
             <blockpin signalname="A(12)" name="I0" />
@@ -1133,6 +1117,24 @@
         <block symbolname="inv" name="XLXI_338">
             <blockpin signalname="M1_L" name="I" />
             <blockpin signalname="XLXN_726" name="O" />
+        </block>
+        <block symbolname="obufe" name="XLXI_249">
+            <blockpin signalname="XLXN_595" name="E" />
+            <blockpin signalname="XLXN_552" name="I" />
+            <blockpin signalname="HLDROMCS_ODL" name="O" />
+        </block>
+        <block symbolname="gnd" name="XLXI_215">
+            <blockpin signalname="XLXN_552" name="G" />
+        </block>
+        <block symbolname="or2" name="XLXI_248">
+            <blockpin signalname="MEMACTIVE" name="I0" />
+            <blockpin signalname="ROMCS_SENSE" name="I1" />
+            <blockpin signalname="XLXN_595" name="O" />
+        </block>
+        <block symbolname="or2" name="XLXI_83">
+            <blockpin signalname="MEMACTIVE" name="I0" />
+            <blockpin signalname="A(15)" name="I1" />
+            <blockpin signalname="A15OUT" name="O" />
         </block>
     </netlist>
     <sheet sheetnum="1" width="3520" height="2720">
@@ -1633,11 +1635,6 @@
             <wire x2="3376" y1="1424" y2="1424" x1="3344" />
         </branch>
         <iomarker fontsize="28" x="3376" y="1424" name="CS3" orien="R0" />
-        <branch name="XLXN_241">
-            <wire x2="2624" y1="1616" y2="1616" x1="2496" />
-            <wire x2="2624" y1="1424" y2="1616" x1="2624" />
-            <wire x2="2704" y1="1424" y2="1424" x1="2624" />
-        </branch>
         <instance x="2240" y="1776" name="XLXI_85" orien="R0" />
         <branch name="HLDROMCS">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="2144" y="1712" type="branch" />
@@ -1728,6 +1725,53 @@
         <instance x="2016" y="1360" name="XLXI_49" orien="R0" />
         <instance x="2416" y="944" name="XLXI_51" orien="R0" />
         <instance x="2432" y="624" name="XLXI_50" orien="R0" />
+        <branch name="XLXN_595">
+            <wire x2="2768" y1="2480" y2="2528" x1="2768" />
+            <wire x2="2816" y1="2528" y2="2528" x1="2768" />
+            <wire x2="2992" y1="2480" y2="2480" x1="2768" />
+            <wire x2="2992" y1="2464" y2="2480" x1="2992" />
+        </branch>
+        <branch name="XLXN_552">
+            <wire x2="2768" y1="2592" y2="2592" x1="2752" />
+            <wire x2="2816" y1="2592" y2="2592" x1="2768" />
+        </branch>
+        <branch name="ROMCS_SENSE">
+            <wire x2="3024" y1="2176" y2="2208" x1="3024" />
+        </branch>
+        <branch name="MEMACTIVE">
+            <attrtext style="alignment:SOFT-TVCENTER" attrname="Name" x="2720" y="2016" type="branch" />
+            <wire x2="2592" y1="1616" y2="1616" x1="2496" />
+            <wire x2="2592" y1="1616" y2="2080" x1="2592" />
+            <wire x2="2720" y1="2080" y2="2080" x1="2592" />
+            <wire x2="2720" y1="2080" y2="2160" x1="2720" />
+            <wire x2="2720" y1="2160" y2="2192" x1="2720" />
+            <wire x2="2960" y1="2192" y2="2192" x1="2720" />
+            <wire x2="2960" y1="2192" y2="2208" x1="2960" />
+            <wire x2="2592" y1="1424" y2="1616" x1="2592" />
+            <wire x2="2704" y1="1424" y2="1424" x1="2592" />
+            <wire x2="2800" y1="1936" y2="1936" x1="2720" />
+            <wire x2="2720" y1="1936" y2="2016" x1="2720" />
+            <wire x2="2720" y1="2016" y2="2075" x1="2720" />
+            <wire x2="2720" y1="2075" y2="2080" x1="2720" />
+        </branch>
+        <branch name="A(15)">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="2736" y="1872" type="branch" />
+            <wire x2="2800" y1="1872" y2="1872" x1="2736" />
+        </branch>
+        <branch name="A15OUT">
+            <wire x2="3088" y1="1904" y2="1904" x1="3056" />
+        </branch>
+        <instance x="2816" y="2624" name="XLXI_249" orien="R0" />
+        <instance x="2624" y="2528" name="XLXI_215" orien="R90" />
+        <instance x="2896" y="2208" name="XLXI_248" orien="R90" />
+        <instance x="2800" y="2000" name="XLXI_83" orien="R0" />
+        <branch name="HLDROMCS_ODL">
+            <wire x2="3056" y1="2592" y2="2592" x1="3040" />
+            <wire x2="3072" y1="2592" y2="2592" x1="3056" />
+        </branch>
+        <iomarker fontsize="28" x="3072" y="2592" name="HLDROMCS_ODL" orien="R0" />
+        <iomarker fontsize="28" x="3024" y="2176" name="ROMCS_SENSE" orien="R270" />
+        <iomarker fontsize="28" x="3088" y="1904" name="A15OUT" orien="R0" />
     </sheet>
     <sheet sheetnum="3" width="3520" height="2720">
         <branch name="A(15)">
@@ -1952,24 +1996,6 @@
             <wire x2="2688" y1="432" y2="560" x1="2688" />
             <wire x2="2768" y1="560" y2="560" x1="2688" />
         </branch>
-        <branch name="HLDROMCS">
-            <attrtext style="alignment:SOFT-TCENTER" attrname="Name" x="3104" y="624" type="branch" />
-            <wire x2="3040" y1="160" y2="160" x1="3024" />
-            <wire x2="3024" y1="160" y2="384" x1="3024" />
-            <wire x2="3104" y1="384" y2="384" x1="3024" />
-            <wire x2="3200" y1="384" y2="384" x1="3104" />
-            <wire x2="3200" y1="384" y2="432" x1="3200" />
-            <wire x2="3104" y1="384" y2="624" x1="3104" />
-            <wire x2="3104" y1="624" y2="624" x1="3024" />
-        </branch>
-        <branch name="XLXN_552">
-            <wire x2="3056" y1="816" y2="816" x1="2992" />
-        </branch>
-        <instance x="2864" y="752" name="XLXI_215" orien="R90" />
-        <branch name="HLDROMCS_ODL">
-            <wire x2="3312" y1="816" y2="816" x1="3280" />
-        </branch>
-        <iomarker fontsize="28" x="3312" y="816" name="HLDROMCS_ODL" orien="R0" />
         <instance x="2656" y="2016" name="XLXI_221" orien="R0" />
         <instance x="2528" y="2144" name="XLXI_222" orien="R0" />
         <branch name="XLXN_553">
@@ -1991,27 +2017,6 @@
             <wire x2="2224" y1="2064" y2="2064" x1="2144" />
             <wire x2="2224" y1="1968" y2="2064" x1="2224" />
         </branch>
-        <branch name="A(15)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="2976" y="96" type="branch" />
-            <wire x2="3040" y1="96" y2="96" x1="2976" />
-        </branch>
-        <branch name="A15OUT">
-            <wire x2="3328" y1="128" y2="128" x1="3296" />
-        </branch>
-        <instance x="3056" y="848" name="XLXI_249" orien="R0" />
-        <instance x="3136" y="432" name="XLXI_248" orien="R90" />
-        <branch name="XLXN_595">
-            <wire x2="3008" y1="704" y2="752" x1="3008" />
-            <wire x2="3056" y1="752" y2="752" x1="3008" />
-            <wire x2="3232" y1="704" y2="704" x1="3008" />
-            <wire x2="3232" y1="688" y2="704" x1="3232" />
-        </branch>
-        <branch name="ROMCS_SENSE">
-            <wire x2="3264" y1="400" y2="432" x1="3264" />
-        </branch>
-        <iomarker fontsize="28" x="3264" y="400" name="ROMCS_SENSE" orien="R270" />
-        <instance x="3040" y="224" name="XLXI_83" orien="R0" />
-        <iomarker fontsize="28" x="3328" y="128" name="A15OUT" orien="R0" />
         <branch name="XLXN_659">
             <wire x2="2144" y1="1840" y2="1840" x1="2000" />
             <wire x2="2144" y1="1840" y2="1872" x1="2144" />
@@ -2064,6 +2069,13 @@
         <branch name="ENTRYPT">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1200" y="592" type="branch" />
             <wire x2="1360" y1="592" y2="592" x1="1200" />
+        </branch>
+        <branch name="HLDROMCS">
+            <attrtext style="alignment:SOFT-LEFT" attrname="Name" x="3120" y="544" type="branch" />
+            <wire x2="3040" y1="624" y2="624" x1="3024" />
+            <wire x2="3040" y1="544" y2="555" x1="3040" />
+            <wire x2="3040" y1="555" y2="624" x1="3040" />
+            <wire x2="3120" y1="544" y2="544" x1="3040" />
         </branch>
     </sheet>
     <sheet sheetnum="4" width="3520" height="2720">
@@ -2161,83 +2173,83 @@
         <instance x="2384" y="2240" name="XLXI_129" orien="R0" />
     </sheet>
     <sheet sheetnum="5" width="3520" height="2720">
-        <instance x="800" y="1088" name="XLXI_334" orien="R0" />
-        <instance x="1360" y="1248" name="XLXI_335" orien="R0" />
+        <instance x="784" y="672" name="XLXI_334" orien="R0" />
+        <instance x="1344" y="832" name="XLXI_335" orien="R0" />
         <branch name="XLXN_724">
-            <wire x2="800" y1="576" y2="576" x1="768" />
+            <wire x2="784" y1="160" y2="160" x1="752" />
         </branch>
-        <instance x="544" y="608" name="XLXI_336" orien="R0" />
+        <instance x="528" y="192" name="XLXI_336" orien="R0" />
         <branch name="XLXN_725">
-            <wire x2="800" y1="640" y2="640" x1="768" />
+            <wire x2="784" y1="224" y2="224" x1="752" />
         </branch>
-        <instance x="544" y="672" name="XLXI_337" orien="R0" />
+        <instance x="528" y="256" name="XLXI_337" orien="R0" />
         <branch name="XLXN_726">
-            <wire x2="1360" y1="1184" y2="1184" x1="1328" />
+            <wire x2="1344" y1="768" y2="768" x1="1312" />
         </branch>
-        <instance x="1104" y="1216" name="XLXI_338" orien="R0" />
+        <instance x="1088" y="800" name="XLXI_338" orien="R0" />
         <branch name="A(15)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="576" type="branch" />
-            <wire x2="544" y1="576" y2="576" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="160" type="branch" />
+            <wire x2="528" y1="160" y2="160" x1="384" />
         </branch>
         <branch name="A(14)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="640" type="branch" />
-            <wire x2="544" y1="640" y2="640" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="224" type="branch" />
+            <wire x2="528" y1="224" y2="224" x1="384" />
         </branch>
         <branch name="A(13)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="704" type="branch" />
-            <wire x2="800" y1="704" y2="704" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="288" type="branch" />
+            <wire x2="784" y1="288" y2="288" x1="384" />
         </branch>
         <branch name="A(12)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="768" type="branch" />
-            <wire x2="800" y1="768" y2="768" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="352" type="branch" />
+            <wire x2="784" y1="352" y2="352" x1="384" />
         </branch>
         <branch name="A(11)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="832" type="branch" />
-            <wire x2="800" y1="832" y2="832" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="416" type="branch" />
+            <wire x2="784" y1="416" y2="416" x1="384" />
         </branch>
         <branch name="A(10)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="896" type="branch" />
-            <wire x2="800" y1="896" y2="896" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="480" type="branch" />
+            <wire x2="784" y1="480" y2="480" x1="384" />
         </branch>
         <branch name="A(9)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="960" type="branch" />
-            <wire x2="800" y1="960" y2="960" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="544" type="branch" />
+            <wire x2="784" y1="544" y2="544" x1="384" />
         </branch>
         <branch name="A(8)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="400" y="1024" type="branch" />
-            <wire x2="800" y1="1024" y2="1024" x1="400" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="608" type="branch" />
+            <wire x2="784" y1="608" y2="608" x1="384" />
         </branch>
         <branch name="XLXN_735">
-            <wire x2="1360" y1="800" y2="800" x1="1056" />
+            <wire x2="1344" y1="384" y2="384" x1="1040" />
         </branch>
         <branch name="A(7)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1120" y="864" type="branch" />
-            <wire x2="1360" y1="864" y2="864" x1="1120" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1104" y="448" type="branch" />
+            <wire x2="1344" y1="448" y2="448" x1="1104" />
         </branch>
         <branch name="A(6)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1120" y="928" type="branch" />
-            <wire x2="1360" y1="928" y2="928" x1="1120" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1104" y="512" type="branch" />
+            <wire x2="1344" y1="512" y2="512" x1="1104" />
         </branch>
         <branch name="A(5)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1120" y="992" type="branch" />
-            <wire x2="1360" y1="992" y2="992" x1="1120" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1104" y="576" type="branch" />
+            <wire x2="1344" y1="576" y2="576" x1="1104" />
         </branch>
         <branch name="A(4)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1120" y="1056" type="branch" />
-            <wire x2="1360" y1="1056" y2="1056" x1="1120" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1104" y="640" type="branch" />
+            <wire x2="1344" y1="640" y2="640" x1="1104" />
         </branch>
         <branch name="A(3)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1120" y="1120" type="branch" />
-            <wire x2="1360" y1="1120" y2="1120" x1="1120" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1104" y="704" type="branch" />
+            <wire x2="1344" y1="704" y2="704" x1="1104" />
         </branch>
         <branch name="ENTRYPT">
-            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1761" y="992" type="branch" />
-            <wire x2="1761" y1="992" y2="992" x1="1616" />
-            <wire x2="1824" y1="992" y2="992" x1="1761" />
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1745" y="576" type="branch" />
+            <wire x2="1745" y1="576" y2="576" x1="1600" />
+            <wire x2="1808" y1="576" y2="576" x1="1745" />
         </branch>
         <branch name="M1_L">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="960" y="1184" type="branch" />
-            <wire x2="1104" y1="1184" y2="1184" x1="960" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="944" y="768" type="branch" />
+            <wire x2="1088" y1="768" y2="768" x1="944" />
         </branch>
     </sheet>
     <sheet sheetnum="6" width="3520" height="2720">
