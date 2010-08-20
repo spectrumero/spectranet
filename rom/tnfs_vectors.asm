@@ -26,7 +26,7 @@ reset	defw F_init		; reset vector
 mount	defw F_tnfs_mount	; The mount routine
 	defw 0xFFFF
 	defw 0xFFFF
-	defw 0xFFFF
+	defw F_startmsg
 	defw 0xFFFF
 idstr	defw STR_ident		; ROM identity string
 	defb 0,0,0		; no MODCALL, pad out three bytes

@@ -19,7 +19,8 @@ then
    svn up
    BUILDREV=`svn info . | grep -m 1 Rev | cut -d ' ' -f 2`
 fi
-echo bldstr defb \"\($BUILDER\@$BUILDHOST r=$BUILDREV\)\",0x0a,0 > ver.asm
+echo bldstr defb \"$BUILDER\@$BUILDHOST r=$BUILDREV\",0x0a,0 > ver.asm
+echo blddate defb \"`date`\",0x0a,0 > date.asm
 
 for src in ${ASMSOURCES[@]}
 do
@@ -42,6 +43,7 @@ do
    if [ "$src" == "tnfs" ]; then
       echo "Generating dependent function symbol table for rom..."
       grep F_machinetype tnfs.sym >>impl.sym
+      grep F_basstart_setup tnfs.sym >>impl.sym
    fi
 done
 

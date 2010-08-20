@@ -102,8 +102,6 @@ NMI2
 	ld a, (v_trapcomefrom+1) ; comefrom MSB
 	cp (hl)			; equal to high order?
 	jr nz, .nmimenu		; no
-	ld a, 6
-	out (254), a
 
 	; Set up the environment ready to handle the trap.
 	ld a, (v_trappage)	; get the page to page in

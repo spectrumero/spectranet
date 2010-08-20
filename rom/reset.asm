@@ -127,8 +127,10 @@ J_reset
 ;	call F_setpageB
 ;	call F_machinetype
 
-	ld hl, STR_unpaging	
-	call F_print
+	ld a, 3			; Page where F_basstart lives
+	call F_setpageB
+	call F_basstart_setup
+	call F_clear
 
 	ld sp, 32767		; lowest guaranteed stack addr
 	ld hl, 0		; We're done so put 0x0000 
@@ -241,8 +243,6 @@ F_w5100init
 STR_bootmsg
 	defb "Alioth Spectranet ",0
 	include "ver.asm"	; include the build number file
-STR_unpaging
-	defb "Unpaging\n",0
 STR_mounting
 	defb "FS mount\n",0
 FSTAB

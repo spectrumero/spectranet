@@ -39,6 +39,8 @@
 	include "sockdefs.asm"		; Socket definitions
 	include "inetinit.asm"		; Initialize interface
 	include "dhcpclient.asm"	; DHCP
+	include "basstart.asm"		; Post BASIC initialization
+	include "startmsg.asm"		; Startup message
 
 	; definitions
 	include "spectranet.asm"	; Base ROM definitions
@@ -47,3 +49,4 @@
 	include "fs_defs.asm"		; General filesystem definitions
 	include "tnfs_defs.asm"		; TNFS definitions
 	include "tnfs_sysvars.asm"	; System variables and workspaces
+	include "sysdefs.asm"		; system defs
