@@ -46,6 +46,7 @@ ZX_CH_ADD	equ 23645	; 2 - Address of next char to be interpreted
 ZX_X_PTR	equ 23647	; 2 - Address of char after ? marker
 ZX_X_PTR_HI	equ 23648	; MSB of X_PTR
 ZX_FLAGS2	equ 23658	; 1 - More flags
+ZX_OLDPPC	equ 23662	; 2 - where CONTINUE jumps
 ZX_FLAGX	equ 23665
 ZX_E_LINE	equ 23641	; 2 - address of line being typed in
 ZX_RAMTOP	equ 23730	

@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2009 Dylan Smith
+;Copyright (c) 2010 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,24 +20,4 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-	include "defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
-
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "parseurl.asm"		; Mount point URL parser
-	include "listdir.asm"		; List directory
-	include	"boot.asm"		; Boot loader
 

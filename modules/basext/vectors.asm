@@ -27,7 +27,7 @@
 	defw 0xFFFF             ; the next few vectors are reserved
         defw 0xFFFF
         defw 0xFFFF
-        defw 0xFFFF
+        defw F_boot		; After BASIC init vector
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
 	ret

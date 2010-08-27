@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2009 Dylan Smith
+;Copyright (c) 2010 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -12,7 +12,7 @@
 ;The above copyright notice and this permission notice shall be included in
 ;all copies or substantial portions of the Software.
 ;
-;THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+
 ;IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ;FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 ;AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -20,24 +20,13 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-	include "defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
-
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "parseurl.asm"		; Mount point URL parser
-	include "listdir.asm"		; List directory
-	include	"boot.asm"		; Boot loader
+	block 0x2F00-$,0xFF
+; The command listing must not span more than one 256 byte page.
+CMD_USER	defb	"USER",0
+CMD_PASS	defb	"PASS",0
+CMD_CWD		defb	"CWD",0
+CMD_LIST	defb	"LIST",0
+CMD_PASV	defb	"PASV",0
+CMD_RETR	defb	"RETR",0
+CMD_QUIT	defb	"QUIT",0
 
