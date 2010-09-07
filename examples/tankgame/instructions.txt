@@ -1,0 +1,34 @@
+
+A silly Tank Game
+
+By: RaceAmiga
+	Winston
+	
+	
+INSTRUCCIONES
+
+Como Jugar:
+
+Cada jugador dispone de hasta 3 disparos consecutivos.
+Debe acertar al oponente.
+Gana el mejor de 3 disparos.
+
+
+Teclas:
+
+Dentro del Menu---------------------------------
+
+	1.- Elige Jugador 1, que será el host de la partida
+	2.- Elige Jugador 2, que será el cliente de la partida
+	
+Dentro del juego-------------------------------
+
+				Jugador 1		Jugador 2
+	izquierda		q				o
+	derecha			w				p
+	disparo			z				m
+	
+	Tecla 0 : Cuando termina partida permite volver al menú
+	
+
+	
