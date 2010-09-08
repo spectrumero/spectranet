@@ -1,9 +1,15 @@
-/* zcc +zx -lndos -lsplib2 -create-app astg.c  */
+/* zcc +zx -lndos -lsplib2 -llibsocket -create-app astg.c  */
 
 
 #include <stdio.h>
 #include <spritepack.h>
 #include <sound.h>
+#include <string.h>
+
+#include <sys/socket.h>		/* socket, connect, send, recv etc. */
+#include <sys/types.h>		/* types, such as socklen_t */
+#include <netdb.h>		/* gethostbyname */
+
 extern struct sp_Rect *sp_ClipStruct;
 #asm
 LIB SPCClipStruct
@@ -65,6 +71,7 @@ struct sp_SS *sp_bullet[6];
 #deinfe EXP_GAMEOVER 3
 #define HOST 1
 #define CLIENT 2
+#define NETB_LEN 18
 
 
  uint PlayerRolle;   /* 1 Host -> Player 1 , 2 Client -> Player 2 */
@@ -76,6 +83,9 @@ struct sp_SS *sp_bullet[6];
  uint keyp2_fire;
  uchar winner;
 
+ int sockfd;
+ int listenfd;
+
 /* Network Functions  */
 
 /***************************************************************************************************/
@@ -85,27 +95,78 @@ This function does all the necessary to establish the connection
 void Start_Match(uint linedo)
 
 {
-return;
-// linedo = 1 Host
-// linedo = 2 Client 
+	struct sockaddr_in my_addr;
+	struct hostent *he;
 
-if (linedo == HOST)
-{							// Host Code
+	/* Set up the sockaddr_in structure.
+	 * Note that we ought to zero out the structure so
+	 * any fields we don't explicitly set are set to 0. */
+	memset(&my_addr, 0, sizeof(my_addr));
 
-// Open Socket
-// Bind to port 
-// Start listening
-// Accept incomming connection
+	// linedo = 1 Host
+	// linedo = 2 Client 
 
+	if (linedo == HOST)
+	{							// Host Code
+		/* Exercises for the reader:
+		 * 1. Convert to UDP.
+		 * 2. Convert to an asynchronous protocol (currently
+		 *    the packet exchange is totally synchronous) */
+		listenfd=socket(AF_INET, SOCK_STREAM, 0);
+	
+		my_addr.sin_family=AF_INET;
+		my_addr.sin_port=htons(2020);
 
-}
-else // linedo == CLIENT
-{							// Client Code
+		if(bind(listenfd, &my_addr, sizeof(my_addr)) < 0)
+		{
+			printk("Bind failed\n");
+			sockclose(listenfd);
+			return;
+		}
 
-// Look up remote host
-// Open Socket
-// Connect remore host
-}
+		/* Now listen for an incoming connection. */
+		if(listen(listenfd, 1) < 0)
+		{
+			printk("Listen failed\n");
+			sockclose(listenfd);
+			return;
+		}
+
+		/* Wait for the client end to connect */
+		if((sockfd=accept(listenfd, NULL, NULL)) < 0)
+		{
+			printk("Accept failed\n");
+			sockclose(sockfd);
+			sockclose(listenfd);
+			return;
+		}
+	
+	}
+	else // linedo == CLIENT
+	{							// Client Code
+		he=gethostbyname("172.16.0.42");
+		if(!he)
+		{
+			printk("Failed to look up remote host\n");
+			return;
+		}
+
+		sockfd=socket(AF_INET, SOCK_STREAM, 0);
+		if(sockfd < 0)
+		{
+			printk("Unable to open the socket\n");
+			return;
+		}
+
+		my_addr.sin_port=htons(2020);
+		my_addr.sin_addr.s_addr=he->h_addr;
+		if(connect(sockfd, &my_addr, sizeof(sockaddr_in)) < 0)
+		{
+			printk("connect failed\n");
+			sockclose(sockfd);
+			return;
+		}
+	}
 
 }
 /*
@@ -116,30 +177,29 @@ another time for player2 data
 void TxRxData(uint linedo)
 
 {
+	int bytes;
 
-return;
-/* First Player1 (Host) send is data      : Send
-   Second waits for Player2 (client) data : Receive
-*/
-if (linedo == HOST)
-{							// Host Code
+	/* First Player1 (Host) send is data      : Send
+	   Second waits for Player2 (client) data : Receive
+	   The protocol is deliberately simple to be an understandable
+	   example. The reads will block if there's no data, generally
+	   this would be undesirable, but for a LAN demonstration we
+	   can get away with it.
+	   Exercise for the reader:
+	   * Make the protocol asynchronous.
+	   * Advanced exercise: compensate for lag :-)
+	*/
+	if (linedo == HOST)
+	{							// Host Code
+		bytes=send(sockfd, data, NETB_LEN, 0);
+		bytes=recv(sockfd, netb, NETB_LEN, 0);
+	}
 
-// Send Data to Player 2
-// Receive Data from Player 2
-// Store in Buffer
-
-
-}
-else // linedo == CLIENT
-{							// Client Code
-
-
-// Receive Data from Player 1
-// Store in Buffer
-// Send Data to Player 1
-
-
-}
+	else // linedo == CLIENT
+	{							// Client Code
+		bytes=recv(sockfd, netb, NETB_LEN, 0);
+		bytes=send(sockfd, data, NETB_LEN, 0);
+	}
 
 }
 /*
@@ -149,25 +209,12 @@ This function close the connection, ending the socket
 void End_Match(uint linedo)
 
 {
+	sockclose(sockfd);
 
-return;
-// linedo = 1 Host
-// linedo = 2 Client 
-
-if (linedo == HOST)
-{							// Host Code
-
-// Close connection
-
-}
-else // linedo == CLIENT
-{							// Client Code
-
-// Close connection
-
-
-}
-
+	if (linedo == HOST)
+	{							// Host Code
+		sockclose(listenfd);
+	}
 }
 
 
@@ -654,7 +701,7 @@ void run_game()
 		
 		read_keys();			/* Read local player keys */
 		procesa_juego();    	/* Process local Game movements & bullets */
-    	//intercambia_info(); 	/* Exchange shared info beetwen players */
+    	intercambia_info(); 	/* Exchange shared info beetwen players */
 		procesa_resultado();    /* Process consolidate info */
         draW_currFrame();  	    /* Dump Current Frame */
    }
