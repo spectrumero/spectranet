@@ -436,7 +436,7 @@ F_allocmem
 	ld a, (v_asave)			; get stream number
 	rlca				; multiply by 2
 	add chmemptr_bottom % 256	; and add the bottom offset
-	ex hl, de			; move block address to DE
+	ex de, hl			; move block address to DE
 	ld h, chmemptr_bottom / 256	; get address to save the block
 	ld l, a				; address into HL
 	ld (hl), e			; save it
