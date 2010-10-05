@@ -1,0 +1,5 @@
+#!/bin/sh
+echo `pwd`/streams.out >> ../../build.out
+sjasmplus streams.asm --lst=streams.lst
+exit $?
+

@@ -1,0 +1,5 @@
+#!/bin/sh
+echo `pwd`/snapman.out >> ../../build.out
+sjasmplus snapman.asm --lst=snapman.lst
+exit $?
+

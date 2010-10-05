@@ -1,0 +1,67 @@
+#!/bin/sh
+BUILDROOT=`pwd`
+UTILS="$BUILDROOT/utils"
+BASEROM="$BUILDROOT/rom"
+MODULES="$BUILDROOT/modules"
+WEBHOST=providence.alioth.net:/var/www/vhosts/spectrum
+BUILDOUT="$BUILDROOT/build.out"
+TMPDIR="$BUILDROOT/tmp"
+BIN2TZX="$UTILS/bin2tzx"
+
+echo "**** BUILDING UTILITIES"
+cd $UTILS
+make bin2tzx
+if [ "$?" != "0" ]; then
+	echo
+	echo "Failed to build utilities"
+	exit
+fi
+
+echo "**** BUILDING BASE ROM"
+
+rm -f $BUILDOUT
+
+cd $BASEROM
+./build $1
+if [ "$?" != "0" ]; then
+	echo
+	echo "Build failed!"
+	exit
+fi
+
+cd $MODULES
+
+echo "**** BUILDING MODULES"
+for dir in *
+do
+	if [ -d $dir ]; then
+		cd $dir
+		if [ -e build ]; then
+			./build $1
+			if [ "$?" != "0" ]; then
+				echo
+				echo "Build failed in $dir"
+				exit
+			fi
+		fi
+		cd ..
+	fi
+done
+
+cd $BUILDROOT
+if [ "$1" == "public" ]; then
+	echo "**** CREATING TZX FILES AND UPLOADING"
+	
+	for fname in `cat $BUILDOUT`
+	do
+		TZX=$TMPDIR/`basename $fname .out`.tzx
+		$BIN2TZX $fname $TZX
+		scp $fname $TZX $WEBHOST
+		if [ "$?" != "0" ]; then
+			echo 
+			echo "Copy failed to $WEBHOST"
+			exit
+		fi
+	done
+fi
+

@@ -31,7 +31,7 @@ do
       echo "Assembly failed:"
       cat .output
       echo
-      exit
+      exit 1
    fi
 
    # should we generate the table ROM functions?
@@ -46,4 +46,7 @@ do
       grep F_basstart_setup tnfs.sym >>impl.sym
    fi
 done
+
+echo "rom/romprog.out" >> ../build.out
+echo "rom/romprog_es.out" >> ../build.out
 
