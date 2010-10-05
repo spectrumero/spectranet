@@ -32,6 +32,49 @@ mount   defw 0xFFFF             ; not a filesystem
         defw 0xFFFF
         defw 0xFFFF
 idstr   defw STR_ident          ; ROM identity string
-modcall jp F_if_configmain	; TODO: modcalls other than this
 
+modcall 
+	xor a
+	cp l			; 0x00? Configuration menu.
+	jp z, F_if_configmain	; TODO: modcalls other than this
+
+	inc a
+	cp l			; 0x01
+	jp z, F_copyconfig
+
+	inc a
+	cp l			; 0x02
+	jp z, F_findsection
+
+	inc a
+	cp l			; 0x03
+	jp z, F_getCFString
+
+	inc a
+	cp l			; 0x04
+	jp z, F_getCFByte
+
+	inc a
+	cp l			; 0x05
+	jp z, F_getCFWord
+
+	inc a
+	cp l			; 0x06
+	jp z, F_setCFString
+
+	inc a
+	cp l			; 0x07
+	jp z, F_setCFByte
+
+	inc a
+	cp l			; 0x08
+	jp z, F_setCFWord
+
+	inc a
+	cp l			; 0x09
+	jp z, F_commitConfig
+
+	ld a, 0xFF
+	scf
+	ret
 
