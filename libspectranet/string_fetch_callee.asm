@@ -7,6 +7,9 @@ XDEF ASMDISP_STRING_FETCH_CALLEE
 .string_fetch_callee
 	rst 16		; CALLBAS
 	defw ZX_STK_FETCH ; fetch string expression - start in bc, length in de
+	ld a, b
+	or c		; zero length string?
+	jr z, zerolen
 	ld ix, 2
 	add ix, sp	; point ix at the length arg
 	ld a, (ix+1)	; msb of dest buffer size
@@ -34,6 +37,12 @@ XDEF ASMDISP_STRING_FETCH_CALLEE
 	ex (sp), hl	; put return address back in its rightful place
 	ld h, b		; return number of bytes copied
 	ld l, c
+	ret
+.zerolen
+	ld l, (ix+2)
+	ld h, (ix+3)
+	ld (hl), 0	; NULL in the first byte of the buffer
+	ld hl, 0	; return 0 length
 	ret
 
 ;defc ASMDISP_STRING_FETCH_CALLEE = asmentry . string_fetch_callee
