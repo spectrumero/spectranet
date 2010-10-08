@@ -218,5 +218,8 @@ v_machinetype	defb 0
 ; Interrupt counter
 v_intcount	defw 0
 
+; Configuration pointer
+v_configptr	defw 0
+
 ; Reserve memory above 0x3FF8 for the jump table.
 		block 0x3FF8-$,0xff

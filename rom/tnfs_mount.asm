@@ -55,7 +55,9 @@ F_tnfs_mount
 	ld de, buf_tnfs_wkspc	; Look up the host
 	ld l, (ix+2)
 	ld h, (ix+3)
+	push ix
 	call GETHOSTBYNAME
+	pop ix
 	jp c, F_leave		; exit if host not found
 
 	; create the socket that will be used for tnfs communications
