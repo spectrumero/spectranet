@@ -31,6 +31,11 @@ F_init
         jr c, .installerror
 	djnz .loop
 
+	; init local 8 byte sysvar area.
+	call F_getsysvar
+	inc hl
+	ld (hl), 0		; shadow copy has not been made.
+
         ld hl, STR_basicinit
         call PRINT42
         ret

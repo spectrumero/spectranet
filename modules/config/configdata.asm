@@ -28,6 +28,8 @@
 ; Section ID to find is in DE.
 ; Carry is set if the section was not found.
 F_findsection
+	call F_mappage
+
 	ld hl, CONFIG_BASE_ADDR		; Start here.
 	ld a, (hl)
 	inc hl
@@ -44,7 +46,7 @@ F_findsection
 	cp d
 	jr nz, .findnext
 	inc hl				; HL points at the section size
-	ret
+	jp F_leave
 
 .findnext
 	cp 0xFF				; Check we've not hit the end.
@@ -66,13 +68,15 @@ F_findsection
 
 .notfound
 	scf
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_createsection: Creates a new empty section.
 ; DE = id of section to create
 ; Carry is set if the section can't be created.
 F_createsection
+	call F_mappage
+
 	ld hl, (v_totalcfgsz)		; get total size
 	ld bc, CONFIG_BASE_ADDR		; set the base address
 	add hl, bc			; find last address
@@ -93,12 +97,14 @@ F_createsection
 	inc hl
 	inc hl
 	ld (v_totalcfgsz), hl
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_createnewconfig
 ; Creates a brand new empty config area.
 F_createnewconfig
+	call F_mappage
+
 	xor a
 	ld (CONFIG_BASE_ADDR+1), a	; msb of size
 	cpl
@@ -106,52 +112,60 @@ F_createnewconfig
 	ld (CONFIG_BASE_ADDR+3), a
 	ld a, 2
 	ld (CONFIG_BASE_ADDR), a
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_getcfgstring: Get an item that is a string.
 ; A = id of item to get.
 ; DE = where to place the result
 F_getCFString
+	call F_mappage
+
 	push de
 	call F_findcfgitem
 	pop de
-	ret c
+	jp c, F_leave	
 	inc hl
 .cpstring
 	ldi
 	ld a, (hl)
 	and a
-	ret z
+	jp z, F_leave
 	jr .cpstring
 
 ;-------------------------------------------------------------------------
 ; F_getCFWord: Get a 2 byte configuration item into HL
 ; A = id of the item.
 F_getCFWord
+	call F_mappage
+
 	call F_findcfgitem
-	ret c
+	jp c, F_leave
 	inc hl
 	ld e, (hl)
 	inc hl
 	ld d, (hl)
 	ex de, hl
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_getCFByte: Get a 1 byte configuration item into A
 ; A = id of the item
 F_getCFByte
+	call F_mappage
+
 	call F_findcfgitem
-	ret c
+	jp c, F_leave
 	inc hl
 	ld a, (hl)
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_addCFString: Adds a string value. Null terminated string should be
 ; pointed to by DE, with its ID in A
 F_addCFString
+	call F_mappage
+
 	push de
 	push af
 	xor a
@@ -177,11 +191,11 @@ F_addCFString
 	ex de, hl
 	pop hl			; get string's address
 	ldir			; copy the string
-	ret
+	jp F_leave
 .noroom
 	pop af
 	pop de
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_findcfgitem
@@ -234,6 +248,8 @@ F_findcfgitem
 ; F_rmcfgitem
 ; A = config item to remove
 F_rmcfgitem
+	call F_mappage
+
 	call F_findcfgitem
 	bit 7, (hl)			; String value?
 	jr z, .rmstring
@@ -241,11 +257,11 @@ F_rmcfgitem
 	jr z, .compact2
 	ld bc, 3
 	call F_compact
-	ret
+	jp F_leave
 .compact2
 	ld bc, 2
 	call F_compact
-	ret
+	jp F_leave
 .rmstring
 	push hl				; find the length of the
 	ld bc, 0xFF			; string.
@@ -256,7 +272,7 @@ F_rmcfgitem
 	ld c, a
 	pop hl
 	call F_compact
-	ret
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_compact

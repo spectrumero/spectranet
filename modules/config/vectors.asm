@@ -60,19 +60,19 @@ modcall
 
 	inc a
 	cp l			; 0x06
-	jp z, F_setCFString
+	jp z, F_addCFString
 
 	inc a
 	cp l			; 0x07
-	jp z, F_setCFByte
+;	jp z, F_setCFByte
 
 	inc a
 	cp l			; 0x08
-	jp z, F_setCFWord
+;	jp z, F_setCFWord
 
 	inc a
 	cp l			; 0x09
-	jp z, F_commitConfig
+;	jp z, F_commitConfig
 
 	ld a, 0xFF
 	scf

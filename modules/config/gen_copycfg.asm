@@ -66,6 +66,10 @@ F_copyconfig
         ldir
         call POPPAGEB   ; reset page B settings before returning (to page B!)
 
+	call F_getsysvar	; get our sysvar space address
+	inc hl			; and point at "has been shadowed" param
+	ld (hl), 1		; and set it
+
         ret             ; configuration settings are in RAM mapped in page AA
 .copierend
 

@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2009 Dylan Smith
+;Copyright (c) 2010 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,22 +20,11 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Filesystem Configuration Utility module
-	org 0x2000
-	include "vectors.asm"			; Vector table
-	include "init.asm"			; Initialization routines
-	include "gen_copycfg.asm"		; Config copier
-	include "fs_strings_en.asm"		; English strings
-	include "fs_config_ui.asm"		; User interface
-	include	"if_configmain.asm"		; Interface configuration
-	include "if_config_ui.asm"		; Interface cf. UI
-	include "if_strings_en.asm"		; English strings
-	include "if_saveconfig.asm"
-	include "configdata.asm"		; get/set config data
-	include "configdefs.asm"		; definitions
-	include "../../rom/spectranet.asm"	; spectranet lib defs
-	include "../../rom/sysvars.sym"		; system vars defs
-	include "../../rom/flashconf.asm"	; flash config defs
-	include "if_defs.asm"			; defines
-	include "flashwrite.asm"		; must be the last included
+; Definitions
+
+v_totalcfgsz		equ 0x1000	; Total configuration size location
+CONFIG_BASE_ADDR	equ 0x1000	; Base address of the config data
+MAXCFGSZ		equ 0xEFF	; last 256 byte page for core...
+CFG_RAM_PAGE		equ 0xDF
+CFG_FLASH_PAGE		equ 0x1F
 
