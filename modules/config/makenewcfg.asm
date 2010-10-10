@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2009 Dylan Smith
+;Copyright (c) 2010 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,69 +20,44 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Filesystem Configuration Utility module
+; Make a new empty configuration.
+;
+; *** NOTE *** This should only be run once per Spectranet to do the initial
+; set-up of the configuration area.
+;
+	include "../../rom/spectranet.asm"
+	include "config_interface.asm"
+	org 0x8000
 
-; This is a ROM module.
-sig     defb 0xAA               ; This is a ROM module
-romid   defb 0xFE               ; ID = 0xFE
-reset   defw F_init             ; reset vector
-mount   defw 0xFFFF             ; not a filesystem
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-idstr   defw STR_ident          ; ROM identity string
+	call PAGEIN
+	ld hl, str_creating
+	call PRINT42
+	
+	; first need to copy any existing config from the last page
+	; of flash into RAM.
+	ld hl, CFG_COPYCONFIG	; load existing data from flash that may exist
+	rst MODULECALL_NOPAGE
 
-modcall 
-	xor a
-	cp l			; 0x00? Configuration menu.
-	jp z, F_if_configmain	; TODO: modcalls other than this
+	ld hl, CFG_CREATENEWCFG	; create a new config area in RAM
+	rst MODULECALL_NOPAGE
 
-	inc a
-	cp l			; 0x01
-	jp z, F_copyconfig
+	ld hl, CFG_COMMITCFG	; commit
+	rst MODULECALL_NOPAGE
+	jr c, .commiterr
 
-	inc a
-	cp l			; 0x02
-	jp z, F_findsection
+	ld hl, str_done
+	call PRINT42
+	jp J_exit
+.commiterr
+	ld hl, str_commiterr
+	call PRINT42
+J_exit
+	jp PAGEOUT
 
-	inc a
-	cp l			; 0x03
-	jp z, F_getCFString
-
-	inc a
-	cp l			; 0x04
-	jp z, F_getCFByte
-
-	inc a
-	cp l			; 0x05
-	jp z, F_getCFWord
-
-	inc a
-	cp l			; 0x06
-	jp z, F_addCFString
-
-	inc a
-	cp l			; 0x07
-;	jp z, F_setCFByte
-
-	inc a
-	cp l			; 0x08
-;	jp z, F_setCFWord
-
-	inc a
-	cp l
-	jp z, F_createsection	; 0x09
-
-	inc a
-	cp l			; 0x0A
-	jp z, F_commitConfig
-
-	ld a, l
-	cp 0xFF			; 0xFF
-	jp z, F_createnewconfig
-
-	ld a, 0xFF
-	scf
-	ret
+str_creating
+	defb "Creating new configuration\n",0
+str_commiterr
+	defb "Unable to commit to flash\n",0
+str_done
+	defb "Done.\n",0
 

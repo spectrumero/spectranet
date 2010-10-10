@@ -21,7 +21,7 @@
 ;THE SOFTWARE.
 
 ; Find, read and insert configuration data.
-
+;	include "debug.asm"
 ;-----------------------------------------------------------------------
 ; F_findsection: Finds where in memory a configuration section lives
 ; and returns the address in HL.
@@ -46,6 +46,7 @@ F_findsection
 	cp d
 	jr nz, .findnext
 	inc hl				; HL points at the section size
+	ld (v_configptr), hl		; save the pointer
 	jp F_leave
 
 .findnext
@@ -97,6 +98,7 @@ F_createsection
 	inc hl
 	inc hl
 	ld (v_totalcfgsz), hl
+
 	jp F_leave
 
 ;-------------------------------------------------------------------------
@@ -190,7 +192,9 @@ F_addCFString
 	inc hl
 	ex de, hl
 	pop hl			; get string's address
+	
 	ldir			; copy the string
+
 	jp F_leave
 .noroom
 	pop af
@@ -362,6 +366,31 @@ F_checkcfgsize
 	ret nz
 	ld a, MAXCFGSZ%256
 	cp l
+	ret
+
+;------------------------------------------------------------------------
+; F_commitConfig: Commits the configuration in RAM to flash.
+F_commitConfig
+	call F_getsysvar	; make sure that a RAM copy has been made
+	inc hl
+	ld a, 1
+	cp (hl)
+	jr nz, .notpaged
+	ld (hl), 0		; clear down "RAM copy" flag
+
+	; copy the flash programmer
+	ld hl, FLASHPROGSTART
+	ld de, 0x3000
+	ld bc, FLASHPROGLEN
+	ldir
+
+	; call the flash programmer and we should be done.
+	call 0x3000
+
+	ret
+
+.notpaged			; do not write flash if it hasn't already
+	scf			; been copied to RAM.
 	ret
 
 ;------------------------------------------------------------------------

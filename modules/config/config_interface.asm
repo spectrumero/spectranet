@@ -1,6 +1,6 @@
 ;The MIT License
 ;
-;Copyright (c) 2009 Dylan Smith
+;Copyright (c) 2010 Dylan Smith
 ;
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -20,69 +20,16 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Filesystem Configuration Utility module
+CFG_COPYCONFIG	equ 0xFE01
+CFG_FINDSECTION	equ 0xFE02
+CFG_GETCFSTRING	equ 0xFE03
+CFG_GETCFBYTE	equ 0xFE04
+CFG_GETCFWORD	equ 0xFE05
+CFG_ADDCFSTRING	equ 0xFE06
+CFG_SETCFBYTE	equ 0xFE07
+CFG_SETCFWORD	equ 0xFE08
+CFG_CREATESECTION equ 0xFE09
+CFG_COMMITCFG	equ 0xFE0A
 
-; This is a ROM module.
-sig     defb 0xAA               ; This is a ROM module
-romid   defb 0xFE               ; ID = 0xFE
-reset   defw F_init             ; reset vector
-mount   defw 0xFFFF             ; not a filesystem
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-idstr   defw STR_ident          ; ROM identity string
-
-modcall 
-	xor a
-	cp l			; 0x00? Configuration menu.
-	jp z, F_if_configmain	; TODO: modcalls other than this
-
-	inc a
-	cp l			; 0x01
-	jp z, F_copyconfig
-
-	inc a
-	cp l			; 0x02
-	jp z, F_findsection
-
-	inc a
-	cp l			; 0x03
-	jp z, F_getCFString
-
-	inc a
-	cp l			; 0x04
-	jp z, F_getCFByte
-
-	inc a
-	cp l			; 0x05
-	jp z, F_getCFWord
-
-	inc a
-	cp l			; 0x06
-	jp z, F_addCFString
-
-	inc a
-	cp l			; 0x07
-;	jp z, F_setCFByte
-
-	inc a
-	cp l			; 0x08
-;	jp z, F_setCFWord
-
-	inc a
-	cp l
-	jp z, F_createsection	; 0x09
-
-	inc a
-	cp l			; 0x0A
-	jp z, F_commitConfig
-
-	ld a, l
-	cp 0xFF			; 0xFF
-	jp z, F_createnewconfig
-
-	ld a, 0xFF
-	scf
-	ret
+CFG_CREATENEWCFG	equ 0xFEFF
 
