@@ -44,7 +44,7 @@
 	inc a
 	inc c
 	or c
-	jr .done
+	jp z, .done
 	dec hl
 
 	push hl
@@ -60,11 +60,92 @@
 	call PRINT42
 	pop hl
 	call F_printint16
+
+	ld c, (hl)		; get the section size into BC and store
+	inc hl
+	ld b, (hl)
+	inc hl			; hl now at first byte of config
+	ld (v_remaining), bc
+.sectionloop
+	ld a, b
+	or c			; read whole section?
+	jr z, .configsections	; go back to the conig sections loop
+
+	bit 7, (hl)
+	jr z, .string		; bit 7 = 0 = string
+	bit 6, (hl)
+	jr z, .word		; but 6 = 0 = byte
+	
+	push hl
+	ld hl, str_byteid
+	call PRINT42
+	pop hl
+	call F_printint8
+	inc hl
+	push hl
+	ld hl, str_byte
+	call PRINT42
+	pop hl
+	call F_printint8
+	inc hl			; point at next element
+	ld bc, (v_remaining)
+	dec bc
+	dec bc
+	ld (v_remaining), bc	; update remaining bytes
+	;jr .sectionloop
+	jp .done
+
+.string
+	push hl
+	ld hl, str_stringid
+	call PRINT42
+	pop hl
+	call F_printint8
+	inc hl
+	push hl
+	ld hl, str_string
+	call PRINT42
+	pop hl
+
+	ld bc, (v_remaining)
+	dec bc
+.printloop
+	ld a, (hl)
+	call PUTCHAR42
+	inc hl
+	dec bc
+	and a			; string end?
+	jr nz, .printloop
+	ld (v_remaining), bc	; update remaining
+;	jr .sectionloop
+	jp .done
+
+.word
+	push hl
+	ld hl, str_wordid
+	call PRINT42
+	pop hl
+	call F_printint8
+	inc hl
+	push hl
+	ld hl, str_word
+	call PRINT42
+	pop hl
+	call F_printint16
 	inc hl
 	inc hl
+	ld bc, (v_remaining)
+	dec bc
+	dec bc
+	dec bc
+	ld (v_remaining), bc
+;	jp .sectionloop
+	
+	
 .done
 	ld hl, str_end
 	call PRINT42
+	call F_dumpbytes
 J_exit
 	jp PAGEOUT
 
@@ -88,6 +169,23 @@ F_printint8			; and just do 8 bits
 	pop hl
 	ret
 
+F_dumpbytes
+	ld hl, 0x1000
+	ld b, 0x20
+.loop
+	push bc
+	push hl
+	ld a, (hl)
+	ld hl, workspace
+	call ITOH8
+	ld hl, workspace
+	call PRINT42
+	pop hl
+	pop bc
+	inc hl
+	djnz .loop
+	ret
+
 str_size	defb "Config size: ",0
 str_section	defb "\n\n--- SectionID: ",0
 str_sectionsize defb "\nSecsize : ",0
@@ -98,6 +196,6 @@ str_byte	defb " Byte: ",0
 str_wordid	defb "\nWordID  : ",0
 str_word	defb " Word: ",0
 str_end		defb "\n---End of configuration.",0
-
+v_remaining	defw 0
 workspace	defb 0
 

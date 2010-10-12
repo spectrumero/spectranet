@@ -121,6 +121,7 @@ F_createnewconfig
 ; A = id of item to get.
 ; DE = where to place the result
 F_getCFString
+	ex af, af'		; get arg
 	call F_mappage
 
 	push de
@@ -132,13 +133,16 @@ F_getCFString
 	ldi
 	ld a, (hl)
 	and a
-	jp z, F_leave
-	jr .cpstring
+	jr nz, .cpstring
+.addnull
+	ld (de), a		; put the NULL on the end
+	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_getCFWord: Get a 2 byte configuration item into HL
 ; A = id of the item.
 F_getCFWord
+	ex af, af'		; get arg
 	call F_mappage
 
 	call F_findcfgitem
@@ -154,6 +158,7 @@ F_getCFWord
 ; F_getCFByte: Get a 1 byte configuration item into A
 ; A = id of the item
 F_getCFByte
+	ex af, af'		; get arg
 	call F_mappage
 
 	call F_findcfgitem
@@ -166,6 +171,7 @@ F_getCFByte
 ; F_addCFString: Adds a string value. Null terminated string should be
 ; pointed to by DE, with its ID in A
 F_addCFString
+	ex af, af'		; get arg
 	call F_mappage
 
 	push de
@@ -252,6 +258,7 @@ F_findcfgitem
 ; F_rmcfgitem
 ; A = config item to remove
 F_rmcfgitem
+	ex af, af'			; retrieve arg in A
 	call F_mappage
 
 	call F_findcfgitem
