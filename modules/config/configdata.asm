@@ -168,12 +168,75 @@ F_getCFByte
 	jp F_leave
 
 ;-------------------------------------------------------------------------
+; F_addCFByte: Add 1 byte configuration item.
+; A = id of the item
+; C = value to add
+F_addCFByte
+	ex af, af'		; get id arg back
+	call F_mappage
+	push af
+	push bc
+	ld hl, (v_configptr)	; set HL to where room is to be made
+	inc hl
+	inc hl			; point at address where we want to add it
+	push hl
+	ld bc, 2		; how much room is needed
+	call F_makeroom
+	pop hl
+	pop bc
+	jr c, .noroom
+	pop af
+	ld (hl), a		; id of the item
+	inc hl
+	ld (hl), c		; value of the item
+	jp F_leave
+
+.noroom
+	pop af
+	scf
+	jp F_leave
+
+;-------------------------------------------------------------------------
+; F_addCFWord: Add 2 byte configuration item.
+; A = id of the item
+; BC = value to add
+F_addCFWord
+	ex af, af'		; get id arg back
+	call F_mappage
+	push af
+	push bc
+	ld hl, (v_configptr)	; set HL to where room is to be made
+	inc hl
+	inc hl			; point at address where we want to add it
+	push hl
+	ld bc, 3		; how much room is needed
+	call F_makeroom
+	pop hl
+	pop bc
+	jr c, .noroom
+	pop af
+	ld (hl), a		; id of the item
+	inc hl
+	ld (hl), c		; value of the item
+	inc hl
+	ld (hl), b
+	jp F_leave
+
+.noroom
+	pop af
+	scf
+	jp F_leave
+
+;-------------------------------------------------------------------------
 ; F_addCFString: Adds a string value. Null terminated string should be
 ; pointed to by DE, with its ID in A
 F_addCFString
 	ex af, af'		; get arg
 	call F_mappage
+	call F_addCFString_core
+	jp F_leave
 
+F_addCFString_core
 	push de
 	push af
 	xor a
@@ -200,11 +263,61 @@ F_addCFString
 	pop hl			; get string's address
 	
 	ldir			; copy the string
-
-	jp F_leave
+	ret
 .noroom
 	pop af
 	pop de
+	ret
+
+;-------------------------------------------------------------------------
+; F_replaceCFString
+; Config strings can be variable length so we delete it first and recreate
+; it.
+F_replaceCFString
+	ex af, af'
+	call F_mappage
+	push af
+	push de
+	call F_rmcfgitem_core
+	pop de
+	jr c, .err
+	pop af
+	call F_addCFString_core
+	jp F_leave
+.err
+	pop bc				; restore stack but preserve flags
+	jp F_leave
+
+;-------------------------------------------------------------------------
+; F_replaceCFWord
+; Change a word value.
+; A = byte ID, BC = new value
+F_replaceCFWord
+	ex af, af'
+	call F_mappage
+	push bc
+	call F_findcfgitem
+	pop bc
+	jp c, F_leave			; not founc
+	inc hl				; point at word's LSB
+	ld (hl), c
+	inc hl
+	ld (hl), b
+	jp F_leave
+
+;-------------------------------------------------------------------------
+; F_replaceCFByte
+; Change a byte value.
+; A = byte ID, C = new value
+F_replaceCFByte
+	ex af, af'
+	call F_mappage
+	push bc
+	call F_findcfgitem		; get the address of the byte 
+	pop bc
+	jp c, F_leave			; not found
+	inc hl				; point at value
+	ld (hl), c
 	jp F_leave
 
 ;-------------------------------------------------------------------------
@@ -260,19 +373,23 @@ F_findcfgitem
 F_rmcfgitem
 	ex af, af'			; retrieve arg in A
 	call F_mappage
+	call F_rmcfgitem_core
+	jp F_leave
 
+F_rmcfgitem_core
 	call F_findcfgitem
+	ret c				; Not found
 	bit 7, (hl)			; String value?
 	jr z, .rmstring
 	bit 6, (hl)			; Word or byte?
 	jr z, .compact2
 	ld bc, 3
 	call F_compact
-	jp F_leave
+	ret
 .compact2
 	ld bc, 2
 	call F_compact
-	jp F_leave
+	ret
 .rmstring
 	push hl				; find the length of the
 	ld bc, 0xFF			; string.
@@ -283,7 +400,7 @@ F_rmcfgitem
 	ld c, a
 	pop hl
 	call F_compact
-	jp F_leave
+	ret
 
 ;-------------------------------------------------------------------------
 ; F_compact

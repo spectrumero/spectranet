@@ -74,7 +74,7 @@
 	bit 7, (hl)
 	jr z, .string		; bit 7 = 0 = string
 	bit 6, (hl)
-	jr z, .word		; but 6 = 0 = byte
+	jr nz, .word		; bit 6 = 0 = byte
 	
 	push hl
 	ld hl, str_byteid
@@ -92,8 +92,7 @@
 	dec bc
 	dec bc
 	ld (v_remaining), bc	; update remaining bytes
-	;jr .sectionloop
-	jp .done
+	jr .sectionloop
 
 .string
 	push hl
@@ -116,9 +115,10 @@
 	dec bc
 	and a			; string end?
 	jr nz, .printloop
+	inc hl
+	dec bc
 	ld (v_remaining), bc	; update remaining
-;	jr .sectionloop
-	jp .done
+	jr .sectionloop
 
 .word
 	push hl
@@ -139,13 +139,12 @@
 	dec bc
 	dec bc
 	ld (v_remaining), bc
-;	jp .sectionloop
+	jp .sectionloop
 	
 	
 .done
 	ld hl, str_end
 	call PRINT42
-	call F_dumpbytes
 J_exit
 	jp PAGEOUT
 

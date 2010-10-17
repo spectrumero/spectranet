@@ -65,11 +65,11 @@ modcall
 
 	inc a
 	cp l			; 0x07
-;	jp z, F_setCFByte
+	jp z, F_addCFByte
 
 	inc a
 	cp l			; 0x08
-;	jp z, F_setCFWord
+	jp z, F_addCFWord
 
 	inc a
 	cp l
@@ -78,6 +78,18 @@ modcall
 	inc a
 	cp l			; 0x0A
 	jp z, F_commitConfig
+	
+	inc a
+	cp l
+	jp z, F_replaceCFByte	; 0x0B
+	
+	inc a
+	cp l
+	jp z, F_replaceCFWord	; 0x0C
+	
+	inc a
+	cp l	
+	jp z, F_replaceCFString	; 0x0D
 
 	ld a, l
 	cp 0xFF			; 0xFF
