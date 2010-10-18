@@ -41,7 +41,7 @@ int dotweet(char *user, char *passwd, char *tweet)
 
 	tweetUri.proto=PROTO_HTTP;
 	tweetUri.host="api.twitter.com";
-	tweetUri.location="/1/statuses/update.json";
+	tweetUri.location="/1/statuses/update.json?source=twitterandroid";
 	tweetUri.user=user;
 	tweetUri.passwd=passwd;
 	addFormData("status", tweet);
