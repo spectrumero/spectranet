@@ -29,7 +29,10 @@
 ; Carry is set if the section was not found.
 F_findsection
 	call F_mappage
+	call F_findsection_core
+	jp F_leave
 
+F_findsection_core
 	ld hl, CONFIG_BASE_ADDR		; Start here.
 	ld a, (hl)
 	inc hl
@@ -47,7 +50,7 @@ F_findsection
 	jr nz, .findnext
 	inc hl				; HL points at the section size
 	ld (v_configptr), hl		; save the pointer
-	jp F_leave
+	ret
 
 .findnext
 	cp 0xFF				; Check we've not hit the end.
@@ -69,7 +72,7 @@ F_findsection
 
 .notfound
 	scf
-	jp F_leave
+	ret
 
 ;-------------------------------------------------------------------------
 ; F_createsection: Creates a new empty section.
@@ -77,6 +80,10 @@ F_findsection
 ; Carry is set if the section can't be created.
 F_createsection
 	call F_mappage
+	push de
+	call F_findsection_core		; does the section already exist?
+	pop de
+	jp nc, F_leave			; if so nothing to do.
 
 	ld hl, (v_totalcfgsz)		; get total size
 	ld bc, CONFIG_BASE_ADDR		; set the base address
@@ -85,6 +92,7 @@ F_createsection
 	inc hl
 	ld (hl), d
 	inc hl
+	ld (v_configptr), hl		; set the current section ptr
 	ld (hl), 0x00			; write size (zero bytes)
 	inc hl
 	ld (hl), 0x00
@@ -175,6 +183,9 @@ F_addCFByte
 	ex af, af'		; get id arg back
 	call F_mappage
 	push af
+	and 0xC0
+	cp 0x80			; check that this is a valid byte id
+	jr nz, .error
 	push bc
 	ld hl, (v_configptr)	; set HL to where room is to be made
 	inc hl
@@ -184,14 +195,14 @@ F_addCFByte
 	call F_makeroom
 	pop hl
 	pop bc
-	jr c, .noroom
+	jr c, .error
 	pop af
 	ld (hl), a		; id of the item
 	inc hl
 	ld (hl), c		; value of the item
 	jp F_leave
 
-.noroom
+.error
 	pop af
 	scf
 	jp F_leave
@@ -204,6 +215,9 @@ F_addCFWord
 	ex af, af'		; get id arg back
 	call F_mappage
 	push af
+	and 0xC0
+	cp 0xC0			; check that this is a valid word id
+	jr nz, .error
 	push bc
 	ld hl, (v_configptr)	; set HL to where room is to be made
 	inc hl
@@ -213,7 +227,7 @@ F_addCFWord
 	call F_makeroom
 	pop hl
 	pop bc
-	jr c, .noroom
+	jr c, .error
 	pop af
 	ld (hl), a		; id of the item
 	inc hl
@@ -222,7 +236,7 @@ F_addCFWord
 	ld (hl), b
 	jp F_leave
 
-.noroom
+.error
 	pop af
 	scf
 	jp F_leave
@@ -239,7 +253,10 @@ F_addCFString
 F_addCFString_core
 	push de
 	push af
-	xor a
+	and 0xC0
+	and a			; check that this is a valid string id
+	jr nz, .error
+
 	ex de, hl
 	ld bc, 0xFF
 	cpir			; find the NULL
@@ -255,7 +272,7 @@ F_addCFString_core
 	call F_makeroom
 	pop hl			; get address of 1st byte of new space
 	pop bc
-	jr c, .noroom
+	jr c, .error
 	pop af
 	ld (hl), a
 	inc hl
@@ -264,7 +281,7 @@ F_addCFString_core
 	
 	ldir			; copy the string
 	ret
-.noroom
+.error
 	pop af
 	pop de
 	ret
