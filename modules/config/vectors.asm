@@ -60,36 +60,28 @@ modcall
 	jp z, F_getCFWord
 
 	inc a
-	cp l			; 0x06
-	jp z, F_addCFString
+	cp l
+	jp z, F_createsection	; 0x06
 
 	inc a
 	cp l			; 0x07
-	jp z, F_addCFByte
-
-	inc a
-	cp l			; 0x08
-	jp z, F_addCFWord
-
-	inc a
-	cp l
-	jp z, F_createsection	; 0x09
-
-	inc a
-	cp l			; 0x0A
 	jp z, F_commitConfig
 	
 	inc a
 	cp l
-	jp z, F_replaceCFByte	; 0x0B
+	jp z, F_setCFByte	; 0x08
 	
 	inc a
 	cp l
-	jp z, F_replaceCFWord	; 0x0C
+	jp z, F_setCFWord	; 0x09
 	
 	inc a
 	cp l	
-	jp z, F_replaceCFString	; 0x0D
+	jp z, F_setCFString	; 0x0A
+
+	inc a
+	cp l	
+	jp z, F_abandonConfig	; 0x0B
 
 	ld a, l
 	cp 0xFF			; 0xFF

@@ -32,10 +32,12 @@
 	include "if_strings_en.asm"		; English strings
 	include "if_saveconfig.asm"
 	include "configdata.asm"		; get/set config data
+	include "configbasic.asm"		; BASIC commands
 	include "configdefs.asm"		; definitions
 	include "../../rom/spectranet.asm"	; spectranet lib defs
 	include "../../rom/sysvars.sym"		; system vars defs
 	include "../../rom/flashconf.asm"	; flash config defs
+	include "../../rom/zxromdefs.asm"	; ZX rom entry points
 	include "if_defs.asm"			; defines
 	include "flashwrite.asm"		; must be the last included
 

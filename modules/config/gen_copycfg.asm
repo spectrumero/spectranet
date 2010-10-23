@@ -26,6 +26,13 @@
 ; the last 16k sector, then copy back the updated configuration plus the
 ; existing content in the remainder of the last sector of flash).
 F_copyconfig
+	call F_getsysvar	; see if we've already copied it
+	inc hl
+	ld a, 1
+	cp (hl)			; if Z we've already made a copy
+	ret z
+	ld (hl), 1		; Indicate a copy has been made.
+	
         ld hl, .copier  ; first, copy to RAM workspace
         ld de, 0x3000   ; fixed workspace page at 0x3000
         ld bc, .copierend-.copier
@@ -66,9 +73,6 @@ F_copyconfig
         ldir
         call POPPAGEB   ; reset page B settings before returning (to page B!)
 
-	call F_getsysvar	; get our sysvar space address
-	inc hl			; and point at "has been shadowed" param
-	ld (hl), 1		; and set it
 
         ret             ; configuration settings are in RAM mapped in page AA
 .copierend

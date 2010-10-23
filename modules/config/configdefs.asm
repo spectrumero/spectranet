@@ -27,4 +27,5 @@ CONFIG_BASE_ADDR	equ 0x1000	; Base address of the config data
 MAXCFGSZ		equ 0xEFF	; last 256 byte page for core...
 CFG_RAM_PAGE		equ 0xDF
 CFG_FLASH_PAGE		equ 0x1F
+INTERPWKSPC		equ 0x3000
 

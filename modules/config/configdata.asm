@@ -180,8 +180,6 @@ F_getCFByte
 ; A = id of the item
 ; C = value to add
 F_addCFByte
-	ex af, af'		; get id arg back
-	call F_mappage
 	push af
 	and 0xC0
 	cp 0x80			; check that this is a valid byte id
@@ -212,8 +210,6 @@ F_addCFByte
 ; A = id of the item
 ; BC = value to add
 F_addCFWord
-	ex af, af'		; get id arg back
-	call F_mappage
 	push af
 	and 0xC0
 	cp 0xC0			; check that this is a valid word id
@@ -287,55 +283,61 @@ F_addCFString_core
 	ret
 
 ;-------------------------------------------------------------------------
-; F_replaceCFString
+; F_setCFString
 ; Config strings can be variable length so we delete it first and recreate
 ; it.
-F_replaceCFString
+F_setCFString
 	ex af, af'
 	call F_mappage
 	push af
 	push de
-	call F_rmcfgitem_core
+	call F_rmcfgitem_core	; if it already exists it must be removed
 	pop de
-	jr c, .err
 	pop af
 	call F_addCFString_core
 	jp F_leave
-.err
-	pop bc				; restore stack but preserve flags
-	jp F_leave
 
 ;-------------------------------------------------------------------------
-; F_replaceCFWord
-; Change a word value.
+; F_setCFWord
+; Set or change a word value.
 ; A = byte ID, BC = new value
-F_replaceCFWord
+F_setCFWord
 	ex af, af'
 	call F_mappage
+	push af
 	push bc
 	call F_findcfgitem
 	pop bc
-	jp c, F_leave			; not founc
+	jp c, .add			; not found, add it
+	pop af
 	inc hl				; point at word's LSB
 	ld (hl), c
 	inc hl
 	ld (hl), b
 	jp F_leave
+.add
+	pop af
+	jp F_addCFWord
 
 ;-------------------------------------------------------------------------
-; F_replaceCFByte
+; F_setCFByte
 ; Change a byte value.
 ; A = byte ID, C = new value
-F_replaceCFByte
+F_setCFByte
 	ex af, af'
 	call F_mappage
+	push af
 	push bc
 	call F_findcfgitem		; get the address of the byte 
 	pop bc
-	jp c, F_leave			; not found
+	jr c, .add			; Not found, add it
+	pop af
 	inc hl				; point at value
 	ld (hl), c
 	jp F_leave
+.add
+	pop af
+	jp F_addCFByte
 
 ;-------------------------------------------------------------------------
 ; F_findcfgitem
@@ -508,6 +510,15 @@ F_checkcfgsize
 	ld a, MAXCFGSZ%256
 	cp l
 	ret
+
+;------------------------------------------------------------------------
+; F_abandonConfig: Abandon the RAM copy of the configuration (mark it
+; uncopied, so further accesses to config go to flash)
+F_abandonConfig
+	call F_getsysvar
+	inc hl
+	ld (hl), 0		; reset "RAM copy" flag
+	ret	
 
 ;------------------------------------------------------------------------
 ; F_commitConfig: Commits the configuration in RAM to flash.
