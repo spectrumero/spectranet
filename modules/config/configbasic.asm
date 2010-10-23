@@ -28,6 +28,25 @@
 ; %cfgget section,id
 ; To commit, %cfgcommit, to abandon, %cfgabandon
 ;--------------------------------------------------------------------------
+; F_cfgcommit. Takes no args. Commits configuration to flash.
+F_cfgcommit
+	call STATEMENT_END
+
+	; runtime
+	call F_commitConfig
+	jp c, F_handle_error
+	jp EXIT_SUCCESS
+
+;--------------------------------------------------------------------------
+; F_cfgabandon. Abandons RAM copy of configuration.
+F_cfgabandon
+	call STATEMENT_END
+
+	; runtime
+	call F_abandonConfig
+	jp EXIT_SUCCESS
+
+;--------------------------------------------------------------------------
 ; F_cfgset
 ; Sets byte and word values
 F_cfgset

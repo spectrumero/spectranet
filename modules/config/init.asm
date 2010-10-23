@@ -45,7 +45,7 @@ F_init
         ret
 
 PARSETABLE
-numcmds		equ 4
+numcmds		equ 6
 P_fsconfig      defb 0x0b       ; Trap C Nonsense in BASIC
                 defw CMD_FSCONFIG
                 defb 0xFF       ; this page
@@ -62,8 +62,19 @@ P_cfgsetstr	defb 0x0b
 		defw CMD_CFGSET_STR
 		defb 0xFF
 		defw F_cfgset_string
+P_cfgcommit	defb 0x0b
+		defw CMD_CFGCOMMIT
+		defb 0xFF
+		defw F_cfgcommit
+P_cfgabandon	defb 0x0b
+		defw CMD_CFGABANDON
+		defb 0xFF
+		defw F_cfgabandon
 CMD_FSCONFIG    defb "%fsconfig",0
 CMD_IFCONFIG	defb "%ifconfig",0
 CMD_CFGSET	defb "%cfgset",0
 CMD_CFGSET_STR	defb "%cfgset$",0
+CMD_CFGCOMMIT	defb "%cfgcommit",0
+CMD_CFGABANDON	defb "%cfgabandon",0
+
 

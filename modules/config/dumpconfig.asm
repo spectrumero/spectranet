@@ -110,11 +110,14 @@
 	dec bc
 .printloop
 	ld a, (hl)
+	and a
+	jr z, .printdone
 	call PUTCHAR42
 	inc hl
 	dec bc
 	and a			; string end?
-	jr nz, .printloop
+	jr .printloop
+.printdone
 	inc hl
 	dec bc
 	ld (v_remaining), bc	; update remaining
