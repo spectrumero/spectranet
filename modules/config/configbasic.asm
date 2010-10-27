@@ -175,6 +175,38 @@ F_do_cfgset_string
 	call F_setCFString
 	jp EXIT_SUCCESS
 
+;-------------------------------------------------------------------------
+; F_cfgnew
+; Create a brand new config (wiping any that may already exist)
+F_cfgnew
+	; Syntax time
+	call STATEMENT_END	; no args
+
+	; Run time
+	call F_copyconfig	; not necessary to actually copy it but
+				; this sets up sysvars ready so we can commit
+	call F_createnewconfig	; overwrite whatever's already there with
+	jp EXIT_SUCCESS		; a new config.
+
+;------------------------------------------------------------------------
+; F_cfgnewsec
+; Create a new section with the ID supplied.
+F_cfgnewsec
+	; Syntax time
+	rst CALLBAS
+	defw ZX_EXPT1_NUM	; expect a single 16 bit number
+	call STATEMENT_END
+
+	; run time
+	call F_copyconfig	; ensure config is in RAM
+	rst CALLBAS		; get the argument
+	defw ZX_FIND_INT2	; which is now in BC.
+	ld d, b
+	ld e, c
+	call F_createsection
+	jp EXIT_SUCCESS
+	
+;-------------------------------------------------------------------------
         ; Copy a BASIC string to a C string.
         ; BASIC string in DE, C string (dest) in HL
 F_basstrcpy
