@@ -32,3 +32,5 @@ STACK_BC		equ NMISTACK-10
 STACK_DE		equ NMISTACK-8
 STACK_HL		equ NMISTACK-6
 
+AUTOBOOT		equ 0x81	; Config ID for autoboot flag
+

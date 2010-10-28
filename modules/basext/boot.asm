@@ -35,11 +35,8 @@
 ; 
 ; On error, the stack is restored back to its original state such that
 ; we re-enter BASIC at the point the (c) message is generated.
-
 F_boot
-	ld bc, 0xFEFE		; read SHIFT through V
-	in a, (c)
-	cp 0xBE			; SHIFT pressed?
+	call F_shouldboot	; set zero flag if we should boot
 	ret nz			; no, do nothing.
 	ld hl, STR_bootmsg
 	call PRINT42
@@ -94,6 +91,32 @@ F_boot
 	ld hl, STR_loaderr	; or print an error message
 	call PRINT42
 	ret
+
+;--------------------------------------------------------------------------
+; F_shouldboot: See if we should boot (either configured to do so or
+; SHIFT is pressed down) Zero flag is set if we should boot, non zero
+; return if not.
+F_shouldboot
+	ld de, ROM_ID		; section ID
+	ld hl, CFG_FINDSECTION	; go and find it
+	rst MODULECALL_NOPAGE
+	jr c, .bootonshift	; we don't have a section, jump forward.
+	
+	ld a, AUTOBOOT		; get 'autoboot' option
+	ld hl, CFG_GETCFBYTE
+	rst MODULECALL_NOPAGE
+	jr c, .bootonshift	; not found, take no action
+	and a			; if set to zero, then don't autoboot
+	jr z, .bootonshift
+	xor a			; set the zero flag to signal 'boot'
+	ret
+
+.bootonshift
+	ld bc, 0xFEFE		; read SHIFT through V
+	in a, (c)
+	cp 0xBE			; SHIFT pressed?
+	ret
+		
 STR_bootmsg	defb "Booting...\n",0
 STR_loaderr	defb "Error loading boot.zx\n",0
 

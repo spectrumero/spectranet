@@ -21,8 +21,9 @@
 ;THE SOFTWARE.
 
 ; BASIC extensions vector table
+ROM_ID	equ  0xFD
 	defb 0xAA		; This is a code ROM
-	defb 0xFD		; ROM ID = 0xFD
+	defb ROM_ID		; ROM ID = 0xFD
 	defw F_init		; RESET vector
 	defw 0xFFFF             ; the next few vectors are reserved
         defw 0xFFFF

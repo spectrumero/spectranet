@@ -25,6 +25,7 @@
 	include "../../rom/sysvars.sym"
 	include "../../rom/zxsysvars.asm"
 	include "../../rom/fs_defs.asm"
+	include "../config/config_interface.asm"
 	include "defs.asm"
 INTERPWKSPC	equ 0x3000
 TNFS_PAGE	equ 0xFF
