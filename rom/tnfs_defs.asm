@@ -23,7 +23,7 @@
 ; TNFS definitions.
 
 tnfs_polltime		equ 7	; How many 50ths/sec we should poll for
-tnfs_max_retries	equ 5
+tnfs_max_retries	equ 10	; maximum retries
 
 ; Standard header offsets
 tnfs_sid_offset		equ 0
