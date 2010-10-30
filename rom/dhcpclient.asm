@@ -513,10 +513,11 @@ F_comparexid
 F_waitfordhcpmsg
 	ld bc, dhcp_polltime
 .loop
-	in a, (254)		; check for BREAK
-	rra
-	jr nc, .interrupted
 	push bc
+	ld bc, 0x7ffe		; read B to SPACE
+	in a, (c)		; check for BREAK
+	cp 0xBE			
+	jr z, .interrupted
 	ld a, (v_dhcpfd)
 	call POLLFD		; data ready for this file descriptor?
 	pop bc
@@ -529,6 +530,7 @@ F_waitfordhcpmsg
 	ld a, DHCP_TIMEOUT	; error code is timeout
 	jr F_closeonerror	; close and return
 .interrupted
+	pop bc			; restore stack
 	ld hl, STR_interrupted
 	call PRINT42
 	ld a, DHCP_INTERRUPTED	; just fall through to closeonerror
