@@ -381,7 +381,7 @@ F_tnfs_message
 	ld h, v_tnfs_seqno0 / 256
 	ld a, (hl)		; (TODO) Consume rest of packet when no match
 	cp b			; sequence number match? if not
-	jr nz, .pollstart	; see if the real message is still to come
+	jr nz, .consume		; consume and discard the non-match data
 
 	; check for error conditions
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
@@ -407,23 +407,55 @@ F_tnfs_message
 	scf			; indicate error
 	ret
 
+.consume			; consume and discard data we don't want
+	ld a, (v_tnfs_sock)	; if there is any data to be consumed
+	call POLLFD		; (a non data datagram or an error datagram
+	jp z, .pollstart	; may not have any more data)
+	
+	ld de, buf_tnfs_wkspc
+	ld bc, 256
+	ld a, (v_tnfs_sock)
+	call RECV		; unload any remaining data from the socket
+	jr .consume
+
 ;-------------------------------------------------------------------------
 ; F_tnfs_poll
 ; Polls the tnfs fd for 1 time unit. Returns with carry set if the time
 ; expired.
 F_tnfs_poll
-	ld bc, tnfs_polltime
+	ld a, (v_tnfs_backoff)
+	and a
+	jr z, .setstart
+	ld a, (v_tnfs_polltime)
+	ld c, a
+	rla			; multiply backoff time by 2
+	jr nc, .setsysvar
+	ld a, c			; can't back off any more, restore value
+	jr .setb
+.setsysvar
+	ld (v_tnfs_polltime), a	; save new poll time
+.setb
+	ld b, a
+	ei			; ensure interrupts are enabled
 .loop
 	push bc
 	ld a, (v_tnfs_sock)
 	call POLLFD
 	pop bc
-	ret nz			; done - fd is ready
-	dec bc
-	ld a, b
-	or c
-	jr nz, .loop
-	scf			; poll unit time over
+	jr nz, .done		; data has arrived
+	halt			; timing: wait for next 50Hz interrupt
+	djnz .loop
+	scf			; poll time has expired
+	ret
+.setstart
+	inc a
+	ld (v_tnfs_backoff), a	; set backoff flag
+	ld a, tnfs_polltime	; initial polltime
+	ld (v_tnfs_polltime), a
+	jr .setb
+.done
+	xor a
+	ld (v_tnfs_backoff), a	; reset backoff flag
 	ret
 
 ;-------------------------------------------------------------------------

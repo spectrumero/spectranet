@@ -22,7 +22,7 @@
 
 ; TNFS definitions.
 
-tnfs_polltime		equ 65535	; How long we should wait for a reply
+tnfs_polltime		equ 7	; How many 50ths/sec we should poll for
 tnfs_max_retries	equ 5
 
 ; Standard header offsets

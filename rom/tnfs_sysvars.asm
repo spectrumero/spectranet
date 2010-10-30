@@ -48,6 +48,9 @@ v_tnfs_sockinfo1	equ 0x1028
 v_tnfs_sockinfo2	equ 0x1030
 v_tnfs_sockinfo3	equ 0x1038
 
+v_tnfs_polltime		equ 0x1040	; current poll time in 50ths/sec
+v_tnfs_backoff		equ 0x1041	; have we backed off yet?
+
 HANDLESPACE		equ 0x1100	; Handle information storage space
 HMETASPACE		equ 0x1200	; Handle metadata storage space
 
