@@ -1,0 +1,5 @@
+#!/bin/sh
+echo `pwd`/config.out >> ../../build.out
+sjasmplus config.asm --lst=config.lst
+exit $?
+
