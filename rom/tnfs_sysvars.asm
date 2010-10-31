@@ -50,6 +50,9 @@ v_tnfs_sockinfo3	equ 0x1038
 
 v_tnfs_polltime		equ 0x1040	; current poll time in 50ths/sec
 v_tnfs_backoff		equ 0x1041	; have we backed off yet?
+v_tnfs_tx_de		equ 0x1042	; DE for transmit
+v_tnfs_tx_bc		equ 0x1044	; BC for transmit
+v_tnfs_tx_hl		equ 0x1046	; HL for transmit
 
 HANDLESPACE		equ 0x1100	; Handle information storage space
 HMETASPACE		equ 0x1200	; Handle metadata storage space
@@ -59,5 +62,5 @@ v_cwd1			equ 0x1900	; for mount points 0 to 4
 v_cwd2			equ 0x1A00
 v_cwd3			equ 0x1B00
 
-tnfs_recv_buffer	equ 0x3B00	; up to 768 bytes
-buf_tnfs_wkspc		equ 0x3B00	; General network workspace
+tnfs_recv_buffer	equ 0x3500	; up to 512 bytes + header
+buf_tnfs_wkspc		equ 0x3B00	; up to 512 bytes + header

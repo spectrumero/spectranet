@@ -20,6 +20,9 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+; Buffer for filesystems, 512 bytes
+fs_scratchpad	equ 0x3500
+
 NMISTACK	equ 0x38FE
 
 ; General purpose small workspace for ROM modules. Each ROM page gets 8 bytes

@@ -307,8 +307,9 @@ F_tnfs_message_w_hl		; entry point for when HL is already set
 F_tnfs_message
 	ld a, tnfs_max_retries	; number of retries
 	ld (v_tnfs_retriesleft), a	; into memory
+	ld (v_tnfs_tx_de), de	; save pointer
+	ld (v_tnfs_tx_bc), bc	; save size
 
-.retryloop
 	ld a, (v_curmountpt)	; current mount point
 	rlca			; multiply by 8 to find the sockinfo
 	rlca
@@ -316,14 +317,15 @@ F_tnfs_message
 	add v_tnfs_sockinfo0 % 256	; LSB
 	ld h, v_tnfs_sockinfo0 / 256	; MSB
 	ld l, a
-	push de			; stack the parameters
-	push bc
+	ld (v_tnfs_tx_hl), hl	; save sockinfo pointer
+.retryloop
+	ld hl, (v_tnfs_tx_hl)	; Fetch parameters
+	ld de, (v_tnfs_tx_de)
+	ld bc, (v_tnfs_tx_bc)
 	ld a, (v_tnfs_sock)	; socket descriptor
 	call SENDTO		; send the data
 	jr nc, .pollstart
-	pop bc			; error, leave now after restoring stack
-	pop de
-	ret
+	ret			; error, leave now
 	
 	; wait for the response by polling
 .pollstart
@@ -333,16 +335,13 @@ F_tnfs_message
 	dec a			; decrement it
 	ld (v_tnfs_retriesleft), a ; and store it
 	and a			; is it at zero?
-	pop bc			; fetch parameters to either restore stack
-	pop de			; or get ready for the next try
 	jr nz, .retryloop
 	ld a, TTIMEOUT		; error code - we tried...but gave up
 	scf			; timed out
 	ret
 
 .continue
-	pop bc			; restore stack
-	pop ix			; start of the block we sent
+	ld ix, (v_tnfs_tx_de)	; start of the block we sent
 	ld a, (ix+tnfs_cmd_offset)	; check the command
 	cp TNFS_OP_READ		; and see if it's a read operation
 	
@@ -350,6 +349,7 @@ F_tnfs_message
 	ld de, tnfs_recv_buffer	; Address to receive data
 	ld a, (v_tnfs_sock)	; The tnfs socket
 	jr z, .read		; ...if the command was READ, handle it
+
 	ld bc, 1024		; max message size
 	call RECVFROM
 	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
@@ -379,7 +379,7 @@ F_tnfs_message
 	add v_tnfs_seqno0 % 256
 	ld l, a
 	ld h, v_tnfs_seqno0 / 256
-	ld a, (hl)		; (TODO) Consume rest of packet when no match
+	ld a, (hl)		; Consume rest of packet when no match
 	cp b			; sequence number match? if not
 	jr nz, .consume		; consume and discard the non-match data
 
@@ -410,9 +410,9 @@ F_tnfs_message
 .consume			; consume and discard data we don't want
 	ld a, (v_tnfs_sock)	; if there is any data to be consumed
 	call POLLFD		; (a non data datagram or an error datagram
-	jp z, .pollstart	; may not have any more data)
+	jp z, .retryloop	; may not have any more data)
 	
-	ld de, buf_tnfs_wkspc
+	ld de, tnfs_recv_buffer
 	ld bc, 256
 	ld a, (v_tnfs_sock)
 	call RECV		; unload any remaining data from the socket
