@@ -22,9 +22,13 @@
 
 ;------------------------------------------------------------------------
 ; Handle user interaction for the snapshot manager.
+.include	"spectranet.inc"
+.include	"snapman.inc"
+.include	"sysvars.inc"
 
 ; Create the user interface and enter the input loop.
-F_startui
+.globl F_startui
+F_startui: 
 	call F_fetchpage
 	jp c, F_nopage
 	call CLEAR42
@@ -43,21 +47,22 @@ F_startui
 
 ;----------------------------------------------------------------------
 ; Main UI loop
-F_mainloop
+.globl F_mainloop
+F_mainloop: 
 	call F_inputloop	; call UI control input loop, wait for a key
 	ld b, a			; save the keypress in B
 	ld c, 0			; use C as a counter
 	ld hl, INPUTTABLE
-.getactionloop
+.getactionloop2: 
 	ld a, (hl)
 	and a			; check for "end of list"
 	jr z, F_mainloop	; invalid key, ignore it
 	cp b			; See if the key press is recognised.
-	jr z, .handlekey
+	jr z,  .handlekey2
 	inc c			; inc. counter
 	inc hl
-	jr .getactionloop
-.handlekey
+	jr  .getactionloop2
+.handlekey2: 
 	rlc c			; double the counter to form the offset
 	ld b, 0			; in BC
 	ld hl, INPUTADDRS	; Calculate the address of the address
@@ -66,10 +71,10 @@ F_mainloop
 	inc hl
 	ld d, (hl)		; and MSB
 	ex de, hl		; put it in hl
-	ld de, .return
+	ld de,  .return2
 	push de			; effectively, we want to CALL (HL)
 	jp (hl)
-.return
+.return2: 
 	ld a, (v_inputflags)
 	bit 0, a		; signal to leave?
 	jr z, F_mainloop	; ...no, so continue
@@ -80,7 +85,8 @@ F_mainloop
 ;------------------------------------------------------------------------
 ; F_exit
 ; Leave the main input loop, by setting the 'done' flag.
-F_exit
+.globl F_exit
+F_exit: 
 	ld a, (v_inputflags)
 	set 0, a
 	ld (v_inputflags), a
@@ -88,12 +94,13 @@ F_exit
 
 ;------------------------------------------------------------------------
 ; F_enterpressed
-F_enterpressed
+.globl F_enterpressed
+F_enterpressed: 
 	call F_getselected
 	ret z			; nothing to do - no entries
 	ld a, (v_viewflags)
 	and 1			; bit 1 set - directory mode
-	jr z, .loadsnap
+	jr z,  .loadsnap4
 	ld de, WORKSPACE	; copy directory name to where the
 	call F_strcpy		; FS module will be able to see it
 	ld hl, WORKSPACE
@@ -106,7 +113,7 @@ F_enterpressed
 	ld de, v_dirtable
 	ld a, (v_numdirs)
 	jp F_makeselection 	; make the selection and return.
-.loadsnap
+.loadsnap4: 
 	ld de, WORKSPACE
 	push hl
 	call F_strcpy		; copy the filename into common workspace
@@ -115,14 +122,16 @@ F_enterpressed
 	call F_strcpy
 	ld hl, WORKSPACE	; filename pointed to by HL
 	call F_loadsnap		; load the snapshot
-F_error				; ends up here if there is an error
+.globl F_error
+F_error: 			; ends up here if there is an error
 	ld a, 2
 	out (254), a
 	ret
 
 ;------------------------------------------------------------------------
 ; F_saveas
-F_saveas
+.globl F_saveas
+F_saveas: 
 	ld hl, STR_filename
 	ld de, v_strbuf
 	ld c, FNAMESZ
@@ -133,7 +142,8 @@ F_saveas
 	ld hl, v_strbuf
 	call F_strcpy		; filename.
 	ld hl, v_strbuf
-F_saveas2
+.globl F_saveas2
+F_saveas2: 
 	ld de, WORKSPACE	; and copy it to the workspace
 	call F_strcpy		; so the FS module can see it too
 	ld hl, WORKSPACE
@@ -145,20 +155,21 @@ F_saveas2
 
 ;------------------------------------------------------------------------
 ; F_save
-F_save
+.globl F_save
+F_save: 
 	ld a, (v_viewflags)	; directory view or file view?
 	and 1
-	jr nz, .needfilename
+	jr nz,  .needfilename8
 	call F_getselected
 	jr z, F_saveas
 	ld (v_hlsave), hl	; save the pointer but don't disturb stack
 	ld de, v_curfilename
 	call F_strcmp		; selected = current?
-	jr nz, .confirm
-.save
+	jr nz,  .confirm8
+.save8: 
 	ld hl, (v_hlsave)
 	jp F_saveas2
-.confirm
+.confirm8: 
 	ld hl, STR_cfoverwrite
 	ld de, v_strbuf
 	ld c, 2
@@ -170,8 +181,8 @@ F_save
 	ld hl, (v_hlsave)
 	ld de, v_curfilename
 	call F_strcpy		; set this as the current file
-	jr .save
-.needfilename
+	jr  .save8
+.needfilename8: 
 	ld a, (v_curfilename)	; Already have a filename?
 	and a			; if zero, no
 	jr z, F_saveas
@@ -181,7 +192,8 @@ F_save
 ; HL = pointer to prompt string
 ; DE = pointer to buffer in which to return the data
 ;  C = size of input buffer
-F_userinput
+.globl F_userinput
+F_userinput: 
         push bc
         push hl
         ld bc, 0x1600           ; line 24, col 0
@@ -203,7 +215,8 @@ F_userinput
 ;----------------------------------------------------------------------
 ; F_rename
 ; Renames a snapshot file.
-F_rename
+.globl F_rename
+F_rename: 
 	ld a, (v_viewflags)	; check we are in snapshot view
 	rra			; if LSB = 1 we are in directory view
 	ret c			; so leave.
@@ -241,7 +254,8 @@ F_rename
 ;----------------------------------------------------------------------
 ; F_erase
 ; Erases a snapshot file.
-F_erase
+.globl F_erase
+F_erase: 
 	ld a, (v_viewflags)	; check we are in snapshot view
 	rra			; if LSB = 1 we are in directory view
 	ret c			; so leave.
@@ -277,26 +291,29 @@ F_erase
 ;----------------------------------------------------------------------
 ; F_switchdirview
 ; Switch between directory and file views.
-F_switchdirview
+.globl F_switchdirview
+F_switchdirview: 
 	ld a, (v_viewflags)
 	xor 1			; flip "dir view" bit
 	ld (v_viewflags), a	; and save
 	rra			; push lsb into the carry flag
 	jr c, showdir		; switch from file to dir view
-F_snapview
+.globl F_snapview
+F_snapview: 
 	ld de, v_snatable
 	ld a, (v_numsnas)
-makesel
+makesel:
 	ld hl, BOXSTARTADDR	; start address of the box
 	ld bc, BOXDIMENSIONS	; box dimensions
 	jp F_makeselection 	; make the selection and return.
-showdir
+showdir:
 	ld de, v_dirtable
 	ld a, (v_numdirs)
 	jr makesel
 
 ; We end up here if the allocated page wasn't found.
-F_nopage
+.globl F_nopage
+F_nopage: 
 	ld hl, STR_nomempage
 	call PRINT42
 	ret

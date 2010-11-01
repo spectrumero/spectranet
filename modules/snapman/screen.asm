@@ -19,6 +19,10 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"ctrlchars.inc"
+.include	"spectranet.inc"
+.include	"snapman.inc"
+.include	"sysvars.inc"
 
 ;------------------------------------------------------------------------
 ; F_makeselection
@@ -26,7 +30,8 @@
 ; B = number of lines the box has
 ; C = maximum column number (32 cols)
 ; DE = address of first item to show
-F_makeselection
+.globl F_makeselection
+F_makeselection: 
 	ld (v_selstart), hl	; initialize variables
 	ld (v_maxcolumn), bc	
 	ld (v_stringtable), de
@@ -49,7 +54,8 @@ F_makeselection
 	add a, b		; and add to the number of 8 px columns
 	inc a
 	ld (v_42colsperln),a	; then save.
-F_reinitselection
+.globl F_reinitselection
+F_reinitselection: 
 	call F_clearattrs
 	call F_cleararea	; clear the box
 	ld hl, (v_selstart)
@@ -77,7 +83,8 @@ F_reinitselection
 ; Constrained print routine. Print from the start column to the maximum
 ; column or until NULL, whichever is earliest.
 ; HL = pointer to string
-F_cprint
+.globl F_cprint
+F_cprint: 
 	xor a
 	ld (v_rowcount), a	; prevent 42 col routine scroll
 	ld a, (v_startcolumn)	; get the 32 column position and
@@ -88,25 +95,26 @@ F_cprint
 	add a, b
 	ld (v_column), a	; set Spectranet 42 col print routine col
 	ld b, 0
-.loop
+.loop3: 
 	ld a, (hl)
 	and a
-	jr z, .cr
+	jr z,  .cr3
 	call PUTCHAR42
 	inc hl
 	inc b			; increment 'columns printed so far'
 	ld a, (v_42colsperln)
 	cp b			; reached the limit?
-	jr nz, .loop
-.cr
-	ld a, '\n'
+	jr nz,  .loop3
+.cr3: 
+	ld a, NEWLINE
 	call PUTCHAR42
 	ret
 
 ;------------------------------------------------------------------------
 ; F_bytesperline
 ; Calculates bytes per line. HL = start address of the line.
-F_bytesperline
+.globl F_bytesperline
+F_bytesperline: 
 	push bc
 	ld a, l
 	and 0x1F
@@ -125,12 +133,13 @@ F_bytesperline
 ; HL = pointer to first line to scroll
 ; B = number of lines to scroll
 ; C = 0 = scroll normal way, nonzero scroll reverse
-F_scrollforward
+.globl F_scrollforward
+F_scrollforward: 
 	push bc			; save counter
-	call .advance		; advance one line (need to scroll
+	call  .advance5		; advance one line (need to scroll
 	push hl			; box size minus 1)
-	jr z, .moveloopthird
-.moveloop
+	jr z,  .moveloopthird5
+.moveloop5: 
 	push bc			; save line counter
 	ld a, l
 	sub 32			; address of next line up
@@ -142,19 +151,19 @@ F_scrollforward
 	pop hl
 	inc h
 	pop bc
-	djnz .moveloop
-.nextline
+	djnz  .moveloop5
+.nextline5: 
 	pop hl
 	pop af			; get counter
 	dec a
 	ret z			; all lines scrolled
 
 	push af			; save counter
-	call .advance
+	call  .advance5
 	push hl
-	jr nz, .moveloop
+	jr nz,  .moveloop5
 
-.moveloopthird
+.moveloopthird5: 
 	push bc
 	ld a, l
 	or 0xE0			; set top 3 bits of LSB
@@ -168,37 +177,38 @@ F_scrollforward
 	pop hl
 	inc h
 	pop bc
-	djnz .moveloopthird
-	jr .nextline
+	djnz  .moveloopthird5
+	jr  .nextline5
 
-.advance
+.advance5: 
         ld a, l
         and 0xE0
         cp 0xE0                 ; about to go into the next third?
-        jr z, .nnextthird
+        jr z,  .nnextthird5
         ld a, 32
         add a, l                ; next line
         ld l, a
         ld b, 8                 ; number of iterations per line
 	ret
-.nnextthird
+.nnextthird5: 
         ld a, l
         and 0x1F                ; clear 3 most significant bits
         ld l, a                 ; set LSB of pointer
         ld a, h
-        add 8
+        add a, 8
         ld h, a                 ; set MSB of pointer
         ld b, 8                 ; move 8 lines
 	xor a
 	ret
 
-F_scrollreverse	
+.globl F_scrollreverse
+F_scrollreverse: 
 	dec b
 	push bc
-	call .retreat		; up one line, scroll box size - 1
+	call  .retreat6		; up one line, scroll box size - 1
 	push hl
-	jr z, .nextthird
-.moveloop
+	jr z,  .nextthird6
+.moveloop6: 
 	push bc
 	ld a, 32
 	add a, l		; calculate next line
@@ -210,25 +220,25 @@ F_scrollreverse
 	pop hl
 	inc h
 	pop bc
-	djnz .moveloop	
-.nextline
+	djnz  .moveloop6	
+.nextline6: 
 	pop hl
 	pop af
 	dec a			; decrement line counter
 	ret z			; and leave if we've finished all lines
 
 	push af			; store counter
-	call .retreat
+	call  .retreat6
 	push hl	
-	jr nz, .moveloop
+	jr nz,  .moveloop6
 
-.moveloopthird
+.moveloopthird6: 
 	push bc
 	ld a, l
 	and 0x1F		; clear 3 bits of LSB
 	ld e, a
 	ld a, h
-	add 0x08		; add 0x08 to the MSB of copy to pointer
+	add a, 0x08		; add 0x08 to the MSB of copy to pointer
 	ld d, a			; DE now equals address of next row
 	push hl
 	ld bc, (v_movebytes)
@@ -236,19 +246,19 @@ F_scrollreverse
 	pop hl
 	inc h
 	pop bc
-	djnz .moveloopthird
-	jr .nextline
+	djnz  .moveloopthird6
+	jr  .nextline6
 
-.retreat
+.retreat6: 
         ld a, l                 ; about to cross a third boundary?
         and 0xE0
-        jr z, .nextthird
+        jr z,  .nextthird6
         ld a, l
         sub 32                  ; move up a line
         ld l, a
         ld b, 8
 	ret
-.nextthird
+.nextthird6: 
         ld a, l
         or 0xE0                 ; set top 3 bits of the pointer
         ld l, a                 ; set LSB of pointer
@@ -263,13 +273,14 @@ F_scrollreverse
 ; F_cleararea: Clears a defined area.
 ; HL = Start address
 ; B = Number of lines to clear
-F_cleararea
+.globl F_cleararea
+F_cleararea: 
 	ld hl, (v_selstart)	; start of area
 	ld bc, (v_maxcolumn)	; counter into B
 	push bc			; save counter
 	push hl
 	ld b, 8			; clear 8 scanlines
-.clearloop
+.clearloop7: 
 	push bc			; save line counter
 	ld d, h			 
 	ld e, l
@@ -283,51 +294,53 @@ F_cleararea
 	pop hl
 	inc h
 	pop bc			; retrieve counter
-	djnz .clearloop
-.nextline
+	djnz  .clearloop7
+.nextline7: 
 	pop hl
 	pop af			; get counter
 	dec a
-	jr z, .savelastline	; all lines cleared
+	jr z,  .savelastline7	; all lines cleared
 
 	push af			; save counter
 	ld a, l
 	and 0xE0
 	cp 0xE0			; about to go into the next third?
-	jr z, .nextthird
+	jr z,  .nextthird7
 	ld a, 32
 	add a, l		; next line
 	ld l, a
 	push hl
 	ld b, 8			; number of iterations per line
-	jr .clearloop
+	jr  .clearloop7
 
-.nextthird
+.nextthird7: 
 	ld a, l
 	and 0x1F		; clear 3 most significant bits
 	ld l, a			; set LSB of pointer
 	ld a, h
-	add 8
+	add a, 8
 	ld h, a			; set MSB of pointer
 	push hl			; save HL
 	ld b, 8			; move 8 lines
-	jr .clearloop
+	jr  .clearloop7
 
-.savelastline
+.savelastline7: 
 	ld (v_selend), hl	; save the bottom row address
 	ret
 
 ;------------------------------------------------------------------------
 ; F_clearline
 ; Clears a line. HL = start address.
-F_clearline
+.globl F_clearline
+F_clearline: 
 	ld bc, (v_movebytes)	; put current box width in
 
 ; ...clears a line BC bytes long.
-F_clearline2
+.globl F_clearline2
+F_clearline2: 
 	ld (v_clearbytes), bc	; our "how much to clear" var.
 	ld b, 8
-.clearloop
+.clearloop9: 
 	push bc
 	ld d, h
 	ld e, l
@@ -341,7 +354,7 @@ F_clearline2
 	pop hl
 	inc h
 	pop bc
-	djnz .clearloop
+	djnz  .clearloop9
 	ret
 
 ;------------------------------------------------------------------------
@@ -349,18 +362,20 @@ F_clearline2
 ; Moves selection bar down.
 ; A = 0 - move bar down
 ; Otherwise, it moves up.
-F_movebar
+.globl F_movebar
+F_movebar: 
 	call F_clearbar
 	ld de, 32		; Next row
 	and a			; Is A = 0?
-	jr z, .down
+	jr z,  .down10
 	sbc hl, de
-	jr .move
-.down
+	jr  .move10
+.down10: 
 	add hl, de
-.move
+.move10: 
 	ld (v_baraddr), hl	; Save the new row pointer
-F_putbar_impl
+.globl F_putbar_impl
+F_putbar_impl: 
 	ld d, h
 	ld e, l
 	inc e
@@ -370,9 +385,11 @@ F_putbar_impl
 	ld (hl), SELECTED_ATTR	; Colour to draw
 	ldir
 	ret
-F_clearbar
+.globl F_clearbar
+F_clearbar: 
 	ld hl, (v_baraddr)	; current start address of bar
-F_clearbar2
+.globl F_clearbar2
+F_clearbar2: 
 	push af
 	ld a, (v_barlen)	; how long the bar is
 	ld b, 0
@@ -390,7 +407,8 @@ F_clearbar2
 ;------------------------------------------------------------------------
 ; F_putbar
 ; Draws the bar at the current start address.
-F_putbar
+.globl F_putbar
+F_putbar: 
 	ld hl, (v_baraddr)
 	ld a, (v_barlen)
 	jp F_putbar_impl
@@ -398,7 +416,8 @@ F_putbar
 ;------------------------------------------------------------------------
 ; F_fbuf2attr
 ; Convert pixel buffer addresses to attribute addresses
-F_fbuf2attr
+.globl F_fbuf2attr
+F_fbuf2attr: 
 	ld a, l			; get LSB of frame buffer address
 	and 0xE0		; mask out bottom bits
 	rlca			; and move to lowest 3 bits
@@ -427,11 +446,12 @@ F_fbuf2attr
 ;------------------------------------------------------------------------
 ; F_clearattrs
 ; Clears the entire background area
-F_clearattrs
+.globl F_clearattrs
+F_clearattrs: 
 	ld hl, (v_selstart)
 	call F_fbuf2attr
 	ld a, (v_sellines)
-.clearloop
+.clearloop16: 
 	push hl
 	call F_clearbar2
 	ld bc, 32
@@ -439,46 +459,47 @@ F_clearattrs
 	add hl, bc
 	dec a
 	and a
-	jr nz, .clearloop
+	jr nz,  .clearloop16
 	ret
 
 ;------------------------------------------------------------------------
 ; F_inputloop
 ; Deal with keyboard input.
-F_inputloop
-.inputloop
+.globl F_inputloop
+F_inputloop: 
+.inputloop17: 
 	call GETKEY		; get the actual key
         ld hl, 0x1000           ; wait some more time so that 
-.loop                           ; multi key contacts on Spectrum + / 128
+.loop17:                           ; multi key contacts on Spectrum + / 128
         dec hl                  ; membranes all make. Use a delay loop
         ld a, h                 ; rather than halt so this routine works
         or l                    ; with interrupts disabled.
-        jr nz, .loop
+        jr nz,  .loop17
 
 	call GETKEY		; to close all the contacts...
 	push af			; save it
 	call KEYUP		; and wait for keyup
 	pop af
 	cp 0x0A			; KEY_DOWN
-	jr z, .bardown
+	jr z,  .bardown17
 	cp 0x0B			; KEY_UP
-	jr z, .barup
+	jr z,  .barup17
 	ret
-.bardown
+.bardown17: 
 	ld a, (v_sellines)	; hit the bottom?
 	dec a			; convert to 'index'
 	ld b, a
 	ld a, (v_barpos)
 	cp b
-	jr z, .scrolldown
+	jr z,  .scrolldown17
 	ld a, (v_numitems)	; check we're not at the end
 	and a
-	jr z, .inputloop	; no items
+	jr z,  .inputloop17	; no items
 	dec a
 	ld b, a
 	ld a, (v_selecteditem)	
 	cp b
-	jr z, .inputloop	; selection is at the end
+	jr z,  .inputloop17	; selection is at the end
 	inc a			; increment selection
 	ld (v_selecteditem), a
 	ld a, (v_barpos)	
@@ -486,11 +507,11 @@ F_inputloop
 	ld (v_barpos), a	; update position
 	xor a
 	call F_movebar
-	jr .inputloop
-.barup
+	jr  .inputloop17
+.barup17: 
 	ld a, (v_barpos)
 	and a
-	jr z, .scrollup
+	jr z,  .scrollup17
 	dec a
 	ld (v_barpos), a
 	ld a, (v_selecteditem)	; decrement the selected item index
@@ -498,18 +519,18 @@ F_inputloop
 	ld (v_selecteditem), a
 	inc a			; ensure A is nonzero
 	call F_movebar
-	jr .inputloop
+	jr  .inputloop17
 
 
-.scrolldown
+.scrolldown17: 
 	ld a, (v_numitems)	
 	and a
-	jr z, .inputloop	; no items
+	jr z,  .inputloop17	; no items
 	dec a
 	ld b, a			; compare the last item index
 	ld a, (v_selecteditem)	; with the current
 	cp b
-	jr z, .inputloop	; already at the last item
+	jr z,  .inputloop17	; already at the last item
 	ld a, (v_selecteditem)	; Increment the selected item index.
 	inc a
 	ld (v_selecteditem), a
@@ -536,12 +557,12 @@ F_inputloop
 	ld (v_row), hl		; set print routine to bottom line row
 	pop hl			; now get the string back
 	call F_cprint
-	jp .inputloop
+	jp  .inputloop17
 
-.scrollup
+.scrollup17: 
 	ld a, (v_selecteditem)	; check we've not hit zero
 	and a
-	jp z, .inputloop
+	jp z,  .inputloop17
 	dec a
 	ld (v_selecteditem), a	; update the selected item
 	ld hl, (v_stringtable)	; string table start address
@@ -567,14 +588,15 @@ F_inputloop
 	ld (v_row), hl		; set the print routine's row address
 	pop hl			; get the string pointer
 	call F_cprint
-	jp .inputloop
+	jp  .inputloop17
 
 ;--------------------------------------------------------------------------
 ; F_setbarloc
 ; Sets the bar location to a determined point in the list (which must
 ; already be initialized, along with the selection box)
 ; A = index of string to select
-F_setbarloc
+.globl F_setbarloc
+F_setbarloc: 
 	ld b, a			; save 'goto' location
 
 	; first find out whether the bar is going to remain within
@@ -588,14 +610,14 @@ F_setbarloc
 	ld a, (v_selecteditem)	; get the selected item index
 	add a, c		; and calculate the index of the bottom item
 	cp b			; Is the request for an item past what
-	jr c, .newselection	; we can see on the screen?
-	jr z, .newselection
+	jr c,  .newselection18	; we can see on the screen?
+	jr z,  .newselection18
 	ld c, (hl)		; get the number of lines in the box
 	sub c			; and calculate index of top item
 	cp b			; is out of bounds low.
-	jr c, .movebar
+	jr c,  .movebar18
 
-.newselection
+.newselection18: 
 	push bc			; save desired index
 	call F_cleararea	; clear the box ready to repaint it
 	ld hl, (v_stringtable)	; calculate new position in the string
@@ -612,7 +634,7 @@ F_setbarloc
 	xor a			; move bar to the top
 	jp F_putbarat		; (only need this if putbarat is moved)
 
-.movebar
+.movebar18: 
 	; The item is actually visible already - select it.
 	ld c, a			; then calculate where the bar actually
 	ld a, b			; should be relative to the top
@@ -623,7 +645,8 @@ F_setbarloc
 
 ;-------------------------------------------------------------------------
 ; F_putbarat: Draws the bar at the specified relative location in A
-F_putbarat
+.globl F_putbarat
+F_putbarat: 
 	call F_clearbar		; clear the existing bar
 	
 	ld (v_barpos), a	; save the bar position
@@ -645,7 +668,8 @@ F_putbarat
 ; Puts the text in the selection box.
 ; HL = address of first character cell
 ; DE = pointer to the first item in the string table to print
-F_puttext
+.globl F_puttext
+F_puttext: 
 	ld a, l			; Initialize the position of the 42 col
 	and 0xE0		; print routine to the top of the box.
 	ld l, a
@@ -654,7 +678,7 @@ F_puttext
 	ex de, hl		; get first item to print
 	ld a, (v_sellines)	; number of lines we can fit
 	ld b, a
-.printloop
+.printloop20: 
 	ld e, (hl)		; low order of string lookup
 	inc hl
 	ld d, (hl)		; high order of string lookup
@@ -669,13 +693,14 @@ F_puttext
 	pop bc
 	pop de
 	ex de, hl
-	djnz .printloop
+	djnz  .printloop20
 	ret
 
 ;--------------------------------------------------------------------------
 ; F_getselected
 ; Returns a pointer to the selected item in HL
-F_getselected
+.globl F_getselected
+F_getselected: 
 	ld a, (v_numitems)	; check there's something there
 	and a
 	ret z			; if nothing return with Z set
@@ -694,11 +719,12 @@ F_getselected
 ;-------------------------------------------------------------------------
 ; F_addstring
 ; Adds a string to the selection
-F_addstring
+.globl F_addstring
+F_addstring: 
 	push hl			; save pointer
 	ld a, (v_numitems)	; Make room in the string table
 	cp 0x7F			; but make sure there is room.
-	jr z, .noroom
+	jr z,  .noroom22
 	rlca			; - find the last entry
 
 	ld hl, (v_stringtable)
@@ -728,15 +754,15 @@ F_addstring
 	ld (hl), a
 
 	pop hl			; get string pointer
-.strcpy
+.strcpy22: 
 	ld a, (hl)
 	ld (de), a
 	and a
-	jr z, .redraw
+	jr z,  .redraw22
 	inc hl
 	inc de
-	jr .strcpy
-.redraw
+	jr  .strcpy22
+.redraw22: 
 	ld a, (v_numitems)
 	inc a
 	ld (v_numitems), a	; update last item index
@@ -746,7 +772,7 @@ F_addstring
 	call F_setbarloc
 	ret
 
-.noroom
+.noroom22: 
 	pop hl	
 	scf
 	ret
@@ -755,10 +781,11 @@ F_addstring
 ; F_printat: Move PRINT42 location.
 ; B = row
 ; C = column
-F_printat
+.globl F_printat
+F_printat: 
 	ld a, b	
 	and 0x18		; find the third of the screen
-	add 0x40		; add MSB of the screen address
+	add a, 0x40		; add MSB of the screen address
 	ld h, a
 	ld a, b
 	and 0x07		; find where we are within that 1/3rd
@@ -776,19 +803,22 @@ F_printat
 ;------------------------------------------------------------------------
 ; F_loading
 ; Show "Loading..."
-F_loading
+.globl F_loading
+F_loading: 
 	ld bc, 0x1600
 	call F_printat
 	ld hl, STR_loading
 	call PRINT42
 	ret
-F_clearloading
+.globl F_clearloading
+F_clearloading: 
 	ld bc, 0x1600
 	call F_printat
 	ld bc, 32
 	call F_clearline2
 	ret
-F_saving
+.globl F_saving
+F_saving: 
 	ld bc, 0x1600
 	call F_printat
 	ld hl, STR_saving
@@ -798,7 +828,8 @@ F_saving
 ;-----------------------------------------------------------------------
 ; F_putcurfile
 ; Prints the currently file name.
-F_printcurfile
+.globl F_printcurfile
+F_printcurfile: 
 	ld bc, 0x1500
 	call F_printat
 	ld bc, 32
@@ -808,10 +839,10 @@ F_printcurfile
 	ld hl, v_curfilename
 	ld a, (hl)
 	and a
-	jr z, .none
+	jr z,  .none27
 	call PRINT42
 	ret
-.none
+.none27: 
 	ld hl, STR_nofile
 	call PRINT42
 	ret
@@ -819,7 +850,8 @@ F_printcurfile
 ;------------------------------------------------------------------------
 ; F_printcwd
 ; Prints the current working directory
-F_printcwd
+.globl F_printcwd
+F_printcwd: 
 	ld bc, 0x1404
 	call F_printat
 	ld bc,  MAXDIRSTR
@@ -832,38 +864,41 @@ F_printcwd
 	ld hl, WORKSPACE
 	call F_strlen
 	cp MAXDIRSTR		; too long to fit in the bit of screen?
-	jr nc, .truncstr
+	jr nc,  .truncstr28
 	call PRINT42		; no, so just print it
 	ret
-.truncstr
+.truncstr28: 
 	sub MAXDIRSTR
 	ld c, a			; should be starting form.
 	ld b, 0
 	add hl, bc
 	add a, 3
 	cp MAXDIRSTR		; still too long with the ... added?
-	call nc, .truncmore
+	call nc,  .truncmore28
 	push hl
 	ld hl, STR_dotdotdot
 	call PRINT42
 	pop hl
 	call PRINT42
 	ret
-.truncmore
+.truncmore28: 
 	sub MAXDIRSTR
 	ld c, a
 	add hl, bc
 	ret
-STR_dotdotdot	defb "...",0
+.data
+STR_dotdotdot: .asciz "..."
+.text
 
 ;------------------------------------------------------------------------
 ; F_strlen
 ; String length returned in A for the string at HL
-F_strlen
+.globl F_strlen
+F_strlen: 
 	push hl
 	xor a
 	ld bc, 0x100
-.loop
+.loop29: 
 	cpir
 	ld a, c
 	cpl
@@ -872,9 +907,10 @@ F_strlen
 	
 ;------------------------------------------------------------------------
 ; F_makestaticUI
-F_makestaticui
+.globl F_makestaticui
+F_makestaticui: 
 	ld hl, UI_STRINGS
-.loop
+.loop30: 
 	ld b, (hl)		; get screen position to print at
 	inc hl
 	ld c, (hl)
@@ -889,16 +925,17 @@ F_makestaticui
 	pop hl
 	call PRINT42		; print the string
 	inc hl			; point HL at the start of the next item
-	jr .loop
+	jr  .loop30
 
 ;-----------------------------------------------------------------------
 ; F_findstring
 ; Finds the index of a string in the box, returns it in A.
 ; Carry flag set if the string was found.
-F_findstr
+.globl F_findstr
+F_findstr: 
 	ld hl, (v_stringtable)
 	ld c, 0			; counter
-.findloop
+.findloop31: 
 	ld e, (hl)
 	inc hl
 	ld d, (hl)
@@ -914,11 +951,11 @@ F_findstr
 	push bc
 	call F_strcmp		; is this the string?
 	pop bc
-	jr z, .found
+	jr z,  .found31
 	inc c
 	ld hl, (v_hlsave)
-	jr .findloop
-.found
+	jr  .findloop31
+.found31: 
 	ld a, c
 	scf
 	ret

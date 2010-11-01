@@ -21,12 +21,15 @@
 ;THE SOFTWARE.
 
 ; Read the current directory and filter files found.
-	include "../../rom/fs_statdefs.asm"
+.include	"stat.inc"
+.include	"spectranet.inc"
+.include	"snapman.inc"
 
 ;-------------------------------------------------------------------------
 ; F_loaddir
 ; Load the contents of a directory into memory.
-F_loaddir
+.globl F_loaddir
+F_loaddir: 
 	call F_loading
 	xor a			; initialize vars
 	ld (v_numdirs), a
@@ -44,16 +47,16 @@ F_loaddir
 	ld (WORKSPACE), hl	; put it somewhere the FS module can see
 	ld hl, WORKSPACE	; and set this as the param to OPENDIR
 	call OPENDIR
-	jr c, .err
+	jr c,  .err1
 	ld (v_dhnd), a		; save the directory handle
-.readloop
+.readloop1: 
 	ld de, v_dirwkspc
 	call READDIR		; Get the next directory entry
-	jr c, .readdone		; Probably EOF
+	jr c,  .readdone1		; Probably EOF
 	call F_filterdir	; Decide whether to store or discard
 	ld a, (v_dhnd)		; Restore dirhandle
-	jr .readloop
-.readdone
+	jr  .readloop1
+.readdone1: 
 	ld a, (v_dhnd)
 	call CLOSEDIR
 	ld hl, (v_snaptr)	; terminate lists
@@ -66,7 +69,7 @@ F_loaddir
 	ld (hl), 0	
 	call F_clearloading
 	ret
-.err
+.err1: 
 	call F_clearloading
 	ret			; TODO - report errors
 
@@ -74,30 +77,31 @@ F_loaddir
 ; F_filterdir
 ; Looks at the directory entry in v_dirwkspc, stats it, and adds it to the
 ; appropriate list.
-F_filterdir
+.globl F_filterdir
+F_filterdir: 
 	ld hl, v_dirwkspc
 	ld de, v_statinfo
 	call STAT
 	ret c			; TODO - error handling
 	ld a, (v_statinfo+STAT_MODE+1)	; Get high order of MODE bits
 	and S_IFDIR / 256	; compare with high order mask for isdir
-	jr nz, .directory
-.file
+	jr nz,  .directory2
+.file2: 
 	ld hl, v_statinfo+STAT_SIZE
 	ld de, c_48ksnap
 	call F_cp32		; Look for a file the size of a 48k snap
-	jr z, .checkfilename
+	jr z,  .checkfilename2
 
 	; TODO - check whether machine is 128K
 	ld hl, v_statinfo+STAT_SIZE
 	ld de, c_128ksnap1
 	call F_cp32
-	jr z, .checkfilename
+	jr z,  .checkfilename2
 	ld hl, v_statinfo+STAT_SIZE
 	ld de, c_128ksnap2
 	call F_cp32
 	ret nz
-.checkfilename
+.checkfilename2: 
 	ld hl, (v_snaptr)
 	ld de, (v_snanextentry)
 	call F_addentry
@@ -108,7 +112,7 @@ F_filterdir
 	ld (v_numsnas), a
 	ret
 
-.directory
+.directory2: 
 	ld hl, (v_dirptr)	; current end of directory table
 	ld de, (v_dirnextentry)
 	call F_addentry
@@ -118,14 +122,15 @@ F_filterdir
 	inc a
 	ld (v_numdirs), a
 	ret
-c_48ksnap	defw	0xC01B,0x0000
-c_128ksnap1	defw	0x001F,0x0002
-c_128ksnap2	defw	0x401F,0x0002
+c_48ksnap:	defw	0xC01B,0x0000
+c_128ksnap1:	defw	0x001F,0x0002
+c_128ksnap2:	defw	0x401F,0x0002
 
 ;-----------------------------------------------------------------------
 ; F_addentry
 ; Adds an entry to a string table
-F_addentry
+.globl F_addentry
+F_addentry: 
 	push hl
 	push de
 	ld hl, v_dirwkspc	; point at filename to copy
@@ -144,14 +149,15 @@ F_addentry
 ; 32 bit compare between two memory locations
 ; HL = pointer to location 1
 ; DE = pointer to location 2
-F_cp32
+.globl F_cp32
+F_cp32: 
 	ld b, 4			; number of iterations
-.loop
+.loop4: 
 	ld a, (de)
 	cp (hl)
 	ret nz			; no compare
 	inc de
 	inc hl
-	djnz .loop
+	djnz  .loop4
 	ret
 	

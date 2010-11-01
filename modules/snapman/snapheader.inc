@@ -20,20 +20,28 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Snapshot Manager.
-	org 0x2000		; ROM module start point.
-	include "vectors.asm"	; Vector/signature table.
-	include "memory.asm"	; Memory allocation and initialization
-	include "utils.asm"	; utility functions
-	include	"screen.asm"	; Screen functions
-	include "directory.asm"	; Read and stat files in the directory
-	include	"inputloop.asm"	; Input loop and handling functions
-	include "strings_en.asm" ; String table
-	include "loadsna.asm"	; Loads snapshots
-	include "savesna.asm"	; Saves snapshots
+; Functions to load  .SNA0 (snapshot) files
 
-	include "../../rom/spectranet.asm"	; Spectranet defines
-	include "../../rom/sysvars.sym"		; System vars
-	include "../../rom/fs_defs.asm"		; Filesystem defs
-	include "snapmandefs.asm"		; Defines
+; SNA file definitions
+HEADER          equ 0x3000
+SNA_I           equ HEADER
+SNA_HLALT       equ HEADER+1
+SNA_DEALT       equ HEADER+3
+SNA_BCALT       equ HEADER+5
+SNA_AFALT       equ HEADER+7
+SNA_HL          equ HEADER+9
+SNA_DE          equ HEADER+11
+SNA_BC          equ HEADER+13
+SNA_IY          equ HEADER+15
+SNA_IX          equ HEADER+17
+SNA_EIDI        equ HEADER+19
+SNA_R           equ HEADER+20
+SNA_AF          equ HEADER+21
+SNA_SP          equ HEADER+23
+SNA_IM          equ HEADER+25
+SNA_BORDER      equ HEADER+26
+HEADERSZ        equ 27
+SNA_PC          equ HEADER+27           ; 128K  .SNA0 file - program counter
+SNA_7FFD        equ HEADER+29           ; value of port 0x7FFD
+SNA_TRDOS	equ HEADER+30
 

@@ -21,6 +21,11 @@
 ;THE SOFTWARE.
 
 ; Save snapshots in SNA format.
+.include	"fcntl.inc"
+.include	"snapheader.inc"
+.include	"snapman.inc"
+.include	"spectranet.inc"
+.include	"sysvars.inc"
 
 ;--------------------------------------------------------------------------
 ; F_savesna48
@@ -30,29 +35,30 @@ SAVERAM	equ	0x3600
 MAINSPSAVE equ	0x35FE
 TEMPSP	equ	0x81FE
 
-F_snaptest
+.globl F_snaptest
+F_snaptest: 
 	ld hl, STR_saving
 	call PRINT42
 
 	ld hl, STR_filename
 	ld de, 0x3000
 	xor a
-.loop
+.loop1: 
 	ldi
 	cp (hl)
-	jr nz, .loop
-.done
+	jr nz,  .loop1
+.done1: 
 	ld (de), a
 	ld hl, 0x3000
 	call F_savesna
-	jr c, .borked
+	jr c,  .borked1
 
 	ld a, (v_border)		; Restore the border
 	out (254), a
 	call F_restorescreen		; Restore the screen
 	ld a, (SNA_EIDI)		; Re.enable interrupts?
 	and a				; No
-	jr nz, .retei			; If yes, then EI on ret
+	jr nz,  .retei1			; If yes, then EI on ret
 	ld sp, NMISTACK-14		; Set SP to where the stack was
 	pop af
 	ex af, af'
@@ -62,12 +68,12 @@ F_snaptest
 	pop hl
 	ld sp, (NMISTACK)
 	jp UNPAGE			; RET
-.borked
+.borked1: 
 	ld a, 2
 	out (254), a
 	ret
 
-.retei
+.retei1: 
 	ld sp, NMISTACK-14
 	pop af
 	ex af, af'
@@ -82,7 +88,8 @@ F_snaptest
 ; HL = pointer to filename string
 ; Entry to the NMI saves the folowing at NMISTACK-4:
 ; hl, de, bc, af, af'
-F_savesna
+.globl F_savesna
+F_savesna: 
 	ld d, O_CREAT | O_TRUNC		; Flags
 	ld e, O_WRONLY			; File mode
 	call OPEN			; Open the snapshot file
@@ -116,7 +123,7 @@ F_savesna
 	exx
 	ld a, i				; also sets P/V flag if IFF2 is
 	ld (SNA_I), a			; set (interrupts enabled)
-	call pe, .setei
+	call pe,  .setei2
 	
 	ld a, (v_border)		; Copy the border colour into
 	ld (SNA_BORDER), a		; the snapshot header.
@@ -125,31 +132,31 @@ F_savesna
 	ld hl, 0x3600
 	ld de, 0x3601
 	ld bc, 258			; table is actually 0x100 bytes
-	ld (hl), F_im2 % 256		; LSB of IM 2 routine.
+	ld (hl), F_im2_lsb		; LSB of IM 2 routine.
 	ldir
 	ld a, 0x36			; MSB of the table
 	ld i, a				; set the vector table
 
 	ld hl, 0
 	ld (v_intcount), hl		; reset IM 1 counter to detect IM 1
-	ld hl, .continue		; "Return" address
+	ld hl,  .continue2		; "Return" address
 	push hl				; on the stack so RETN
 	retn				; takes us just to the next addr.
 
-.continue
+.continue2: 
 	xor a
 	ld (SNA_IM), a			; clear IM x
 	ei
 	halt				; wait for an interrupt
 	ld a, (SNA_IM)			; Did the IM 2 routine update
 	and a				; the interrupt mode?
-	jr nz, .donewithinterrupts	; Done.
+	jr nz,  .donewithinterrupts2	; Done.
 
 	inc a				 
 	ld (SNA_IM), a			; set interrupt mode 1
 
 	; Now it's all over bar the shouting.
-.donewithinterrupts
+.donewithinterrupts2: 
 	di
 
 	; Restore the I register
@@ -159,26 +166,26 @@ F_savesna
 	; Detect whether we're saving a 48K or a 128K snapshot
 	ld a, (v_machinetype)		
 	and 1				; Bit 1 set = 128K
-	jr nz, .save128snap
+	jr nz,  .save128snap2
 
-	call .savemain			; save header and memory
-.writedone
+	call  .savemain2			; save header and memory
+.writedone2: 
 	ld a, (v_snapfd)		; close the file
 	call VCLOSE
 	ret
 
-.writeerr
+.writeerr2: 
 	push af
 	ld a, (v_snapfd)
 	call VCLOSE
 	pop af
 	ret
-.setei
+.setei2: 
 	ld a, 4
 	ld (SNA_EIDI), a
 	ret
 
-.save128snap
+.save128snap2: 
 	; copy port 0x7FFD value to the header
 	ld a, (v_port7ffd)
 	ld (SNA_7FFD), a
@@ -193,27 +200,27 @@ F_savesna
 	ld (SNA_PC), de			; Set the PC
 	xor a
 	ld (SNA_TRDOS), a		; TRDOS always 0
-	call .savemain			; the header + 48K
-	jr c, .writeerr
+	call  .savemain2			; the header + 48K
+	jr c,  .writeerr2
 
 	ld hl, SNA_PC			; Save the 128K second header
 	ld bc, 4			; (4 bytes long)
 	ld a, (v_snapfd)
 	call WRITE
-	jr c, .writeerr
+	jr c,  .writeerr2
 
 	; Save the 128K pages at 0xC000.
 	ld a, (SNA_7FFD)		; Skip the page we've aready
 	and 7				; saved (as it was in 0xC000)
 	ld e, a
 	xor a				; start from page 0
-.save128loop
+.save128loop2: 
 	cp e				; skip the page that was already
-	jr z, .next			; saved, also skip pages 2 and 5
+	jr z,  .next2			; saved, also skip pages 2 and 5
 	cp 0x02
-	jr z, .next
+	jr z,  .next2
 	cp 0x05
-	jr z, .next
+	jr z,  .next2
 	ld bc, 0x7FFD			; set the page we want to save
 	out (c), a
 
@@ -223,25 +230,25 @@ F_savesna
 	ld bc, 0x4000
 	ld a, (v_snapfd)
 	call WRITE
-	jr c, .writeerr128
+	jr c,  .writeerr1282
 	pop de
 	pop af
-.next
+.next2: 
 	inc a
 	cp 0x08				; all pages have been saved
-	jr nz, .save128loop
+	jr nz,  .save128loop2
 	ld a, (SNA_7FFD)		; restore 128K paging but with
 	and 0xF7			; but ensure the normal screen
 	ld bc, 0x7FFD			; is in use for the NMI menu
 	out (c), a
-	jr .writedone
+	jr  .writedone2
 
-.writeerr128
+.writeerr1282: 
 	pop de
 	pop de				; don't overwrite AF
-	jr .writeerr
+	jr  .writeerr2
 
-.savemain
+.savemain2: 
 	; TODO: Something ought to be done with the R register, really.
 	; Save the interrupts-and-stuff block.
 	ld hl, HEADER
@@ -262,25 +269,27 @@ F_savesna
 ;----------------------------------------------------------------------
 ; F_savesavedscreen
 ; Save the screen that was copied to 0xDA:000 to 0xDB:AFF
-F_savesavedscreen
+.globl F_savesavedscreen
+F_savesavedscreen: 
 	ld a, 0xDA			; first page
 	call PUSHPAGEA			; set it and save current page
 	ld hl, 0x1000
 	ld bc, 0x1000
 	ld a, (v_snapfd)
 	call WRITE
-	jr c, .restoreerr
+	jr c,  .restoreerr3
 	ld a, 0xDB
 	call SETPAGEA
 	ld hl, 0x1000
 	ld bc, 0xB00
 	ld a, (v_snapfd)
 	call WRITE
-.restoreerr
+.restoreerr3: 
 	call POPPAGEA			; restore original page
 	ret
 
-F_restorescreen
+.globl F_restorescreen
+F_restorescreen: 
 	ld a, 0xDA
 	call PUSHPAGEA
 	ld hl, 0x1000
