@@ -22,7 +22,7 @@
 
 ; Snapshot manager extensions vector table
 .include	"snapheader.inc"
-.text
+.section vectors
 .vectorstart:
         defb 0xAA               ; This is a code ROM
         defb 0xFB               ; ROM ID = 0xFC
@@ -37,6 +37,7 @@
 .fillstart:
 	.fill 0x20-(.fillstart-.vectorstart), 1, 0xFF
 
+.section isr
 ;-----------------------------------------------------------------------
 ; F_im2 - Detect interrupt mode 2 ISR
 .globl F_im2
@@ -49,6 +50,7 @@ F_im2:
         pop af
         reti
 
+.text
 .globl F_modulecall
 F_modulecall: 
 	ld a, l

@@ -27,6 +27,7 @@
 .include	"spectranet.inc"
 .include	"sysvars.inc"
 
+.text 
 ;--------------------------------------------------------------------------
 ; F_savesna48
 ; Save a 48K snapshot. Null terminated filename pointed to by HL.

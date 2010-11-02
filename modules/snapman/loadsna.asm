@@ -26,6 +26,7 @@
 .include	"fcntl.inc"
 .include	"spectranet.inc"
 
+.text
 ;------------------------------------------------------------------------
 ; F_loadsnap
 ; Determine if the filename passed in HL is a snapshot file we can handle

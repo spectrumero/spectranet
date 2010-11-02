@@ -2,8 +2,8 @@ AS = z80-unknown-coff-as
 LD = z80-unknown-coff-ld
 RM = rm
 ASFLAGS = -I../../include
-LDFLAGS = -Ttext 0x2000
-ASOBJS = vectors.o directory.o inputloop.o loadsna.o memory.o savesna.o screen.o strings_en.o utils.o
+LDFLAGS = -T ../modules.ld --Map snapman.map
+ASOBJS = directory.o inputloop.o loadsna.o memory.o savesna.o screen.o strings_en.o utils.o vectors.o
 OUT = snapman.out
 
 all:	$(ASOBJS)

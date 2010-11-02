@@ -25,6 +25,7 @@
 .include	"spectranet.inc"
 .include	"snapman.inc"
 
+.text 
 ;-------------------------------------------------------------------------
 ; F_loaddir
 ; Load the contents of a directory into memory.

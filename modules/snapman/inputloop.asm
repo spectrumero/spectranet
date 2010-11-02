@@ -26,6 +26,7 @@
 .include	"snapman.inc"
 .include	"sysvars.inc"
 
+.text
 ; Create the user interface and enter the input loop.
 .globl F_startui
 F_startui: 

@@ -22,6 +22,7 @@
 .include	"spectranet.inc"
 .include	"sysvars.inc"
 
+.text 
 ;-------------------------------------------------------------------------
 ; F_init: Initialize the snapshot manager.
 .globl F_init

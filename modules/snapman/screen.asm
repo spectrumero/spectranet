@@ -24,6 +24,7 @@
 .include	"snapman.inc"
 .include	"sysvars.inc"
 
+.text 
 ;------------------------------------------------------------------------
 ; F_makeselection
 ; HL = start address of box
