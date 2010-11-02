@@ -21,6 +21,7 @@
 ;THE SOFTWARE.
 
 ; BASIC extensions vector table
+.section vectors
 	defb 0xAA		; This is a code ROM
 	defb 0xFC		; ROM ID = 0xFC
 	defw 0xFFFF		; RESET vector
@@ -31,5 +32,6 @@
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
 	jp F_getmessage
-STR_ident	defb	"String table",0
+.data
+STR_ident: asciz	"String table"
 

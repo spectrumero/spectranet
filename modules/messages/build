@@ -1,5 +1,0 @@
-#!/bin/sh
-echo `pwd`/msgrom.out >> ../../build.out
-sjasmplus msgrom.asm --lst=msgrom.lst
-exit $?
-
