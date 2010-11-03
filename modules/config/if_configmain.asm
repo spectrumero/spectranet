@@ -19,18 +19,22 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.text
 
 ; The configuration utility main routine.
-F_ifconfig
+.globl F_ifconfig
+F_ifconfig: 
 	call STATEMENT_END	; no args
 
 	;--- runtime ---
 	call F_if_configmain
 	jp EXIT_SUCCESS
 
-F_if_configmain
+.globl F_if_configmain
+F_if_configmain: 
 	call F_copyconfig
-.menuloop
+.menuloop2: 
 	call F_showcurrent
 	ld hl, STR_choose
 	call PRINT42
@@ -39,7 +43,7 @@ F_if_configmain
 
 	ld hl, MENU_config
 	call F_getmenuopt
-	jr z, .menuloop
+	jr z,  .menuloop2
 
 	ret
 

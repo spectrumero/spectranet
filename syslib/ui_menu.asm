@@ -19,17 +19,22 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"ctrlchars.inc"
+.include	"sysvars.inc"
 
 ; Simple menu system routines.
+.text
 
 ;--------------------------------------------------------------------------
 ; F_genmenu
 ; Generates a menu screen.
 ; Parameters: HL = pointer to menu structure, that should be a null terminated
 ; list of pointers to strings that define the choices.
-F_genmenu
+.globl F_genmenu
+F_genmenu: 
 	ld b, 'A'	; first option is 'A'
-.loop
+.loop1: 
 	ld e, (hl)	; get pointer into DE
 	inc hl
 	ld d, (hl)
@@ -50,39 +55,40 @@ F_genmenu
 	ex de, hl		; get string pointer into hl
 	call PRINT42		; print the menu option
 	ex de, hl		; move the menu pointer back
-	ld a, '\n'		; print a CR
+	ld a, NEWLINE		; print a CR
 	call PUTCHAR42
 	inc b			; update option character
-	jr .loop
+	jr  .loop1
 
 ;-------------------------------------------------------------------------
 ; F_getmenuopt:
 ; Wait for the user to press a key, then call the appropriate routine.
-F_getmenuopt
+.globl F_getmenuopt
+F_getmenuopt: 
 	ld (v_hlsave), hl	; save HL without disturbing stack
-.getkey
+.getkey2: 
 	call GETKEY		; wait for key to be pressed
 	ld hl, (v_hlsave)
 	sub 'a'			; ASCII a = 0
-	jr c, .getkey		; key pressed was < 'a'
-.loop
+	jr c,  .getkey2		; key pressed was < 'a'
+.loop2: 
 	push af
 	ld a, (hl)
 	inc hl
 	or (hl)			; Null terminator?
-	jr z, .outofrange
+	jr z,  .outofrange2
 	inc hl			; hl points at call entry
 	pop af
 	and a			; A=0?
-	jr z, .callopt
+	jr z,  .callopt2
 	dec a
 	inc hl			; advance past string pointer
 	inc hl
-	jr .loop
-.outofrange
+	jr  .loop2
+.outofrange2: 
 	pop af			; fix stack
-	jr .getkey		; try again
-.callopt
+	jr  .getkey2		; try again
+.callopt2: 
 	ld e, (hl)		; get call address into DE
 	inc hl
 	ld d, (hl)

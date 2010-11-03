@@ -25,6 +25,8 @@
 ; Disassembly", but prepended with 'ZX' so that when browsing the code 
 ; it's immediately obvious where they come from.
 
+CALLBAS		equ 0x0010	; Spectranet CALLBAS restart
+
 ZX_PRINT_A_1	equ 0x0010	; Prints a character to the current stream
 ZX_GET_CHAR	equ 0x0018	; The 'collect a character' restart
 ZX_NEXT_CHAR	equ 0x0020	; The 'collect next character' restart
@@ -40,6 +42,19 @@ ZX_STMT_R_1	equ 0x1B7D	; Fetch new line number unless a further stmt
 ZX_STMT_NEXT	equ 0x1BF4	; Get next statement (or finish with error C)
 ZX_NEXT_2NUM	equ 0x1C79	; Evaluate next 2 numbers 
 ZX_FIND_INT2	equ 0x1E99	; Find 2 byte integer
+ZX_STK_FETCH    equ 0x2BF1
+ZX_EXPT_EXP     equ 0x1C8C
+ZX_EXPT1_NUM    equ 0x1C82
+ZX_NEXT2_NUM    equ 0x1C79
+ZX_FIND_INT1    equ 0x1E94
+ZX_RECLAIM_1    equ 0x19E5
+ZX_MAKE_ROOM    equ 0x1655
+
+; Token definitions
+TOKEN_CODE      equ 0xAF
+TOKEN_SCREEN    equ 0xAA
+TOKEN_LINE      equ 0xCA
+
 
 ; Keyboard routines.
 ZX_KEY_SCAN	equ 0x028E	; Finds keyboard 'scan code'

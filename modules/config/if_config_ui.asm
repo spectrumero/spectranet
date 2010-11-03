@@ -19,7 +19,12 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"if_defs.inc"
+.include	"spectranet.inc"
+.include	"flashconf.inc"
+.include	"ctrlchars.inc"
+.include	"sysvars.inc"
+.text
 ;-------------------------------------------------------------------------
 ; Configuration user interface.
 ; This essentially forms a program that gets run from ROM page 1, paged
@@ -30,7 +35,8 @@
 ; Show the current configuration. This is a rather tedious routine that
 ; does a lot of calls to the print a string routine and various conversion
 ; routines.
-F_showcurrent
+.globl F_showcurrent
+F_showcurrent: 
 	call CLEAR42
 
 	ld hl, STR_currset	; print 'Current settings'
@@ -41,32 +47,32 @@ F_showcurrent
 	call PRINT42
 	ld hl, 0x1000 + INITFLAGS
 	bit INIT_STATICIP, (hl)
-	jr z, .yes
+	jr z,  .yes1
 	ld hl, STR_no
 	call PRINT42
-	jr .continue
-.yes
+	jr  .continue1
+.yes1: 
 	ld hl, STR_yes
 	call PRINT42
-.continue
+.continue1: 
 
 	; Print IPv4 settings.
 	ld hl, TABLE_config
-.showconfig
+.showconfig1: 
 	ld e, (hl)
 	inc hl
 	ld d, (hl)
 	inc hl
 	ld a, d			; End of table encountered?
 	or e
-	jr z, .printhwaddr	; yes; null terminator.
+	jr z,  .printhwaddr1	; yes; null terminator.
 	push hl			; save current pointer
 	ex de, hl
 	call PRINT42		; print the string that was pointed to.
 	pop hl
 	ld a, (0x1000 + INITFLAGS) ; should we print an address?
 	bit INIT_STATICIP, a	; non zero = static IP configuration
-	jr z, .bydhcp
+	jr z,  .bydhcp1
 	ld e, (hl)		; get low order of configuration address
 	inc hl
 	ld d, (hl)		; high order of configuration address
@@ -76,20 +82,20 @@ F_showcurrent
 	ld de, buf_workspace
 	call LONG2IPSTRING	; convert it to a string
 	ld hl, buf_workspace	; and print it.
-.printresult
+.printresult1: 
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	pop hl
-	jr .showconfig		; continue with next entry
-.bydhcp
+	jr  .showconfig1		; continue with next entry
+.bydhcp1: 
 	inc hl			; point hl at next entry
 	inc hl
 	push hl			; save it
 	ld hl, STR_bydhcp
-	jr .printresult
+	jr  .printresult1
 
-.printhwaddr
+.printhwaddr1: 
 	; print the current hardware (MAC) address
 	ld hl, STR_currhwaddr
 	call PRINT42
@@ -98,7 +104,7 @@ F_showcurrent
 	call MAC2STRING
 	ld hl, buf_workspace
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 
 	; print the current hostname
@@ -107,12 +113,12 @@ F_showcurrent
 	ld hl, 0x1000 + HOSTNAME
 	ld a, (hl)		; has it ever been set?
 	cp 0xFF
-	jr nz, .printhost
+	jr nz,  .printhost1
 	ld hl, STR_vunset
-.printhost
+.printhost1: 
 	ld hl, 0x1000 + HOSTNAME 
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	ret
 
@@ -120,20 +126,21 @@ F_showcurrent
 ; F_setdhcp:
 ; Ask the user whethe to use DHCP or not.
 ; Called by F_getmenuopt.
-F_setdhcp
+.globl F_setdhcp
+F_setdhcp: 
 	ld hl, STR_dhcpquestion
 	call PRINT42
-.keyloop
+.keyloop2: 
 	call GETKEY
 	cp 'y'
-	jr nz, .noty
+	jr nz,  .noty2
 	ld hl, 0x1000 + INITFLAGS
 	res INIT_STATICIP, (hl)		; set 'use static IP' to 0
 	xor a				; return 0 (non terminal menu option)
 	ret
-.noty
+.noty2: 
 	cp 'n'
-	jr nz, .keyloop			; try again
+	jr nz,  .keyloop2			; try again
 	ld hl, 0x1000 + INITFLAGS
 	set INIT_STATICIP, (hl)		; set 'use static ip' bit
 	xor a				; return 0 (non terminal menu option)
@@ -142,16 +149,17 @@ F_setdhcp
 ;-----------------------------------------------------------------------
 ; F_setipaddr
 ; Asks the user for an IP address.
-F_setipaddr
+.globl F_setipaddr
+F_setipaddr: 
 	ld hl, STR_abort
 	call PRINT42
-.askloop
+.askloop3: 
 	ld hl, STR_askip
 	call PRINT42
 	call F_getipstr
-	jr c, .askloop		; try again
+	jr c,  .askloop3		; try again
 	ld de, 0x1000 + IP_ADDRESS
-copyquad
+copyquad:
 	ld hl, buf_hex		; copy the address into config area
 	ld a, (hl)
 	and a			; nothing there?
@@ -163,54 +171,59 @@ copyquad
 	xor a			; set zero flag
 	ret
 
-F_setnetmask
+.globl F_setnetmask
+F_setnetmask: 
 	ld hl, STR_abort
 	call PRINT42
-.askloop
+.askloop4: 
 	ld hl, STR_asknetmask
 	call PRINT42
 	call F_getipstr
-	jr c, .askloop
+	jr c,  .askloop4
 	ld de, 0x1000 + IP_SUBNET
 	jr copyquad
 
-F_setgateway
+.globl F_setgateway
+F_setgateway: 
 	ld hl, STR_abort
 	call PRINT42
-.askloop
+.askloop5: 
 	ld hl, STR_askgw
 	call PRINT42
 	call F_getipstr
-	jr c, .askloop
+	jr c,  .askloop5
 	ld de, 0x1000 + IP_GATEWAY
 	jr copyquad
 
-F_setpridns
+.globl F_setpridns
+F_setpridns: 
 	ld hl, STR_abort
 	call PRINT42
-.askloop
+.askloop6: 
 	ld hl, STR_askpridns
 	call PRINT42
 	call F_getipstr
-	jr c, .askloop
+	jr c,  .askloop6
 	ld de, 0x1000 + PRI_DNS
 	jr copyquad
 
-F_setsecdns
+.globl F_setsecdns
+F_setsecdns: 
 	ld hl, STR_abort
 	call PRINT42
-.askloop
+.askloop7: 
 	ld hl, STR_asksecdns
 	call PRINT42
 	call F_getipstr
-	jr c, .askloop
+	jr c,  .askloop7
 	ld de, 0x1000 + SEC_DNS
 	jr copyquad
 
 ;-------------------------------------------------------------------------
 ; F_getipstr
 ; Get an IP-like string (i.e. inet addr, netmask, gateway)
-F_getipstr
+.globl F_getipstr
+F_getipstr: 
 	ld c, 16		; maximum length of an IP address string
 	ld de, buf_addr
 	call INPUTSTRING
@@ -229,10 +242,11 @@ F_getipstr
 ;-----------------------------------------------------------------------
 ; F_sethwaddr
 ; Get a hardware address from the user.
-F_sethwaddr
+.globl F_sethwaddr
+F_sethwaddr: 
 	ld hl, STR_abort
 	call PRINT42
-.askloop
+.askloop9: 
 	ld hl, STR_askhw
 	call PRINT42
 	ld c, 18		; hw address is 18 bytes long
@@ -244,22 +258,23 @@ F_sethwaddr
 	ret z			; nothing entered, so do nothing
 	ld de, buf_hex
 	call STRING2MAC
-	jr c, .badmac		; carry set? Couldn't interpret address
+	jr c,  .badmac9		; carry set? Couldn't interpret address
 	ld hl, buf_hex
 	ld de, 0x1000 + HW_ADDRESS
 	ld bc, 6
 	ldir
 	xor a			; ensure Z is set
 	ret
-.badmac
+.badmac9: 
 	ld hl, STR_invalidip
 	call PRINT42
-	jr .askloop
+	jr  .askloop9
 
 ;-----------------------------------------------------------------------
 ; F_sethostname
 ; Sets the computer's hostname
-F_sethostname
+.globl F_sethostname
+F_sethostname: 
 	ld hl, STR_abort
 	call PRINT42
 	ld hl, STR_askhostname
@@ -280,11 +295,13 @@ F_sethostname
 ;-----------------------------------------------------------------------
 ; F_cancelconfig:
 ; Bale out of the menu.
-F_cancelconfig
+.globl F_cancelconfig
+F_cancelconfig: 
 	or 1			; reset zero flag
 	ret
-
-MENU_config
+.data
+.globl MENU_config
+MENU_config:
 		defw	STR_dhcp, F_setdhcp
 		defw	STR_ipaddr, F_setipaddr
 		defw	STR_netmask, F_setnetmask
@@ -296,7 +313,8 @@ MENU_config
 		defw	STR_save, F_saveconfig
 		defw	STR_cancel, F_cancelconfig
 		defw	0,0
-TABLE_config	
+.globl TABLE_config
+TABLE_config:	
 		defw	STR_currip, 0x1000+IP_ADDRESS
 		defw	STR_currmask, 0x1000+IP_SUBNET
 		defw	STR_currgw, 0x1000+IP_GATEWAY

@@ -23,6 +23,8 @@
 ; Flash erase and write routines.
 ; Note that these routines can't actually be run from flash! They should
 ; be assembled to RAM instead.
+.include	"sysdefs.inc"
+.text
 
 ;---------------------------------------------------------------------------
 ; F_FlashEraseSector
@@ -32,7 +34,8 @@
 ; Parameters: A = page to erase (based on 4k Spectranet pages, but
 ; erases a 16k sector)
 ; Carry flag is set if an error occurs.
-F_FlashEraseSector
+.globl F_FlashEraseSector
+F_FlashEraseSector: 
 
 	; Page in the appropriate sector first 4k into page area B.
 	; Page to start the erase from is in A.
@@ -52,19 +55,19 @@ F_FlashEraseSector
 	ld (0x2000), a	; erase sector address
 
 	ld hl, 0x2000
-.wait
+.wait1: 
 	bit 7, (hl)	; test DQ7 - should be 1 when complete
-	jr nz, .complete
+	jr nz,  .complete1
 	bit 5, (hl)	; test DQ5 - should be 1 to continue
-	jr z, .wait
+	jr z,  .wait1
 	bit 7, (hl)	; test DQ7 again
-	jr z, .borked
+	jr z,  .borked1
 
-.complete
+.complete1: 
 	or 0		; clear carry flag
 	ret
 
-.borked	
+.borked1: 
 	scf		; carry flag = error
 	ret
 
@@ -76,7 +79,8 @@ F_FlashEraseSector
 ;             DE = destination start address
 ;             BC = number of bytes to copy
 ; On error, the carry flag is set.
-F_FlashWriteBlock
+.globl F_FlashWriteBlock
+F_FlashWriteBlock: 
 	ld a, (hl)	; get byte to write
 	call F_FlashWriteByte
 	ret c		; on error, return immediately
@@ -96,11 +100,12 @@ F_FlashWriteBlock
 ; On return, carry flag set = error
 ; Page the appropriate flash area into one of the paging areas to write to
 ; it, and the address should be in that address space.
-F_FlashWriteByte
+.globl F_FlashWriteByte
+F_FlashWriteByte: 
 	push bc
 	ld c, a		; save A
 
-	ld a, #AA	; unlock 1
+	ld a, 0xAA	; unlock 1
 	ld (0x555), a	; unlock address 1
 	ld a, 0x55	; unlock 2
 	ld (0x2AA), a	; unlock address 2
@@ -109,27 +114,27 @@ F_FlashWriteByte
 	ld a, c		; retrieve A
 	ld (de), a	; program it
 
-.wait
+.wait3: 
 	ld a, (de)	; read programmed address
 	ld b, a		; save status
 	xor c		
 	bit 7, a	; If bit 7 = 0 then bit 7 = data	
-	jr z, .byteComplete
+	jr z,  .byteComplete3
 
 	bit 5, b	; test DQ5
-	jr z, .wait
+	jr z,  .wait3
 
 	ld a, (de)	; read programmed address
 	xor c		
 	bit 7, a	; Does DQ7 = programmed data? 0 if true
-	jr nz, .borked
+	jr nz,  .borked3
 
-.byteComplete
+.byteComplete3: 
 	pop bc
 	or 0		; clear carry flag
 	ret
 
-.borked
+.borked3: 
 	pop bc
 	scf		; error = set carry flag
 	ret
@@ -138,11 +143,12 @@ F_FlashWriteByte
 ; F_writesector
 ; Writes 4 pages from the last 4 pages of RAM to flash, starting at the
 ; page specified in A
-F_writesector
+.globl F_writesector
+F_writesector: 
 	ex af, af'	; swap with alternate set
 	ld a, 0xDC	; RAM page 0xDC
 	ld b, 4		; number of pages
-.loop
+.loop4: 
 	push bc
 	call F_setpageA ; Page into area A
 	inc a		; next page
@@ -155,18 +161,16 @@ F_writesector
 	ld bc, 0x1000
 	push af
 	call F_FlashWriteBlock
-	jr c, .failed	; restore stack and exit
+	jr c,  .failed4	; restore stack and exit
 	pop af
 	pop bc
-	djnz .loop	; next page
+	djnz  .loop4	; next page
 	ret
-.failed			; restore stack, set carry flag
+.failed4: 		; restore stack, set carry flag
 	pop af
 	pop bc
 	scf
 	ret
 
-	include "pager.asm"	; we need our own copy of the pager code
-	include "sysdefs.asm"
 UNPAGE	equ 0x007C
 

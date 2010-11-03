@@ -19,84 +19,25 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
+.text
 
-
-; Paging functions.
-; These functions abstract the pager, which is a CPLD function. They also
-; take care of ensuring modifying one paging area doesn't affect the other.
-;
-; Set paging area A. Page to load in A.
-F_setpageA
-	push bc
-	ld bc, PAGEA
-	ld (v_pga), a	; save the page we've just paged.
-	out (c), a	; page it in
-	pop bc
-	ret
-
-; Set paging area B. As for area A.
-F_setpageB
-	push bc
-	ld bc, PAGEB
-	ld (v_pgb), a
-	out (c), a	; page it in
-	pop bc
-	ret
-
-; Set paging area A and push the page currently selected onto the stack.
-; A = new page to select
-F_pushpageA
-	ld (v_pagerws), hl
-	ld hl, (v_pga)		; get current page (and the adjacent byte)
-	ex (sp), hl		; stack it
-	push hl			; put the return address back
-	call F_setpageA		; set the new page
-	ld hl, (v_pagerws)	; restore hl
-	ret
-
-; Restore page area A from the stack
-F_poppageA
-	ld (v_pagerws), hl
-	pop hl			; get the return address
-	ex (sp), hl		; get the page to restore
-	ld a, l			; the page itself being in L
-	call F_setpageA		; restore the page
-	ld hl, (v_pagerws)
-	ret
-	
-; Set paging area B and push the page currently selected onto the stack.
-; A = new page to select
-F_pushpageB
-	ld (v_pagerws), hl
-	ld hl, (v_pgb)		; get current page (and the adjacent byte)
-	ex (sp), hl		; stack it
-	push hl			; put the return address back
-	call F_setpageB		; set the new page
-	ld hl, (v_pagerws)	; restore hl
-	ret
-
-; Restore page area B from the stack
-F_poppageB
-	ld (v_pagerws), hl
-	pop hl			; get the return address
-	ex (sp), hl		; get the page to restore
-	ld a, l			; the page itself being in L
-	call F_setpageB		; restore the page
-	ld hl, (v_pagerws)
-	ret
-	
 ;--------------------------------------------------------------------------
 ; J_hldispatch and J_ixdispatch:
 ; Dispatches a page-in from the call table, and unpages when it's done
-J_hldispatch
+.globl J_hldispatch
+J_hldispatch:
 	ld (v_pagerws), hl	; save HL without disturbing the stack
-	ld hl, UNPAGE		; unpage address
+	ld hl, PAGEOUT		; unpage address
 	push hl			; this is now the return address
 	ld hl, (v_pagerws)	; restore hl
 	jp (hl)			; jump to routine.
-J_ixdispatch
+.globl J_ixdispatch
+J_ixdispatch:
 	ld (v_pagerws), hl	; save HL without disturbing the stack
-	ld hl, UNPAGE
+	ld hl, PAGEOUT
 	push hl			; this is now the return address
 	ld hl, (v_pagerws)	; restore hl
 	jp (ix)			; jump to routine.
@@ -106,20 +47,21 @@ J_ixdispatch
 ; Finds the ROM module for the call to be handed off. The ROM ID is in
 ; H. The call number is in L. This routine just needs H (L is handled by
 ; the module)
-J_moduledispatch
+.globl J_moduledispatch
+J_moduledispatch:
 	ex af, af'		; save af
 	push hl			; save hl
 	push bc			; save bc
 	ld b, h			; get ROM module ID
 	ld hl, vectors		; start of vector table
-.findcall
+.findcall6: 
 	ld a, (hl)		; get ROM ID from table
 	and a			; check for terminator
-	jr z, .notfound
+	jr z,  .notfound6
 	inc l			; increment table pointer
 	cp b			; ROM ID to look for
-	jr nz, .findcall
-.found
+	jr nz,  .findcall6
+.found6: 
 	ld a, l			; get vector address LSB
 	sub vectors % 256 - 1	; subtract the base to get the ROM slot
 	pop bc
@@ -133,7 +75,7 @@ J_moduledispatch
 	ld hl, (v_hlsave)
 	ex af, af'
 	ret
-.notfound
+.notfound6: 
 	pop bc
 	pop hl
 	scf			; return with "function not found"

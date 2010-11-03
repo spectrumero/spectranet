@@ -23,17 +23,18 @@
 ; Filesystem Configuration Utility module
 
 ; This is a ROM module.
-sig     defb 0xAA               ; This is a ROM module
-romid   defb 0xFE               ; ID = 0xFE
-reset   defw F_init             ; reset vector
-mount   defw 0xFFFF             ; not a filesystem
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-        defw 0xFFFF
-idstr   defw STR_ident          ; ROM identity string
+.section vectors
+sig:     defb 0xAA               ; This is a ROM module
+romid:   defb 0xFE               ; ID = 0xFE
+reset:   defw F_init             ; reset vector
+mount:   defw 0xFFFF             ; not a filesystem
+         defw 0xFFFF
+         defw 0xFFFF
+         defw 0xFFFF
+         defw 0xFFFF
+idstr:   defw STR_ident          ; ROM identity string
 
-modcall
+modcall:
 	ex af, af'		; preserve any args in A
 	xor a
 	cp l			; 0x00? Configuration menu.
