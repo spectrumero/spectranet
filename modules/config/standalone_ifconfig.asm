@@ -21,23 +21,22 @@
 ;THE SOFTWARE.
 
 ; Standalone configuration utility.
-
-	org 0x8000
+.include	"spectranet.inc"
+.text
 	di
 	call PAGEIN
-	call F_if_configmain
+        call F_copyconfig
+.menuloop2:
+        call F_showcurrent
+        ld hl, STR_choose
+        call PRINT42
+        ld hl, MENU_config
+        call F_genmenu
+
+        ld hl, MENU_config
+        call F_getmenuopt
+        jr z,  .menuloop2
+
 	ei
 	jp PAGEOUT
-
-	include "gen_copycfg.asm"
-	include "if_configmain.asm"
-	include "if_config_ui.asm"
-	include "if_menu_ui.asm"
-	include "if_strings_en.asm"
-	include "sa_if_saveconfig.asm"
-	include "sa_flashwrite.asm"
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.asm"
-	include "../../rom/flashconf.asm"
-	include "if_defs.asm"
 

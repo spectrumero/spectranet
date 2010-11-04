@@ -29,12 +29,6 @@
 .text
 .globl F_copyconfig
 F_copyconfig: 
-	call F_getsysvar	; see if we've already copied it
-	inc hl
-	ld a, 1
-	cp (hl)			; if Z we've already made a copy
-	ret z
-	ld (hl), 1		; Indicate a copy has been made.
 	
         ld hl, .copier1  ; first, copy to RAM workspace
         ld de, 0x3000   ; fixed workspace page at 0x3000

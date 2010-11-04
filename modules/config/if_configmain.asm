@@ -33,7 +33,7 @@ F_ifconfig:
 
 .globl F_if_configmain
 F_if_configmain: 
-	call F_copyconfig
+	call F_cond_copyconfig
 .menuloop2: 
 	call F_showcurrent
 	ld hl, STR_choose

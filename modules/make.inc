@@ -12,5 +12,5 @@ module:	$(ASOBJS)
 	$(AS) $(ASFLAGS) $< -o $@
 
 clean:
-	$(RM) -f $(ASOBJS) $(OUT) $(MAPFILE)
+	$(RM) -f *.o *.module *.bin *.map
 

@@ -143,7 +143,7 @@ F_cfgset_common:
 ; Section to use in DE
 .globl F_prepwrite
 F_prepwrite: 
-	call F_copyconfig
+	call F_cond_copyconfig
 	ld d, (ix+1)
 	ld e, (ix+0)
 	call F_findsection
@@ -197,7 +197,7 @@ F_cfgnew:
 	call STATEMENT_END	; no args
 
 	; Run time
-	call F_copyconfig	; not necessary to actually copy it but
+	call F_cond_copyconfig	; not necessary to actually copy it but
 				; this sets up sysvars ready so we can commit
 	call F_createnewconfig	; overwrite whatever's already there with
 	jp EXIT_SUCCESS		; a new config.
@@ -213,7 +213,7 @@ F_cfgnewsec:
 	call STATEMENT_END
 
 	; run time
-	call F_copyconfig	; ensure config is in RAM
+	call F_cond_copyconfig	; ensure config is in RAM
 	rst CALLBAS		; get the argument
 	defw ZX_FIND_INT2	; which is now in BC.
 	ld d, b

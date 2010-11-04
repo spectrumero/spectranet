@@ -25,7 +25,20 @@
 .text
 
 ; Find, read and insert configuration data.
-;	include "debug.asm"
+;	include "debug.asm"A
+;-----------------------------------------------------------------------
+; F_cond_copyconfig: Conditionally copy the configuration (if it's not
+; been copied already)
+.globl F_cond_copyconfig
+F_cond_copyconfig:
+        call F_getsysvar        ; see if we've already copied it
+        inc hl
+        ld a, 1
+        cp (hl)                 ; if Z we've already made a copy
+        ret z
+        ld (hl), 1              ; Indicate a copy has been made.
+	jp F_copyconfig
+
 ;-----------------------------------------------------------------------
 ; F_findsection: Finds where in memory a configuration section lives
 ; and returns the address in HL.

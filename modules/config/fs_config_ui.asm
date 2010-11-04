@@ -39,7 +39,7 @@ F_start:
 ; Main configuration menu.
 .globl F_fsconfigmain
 F_fsconfigmain: 
-	call F_copyconfig
+	call F_cond_copyconfig
 	ld a, 0x1D		; first configuration table
 	ld (v_workspace), a
 .fsconfigloop2: 

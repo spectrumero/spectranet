@@ -42,7 +42,7 @@ modcall:
 
 	inc a
 	cp l			; 0x01
-	jp z, F_copyconfig
+	jp z, F_cond_copyconfig
 
 	inc a
 	cp l			; 0x02

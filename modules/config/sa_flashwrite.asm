@@ -20,18 +20,16 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-F_updateflash
+.globl F_updateflash
+F_updateflash: 
         di
         ld a, 0x1C              ; last sector of flash
         call F_FlashEraseSector
-        jr c, .cleanup
+        jr c,  .cleanup1
         ld a, 0x1C              ; start page to write
         call F_writesector
-.cleanup
+.cleanup1: 
 	ld a, 2
 	out (254), a
         ei
         ret
-
-        include "../../rom/flashwrite.asm"
-
