@@ -21,10 +21,15 @@
 ;THE SOFTWARE.
 
 ; ROM configuration utility main routine.
+.include	"spectranet.inc"
+.include	"ctrlchars.inc"
+.include	"sysvars.inc"
 
 ;--------------------------------------------------------------------------
 ; F_romconfigmain: Main loop
-F_romconfigmain
+.section main
+.globl F_romconfigmain
+F_romconfigmain:
 	call CLEAR42
 	ld hl, STR_installed
 	call PRINT42
@@ -36,44 +41,45 @@ F_romconfigmain
 	ld a, 0x02		; utility ROM
 	call SETPAGEB
 	ret
-
+.text
 ;--------------------------------------------------------------------------
 ; F_showroms - Shows the current available ROMs.
-F_showroms
+.globl F_showroms
+F_showroms:
 	ld a, 0x02		; first valid ROM slot
-.disploop
+.disploop2:
 	call SETPAGEB
 	push af
 	ld a, (0x2000)		; check signature byte
 	cp 0xFF			; end?
-	jr z, .exit		; exit routine
+	jr z, .exit2		; exit routine
 	cp 0xAA			; ROM module?
-	jr nz, .putdatarom	; no, list as "data"
+	jr nz, .putdatarom2	; no, list as "data"
 	pop af			; get ROM number
 	push af
-	call .printid		; print its id
+	call .printid2		; print its id
 	ld hl, (0x200E)		; get the identity string
 	call PRINT42		; print the identity
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	pop af
 	inc a
-	jr .disploop
-.exit
+	jr .disploop2
+.exit2:
 	pop af
 	ret
 
-.putdatarom
+.putdatarom2:
 	pop af
 	push af
-	call .printid
+	call .printid2
 	ld hl, STR_datarom
 	call PRINT42
 	pop af
 	inc a
-	jr .disploop
+	jr .disploop2
 
-.printid
+.printid2:
 	ld hl, v_workspace	; workspace to load with value
 	call ITOH8
 	ld a, '['
@@ -91,31 +97,33 @@ F_showroms
 ; Finds the first free ROM page, returning it in A.
 ; Search starts from the first user page, page 0x04. Returns with the
 ; carry flag set if no free pages are available.
-F_findfirstfreepage
+.globl F_findfirstfreepage
+F_findfirstfreepage:
 	ld a, 0x04
-.loop
+.loop3:
 	call SETPAGEB
 	ex af, af'
 	ld a, (0x2000)
 	cp 0xFF			; FF = free page
-	jr z, .found
+	jr z, .found3
 	ex af, af'
 	cp 0x1F			; Last page?
-	jr z, .nospace
+	jr z, .nospace3
 	inc a
-	jr .loop
-.nospace
+	jr .loop3
+.nospace3:
 	scf
 	ret
-.found
-	ex af, af´
+.found3:
+	ex af, af'
 	and a			; make sure carry is reset
 	ret
 
 ;-----------------------------------------------------------------------
 ; F_loader
 ; Loads some data into RAM.
-F_loader
+.globl F_loader
+F_loader:
 	; Page in some RAM for the data to land.
 	call SETPAGEA
 
@@ -123,16 +131,16 @@ F_loader
 	
 	ld c, SOCK_STREAM	; open a TCP socket
 	call SOCKET		; file descriptor in A
-	jp c, .borked		; or c set if failed
+	jp c, .borked4		; or c set if failed
 	ld (v_sockfd), a	; save the fd
 
 	ld de, 2000		; port 2000
 	call BIND		; bind to the port
-	jp c, .borked
+	jp c, .borked4
 
 	ld a, (v_sockfd)	; socket we want to listen on
 	call LISTEN		; listen
-	jr c, .borked
+	jr c, .borked4
 
 	; Display an informative message to the user showing the
 	; IP and port we are listening on.
@@ -151,7 +159,7 @@ F_loader
 	; Wait for a connection.		
 	ld a, (v_sockfd)
 	call ACCEPT		; block until something connects
-	jr c, .borked
+	jr c, .borked4
 	ld (v_connfd), a	; save the connection file descriptor
 
 	; Get the first 4 bytes which contains the start address and
@@ -166,16 +174,16 @@ F_loader
 	; Receive the data.
 	ld de, 0x1000		; current address to write to
 	ld (buf_workspace), de	; save current pointer
-.recvloop
+.recvloop4:
 	ld a, (v_connfd)
 	ld bc, 1024		; receive up to 1K at a time
 	call RECV
-	jr c, .borked
+	jr c, .borked4
 	ld hl, (buf_workspace+2) ; get remaining length
 	sbc hl, bc
 	ld a, h			; are we done yet?
 	or l
-	jr z, .recvdone
+	jr z, .recvdone4
 	ld (buf_workspace+2), hl ; save remaining length
 	ld hl, (buf_workspace)	; get current pointer
 	add hl, bc		; increment it
@@ -183,14 +191,14 @@ F_loader
 	ex de, hl
 	ld a, '.'		; progress marker
 	call PUTCHAR42
-	jr .recvloop		; get the next block
-.recvdone
+	jr .recvloop4		; get the next block
+.recvdone4:
 	ld a, (v_connfd)	; close the connection
 	call CLOSE
 	ld a, (v_sockfd)
 	call CLOSE
 	ret
-.borked
+.borked4:
 	ld hl, buf_workspace
 	call ITOH8
 	ld hl, STR_borked
@@ -201,7 +209,8 @@ F_loader
 	ret
 
 ; internal function for the above - print info of what's being tx'd to us.
-F_printxfinfo
+.globl F_printxfinfo
+F_printxfinfo:
 	ld hl, STR_est
 	call PRINT42
 	ld hl, STR_len
@@ -213,14 +222,15 @@ F_printxfinfo
 	call ITOH8
 	ld hl, buf_workspace+4
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	ret
 	
 ;-------------------------------------------------------------------------
 ; F_romconfigmenu
 ; Displays the ROM configuration menu.
-F_configmenu
+.globl F_configmenu
+F_configmenu:
 	ld hl, STR_menutitle
 	call PRINT42
 	ld hl, MENU_romconfig
@@ -232,7 +242,8 @@ F_configmenu
 ;-------------------------------------------------------------------------
 ; F_addmodule
 ; Adds a new module to the last slot in ROM, assuming there's one available
-F_addmodule
+.globl F_addmodule
+F_addmodule:
 	call F_findfirstfreepage	; Find the ROM page for the module
 	jp c, J_noroom			; Report "no room" if C is set
 	call SETPAGEB			; page it into area B
@@ -258,7 +269,8 @@ F_addmodule
 ;-------------------------------------------------------------------------
 ; F_repmodule
 ; Replaces a module.
-F_repmodule
+.globl F_repmodule
+F_repmodule:
 	ld hl, STR_entermod
 	call PRINT42
 	call F_getromnum		; ask for the ROM id
@@ -269,7 +281,7 @@ F_repmodule
 	call F_copysectortoram		; copy the flash sector
 	ld a, (v_workspace)		; calculate the RAM page to use
 	and 0x03			; get position in the sector
-	add 0xDC			; add RAM page number
+	add a, 0xDC			; add RAM page number
 	call F_loader			; get the new data over the net
 	ld a, (v_workspace + 1)		; retrieve sector page
 	di
@@ -283,7 +295,7 @@ F_repmodule
 
 ;------------------------------------------------------------------------
 ; Report flash write/erase failures
-J_eraseborked
+J_eraseborked:
 	ld hl, STR_erasebork
 	call PRINT42
 	scf
@@ -294,20 +306,21 @@ J_eraseborked
 ; Removes a page from a sector of flash, shuffling all the ROMs down.
 ; Page to remove should be in (v_workspace), and A should have the sector
 ; first page.
-F_removepage
+.globl F_removepage
+F_removepage:
 	ld b, 3				; 3 pages to copy to RAM
 	ex af, af'
 	ld a, 0xDC			; RAM page to start with
-.loop
+.loop9:
 	push bc
 	call F_setpageB			; page in RAM destination
 	inc a
 	ex af, af'
 	ld hl, v_workspace
 	cp (hl)				; is this the page to delete?
-	jr nz, .noskip			
+	jr nz, .noskip9			
 	inc a				; if so skip it
-.noskip
+.noskip9:
 	call F_setpageA			; page in ROM source
 	inc a
 	ex af, af'
@@ -316,7 +329,7 @@ F_removepage
 	ld bc, 0x1000
 	ldir
 	pop bc
-	djnz .loop
+	djnz .loop9
 
 	call F_setpageB			; page in the final RAM page
 	ld hl, 0x2000
@@ -331,20 +344,20 @@ F_removepage
 	push af				; save it
 	di
 	call F_FlashEraseSector		; erase it
-	jr c, .fail
+	jr c, .fail9
 	pop af
 	call F_writesector		; write the modified sector back
 	ei
 	jr c, J_writeborked
 	ret
-.fail
+.fail9:
 	ei
 	pop af				; restore stack
 	jr J_eraseborked
 
 ;-----------------------------------------------------------------------
 ; Jump here to display a write failed message.
-J_writeborked
+J_writeborked:
 	ld hl, STR_writebork
 	call PRINT42
 	scf
@@ -352,7 +365,8 @@ J_writeborked
 
 ;-----------------------------------------------------------------------
 ; F_remmodule: Removes a module.
-F_remmodule
+.globl F_remmodule
+F_remmodule:
 	ld hl, STR_delrom
 	call PRINT42
 	call F_getromnum		; ask for the ROM id
@@ -409,24 +423,26 @@ F_remmodule
 
 ;----------------------------------------------------------------------
 ; F_exit: Exit the ROM utility.
-F_exit
+.globl F_exit
+F_exit:
 	or 1				; reset Z flag
 	ret
 
 ;-------------------------------------------------------------------------
 ; J_noroom
-J_noroom
+J_noroom:
 	ld hl, STR_noroom
 	call PRINT42
 ;-------------------------------------------------------------------------
 ; 'Press x to exit'
-F_waitforkey
+.globl F_waitforkey
+F_waitforkey:
 	ld hl, STR_xtoexit
 	call PRINT42
-.waitforkey
+.waitforkey12:
 	call GETKEY
 	cp 'x'
-	jr nz, .waitforkey
+	jr nz, .waitforkey12
 	xor a			; set Z flag
 	ret
 
@@ -434,7 +450,8 @@ F_waitforkey
 ; F_getromnum
 ; Ask the user for a ROM slot (hex value), return it in A
 ; Note. First free page is also returned in A'
-F_getromnum
+.globl F_getromnum
+F_getromnum:
 	ld c, 3			; buffer is 3 bytes long (2 + null)
 	ld de, v_workspace
 	call INPUTSTRING
@@ -444,17 +461,17 @@ F_getromnum
 	ret z
 	call HTOI8		; convert hex string pointed to by hl
 	cp 4			; must be greater than 4
-	jr c, .invalid
+	jr c, .invalid13
 	push af			; save the ROM number selected
 	call F_findfirstfreepage
 	pop bc			; get AF back into BC for comparison
 	cp b			; b should be <= a
-	jr c, .invalid
+	jr c, .invalid13
 	ex af, af'		; keep first free page in A'
 	ld a, b			; move result into A
 	or a			; make sure Z is not set
 	ret
-.invalid	
+.invalid13:	
 	ld hl, STR_notvalid
 	call PRINT42
 	jr F_getromnum
@@ -463,11 +480,12 @@ F_getromnum
 ; F_copysectortoram
 ; Copies 4 pages of flash to RAM.
 ; Parameter: A = first page.
-F_copysectortoram
+.globl F_copysectortoram
+F_copysectortoram:
 	ex af, af'			; save ROM page
 	ld a, 0xDC			; first RAM page
 	ld b, 4				; pages to copy
-.copyloop
+.copyloop14:
 	push bc
 	call F_setpageB			; RAM into area B
 	inc a
@@ -480,10 +498,11 @@ F_copysectortoram
 	ld bc, 0x1000
 	ldir
 	pop bc
-	djnz .copyloop
+	djnz .copyloop14
 	ret
 
-F_debugpages
+.globl F_debugpages
+F_debugpages:
 	push af
 	ex af, af'
 	push af
@@ -526,15 +545,15 @@ F_debugpages
 	ex af, af'
 	pop af
 	ret
-	
-STR_workspace	defb "\nworkspace + 0: ",0
-STR_workspace1	defb "\nworkspace + 1: ",0
-STR_accum	defb "\nA register   : ",0
-STR_accum1	defb "\nA' register  : ",0
+.data	
+STR_workspace:	defb NEWLINE,"workspace + 0: ",0
+STR_workspace1:	defb NEWLINE,"workspace + 1: ",0
+STR_accum:	defb NEWLINE,"A register   : ",0
+STR_accum1:	defb NEWLINE,"A' register  : ",0
 
 ;-------------------------------------------------------------------------
 ; Definitions.
-MENU_romconfig
+MENU_romconfig:
 	defw STR_addmodule,F_addmodule
 	defw STR_repmodule,F_repmodule
 	defw STR_remmodule,F_remmodule
