@@ -19,15 +19,18 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"ctrlchars.inc"
 
-; Basstart.asm runs module functions that should be run once BASIC has
+; Basstart.asm0 runs module functions that should be run once BASIC has
 ; shown the copyright message. The basstart function gets called from
 ; a trap.
 
 ; Displays the startup message when BASIC has initialized.
 ; This includes the IP address.
-
-F_startmsg
+.text
+.globl F_startmsg
+F_startmsg:
 	ld hl, STR_rel
 	call PRINT42
 	ld hl, bldstr
@@ -45,12 +48,13 @@ F_startmsg
 	call LONG2IPSTRING	; convert to a string
 	ld hl, 0x3004		; string pointer
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	ret
-STR_rel		defb "Alioth Spectranet\nBuild: ",0
-STR_ip		defb "   IP: ",0
-STR_date	defb " Date: ",0
-	include	"date.asm"
-	include "ver.asm"
+.data
+STR_rel:		defb "Alioth Spectranet\nBuild: ",0
+STR_ip:		defb "   IP: ",0
+STR_date:	defb " Date: ",0
+.include	"date.xinc"
+.include 	"ver.xinc"
 	

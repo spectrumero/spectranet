@@ -19,16 +19,20 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"sysvars.inc"
 
 ; Initialization routines
-F_init
+.text
+.globl F_init
+F_init:
 	call F_inetinit		; Initialize the interface - note not a
 				; TNFS function but in this area for practical
 				; reasons.
 
         ld a, (v_pgb)           ; Who are we?
         call RESERVEPAGE        ; Reserve a page of static RAM.
-        jr c, .failed
+        jr c, .failed1
         ld b, a                 ; save the page number
         ld a, (v_pgb)           ; and save the page we got
         rlca                    ; in our 8 byte area in sysvars
@@ -50,17 +54,19 @@ F_init
         ld hl, STR_init
         call PRINT42
         ret
-.failed
+.failed1:
         ld hl, STR_allocfailed
         call PRINT42
         ret
-STR_allocfailed defb    "tnfs: No memory pages available\n",0
-STR_init        defb    "TNFS 1.0 initialized\n",0
-
+.data
+STR_allocfailed: defb    "tnfs: No memory pages available\n",0
+STR_init:        defb    "TNFS 1.01 initialized\n",0
+.text
 ;-----------------------------------------------------------------------------
 ; F_fetchpage
 ; Gets our page of RAM and puts it in page area A.
-F_fetchpage
+.globl F_fetchpage
+F_fetchpage:
 	push af
 	push hl
 	ld a, (v_pgb)		; get our ROM number and calculate
@@ -71,7 +77,7 @@ F_fetchpage
 	ld l, a
 	ld a, (hl)		; fetch the page number
 	and a			; make sure it's nonzero
-	jr z, .nopage
+	jr z, .nopage2
 	inc l			; point hl at "page number storage"
 	ex af, af'
 	ld a, (v_pga)
@@ -82,7 +88,7 @@ F_fetchpage
 	pop af
 	or a			; ensure carry is cleared
 	ret
-.nopage
+.nopage2:
 	pop hl			; restore the stack
 	pop af
 	ld a, 0xFF		; TODO: ENOMEM return code
@@ -92,8 +98,10 @@ F_fetchpage
 ;---------------------------------------------------------------------------
 ; F_restorepage
 ; Restores page A to its original value.
-F_leave
-F_restorepage
+.globl F_leave
+F_leave:
+.globl F_restorepage
+F_restorepage:
 	push af
 	push hl
 	ld a, (v_pgb)		; calculate the offset...

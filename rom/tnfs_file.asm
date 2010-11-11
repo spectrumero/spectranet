@@ -19,8 +19,13 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"tnfs_sysvars.inc"
+.include	"tnfs_defs.inc"
+.text
 ; TNFS file operations - open, read, write, close
-;	include "regdump.asm"
+;	include "regdump.asm0"
 ;--------------------------------------------------------------------------
 ; F_tnfs_open
 ; Opens a file on the remote server.
@@ -28,7 +33,8 @@
 ;		D  - File flags (POSIX)
 ;		E  - File mode (POSIX)
 ;		HL - Pointer to a string containing the full path to the file
-F_tnfs_open
+.globl F_tnfs_open
+F_tnfs_open:
 	call F_fetchpage
 	ret c
 	ld (v_curmountpt), a
@@ -49,14 +55,14 @@ F_tnfs_open
 	jp c, F_leave		; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	jr z, .gethandle
+	jr z, .gethandle1
 	scf			; tnfs error
 	jp F_leave
-.gethandle
+.gethandle1:
 	ld a, (v_pgb)		; Allocate a new file descriptor
 	ld c, ALLOCFD		
 	call RESALLOC		; for this TNFS handle
-	jr c, .nofds
+	jr c, .nofds1
 	ld a, 0x20		; indicate "not a socket"
 	ld (hl), a		; and update the FD table
 	ld h, HANDLESPACE / 256	; now save the TNFS handle
@@ -67,7 +73,7 @@ F_tnfs_open
 	ld (hl), a
 	ld a, l			; FD is in L, needs to be returned in A
 	jp F_leave
-.nofds
+.nofds1:
 	ld a, TNFS_OP_CLOSE	; cleanup recovery from finding no free
 	call F_tnfs_header_w	; file descriptors - close TNFS handle
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
@@ -86,7 +92,8 @@ F_tnfs_open
 ;		DE - Pointer to a buffer to copy the data
 ; Returns with carry set on error and A=code, or carry reset on success
 ; with BC = actual number of bytes read
-F_tnfs_read
+.globl F_tnfs_read
+F_tnfs_read:
 	call F_fetchpage
 	ret c
 	ld (v_curfd), a			; store the FD
@@ -96,7 +103,7 @@ F_tnfs_read
 
 	ld h, b				; store bytes requested in HL
 	ld l, c
-.readloop
+.readloop2:
 	ld a, (v_curfd)
 	push hl
 	call F_tnfs_read_blk		; note: returns with our memory
@@ -106,25 +113,26 @@ F_tnfs_read
 	ld (v_bytesread), hl
 	ex af, af'
 	pop hl
-	jr nz, .readdone		; fewer bytes read than requested
-	jr c, .readdone			; or an error occurred
+	jr nz, .readdone2		; fewer bytes read than requested
+	jr c, .readdone2			; or an error occurred
 	sbc hl, bc			; calculate bytes remaining
 	ld b, h				; and set BC
 	ld c, l
-	jr nz, .readloop		; still more to read
-.readdone
+	jr nz, .readloop2		; still more to read
+.readdone2:
 	ld bc, (v_bytesread)		; return bytes read in BC
 	jp F_leave			; read complete
 	
-F_tnfs_read_blk
+.globl F_tnfs_read_blk
+F_tnfs_read_blk:
 	ld (v_read_destination), de	; save destination
 	ex af, af'		; save FD
 	ld a, b			; cap read size at 512 bytes
 	cp 0x02
-	jr c, .continue		; less than 512 bytes if < 0x02
-.sizecap
+	jr c, .continue3		; less than 512 bytes if < 0x02
+.sizecap3:
 	ld bc, 512		; cap at 512 bytes
-.continue
+.continue3:
 	push bc			; save requested bytes
 	ld a, TNFS_OP_READ
 	call F_tnfs_header_w
@@ -163,11 +171,12 @@ F_tnfs_read_blk
 ;			BC = number of bytes to write
 ; Returns with carry set on error and A = return code. BC = bytes
 ; written.
-F_tnfs_write
+.globl F_tnfs_write
+F_tnfs_write:
 	call F_fetchpage
 	ret c
 	ld (v_curfd), a
-.writeloop
+.writeloop4:
 	push hl
 	push bc
 	ld a, (v_curfd)		; load current file handle
@@ -181,17 +190,18 @@ F_tnfs_write
 	add hl, bc		; advance pointer
 	ld b, d			; bytes remaining into BC
 	ld c, e
-	jr nz, .writeloop	; next block if bytes remain
+	jr nz, .writeloop4	; next block if bytes remain
 	jp F_leave
 
-F_tnfs_write_blk
+.globl F_tnfs_write_blk
+F_tnfs_write_blk:
 	ex af, af'
 	ld a, b			; cap write size at 512 bytes
 	cp 0x02
-	jr c, .continue		; less than 512 bytes if < 0x02
-.sizecap
+	jr c, .continue5		; less than 512 bytes if < 0x02
+.sizecap5:
 	ld bc, 512		; cap at 512 bytes
-.continue
+.continue5:
 	push hl			; save buffer pointer
 	ld a, TNFS_OP_WRITE
 	call F_tnfs_header_w
@@ -220,10 +230,10 @@ F_tnfs_write_blk
 	ret c			; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a			; check for tnfs error
-	jr z, .getsize
+	jr z, .getsize5
 	scf			; set carry to flag error
 	ret			
-.getsize
+.getsize5:
 	ld bc, (tnfs_recv_buffer+tnfs_msg_offset)
 	ret
 
@@ -232,7 +242,8 @@ F_tnfs_write_blk
 ; Closes an open file descriptor.
 ; Arguments		A = the file descriptor
 ; Returns with carry set on error and A = return code.
-F_tnfs_close
+.globl F_tnfs_close
+F_tnfs_close:
 	call F_fetchpage
 	ret c
 
@@ -263,11 +274,12 @@ F_tnfs_close
 ; Stats a file (gets information on it).
 ; Arguments		HL = pointer to a null-terminated string - the filename
 ; 			DE = pointer to a buffer for the result
-; The result is exactly the structure defined in tnfs-protocol.txt
+; The result is exactly the structure defined in tnfs-protocol.txt6
 ; Returns with carry set on error and A = return code.
 ; An optimization would be to copy the reply directly from the ethernet
 ; buffer and save a buffer copy.
-F_tnfs_stat
+.globl F_tnfs_stat
+F_tnfs_stat:
 	call F_fetchpage
 	ret c
 	ld (v_curmountpt), a	; save the mount point
@@ -279,10 +291,10 @@ F_tnfs_stat
 	jp c, F_leave		; network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	jr z, .copybuf
+	jr z, .copybuf7
 	scf			; tnfs error
 	jp F_leave
-.copybuf
+.copybuf7:
 	dec bc			; decrease BC by the size of the
 	dec bc			; TNFS header + status byte
 	dec bc
@@ -298,7 +310,8 @@ F_tnfs_stat
 ; Arguments		HL = pointer to null terminated source filename
 ;			DE = pointer to null terminated destination filename
 ;			A = mount point
-F_tnfs_rename
+.globl F_tnfs_rename
+F_tnfs_rename:
 	call F_fetchpage
 	ret c
 	ld (v_curmountpt), a
@@ -322,7 +335,8 @@ F_tnfs_rename
 ;		C = operation 0x00 = SEEK_SET, 0x01 = SEEK_CUR, 0x02 = SEEK_END
 ;		DEHL = 32 bit signed seek position
 ; Returns with carry set and A=error code on error.
-F_tnfs_lseek
+.globl F_tnfs_lseek
+F_tnfs_lseek:
 	call F_fetchpage
 	ret c
 
@@ -354,7 +368,8 @@ F_tnfs_lseek
 ; F_tnfs_unlink
 ; Unlink (delete) a file.
 ; Parameters		HL = pointer to filename
-F_tnfs_unlink
+.globl F_tnfs_unlink
+F_tnfs_unlink:
 	ld b, TNFS_OP_UNLINK
 	jp F_tnfs_simplepathcmd
 
@@ -364,7 +379,8 @@ F_tnfs_unlink
 ; Parameters		HL = pointer to filename
 ;			DE = 16 bit mode flags
 ; On error returns with carry set and A=error
-F_tnfs_chmod
+.globl F_tnfs_chmod
+F_tnfs_chmod:
 	call F_fetchpage
 	ret c
 

@@ -21,7 +21,11 @@
 ;THE SOFTWARE.
 
 ; DHCP Client
-
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"dhcpdefs.inc"
+.include	"ctrlchars.inc"
+.text
 ;-------------------------------------------------------------------------
 ; F_dhcp
 ; Performs all the actions of a DHCP client, displaying helpful messages
@@ -39,9 +43,10 @@
 ; The DHCP client requests an IP address, subnet mask and default gateway,
 ; and any DNS servers.
 
-F_dhcp
+.globl F_dhcp
+F_dhcp:
 	ld bc, 0xFFFF		; delay for long enough for hw to init
-.delay
+.delay1:
 	push hl			; waste a load of time
 	push bc
 	push de
@@ -51,7 +56,7 @@ F_dhcp
 	dec bc
 	ld a, b
 	or c
-	jr nz, .delay
+	jr nz, .delay1
 
 	ld hl, STR_dhcpinit
 	call PRINT42
@@ -59,32 +64,32 @@ F_dhcp
 	call PRINT42
 
 	ld b, 8			; num of retries
-.retrydiscover
+.retrydiscover1:
 	push bc
 
 	call F_dhcpdiscover
-	jr c, .borked
+	jr c, .borked1
 
 	call F_dhcprecvoffer
-	jr nc, .offer
+	jr nc, .offer1
 	cp DHCP_INTERRUPTED	; BREAK pressed?
-	jr z, .break
+	jr z, .break1
 	ld a, '.'
 	call PUTCHAR42
 	pop bc
-	djnz .retrydiscover
+	djnz .retrydiscover1
 
 	push af			; ran out of retries
-	ld a, '\n'		; so put a CR
+	ld a, NEWLINE		; so put a CR
 	call PUTCHAR42
 	pop af
-	jr .borked		; then report the error
+	jr .borked1		; then report the error
 
-.break	
+.break1:	
 	pop bc			; fix stack
-	jr .borked
+	jr .borked1
 
-.offer
+.offer1:
 	pop bc			; fix stack
 	ld hl, STR_dhcpoffer
 	call PRINT42
@@ -92,10 +97,10 @@ F_dhcp
 	ld hl, STR_dhcprequest
 	call PRINT42
 	call F_dhcpsendrequest
-	jr c, .borked
+	jr c, .borked1
 
 	call F_dhcprecvack
-	jr c, .borked
+	jr c, .borked1
 	ld hl, STR_dhcpack
 	call PRINT42
 
@@ -107,11 +112,11 @@ F_dhcp
 	call LONG2IPSTRING
 	ld hl, buf_workspace
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	ret
 
-.borked
+.borked1:
 	push af
 	ld hl, STR_failed
 	call PRINT42
@@ -120,12 +125,12 @@ F_dhcp
 	call ITOA8
 	ld hl, v_workspace
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 
 	; pause - TODO: something a bit better (perhaps a keypress?)
 	ld bc, 0xFFFF
-.bdelay
+.bdelay1:
 	dec bc
 	push hl
 	push de
@@ -135,23 +140,24 @@ F_dhcp
 	pop hl
 	ld a, b
 	or c
-	jr nz, .bdelay
+	jr nz, .bdelay1
 	
 	ret
 
-STR_dhcpinit	defb "Press BREAK to interrupt.\n",0
-STR_dhcpdiscover	defb "DHCPDISCOVER",0
-STR_dhcpoffer		defb "\nDHCPOFFER\n",0
-STR_dhcprequest		defb "DHCPREQUEST\n",0
-STR_dhcpack		defb "DHCPACK\n",0
-STR_failed		defb "DHCP failed with return code ",0
-STR_ipaddr		defb "Allocated IP address ",0
-STR_interrupted		defb "\nBREAK pressed\n",0
+STR_dhcpinit:	defb "Press BREAK to interrupt.\n",0
+STR_dhcpdiscover:	defb "DHCPDISCOVER",0
+STR_dhcpoffer:		defb "\nDHCPOFFER\n",0
+STR_dhcprequest:		defb "DHCPREQUEST\n",0
+STR_dhcpack:		defb "DHCPACK\n",0
+STR_failed:		defb "DHCP failed with return code ",0
+STR_ipaddr:		defb "Allocated IP address ",0
+STR_interrupted:		defb "\nBREAK pressed\n",0
 
 ;-------------------------------------------------------------------------
 ; F_dhcpdiscover
 ; Creates and sends the DHCPDISCOVER message.
-F_dhcpdiscover
+.globl F_dhcpdiscover
+F_dhcpdiscover:
 	; Most of the DHCPDISCOVER message is zeros, so we can
 	; save a lot of effort by starting with a workspace set to that.
 	ld hl, buf_message
@@ -179,7 +185,7 @@ F_dhcpdiscover
 	; Copy the request options data to the buffer.
 	ld hl, DHCPDISCOVER_BLOCK
 	ld de, buf_message+dhcp_options
-	ld bc, DHCPDISCOVER_BLOCKEND-DHCPDISCOVER_BLOCK
+	ld bc, DHCPBLOCKSZ
 	ldir
 
 	; Copy the hardware address to the memory pointed by de
@@ -191,7 +197,7 @@ F_dhcpdiscover
 
 	; Re-initialize other hardware registers to zero
 	call DECONFIG
-.send
+.send2:
 	; Send the assembled DHCP message.	
 	ld c, SOCK_DGRAM	; Datagram (UDP) socket
 	call SOCKET
@@ -201,10 +207,10 @@ F_dhcpdiscover
 	; The DHCP request should come from port 68 and go to port 67	
 	ld hl, v_dhcpsockinfo	; socket info structure
 	ld b, 4
-.fill
-	ld (hl), 0xFF		; dest address = 255.255.255.255
+.fill2:
+	ld (hl), 0xFF		; dest address = 255.2552.2552.2552
 	inc l
-	djnz .fill
+	djnz .fill2
 	ld hl, 67		; destination port
 	ld (v_dhcpsockinfo+4), hl
 	inc l
@@ -223,7 +229,8 @@ F_dhcpdiscover
 ; F_dhcprecvoffer
 ; Wait for a DHCPOFFER message. The assumption is that F_dhcpdiscover
 ; was called, and has opened a UDP socket for the DHCP messages.
-F_dhcprecvoffer
+.globl F_dhcprecvoffer
+F_dhcprecvoffer:
 	; bind to port 68 for the incoming message
 	ld a, (v_dhcpfd)
 	ld de, 68		; port 68
@@ -273,7 +280,8 @@ F_dhcprecvoffer
 ; F_dhcpsendrequest
 ; Turn around the data sent in the DHCPOFFER message with the right
 ; bits tweaked to turn it into a DHCPREQUEST.
-F_dhcpsendrequest		
+.globl F_dhcpsendrequest
+F_dhcpsendrequest:		
 	; Most of the DHCPDISCOVER message is zeros, so we can
 	; save a lot of effort by starting with a workspace set to that.
 	ld hl, buf_message
@@ -301,7 +309,7 @@ F_dhcpsendrequest
 	; Copy the request options data to the buffer.
 	ld hl, DHCPDISCOVER_BLOCK
 	ld de, buf_message+dhcp_options
-	ld bc, DHCPDISCOVER_BLOCKEND-DHCPDISCOVER_BLOCK
+	ld bc, DHCPBLOCKSZ
 	ldir
 	; modify the message from DISCOVER to REQUEST
 	ld hl, buf_message+dhcp_options+6
@@ -336,7 +344,7 @@ F_dhcpsendrequest
 	
 	; Replace the lease with what we were offered.
 	ld hl, v_dhcplease
-	ld de, buf_message+dhcp_options+(dhcp_lease-DHCPDISCOVER_BLOCK)+2
+	ld de, DHCPLEASE_OFFSET
 	ldi
 	ldi
 	ldi
@@ -346,14 +354,14 @@ F_dhcpsendrequest
 	ld de, buf_message+dhcp_chaddr
 	call GETHWADDR
 
-.send
+.send4:
 	; The DHCP request should come from port 68 and go to port 67	
 	ld hl, v_dhcpsockinfo	; socket info structure
 	ld b, 4
-.fill
-	ld (hl), 0xFF		; dest address = 255.255.255.255
+.fill4:
+	ld (hl), 0xFF		; dest address = 255.2554.2554.2554
 	inc l
-	djnz .fill
+	djnz .fill4
 	ld hl, 67		; destination port
 	ld (v_dhcpsockinfo+4), hl
 	inc l
@@ -371,7 +379,8 @@ F_dhcpsendrequest
 ;---------------------------------------------------------------------------
 ; F_dhcprecvack
 ; Receives the DHCPACK message and extracts the fields that we require.
-F_dhcprecvack		
+.globl F_dhcprecvack
+F_dhcprecvack:		
 	; bind to port 68 for the incoming message
 	ld a, (v_dhcpfd)
 	ld de, 68		; port 68
@@ -412,46 +421,46 @@ F_dhcprecvack
 	ld (v_nspointer), hl
 	ld hl, buf_message+dhcp_options+4
 	ld b, 0			; BC = length of option
-.optloop
+.optloop5:
 	ld a, (hl)		; Option
 	inc hl
 	ld c, (hl)		; Length
 	inc hl
 	cp dhcp_opt_msg		; Message type? (usually 1st in the list)
-	jr z, .checkmsg
+	jr z, .checkmsg5
 	cp dhcp_opt_gateway	; Gateway address?
-	jr z, .copygw
+	jr z, .copygw5
 	cp dhcp_opt_netmask	; Netmask?
-	jr z, .copynetmask
+	jr z, .copynetmask5
 	cp dhcp_opt_dns		; DNS server?
-	jr z, .copydns
+	jr z, .copydns5
 	and a			; End of options?
 	ret z			; in which case return now
 	add hl, bc		; move hl to next option
-	jr .optloop
-.copygw
+	jr .optloop5
+.copygw5:
 	call IFCONFIG_GW	; set the gateway address
-	jr .optloop
-.copynetmask
+	jr .optloop5
+.copynetmask5:
 	call IFCONFIG_NETMASK	; set the netmask
-	jr .optloop
-.copydns
+	jr .optloop5
+.copydns5:
 	ld de, (v_nspointer)
 	ld a, v_nsend % 256	; address of end of nameserver memory
 	cp e			; no more space?
-	jr z, .skipdns
+	jr z, .skipdns5
 	ldir
 	ld (v_nspointer), de
-	jr .optloop
-.skipdns
+	jr .optloop5
+.skipdns5:
 	ld c, 4
 	add hl, bc
-	jr .optloop
-.checkmsg
+	jr .optloop5
+.checkmsg5:
 	ld a, (hl)		; Get the message type (always 1 byte long)
 	cp dhcp_msg_ack		; check that it's a DHCPACK
 	inc hl			; message is 1 byte long
-	jr z, .optloop		; if so, continue
+	jr z, .optloop5		; if so, continue
 	ld a, DHCP_NAK		; if not set error code and exit
 	scf
 	ret
@@ -462,24 +471,25 @@ F_dhcprecvack
 ; HL = pointer to DHCP options block (after the magic cookie)
 ; DE = pointer to memory to copy the result
 ; B = option to search for
-F_dhcpgetoption
+.globl F_dhcpgetoption
+F_dhcpgetoption:
 	ld a, (hl)	; get option
 	and a		; zero?
-	jr z, .notfound	; option not found
+	jr z, .notfound6	; option not found
 	inc hl
 	ld c, (hl)	; get length of option
 	inc hl
 	cp b		; is it the option we're looking for?
 	ld a, b		; save option in A
 	ld b, 0		; bc now = size of option
-	jr nz, .nextopt	; no - go for the next option
+	jr nz, .nextopt6	; no - go for the next option
 	ldir		; copy option to destination buffer
 	ret		; done
-.nextopt
+.nextopt6:
 	add hl, bc	; add length to hl to point at the next option
 	ld b, a		; get back the option
 	jr F_dhcpgetoption
-.notfound
+.notfound6:
 	scf		; indicate option not found
 	ld a, DHCP_OPTNOTFOUND	; return code
 	ret
@@ -489,19 +499,20 @@ F_dhcpgetoption
 ; Compares the XID field received in a DHCP message with the XID that
 ; we sent in the first instance. Carry is set if the compare fails,
 ; and A is set to the DHCP_BAD_XID return code on failure.
-F_comparexid
+.globl F_comparexid
+F_comparexid:
 	ld hl, buf_message+dhcp_xid
 	ld de, v_dhcpxid
 	ld b, 4
-.cmploop
+.cmploop7:
 	ld a, (de)
 	cp (hl)
-	jr nz, .badxid
+	jr nz, .badxid7
 	inc hl
 	inc de
-	djnz .cmploop
+	djnz .cmploop7
 	ret
-.badxid
+.badxid7:
 	ld a, DHCP_BAD_XID
 	scf
 	ret
@@ -510,14 +521,15 @@ F_comparexid
 ; F_waitfordhcpmsg
 ; Waits for DHCP data, and returns with carry set if we poll for too long
 ; and have not got a response. Also allows for user (keyboard) interruption.
-F_waitfordhcpmsg
+.globl F_waitfordhcpmsg
+F_waitfordhcpmsg:
 	ld bc, dhcp_polltime
-.loop
+.loop8:
 	push bc
 	ld bc, 0x7ffe		; read B to SPACE
 	in a, (c)		; check for BREAK
 	cp 0xBE			
-	jr z, .interrupted
+	jr z, .interrupted8
 	ld a, (v_dhcpfd)
 	call POLLFD		; data ready for this file descriptor?
 	pop bc
@@ -526,10 +538,10 @@ F_waitfordhcpmsg
 	dec bc
 	ld a, b
 	or c			; check bc for zero
-	jr nz, .loop		; make another loop
+	jr nz, .loop8		; make another loop
 	ld a, DHCP_TIMEOUT	; error code is timeout
 	jr F_closeonerror	; close and return
-.interrupted
+.interrupted8:
 	pop bc			; restore stack
 	ld hl, STR_interrupted
 	call PRINT42
@@ -538,7 +550,8 @@ F_waitfordhcpmsg
 ;--------------------------------------------------------------------------
 ; F_closeonerror
 ; A helper function to close and return with the carry flag set.
-F_closeonerror
+.globl F_closeonerror
+F_closeonerror:
 	push af
 	ld a, (v_dhcpfd)
 	call CLOSE

@@ -19,16 +19,18 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"fcntl.inc"
 
-sig	defb 0xAA		; This is a ROM module
-romid	defb 0xFF		; for a filesystem only.
-reset	defw F_init		; reset vector
-mount	defw F_tnfs_mount	; The mount routine
+.section vectors
+sig:	defb 0xAA		; This is a ROM module
+romid:	defb 0xFF		; for a filesystem only.
+reset:	defw F_init		; reset vector
+mount:	defw F_tnfs_mount	; The mount routine
 	defw 0xFFFF
 	defw 0xFFFF
 	defw F_startmsg
 	defw 0xFFFF
-idstr	defw STR_ident		; ROM identity string
+idstr:	defw STR_ident		; ROM identity string
 	defb 0,0,0		; no MODCALL, pad out three bytes
 
 ; The VFS table. This is a jump table for all the VFS entry points.
@@ -54,13 +56,16 @@ idstr	defw STR_ident		; ROM identity string
 	jp F_tnfs_chdir		; Change directory
 	jp F_tnfs_getcwd	; get current directory
 	jp F_tnfs_rename	; rename
-
-STR_ident
-	defb "TNFS 1.0",0
-
-F_tnfs_size			; TODO functions
-F_tnfs_free
-F_undef
+.data
+STR_ident:
+	defb "TNFS 1.00",0
+.text
+.globl F_tnfs_size
+F_tnfs_size:			; TODO functions
+.globl F_tnfs_free
+F_tnfs_free:
+.globl F_undef
+F_undef:
 	ld a, ENOSYS		; Function not implemented
 	scf
 	ret

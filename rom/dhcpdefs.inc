@@ -60,26 +60,10 @@ dhcp_opt_msg	equ 0x35	; Message type
 
 dhcp_polltime	equ 50000	; how many times to poll when waiting
 
-DHCPDISCOVER_BLOCK
-; The following is a block that can be LDIR'd into the options offset
-; for a DHCPDISCOVER message.
-dhcp_cookie	defb 0x63,0x82,0x53,0x63
-
-; DHCP discover message options
-dhcp_discover	defb 0x35,0x01,0x01 ; option 0x35, 1 byte long, value=1
-
-; Parameter request list - ask for the subnet, router and domain
-; name server
-dhcp_params	defb 0x37, 0x03, 0x01, 0x03, 0x06
-
-; Specify the maximum message size - 768 bytes (buffer+workspace)
-dhcp_maxsize	defb 0x39, 0x02, 0x03, 0x00
-
-; Lease time request - 90 days
-dhcp_lease	defb 0x33, 0x04, 0x00, 0x76, 0xa7, 0x00
-
-; Identifier - our MAC address and hardware type
-dhcp_mac	defb 0x3d, 0x07, 0x01	; remaining 6 bytes must be filled
-
-DHCPDISCOVER_BLOCKEND
+; Error return codes - DHCP
+DHCP_NAK        equ 0xCF
+DHCP_OPTNOTFOUND equ 0xCE
+DHCP_TIMEOUT    equ 0xCD
+DHCP_BAD_XID    equ 0xCC
+DHCP_INTERRUPTED equ 0xCB
 

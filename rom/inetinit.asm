@@ -23,14 +23,19 @@
 ; Called on reset/power up, these routines examine the configuration
 ; stored in the last page of flash, and initializes the IP settings
 ; accordingly.
-
+.include	"spectranet.inc"
+.include	"flashconf.inc"
+.include	"ctrlchars.inc"
+.include	"sysvars.inc"
 ;---------------------------------------------------------------------------
 ; F_inetinit
 ; Initializes IPv4 settings.
 ; Called by the reset routine in the main rom on reset/power up.
 ; Configuration must be copied to RAM since we are using both paging areas
 ; (one for the W5100 register area, and one for this code).
-F_inetinit
+.text
+.globl F_inetinit
+F_inetinit:
 	ld a, 0x1F		; flash page containing configuration
 	call SETPAGEA
 	ld hl, 0x1F00		; last 256 bytes of config
@@ -57,7 +62,8 @@ F_inetinit
 ;------------------------------------------------------------------------
 ; F_showstatic
 ; Show configuration if statically configured.
-F_showstatic
+.globl F_showstatic
+F_showstatic:
 	ld hl, STR_staticip
 	call PRINT42
 	ld hl, 0x2100+IP_ADDRESS
@@ -72,16 +78,17 @@ F_showstatic
 	call F_showaddr
 	ret
 
-F_showaddr
+.globl F_showaddr
+F_showaddr:
 	ld de, buf_workspace
 	call LONG2IPSTRING
 	ld hl, buf_workspace
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	ret
-
-STR_staticip	defb "I:",0
-STR_staticmask	defb "M:",0
-STR_staticgw	defb "G:",0
+.data
+STR_staticip:	defb "I:",0
+STR_staticmask:	defb "M:",0
+STR_staticgw:	defb "G:",0
 
