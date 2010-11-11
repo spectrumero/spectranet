@@ -20,17 +20,42 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+; Definitions for streams.
 
-; Temporary storage
-v_snapfd		equ 0x32FF	; Snapshot FD
-v_stacksave		equ 0x32FD	; Save the stack pointer
-v_snapstack		equ 0x32FB	; Start of snapshot stack
+; Flags that describe what kind of stream we have.
+ISFILE		equ 1
+RDONLY		equ 2 
+ISDIR		equ 4
+ISCTRL		equ 8
 
-STACK_AFALT		equ NMISTACK-14
-STACK_AF		equ NMISTACK-12
-STACK_BC		equ NMISTACK-10
-STACK_DE		equ NMISTACK-8
-STACK_HL		equ NMISTACK-6
+; Bit positions for the above
+BIT_ISFILE	equ 0
+BIT_RDONLY	equ 1
+BIT_ISDIR	equ 2
+BIT_ISCTRL	equ 3
 
-AUTOBOOT		equ 0x81	; Config ID for autoboot flag
+; Offsets for stream metadata.
+STRM_WRITEBUF	equ 0		; Write buffer number
+STRM_READBUF	equ 1		; Read buffer number
+STRM_WRITEPTR	equ 2		; Write pointer
+STRM_READPTR	equ 3		; Read pointer
+STRM_FD		equ 4		; File/socket/dir handle
+STRM_FLAGS	equ 5		; Flags bitfield
+STRM_REMAINING	equ 6		; Remaining buffer size
 
+; State variables - offsets (note offset 5 is STRM_FLAGS)
+OFS_FLAGS       equ 0
+OFS_CURCMD      equ 1
+OFS_CURSTATE    equ 2
+OFS_STREAM      equ 3
+OFS_CURDATA     equ 6		
+
+; Definitions.
+BUFMETADATA     equ 0x1000
+BUFDATASZ       equ 8
+
+; Command definitions for the control channel
+CMD_POLLALL	equ 'p'
+
+STREAM_ROM_ID	equ 0x02
+INTERPWKSPC	equ 0x3000

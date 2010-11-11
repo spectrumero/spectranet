@@ -19,7 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"defs.inc"
+.include	"spectranet.inc"
+.text
 ; Buffer management routines.
 ; Note - the memory we want to use should be paged into area A.
 
@@ -40,30 +42,31 @@
 ;--------------------------------------------------------------------------
 ; F_findfreebuf - Returns the number of the first free buffer found.
 ; Carry set if no buffer available.
-F_findfreebuf
+.globl F_findfreebuf
+F_findfreebuf:
 	push hl
 	ld b, 0x1F		; number of buffers available
-.findloop
+.findloop1:
 	ld hl, 0x1000		; address to start from in metadata page
-.next
+.next1:
 	ld a, (hl)
 	cp b
-	jr z, .inuse
+	jr z, .inuse1
 	inc l			; check second buffer
 	ld a, (hl)
 	cp b
-	jr z, .inuse
+	jr z, .inuse1
 	ld a, 7			; advance by 7 bytes
 	add a, l
-	jr z, .free		; this buffer number wasn't found, it's free
+	jr z, .free1		; this buffer number wasn't found, it's free
 	ld l, a
-	jr .next
-.inuse
-	djnz .findloop		; try the next buffer number
+	jr .next1
+.inuse1:
+	djnz .findloop1		; try the next buffer number
 	pop hl
 	scf			; we ran out of attempts
 	ret
-.free
+.free1:
 	pop hl
 	ld a, b			; get result into A
 	and a			; clear possible carry (from the add op)
@@ -72,7 +75,8 @@ F_findfreebuf
 ;---------------------------------------------------------------------------
 ; F_feedbuffer
 ; Adds the byte in A to the buffer for the stream in L
-F_feedbuffer
+.globl F_feedbuffer
+F_feedbuffer:
         ex af, af'              ; save A
 	call F_findmetadata	; IX = pointer to metadata
 
@@ -82,14 +86,14 @@ F_feedbuffer
         ld e, (ix+STRM_WRITEPTR); DE = current buffer pointer
         ex af, af'              ; get byte back
         cp 0x0d                 ; Spectrum ENTER?
-        jr nz, .cont
+        jr nz, .cont2
 
         ld (de), a              ; Convert it to 0x0d 0x0a
         inc e
         ld a, 0x0a
         ld (de), a
         jr F_flushbuffer
-.cont
+.cont2:
         ld (de), a              ; write the value into the buffer
         ld a, 0xFE              ; it would be easier to flush one byte later
         cp e                    ; but we must leave enough room for CRLF
@@ -104,7 +108,8 @@ F_feedbuffer
 ; Flushes the given buffer
 ;       DE = current buffer pointer
 ;       IX = current buffer info pointer 
-F_flushbuffer
+.globl F_flushbuffer
+F_flushbuffer:
         ; TODO
         ; This needs to work with all kinds of streams, not just SOCK_STREAM
         ld (ix+STRM_WRITEPTR), 0 ; reset buffer pointer
@@ -119,17 +124,17 @@ F_flushbuffer
         ; BC now = length
         ; A now = file descriptor
 	bit 0, (ix+STRM_FLAGS)	; Check "is a file" flag
-	jr nz, .filewrite
+	jr nz, .filewrite3
         call SEND               ; Send the data
-        jr c, .borked
+        jr c, .borked3
         ret
 
-.borked
+.borked3:
         ld a, 2                 ; todo - proper error handling
         out (254), a
         ret
 
-.filewrite
+.filewrite3:
 	; TODO: File I/O does not yet handle writing a buffer in page A
 	; because that's where the VFS mods put their data. So copy the
 	; data first. However, VFS modules ought to be able to cope with
@@ -141,6 +146,6 @@ F_flushbuffer
 	pop bc			; restore the length
 	ld hl, INTERPWKSPC	; start of new buffer
 	call WRITE
-	jr c, .borked
+	jr c, .borked3
 	ret
 

@@ -21,13 +21,19 @@
 ;THE SOFTWARE.
 
 ; TNFS BASIC extensions
-	include "../../rom/zxromdefs.asm"
-
+.include	"zxrom.inc"
+.include	"spectranet.inc"
+.include	"defs.inc"
+.include	"fcntl.inc"
+.include	"sysvars.inc"
+.include	"zxsysvars.inc"
+.text
 ;---------------------------------------------------------------------------
 ; F_tbas_mount
 ; BASIC interpreter for "mount"
 ; Syntax: %mount mountpoint, "url"
-F_tbas_mount
+.globl F_tbas_mount
+F_tbas_mount:
 	; Syntax and runtime
 	rst CALLBAS
 	defw ZX_EXPT1_NUM
@@ -55,35 +61,36 @@ F_tbas_mount
 	ld ix, INTERPWKSPC		; where to place the mount struct
 	ld hl, INTERPWKSPC+10		; location of the string to parse
 	call F_parseurl
-	jr c, .badurl
+	jr c, .badurl1
 
 	rst CALLBAS			; fetch the mount point
 	defw ZX_FIND_INT2
 	
-.mount
+.mount1:
 	ld a, c				; mount point in BC
 	call MOUNT
 	jp c, J_tbas_error		; display the error message
 
 	jp EXIT_SUCCESS
 
-.badurl
+.badurl1:
 	ld a, EBADURL
 	jp J_tbas_error
 
 	; Copy a BASIC string to a C string.
 	; BASIC string in DE, C string (dest) in HL
-F_basstrcpy
+.globl F_basstrcpy
+F_basstrcpy:
 	ld a, b				; end of string?
 	or c
-	jr z, .terminate
+	jr z, .terminate2
 	ld a, (de)
 	ld (hl), a
 	inc hl
 	inc de
 	dec bc
 	jr F_basstrcpy
-.terminate
+.terminate2:
 	xor a				; put the null on the end
 	ld (hl), a
 	inc hl
@@ -92,7 +99,8 @@ F_basstrcpy
 ;----------------------------------------------------------------------------
 ; F_tbas_umount
 ; Umount the mounted filesystem.
-F_tbas_umount
+.globl F_tbas_umount
+F_tbas_umount:
 	rst CALLBAS
 	defw ZX_EXPT1_NUM		; 1 parameter - mount point number
 	call STATEMENT_END
@@ -108,7 +116,8 @@ F_tbas_umount
 ;----------------------------------------------------------------------------
 ; F_tbas_chdir
 ; Handle changing directory
-F_tbas_chdir
+.globl F_tbas_chdir
+F_tbas_chdir:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; expect a string expression
 	call STATEMENT_END
@@ -127,7 +136,8 @@ F_tbas_chdir
 ; F_tbas_aload: Loads an arbitary file from the TNFS filesystem.
 ; The syntax is %aload "filename" CODE address. This allows the user
 ; to load an arbitrary file with no ZX formatting into memory.
-F_tbas_aload
+.globl F_tbas_aload
+F_tbas_aload:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; expect a string expression
 	cp TOKEN_CODE			; expect CODE
@@ -158,31 +168,32 @@ F_tbas_aload
 ; F_tbas_load: Loads a ZX file (BASIC, CODE etc.)
 ; The syntax is as for ZX BASIC LOAD, except %load.
 ; TODO: CODE et al.
-F_tbas_load
+.globl F_tbas_load
+F_tbas_load:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; expect a string expression
 	cp TOKEN_CODE			; Check for CODE...
-	jr z, .loadcode
+	jr z, .loadcode6
 	call STATEMENT_END		; If not, statment end for BASIC.
 
 	;------ runtime for BASIC ------
 	xor a				; type 0x00 is BASIC
-.loader
+.loader6:
 	push af				; save type
 	rst CALLBAS
 	defw ZX_STK_FETCH		; fetch the filename
 	ld a, b				; check for empty string
 	or c
-	jr nz, .havefilename
+	jr nz, .havefilename6
 	ld hl, STR_BOOTDOTZX
 	ld de, INTERPWKSPC
 	ld bc, STR_BOOTDOTZXLEN
 	ldir
-	jr .loadbasic
-.havefilename
+	jr .loadbasic6
+.havefilename6:
 	ld hl, INTERPWKSPC
 	call F_basstrcpy		; copy + convert to C string
-.loadbasic
+.loadbasic6:
 	; Now call the loader routine with the filename in HL
 	ld hl, INTERPWKSPC
 	pop af				; get type id
@@ -190,7 +201,7 @@ F_tbas_load
 	jp c, J_tbas_error
 	jp EXIT_SUCCESS
 
-.loadcode
+.loadcode6:
 	; TODO - code to a specific address.
 	rst CALLBAS
 	defw ZX_NEXT_CHAR
@@ -198,21 +209,22 @@ F_tbas_load
 
 	;------ runtime for CODE with no addr -------
 	ld a, 3				; type=CODE
-	jr .loader			; get the filename then load.
+	jr .loader6			; get the filename then load.
 
 ;----------------------------------------------------------------------------
 ; F_tbas_save: Save a ZX file (BASIC, CODE etc.)
 ; The syntax is as for ZX BASIC SAVE.
 ; TODO: CODE et al.
-F_tbas_save
+.globl F_tbas_save
+F_tbas_save:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; fetch the file name
 	cp TOKEN_CODE			; for CODE
-	jr z, .savecode
+	jr z, .savecode7
 	cp TOKEN_SCREEN			; for SCREEN$
-	jr z, .savescreen	
+	jr z, .savescreen7	
 	cp TOKEN_LINE			; then for LINE
-	jr z, .savebasline
+	jr z, .savebasline7
 
 	call STATEMENT_END		; a basic BASIC save.
 
@@ -225,10 +237,10 @@ F_tbas_save
 	call F_tbas_mktapheader
 	ld hl, 0xFFFF			; set param1 to >32767
 	ld (INTERPWKSPC+OFFSET_PARAM1), hl
-	jr .makebasicblock
+	jr .makebasicblock7
 
 	; Deal with SAVE "filename" CODE
-.savecode
+.savecode7:
 	rst CALLBAS
 	defw ZX_NEXT2_NUM		; check for 2 numbers
 	call STATEMENT_END		; then end of command.
@@ -240,7 +252,7 @@ F_tbas_save
 	rst CALLBAS
 	defw ZX_FIND_INT2		; and the start
 	push bc				; and save that, too
-.savecodemain
+.savecodemain7:
 	rst CALLBAS
 	defw ZX_STK_FETCH		; and get the filename
 	ld a, 3				; type = 3 - CODE
@@ -253,7 +265,7 @@ F_tbas_save
 	jp c, J_tbas_error
 	jp EXIT_SUCCESS
 	
-.savescreen
+.savescreen7:
 	rst CALLBAS
 	defw ZX_NEXT_CHAR		; advance to the end of the line
 	call STATEMENT_END
@@ -263,9 +275,9 @@ F_tbas_save
 	push hl				; on the stack
 	ld hl, 16384			; followed by the start address
 	push hl
-	jr .savecodemain		; and do as for CODE
+	jr .savecodemain7		; and do as for CODE
 
-.savebasline
+.savebasline7:
 	rst CALLBAS
 	defw ZX_NEXT_CHAR
 	rst CALLBAS
@@ -284,7 +296,7 @@ F_tbas_save
 	call F_tbas_mktapheader		; Create the header
 	ld hl, (v_bcsave)		; get LINE parameter
 	ld (INTERPWKSPC+OFFSET_PARAM1), hl ; Put it into parameter 1
-.makebasicblock
+.makebasicblock7:
 
 	; Fill in the header, length and length without vars
 	ld hl, (ZX_E_LINE)		; get the length of the BASIC prog
@@ -305,11 +317,12 @@ F_tbas_save
 ; F_tbas_ls
 ; List a directory
 ; Two forms - either %cat or %cat "directory"
-F_tbas_ls
+.globl F_tbas_ls
+F_tbas_ls:
 	cp 0x0d
-	jr z, .noargs
+	jr z, .noargs8
 	cp ':'
-	jr z, .noargs
+	jr z, .noargs8
 	
 	; we have an argument supplied.
 	rst CALLBAS
@@ -324,7 +337,7 @@ F_tbas_ls
 	ld hl, INTERPWKSPC
 	jp F_listdir
 
-.noargs
+.noargs8:
 	call STATEMENT_END
 	
 	; --------- runtime ----------
@@ -333,13 +346,14 @@ F_tbas_ls
 	xor a
 	ld (INTERPWKSPC+1), a
 	ld hl, INTERPWKSPC
-.makecat
+.makecat8:
 	jp F_listdir
 
 ;---------------------------------------------------------------------------
 ; F_tbas_tapein
 ; Handle the %tapein command, which takes a filename as a parameter.
-F_tbas_tapein
+.globl F_tbas_tapein
+F_tbas_tapein:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; expect a string expression
 	call STATEMENT_END
@@ -354,7 +368,8 @@ F_tbas_tapein
 ;----------------------------------------------------------------------------
 ; F_tbas_info
 ; Handle the %info command
-F_tbas_info
+.globl F_tbas_info
+F_tbas_info:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; expect a string
 	call STATEMENT_END
@@ -369,7 +384,8 @@ F_tbas_info
 ;----------------------------------------------------------------------------
 ; F_tbas_fs
 ; Sets the current filesystem.
-F_tbas_fs
+.globl F_tbas_fs
+F_tbas_fs:
 	rst CALLBAS
 	defw ZX_EXPT1_NUM		; expect one number - the FS number
 	call STATEMENT_END
@@ -386,7 +402,8 @@ F_tbas_fs
 ;----------------------------------------------------------------------------
 ; F_loadsnap
 ; Loads a snapshot file.
-F_loadsnap
+.globl F_loadsnap
+F_loadsnap:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; filename string
 	call STATEMENT_END
@@ -404,7 +421,8 @@ F_loadsnap
 ;----------------------------------------------------------------------------
 ; F_tbas_mv
 ; Moves (renames) a file.
-F_tbas_mv
+.globl F_tbas_mv
+F_tbas_mv:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; source filename
 	cp ','				; and a comma	
@@ -433,7 +451,8 @@ F_tbas_mv
 
 ;---------------------------------------------------------------------------
 ; F_tbas_rm: Removes a file
-F_tbas_rm
+.globl F_tbas_rm
+F_tbas_rm:
 	rst CALLBAS
 	defw ZX_EXPT_EXP		; file to remove
 	call STATEMENT_END
@@ -452,7 +471,8 @@ F_tbas_rm
 ; F_tbas_zxprint
 ; Prints a C string to the current ZX channel
 ; HL = pointer to string 
-F_tbas_zxprint
+.globl F_tbas_zxprint
+F_tbas_zxprint:
 	ld a, (hl)
 	and a
 	ret z
@@ -464,7 +484,8 @@ F_tbas_zxprint
 ;----------------------------------------------------------------------------
 ; handle errors and return control to BASIC.
 ; A=tnfs error number
-J_tbas_error
+.globl J_tbas_error
+J_tbas_error:
 	push af				; save error number
 	call F_geterrstr		; get the error string
 	pop af
@@ -474,7 +495,8 @@ J_tbas_error
 ; F_tnfs_geterrstr
 ; Enter with A=error number
 ; Exits with HL=pointer to null terminated error string
-F_geterrstr
+.globl F_geterrstr
+F_geterrstr:
 	ld h, 0xFC		; ID of messages module
 	ld l, a			; Set the message ID to fetch
 	ld de, 0x3000		; buffer
@@ -483,11 +505,15 @@ F_geterrstr
 	rst MODULECALL_NOPAGE
 	ld hl, 0x3000		; address of the message
 	ret
+.data
+.globl STR_BOOTDOTZX
+.globl STR_BOOTDOTZXLEN
+STR_proto:	defb	"tnfs",0
+STR_BOOTDOTZX:	defb	"boot.zx",0
+STR_BOOTDOTZXEND:
 
-STR_proto	defb	"tnfs",0
-STR_BOOTDOTZX	defb	"boot.zx",0
-STR_BOOTDOTZXLEN equ	$-STR_BOOTDOTZX
+STR_BOOTDOTZXLEN equ	STR_BOOTDOTZXEND-STR_BOOTDOTZX
 
-EBADURL		equ	0x28
-EBADFS		equ	0x29
+EBADURL:		equ	0x28
+EBADFS:		equ	0x29
 

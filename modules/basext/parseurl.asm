@@ -19,16 +19,19 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"defs.inc"
+.include	"sysvars.inc"
+.text
 ; Parse URLs for mounting filesystems.
 
 ;--------------------------------------------------------------------------
 ; F_parseurl: Break up incoming string into null-terminated strings.
 ; Parameters: IX - points to memory where the mount structure will be held
 ;             HL - pointer to string
-F_parseurl
+.globl F_parseurl
+F_parseurl:
 	call F_findfstype	; if there's an fs type token
-	jr nc, .continue	; then continue
+	jr nc, .continue1	; then continue
 	push hl			; otherwise
 	ld hl, STR_defaulttype	; make a copy of the default fs
 	ld de, v_workspace	; type token in memory that's not 
@@ -37,25 +40,25 @@ F_parseurl
 	pop hl
 	ld (ix+0), v_workspace%256
 	ld (ix+1), v_workspace/256
-	jr .finduser
-.continue
+	jr .finduser1
+.continue1:
 	ld (ix+0), e		; set the host arg
 	ld (ix+1), d
-.finduser
+.finduser1:
 	call F_finduser		; User specified in the string?
-	jr c, .findhost
+	jr c, .findhost1
 	ld (ix+6), e
 	ld (ix+7), d
 	call F_findpasswd	; Is there a password?
-	jr c, .findhost
+	jr c, .findhost1
 	ld (ix+8), e
 	ld (ix+9), d
-.findhost
+.findhost1:
 	call F_findhost		; There *must* be a host.
 	ret c
 	ld (ix+2), e
 	ld (ix+3), d
-.path				; The remainder is the path - just
+.path1:				; The remainder is the path - just
 	ld (ix+4), l		; set the next argument to the current
 	ld (ix+5), h		; value of HL and return.
 	ret
@@ -65,21 +68,22 @@ F_parseurl
 ; with carry reset, DE pointing at the start address, and HL pointing
 ; at the start of the  next bit of the string to parse.
 ; If not return with carry set and HL set to its original value.
-F_findfstype
+.globl F_findfstype
+F_findfstype:
 	push hl
-.loop
+.loop2:
 	ld a, (hl)
 	and a
 	jr z, J_notfound
 	cp ':'			; look for colon token followed by...
 	inc hl
-	jr nz, .loop		; Not found, next...
+	jr nz, .loop2		; Not found, next...
 	ld a, (hl)		; See if we have an "/"
 	cp '/'
-	jr z, .found
+	jr z, .found2
 	inc hl
-	jr .loop		; no, continue
-.found
+	jr .loop2		; no, continue
+.found2:
 	dec hl			; convert tokens to nulls
 	xor a
 	ld (hl), a		; delete the colon
@@ -90,7 +94,7 @@ F_findfstype
 	inc hl
 	pop de			; return start address in DE
 	ret
-J_notfound
+J_notfound:
 	pop hl			; restore HL
 	scf			; indicate "no fstype found"
 	ret
@@ -98,9 +102,10 @@ J_notfound
 ;-------------------------------------------------------------------------
 ; See if there's a user. The hostname part of the string can be
 ; user@host, user:pw@host or just host.
-F_finduser
+.globl F_finduser
+F_finduser:
 	push hl
-.loop
+.loop3:
 	ld a, (hl)
 	and a			; end of string
 	jr z, J_notfound
@@ -111,19 +116,19 @@ F_finduser
 	cp '@'			; host separator?
 	jr z, J_found
 	inc hl
-	jr .loop		; no - check the next char
-J_found
+	jr .loop3		; no - check the next char
+J_found:
 	pop de			; DE = start of string
 	ld a, d			; make sure the arg is at least 1 char
 	cp h
-	jr nz, .done
+	jr nz, .done3
 	ld a, e
 	cp l
-	jr nz, .done
+	jr nz, .done3
 	ex de, hl		; oops - reset HL to the start of the string
 	scf			; indicate not found
 	ret
-.done
+.done3:
 	xor a
 	ld (hl), a
 	inc hl
@@ -131,9 +136,10 @@ J_found
 
 ;-------------------------------------------------------------------------
 ; See if there's a password.
-F_findpasswd
+.globl F_findpasswd
+F_findpasswd:
 	push hl
-.loop
+.loop4:
 	ld a, (hl)
 	and a
 	jr z, J_notfound
@@ -142,31 +148,32 @@ F_findpasswd
 	cp '@'
 	jr z, J_found
 	inc hl
-	jr .loop
+	jr .loop4
 
 ;------------------------------------------------------------------------
 ; Find the hostname
-F_findhost
+.globl F_findhost
+F_findhost:
 	push hl
-.loop
+.loop5:
 	ld a, (hl)
 	and a
-	jr z, .addpath
+	jr z, .addpath5
 	cp '/'
 	jr z, J_found
 	inc hl
-	jr .loop
+	jr .loop5
 	
 	; if we hit the end of the string while parsing the hostname
 	; we can assume the user wants to mount the root.
-.addpath
+.addpath5:
 	inc hl
 	ld (hl), '/'
 	inc hl
 	ld (hl), 0
 	pop de
 	ret
-
-STR_defaulttype
+.data
+STR_defaulttype:
 	defb "tnfs",0
-deftypelen equ 5
+deftypelen: equ 5

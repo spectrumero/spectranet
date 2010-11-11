@@ -21,11 +21,17 @@
 ;THE SOFTWARE.
 
 ; Routines for the %info command.
-
+.include	"defs.inc"
+.include	"zxrom.inc"
+.include	"spectranet.inc"
+.include	"fcntl.inc"
+.include	"sysvars.inc"
+.text
 ;---------------------------------------------------------------------------
 ; F_showfileinfo
 ; Shows information on a file.
-F_showfileinfo
+.globl F_showfileinfo
+F_showfileinfo:
 	ld hl, INTERPWKSPC
 	call F_basstrcpy	; prepare BASIC string for use
 	
@@ -36,16 +42,16 @@ F_showfileinfo
 
 	ld a, (INTERPWKSPC+256+1) ; get file type flags
 	bit 7, a		; test for regular file
-	jr nz, .rfinfo
+	jr nz, .rfinfo1
 	
 	bit 6, a		; test for directory
-	jp nz, .dirinfo
+	jp nz, .dirinfo1
 
-	ld a, 0x26		; Unknown file type - TODO - errno.asm
+	ld a, 0x26		; Unknown file type - TODO - errno.asm1
 	scf
 	ret
 
-.rfinfo
+.rfinfo1:
 	ld a, 2
 	rst CALLBAS
 	defw 0x1601		; set channel
@@ -71,45 +77,45 @@ F_showfileinfo
 	ret c			; failed top open the file!
 	ld (v_vfs_curfd), a	; save the FD
 
-.gethdrinfo
+.gethdrinfo1:
 	ld de, INTERPWKSPC	; we no longer need the filename
 	call F_tbas_getheader
-	jr c, .nottap		; Not a TAP file (or an error)
-	call .hdrinfo
+	jr c, .nottap1		; Not a TAP file (or an error)
+	call .hdrinfo1
 
 	; At this point we list any remaining blocks, some of which may
 	; lack normal headers, so we have to do it in a new block of code.
 	; Seek forward past the data block and try to analyze the rest
 	; of the TAP file.
-.getblocks
+.getblocks1:
 	ld de, INTERPWKSPC
 	ld bc, 2		; read the length value
 	ld a, (v_vfs_curfd)
 	call READ
-	jr c, .cleanuperr	; shouldn't die here.
+	jr c, .cleanuperr1	; shouldn't die here.
 
 	ld hl, (INTERPWKSPC)	; get the length of the block
-.seeknextblock
+.seeknextblock1:
 	ld de, 0		; and make dehl = 32 bit version of it
 	ld a, (v_vfs_curfd)
 	ld c, SEEK_CUR		; and seek forwards that many bytes
 	call LSEEK
-	jr c, .cleanuperr
+	jr c, .cleanuperr1
 
 	ld de, INTERPWKSPC	; see if we've got another header
 	call F_tbas_getheader
-	jr nc, .disphdr
+	jr nc, .disphdr1
 	cp TBADLENGTH
-	jr z, .dispnonhdr	; suspected headerless block
+	jr z, .dispnonhdr1	; suspected headerless block
 	cp TBADTYPE
-	jr z, .dispnonhdr
+	jr z, .dispnonhdr1
 	cp EOF			; reached end of file?
-	jr z, .done
-.disphdr
-	call .hdrinfo		; show the header information
-	jr .getblocks
+	jr z, .done1
+.disphdr1:
+	call .hdrinfo1		; show the header information
+	jr .getblocks1
 
-.dispnonhdr
+.dispnonhdr1:
 	ld hl, STR_headerless	; print "Headerless block"
 	call F_tbas_zxprint
 	ld de, 0		; most significant word is always 0
@@ -123,30 +129,30 @@ F_showfileinfo
 	ld hl, (INTERPWKSPC)
 	ld de, TNFS_HDR_LEN-2	; already read this much, subtract from
 	sbc hl, de		; the block size. TODO: block sizes
-	jr .seeknextblock	; smaller than a standard header!
+	jr .seeknextblock1	; smaller than a standard header!
 
-.done
+.done1:
 	ld a, (v_vfs_curfd)
 	call VCLOSE	
 	ret
-.nottap
+.nottap1:
 	cp TBADLENGTH
-	jr z, .data
+	jr z, .data1
 	cp TBADTYPE
-	jr z, .data
-.cleanuperr
+	jr z, .data1
+.cleanuperr1:
 	push af			; store original error
 	ld a, (v_vfs_curfd)
 	call CLOSE
 	pop af
 	ret
-.data
+.data1:
 	ld hl, STR_data
 	call F_tbas_zxprint
 	call F_lf
-	jr .done
+	jr .done1
 
-.dirinfo
+.dirinfo1:
 	ld a, 2
 	rst CALLBAS
 	defw 0x1601		; set channel
@@ -165,26 +171,26 @@ F_showfileinfo
 	ret
 
 	; A should be the block type as returned by getheader
-.hdrinfo
+.hdrinfo1:
 	and a
-	jr z, .program
+	jr z, .program1
 	cp 1
-	jr z, .numarray
+	jr z, .numarray1
 	cp 2
-	jr z, .strarray
+	jr z, .strarray1
 	cp 3
-	jr z, .code
+	jr z, .code1
 	ld hl, STR_unknown
 	call F_tbas_zxprint
-.continue
+.continue1:
 	ld hl, INTERPWKSPC+4	; Filename in the TAP block
 	ld b, 10
-.fnloop				; Print the filename of this TAP block
+.fnloop1:				; Print the filename of this TAP block
 	ld a, (hl)
 	rst CALLBAS
 	defw 16
 	inc hl
-	djnz .fnloop
+	djnz .fnloop1
 	call F_lf
 
 	ld hl, STR_blksize
@@ -209,24 +215,25 @@ F_showfileinfo
 	call F_lf
 	ret	
 
-.program
+.program1:
 	ld hl, STR_basic
-	jr .pr
-.numarray
+	jr .pr1
+.numarray1:
 	ld hl, STR_numarray
-	jr .pr
-.strarray
+	jr .pr1
+.strarray1:
 	ld hl, STR_strarray
-	jr .pr
-.code
+	jr .pr1
+.code1:
 	ld hl, STR_code
-.pr
+.pr1:
 	call F_tbas_zxprint
-	jr .continue
+	jr .continue1
 	
 
 ; F_lf: Print an "enter"
-F_lf
+.globl F_lf
+F_lf:
 	ld a, 0x0d
 	rst CALLBAS
 	defw 16
@@ -236,10 +243,11 @@ F_lf
 ; F_print32
 ; Converts the 32 bit value in DEHL to ASCII and displays it on the
 ; current ZX channel.
-F_print32
+.globl F_print32
+F_print32:
         ld ix, INTERPWKSPC+512
         ld (ix), 0
-.divloop
+.divloop3:
         inc ix
         ld c, 10
         call F_div32
@@ -249,21 +257,22 @@ F_print32
         or l                    ; has DEHL reached 0?
         or d
         or e
-        jr nz, .divloop
-.loop
+        jr nz, .divloop3
+.loop3:
         ld a, (ix)
         and a
         ret z
         rst CALLBAS
 	defw 16
         dec ix
-        jr .loop
+        jr .loop3
         
 ; Modified version of baze's 32 bit divide routine
-F_div32
+.globl F_div32
+F_div32:
         xor a
         ld b, 32
-.loop
+.loop4:
         add hl,hl           
         rl e              
         rl d             
@@ -272,6 +281,6 @@ F_div32
         jr c,$+4      
         sub c         
         inc l        
-        djnz .loop
+        djnz .loop4
         ret
 

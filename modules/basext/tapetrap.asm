@@ -19,13 +19,18 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"defs.inc"
+.include	"spectranet.inc"
+.include	"fcntl.inc"
+.include	"sysvars.inc"
+.text
 ; Initialize and handle tape traps.
 
 ;---------------------------------------------------------------------------
 ; F_settrap: Sets up tape traps for the named file.
 ; This must be called immediately after ZX_STK_FETCH to get the string.
-F_settrap
+.globl F_settrap
+F_settrap:
 	ld hl, INTERPWKSPC
 	call F_basstrcpy	; get the string from the interpreter
 	
@@ -50,13 +55,13 @@ F_settrap
 	call SETTRAP
 	ret
 
-TAPETRAPBLOCK
+TAPETRAPBLOCK:
 	defb	0xFF		; this page
 	defw	F_loadbytes	; function to call
 	defw	0x0564		; address at time of NMI
 	defw	0x0562		; address to trap with NMI
 
-DEFAULTTRAPBLOCK
+DEFAULTTRAPBLOCK:
 	defb	0xFF		; this page
 	defw	F_bootfile	; function to call
 	defw	0x0564		; address at time of NMI
@@ -65,7 +70,8 @@ DEFAULTTRAPBLOCK
 ;---------------------------------------------------------------------------
 ; F_releasetrap: Closes the file associated with the tape trap and disables
 ; the trap itself.
-F_releasetrap
+.globl F_releasetrap
+F_releasetrap:
 	push ix
 	ld a, 1
 	out (254), a
@@ -87,9 +93,11 @@ F_releasetrap
 ; On return, the carry flag is the *opposite* to normal Spectranet code -
 ; the routines that call loadbytes expect carry to be set if there's NOT
 ; an error.
-F_loadbytes
+.globl F_loadbytes
+F_loadbytes:
 	push ix			; store address
-F_loadbytes_nopush		; (if IX has already been pushed)
+.globl F_loadbytes_nopush
+F_loadbytes_nopush:		; (if IX has already been pushed)
 	ld ix, 4		; point IX at the stacked registers
 	add ix, sp
 
@@ -104,30 +112,30 @@ F_loadbytes_nopush		; (if IX has already been pushed)
 	push ix
 	call READ		; get the "flag" byte.
 	pop ix
-	jr c, .cleanuperror1
+	jr c, .cleanuperror14
 
 	ld a, (INTERPWKSPC)	; compare the flag byte read with the flag
 	cp (ix+1)		; passed in A to LD-BYTES
 
-	jr nz, .skip		; if they aren't the same skip the block
+	jr nz, .skip4		; if they aren't the same skip the block
 
 	ld c, (ix+6)		; get the requested length into
 	ld b, (ix+7)		; BC
 	pop de			; and the address into DE
 	ld h, b			; remaining length in HL
 	ld l, c
-.readloop
+.readloop4:
 	ld a, (v_trapfd)
 	push hl
 	push ix
 	call READ
 	pop ix
 	pop hl
-	jr c, .cleanuperror2
+	jr c, .cleanuperror24
 	sbc hl, bc		; decrement length remaining
 	ld b, h			; update requested bytes
 	ld c, l
-	jr nz, .readloop	; continue until 0 bytes remain
+	jr nz, .readloop4	; continue until 0 bytes remain
 
 	ld a, (v_trapfd)
 	ld bc, 3		; now read the "check sum" + next block length
@@ -135,28 +143,28 @@ F_loadbytes_nopush		; (if IX has already been pushed)
 	push ix
 	call READ
 	pop ix
-	jr c, .checkeof		; EOF?
+	jr c, .checkeof4		; EOF?
 	ld hl, (INTERPWKSPC+1)	; Get the length of the next block and copy
 	ld (v_trap_blklen), hl	; to the length storage.
-.success
+.success4:
 	ld (ix+2), 1		; set carry flag in return stack
 	jp PAGETRAPRETURN
 
-.checkeof
+.checkeof4:
 	cp EOF			; End of file - not an error condition
-	jr nz, .cleanuperror2
+	jr nz, .cleanuperror24
 	call F_releasetrap	; Close the file and release the trap
 	ld (ix+2), 1		; Signal success to ROM
 	jp PAGETRAPRETURN
 
-.cleanuperror1
+.cleanuperror14:
 	pop hl			; restore the stack (originally ix)
-.cleanuperror2
+.cleanuperror24:
 	call F_releasetrap	; Release the trap and close files
 	ld (ix+2), 0		; reset the carry flag to signal error
 	jp PAGETRAPRETURN
 
-.skip				; TODO: when seek() is working...
+.skip4:				; TODO: when seek() is working...
 	call F_releasetrap
 	pop de			; restore stack
 	pop ix
@@ -165,10 +173,10 @@ F_loadbytes_nopush		; (if IX has already been pushed)
 	ld (ix+2), 0		; ensure C is cleared
 	jp PAGETRAPRETURN
 
-J_trapreturn
+J_trapreturn:
 
 ;---------------------------------------------------------------------------	
-J_cleanup_traperr
+J_cleanup_traperr:
 	push af
 	ld a, (v_trapfd)
 	call VCLOSE
@@ -177,7 +185,8 @@ J_cleanup_traperr
 
 ;--------------------------------------------------------------------------
 ; F_initbootfile: Sets up LOAD ""
-F_initbootfile
+.globl F_initbootfile
+F_initbootfile:
 	ld hl, DEFAULTTRAPBLOCK	; Program the CPLD NMI trap
 	call SETTRAP
 	ret
@@ -187,7 +196,8 @@ F_initbootfile
 ; Handles the case of an unsolicited LOAD "". It will try to load the file
 ; "boot" in the current working directory. If the file doesn't exist, it
 ; releases the trap and returns control to the tape loader.
-F_bootfile
+.globl F_bootfile
+F_bootfile:
 	push ix
 	ld hl, DEFAULTFILE	; first copy the filename into memory
 	ld de, INTERPWKSPC	; that's accessable by the FS module
@@ -198,28 +208,28 @@ F_bootfile
 	ld d, 0x00		; no flags
 	ld e, O_RDONLY		; read only
 	call OPEN
-	jr c, .usetape		; On error, simply pass control back to the
+	jr c, .usetape6		; On error, simply pass control back to the
 				; ROM tape loader.
 	ld (v_trapfd), a	; save the file descriptor
 	
 	ld de, v_trap_blklen	; read the TAP block length to "prime the
 	ld bc, 2		; system" as it were.
 	call READ
-	jr c, .cleanupusetape	; any errors, then clean up and use tape. (EOF 
+	jr c, .cleanupusetape6	; any errors, then clean up and use tape. (EOF 
 				; considered an error at this point too)
 	
 	ld hl, TAPETRAPBLOCK	; Reprogram the NMI trap.
 	call SETTRAP
 	jp F_loadbytes_nopush	; and go to loadbytes to do the work.
 
-.cleanupusetape
+.cleanupusetape6:
 	ld a, (v_trapfd)
 	call VCLOSE		; close the file
-.usetape
+.usetape6:
 	pop ix
 	jp PAGETRAPRETURN
 
-DEFAULTFILE
-	defb	"boot.zx",0
-DEFAULTFILELEN equ $-DEFAULTFILE
+DEFAULTFILE:
+	defb	"boot.zx6",0
+DEFAULTFILELEN: equ $-DEFAULTFILE
 

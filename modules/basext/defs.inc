@@ -20,25 +20,19 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Creates the BASIC extensions module.
-	include "../../rom/spectranet.asm"
-	include "../../rom/sysvars.sym"
-	include "../../rom/zxsysvars.asm"
-	include "../../rom/fs_defs.asm"
-	include "../config/config_interface.asm"
-	include "defs.asm"
-INTERPWKSPC	equ 0x3000
-TNFS_PAGE	equ 0xFF
 
-	org 0x2000
-	include "vectors.asm"		; vector table
-	include "init.asm"		; initialization routines	
-	include "commands.asm"		; Command routines
-	include "loader.asm"		; Load/save routines
-	include "tapetrap.asm"		; tape traps
-	include "info.asm"		; %info command
-	include "strings_en.asm"	; Strings
-	include "parseurl.asm"		; Mount point URL parser
-	include "listdir.asm"		; List directory
-	include	"boot.asm"		; Boot loader
+; Temporary storage
+v_snapfd		equ 0x32FF	; Snapshot FD
+v_stacksave		equ 0x32FD	; Save the stack pointer
+v_snapstack		equ 0x32FB	; Start of snapshot stack
 
+STACK_AFALT		equ NMISTACK-14
+STACK_AF		equ NMISTACK-12
+STACK_BC		equ NMISTACK-10
+STACK_DE		equ NMISTACK-8
+STACK_HL		equ NMISTACK-6
+
+AUTOBOOT		equ 0x81	; Config ID for autoboot flag
+ROM_ID			equ 0xFD
+
+INTERPWKSPC		equ 0x3000

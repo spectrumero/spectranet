@@ -19,11 +19,14 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.text
 ; Claim our memory page, functions to fetch etc.
 ; Note: Ought to be a library function.
 
-F_allocpage
+.globl F_allocpage
+F_allocpage:
 	ld a, (v_pgb)		; Find our identity
 	call RESERVEPAGE
 	ret c			; Failed to reserve a page!
@@ -53,7 +56,8 @@ F_allocpage
 ;-----------------------------------------------------------------------------
 ; F_fetchpage
 ; Gets our page of RAM and puts it in page area A.
-F_fetchpage
+.globl F_fetchpage
+F_fetchpage:
         push af
         push hl
         ld a, (v_pgb)           ; get our ROM number and calculate
@@ -64,7 +68,7 @@ F_fetchpage
         ld l, a
         ld a, (hl)              ; fetch the page number
         and a                   ; make sure it's nonzero
-        jr z, .nopage
+        jr z, .nopage2
         inc l                   ; point hl at "page number storage"
         ex af, af'
         ld a, (v_pga)
@@ -75,7 +79,7 @@ F_fetchpage
         pop af
         or a                    ; ensure carry is cleared
         ret
-.nopage
+.nopage2:
         pop hl                  ; restore the stack
         pop af
         ld a, 0xFF              ; TODO: ENOMEM return code
@@ -86,7 +90,8 @@ F_fetchpage
 ; F_isallocated
 ; Tests to see if we have a memory page allocated already.
 ; Returns nonzero if we have a page
-F_isallocated
+.globl F_isallocated
+F_isallocated:
 	push hl
 	ld a, (v_pgb)		; get our ROM number
 	rlca			; multiply by 8 to find our
@@ -102,8 +107,10 @@ F_isallocated
 ;---------------------------------------------------------------------------
 ; F_restorepage
 ; Restores page A to its original value.
-F_leave
-F_restorepage
+.globl F_leave
+F_leave:
+.globl F_restorepage
+F_restorepage:
         push af
         push hl
         ld a, (v_pgb)           ; calculate the offset...

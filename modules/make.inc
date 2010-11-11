@@ -5,6 +5,8 @@ ASFLAGS = -I../../include
 MAPFILE = $(OUT).map
 LDFLAGS = -T ../modules.ld -Map $(MAPFILE)
 
+.PHONY: clean
+
 module:	$(ASOBJS)
 	$(LD) -o $(OUT) $(ASOBJS) $(LDFLAGS) $(LIBPATH) $(LIBS)
 

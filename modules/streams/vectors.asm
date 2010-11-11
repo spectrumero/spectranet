@@ -22,6 +22,8 @@
 
 ; BAISC streams support
 ; Vector table
+.include	"defs.inc"
+.section vectors
 	defb 0xAA		; This is a code ROM
         defb STREAM_ROM_ID      ; Rom ID 0x01
         defw F_init             ; RESET vector
@@ -32,5 +34,6 @@
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
 	jp J_modcall		; we have a module call routine
-STR_ident
-	defb "Streams 1.0",0
+.data
+STR_ident:
+	defb "Streams 1.00",0

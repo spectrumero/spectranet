@@ -19,14 +19,20 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"spectranet.inc"
+.include	"zxrom.inc"
+.include	"zxsysvars.inc"
+.include	"sysvars.inc"
+.include	"streamvars.inc"
+.text
 ; BASIC extensions
 
 ;--------------------------------------------------------------------------
 ; F_connect: Receives the %connect command, opens a socket,
 ; and connects it to a host.
 ; Syntax is %connect stream,"hostname",port
-F_connect
+.globl F_connect
+F_connect:
 	rst CALLBAS
 	defw ZX_NEXT_CHAR
 	cp '#'				; # means channel number
@@ -72,7 +78,8 @@ F_connect
 ; F_listen
 ; Opens a socket that listens.
 ; %listen #n,port
-F_listen
+.globl F_listen
+F_listen:
         rst CALLBAS
         defw ZX_NEXT_CHAR
         cp '#'                          ; # means channel number
@@ -95,7 +102,8 @@ F_listen
 ;-------------------------------------------------------------------------
 ; F_accept
 ; Accepts an incoming connection
-F_accept
+.globl F_accept
+F_accept:
 	rst CALLBAS
         defw ZX_NEXT_CHAR
         cp '#'                          ; # means channel number
@@ -118,7 +126,8 @@ F_accept
 ;-------------------------------------------------------------------------
 ; F_fopen: Opens a file
 ; Syntax is %fopen #stream, "filename","filemode"
-F_fopen
+.globl F_fopen
+F_fopen:
         rst CALLBAS
         defw ZX_NEXT_CHAR
         cp '#'                          ; # means channel number
@@ -164,7 +173,8 @@ F_fopen
 ;------------------------------------------------------------------------
 ; F_opendir: Opens a directory
 ; Syntax is %opendir #stream, "dirname"
-F_opendir
+.globl F_opendir
+F_opendir:
 	rst CALLBAS
         defw ZX_NEXT_CHAR
         cp '#'                          ; # means channel number
@@ -198,7 +208,8 @@ F_opendir
 ;-------------------------------------------------------------------------
 ; F_close: Closes an open stream.
 ; Syntax is %close stream
-F_close
+.globl F_close
+F_close:
 	rst CALLBAS
 	defw ZX_NEXT_CHAR
 	cp '#'			; expect channel number
@@ -219,7 +230,8 @@ F_close
 ;------------------------------------------------------------------------
 ; F_oneof: Sets the line number to go to on EOF.
 ; Syntax is %oneof linenumber
-F_oneof
+.globl F_oneof
+F_oneof:
 	rst CALLBAS
 	defw ZX_EXPT1_NUM	; Line number
 	call STATEMENT_END
@@ -232,7 +244,7 @@ F_oneof
 	ld (oneof_line), bc	; set the line number
 	call F_leave
 	jp EXIT_SUCCESS
-J_memerr
+J_memerr:
 	call F_leave
 	ld hl, STR_nomem
 	jp REPORTERR
@@ -240,7 +252,8 @@ J_memerr
 ;--------------------------------------------------------------------------
 ; F_ctrt: Opens a control channel.
 ; Syntax is: %control #n
-F_ctrl
+.globl F_ctrl
+F_ctrl:
 	rst CALLBAS
 	defw ZX_NEXT_CHAR
 	cp '#'			; expect channel number
@@ -261,7 +274,8 @@ F_ctrl
 ;--------------------------------------------------------------------------
 ; F_reclaim: Reclaims stream memory
 ; Syntax is %reclaim
-F_reclaim
+.globl F_reclaim
+F_reclaim:
 	call STATEMENT_END	; No arguments.
 
 	; Runtime
@@ -274,17 +288,18 @@ F_reclaim
 ;--------------------------------------------------------------------------
 ; Copy a BASIC string to a C string.
 ; BASIC string in DE, C string (dest) in HL
-F_basstrcpy 
+.globl F_basstrcpy
+F_basstrcpy: 
         ld a, b                         ; end of string?
         or c
-        jr z, .terminate
+        jr z, .terminate10
         ld a, (de)
         ld (hl), a
         inc hl 
         inc de 
         dec bc 
         jr F_basstrcpy
-.terminate
+.terminate10:
         xor a                           ; put the null on the end
         ld (hl), a
         inc hl

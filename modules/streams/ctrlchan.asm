@@ -33,17 +33,23 @@
 ; byte 1: current command
 ; byte 2: state of current cmd
 ; byte 3: stream to act upon
-
+.include	"zxrom.inc"
+.include	"zxsysvars.inc"
+.include	"spectranet.inc"
+.include	"defs.inc"
+.text
 ;-------------------------------------------------------------------------
 ; Control stream entry point
-F_control
+.globl F_control
+F_control:
 	bit 7, l
 	jr nz, F_read_ctrlstream
 ; F_write_ctrlstream
 ; Sets the function of the control stream. This allows the BASIC
 ; programmer do something like "INPUT#4;"command";a%".
 ; Enter with L=stream
-F_write_ctrlstream
+.globl F_write_ctrlstream
+F_write_ctrlstream:
 	ex af, af'
 	call F_findmetadata	; find our metadata table
 	ex af, af'
@@ -55,12 +61,13 @@ F_write_ctrlstream
 
 ;-------------------------------------------------------------------------
 ; F_read_ctrlstream
-F_read_ctrlstream
+.globl F_read_ctrlstream
+F_read_ctrlstream:
 	call F_findmetadata	; stream metadata now pointed to by IX
 
         ld hl, ZX_TV_FLAG       ; the mode is considered unchanged
         res 3, (hl)
-.isinkey			; The control stream only works with
+.isinkey3:			; The control stream only works with
 	ld hl, (ZX_ERR_SP)	; INPUT#, make INKEY$ a no-op
 	ld e, (hl)
 	inc hl
@@ -68,21 +75,21 @@ F_read_ctrlstream
 	and a
 	ld hl, 0x107F		; Compare with ED_ERROR
 	sbc hl, de
-	jp nz, .wasinkey
+	jp nz, .wasinkey3
 
 	ld a, (ix+OFS_CURCMD)	; find out the command in use
 	cp CMD_POLLALL
 	jp z, J_pollall
 	and a
-	jr z, .nocmd
+	jr z, .nocmd3
 
-.badcmd
+.badcmd3:
 	ld hl, STR_badcmd	; Unknown command
 	jp F_sendbuf
-.nocmd
+.nocmd3:
 	ld hl, STR_nocmd
 	jp F_sendbuf
-.wasinkey
+.wasinkey3:
 	xor a			; Z and C reset - no data
 	ld l, 1			; Don't fix the stack
 	jp F_leave
@@ -93,64 +100,64 @@ F_read_ctrlstream
 ; Note that not all sockets may be being used by BASIC, some may be used
 ; by ROM modules or other machine code programs. If a socket that's
 ; ready is not for a BASIC stream it gets ignored.
-J_pollall
+J_pollall:
 	ld a, (ix+OFS_CURSTATE)	; check current state
 	and a			; if is zero, do the actual poll
-	jr nz, .retsockstate	; return the socket state
+	jr nz, .retsockstate3	; return the socket state
 	ld (ix+OFS_CURSTATE), 1	; set current state flag to "get status"
 
 	; Check to find out whether there is pending data already
 	; in the buffer.
-.checkbufs
+.checkbufs3:
 	; start with HL pointing at the first potential FD
 	ld hl, BUFMETADATA+STRM_FLAGS+BUFDATASZ
 	ld b, 15		; maximum number of iterations
 	ld c, a			; store fd
-.findloop_buf
+.findloop_buf3:
 	xor a			; check flags for the stream
 	cp (hl)			; - for a socket, should all be zero
-	jr nz, .nextbuf
+	jr nz, .nextbuf3
 	dec l			; point at the read buffer current
 	dec l			; pointer
 	cp (hl)
-	jr nz, .bufrdy		; a buffer still has stuff in it
+	jr nz, .bufrdy3		; a buffer still has stuff in it
 	inc l
 	inc l			; restore HL
-.nextbuf
+.nextbuf3:
 	ld a, BUFDATASZ		; move to the next channel info
 	add a, l
 	ld l, a
-	djnz .findloop_buf
+	djnz .findloop_buf3
 
 	; no buffers have pending data, poll the sockets.
 	call POLLALL		; poll all open sockets
-	jr z, .none		; nothing waiting
+	jr z, .none3		; nothing waiting
 	ld (ix+OFS_CURDATA), c	; save socket state
 
 	; start with HL pointing at the first potential FD
 	ld hl, BUFMETADATA+STRM_FLAGS+BUFDATASZ
 	ld b, 15		; maximum number of iterations
 	ld c, a			; store fd
-.findloop
+.findloop3:
 	xor a			; check flags for the stream
 	cp (hl)			; - for a socket, should all be zero
-	jr nz, .next
+	jr nz, .next3
 	ld a, c			; check FD = stream's FD	
 	dec l
 	cp (hl)
-	jr z, .foundchan
+	jr z, .foundchan3
 	inc l
-.next
+.next3:
 	ld a, BUFDATASZ		; move to the next channel info
 	add a, l
 	ld l, a
-	djnz .findloop
-	jr .checkbufs		; something not ready for us, but check
+	djnz .findloop3
+	jr .checkbufs3		; something not ready for us, but check
 				; our buffers too.
 
-.bufrdy
+.bufrdy3:
 	set BIT_RECV, (ix+OFS_CURDATA)
-.foundchan
+.foundchan3:
 	ld a, 16		; maximum stream number
 	sub b			; subtract where we got to
 	ld hl, INTERPWKSPC	; and convert it to a string
@@ -159,54 +166,55 @@ J_pollall
 	ld hl, INTERPWKSPC	; and send it to BASIC's input buffer.
 	jp F_sendbuf
 
-.retsockstate
+.retsockstate3:
 	ld (ix+OFS_CURSTATE), 0	; reset state flags
 	ld a, (ix+OFS_CURDATA)	; get the socket's state
 	bit BIT_RECV, a		; Received data?
-	jr nz, .recv
+	jr nz, .recv3
 	bit BIT_DISCON, a	; Disconnected?
-	jr nz, .discon
+	jr nz, .discon3
 	bit BIT_CONN, a		; Connected?
-	jr nz, .connected
+	jr nz, .connected3
 	ld hl, STR_unk
 	jp F_sendbuf
-.recv
+.recv3:
 	ld hl, STR_recv
 	jp F_sendbuf
-.discon
+.discon3:
 	ld hl, STR_discon
 	jp F_sendbuf
-.connected
+.connected3:
 	ld hl, STR_conn
 	jp F_sendbuf
-.none
+.none3:
 	ld hl, STR_zero
 	jp F_sendbuf
 
 ;-------------------------------------------------------------------------
 ; Send the command buffer. Buffer is at (HL)
-F_sendbuf
+.globl F_sendbuf
+F_sendbuf:
 	ld a, (hl)
 	and a			; end of buffer?
-	jr z, .bufdone
+	jr z, .bufdone4
 	push hl
 	rst CALLBAS
 	defw 0x0F85		; ZX_ADD_CHAR - put a character into
 	pop hl			; INPUT's buffer.
 	inc hl
 	jr F_sendbuf
-.bufdone
+.bufdone4:
 	ld a, 0x0d		; put a CR as the last item
 	ld l, 0			; and signal "munge the stack"
 	scf
 	jp F_leave		; done.
 	
 ; Some pre-defined strings to return to BASIC.
-STR_badcmd	defb "err Bad command",0
-STR_nocmd	defb "err No command",0
-STR_unk		defb "unknown",0
-STR_recv	defb "recv",0
-STR_discon	defb "disconn",0
-STR_conn	defb "conn",0
-STR_zero	defb "0",0
+STR_badcmd:	defb "err Bad command",0
+STR_nocmd:	defb "err No command",0
+STR_unk:		defb "unknown",0
+STR_recv:	defb "recv",0
+STR_discon:	defb "disconn",0
+STR_conn:	defb "conn",0
+STR_zero:	defb "0",0
 

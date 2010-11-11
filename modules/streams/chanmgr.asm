@@ -19,7 +19,14 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"spectranet.inc"
+.include	"zxrom.inc"
+.include	"zxsysvars.inc"
+.include	"sysvars.inc"
+.include	"defs.inc"
+.include	"ctrlchars.inc"
+.include	"streamvars.inc"
+.text
 ; Channel manager - handles creation and deletion of channels
 
 ;------------------------------------------------------------------------
@@ -39,10 +46,11 @@
 ;	byte 3: read buffer pointer
 ;	byte 4: file descriptor
 ;	byte 5: flags (bit 0 = socket or file)
-F_connect_impl
+.globl F_connect_impl
+F_connect_impl:
 	call F_fetchpage		; fetch our memory
 	call c, F_allocpage
-	jr c, .memerr			; one already
+	jr c, .memerr1			; one already
 
 	pop bc				; Get stream number
 	ld (v_bcsave), bc		; save it
@@ -55,17 +63,17 @@ F_connect_impl
 	ld hl, INTERPWKSPC+5		; Try to look up the supplied
 	ld de, INTERPWKSPC		; hostname
 	call GETHOSTBYNAME
-	jr c, .sockerr3
+	jr c, .sockerr31
 
 	ld c, SOCK_STREAM		; Now try to connect to the host -
 	call SOCKET			; open the socket...
-	jr c, .sockerr3
+	jr c, .sockerr31
 	ld (INTERPWKSPC+4), a		; save the socket number
 
 	pop bc				; get port number
 	ld de, INTERPWKSPC		; address of IP address
 	call CONNECT
-	jr c, .sockerr4
+	jr c, .sockerr41
 
 	; All was well, so a channel can now be created and a stream
 	; attached.
@@ -81,11 +89,11 @@ F_connect_impl
 	ld l, a
 
 	call F_findfreebuf		; create a write buffer
-	jr c, .nobufcleanup
+	jr c, .nobufcleanup1
 	ld (hl), a			; save the buffer number
 	inc l
 	call F_findfreebuf		; create a read buffer
-	jr c, .nobufcleanup
+	jr c, .nobufcleanup1
 	ld (hl), a
 	inc l
 
@@ -101,7 +109,7 @@ F_connect_impl
 	call F_leave			; restore memory page A
 	jp EXIT_SUCCESS
 
-.memerr
+.memerr1:
 	pop hl				; restore the stack
 	pop hl
 	pop hl
@@ -109,22 +117,23 @@ F_connect_impl
 	ld hl, STR_nomem
 	jp REPORTERR			; Report "Out of memory"
 
-.sockerr				; TODO - better error routine
+.sockerr1:				; TODO - better error routine
 	pop hl
-.sockerr1
+.sockerr11:
 	pop hl
-.sockerr2
+.sockerr21:
 	pop hl
-.sockerr3
+.sockerr31:
 	pop hl
-.sockerr4
+.sockerr41:
 	call F_leave
 	ld hl, STR_sockerr
 	jp REPORTERR
 
-.nobufcleanup
+.nobufcleanup1:
 	ld a, (INTERPWKSPC+4)		; get the socket number back
-NOBUFCLEANUP
+.globl NOBUFCLEANUP
+NOBUFCLEANUP:
 	call CLOSE			; and close it
 	ld a, (v_bcsave)		; clear down our data structure
 	rlca
@@ -144,37 +153,40 @@ NOBUFCLEANUP
 ; Implementation of the close routine.
 ; This routine is jumped into from the BASIC interpreter, argument is on
 ; the stack.
-F_close_impl
+.globl F_close_impl
+F_close_impl:
 	call F_fetchpage
 	pop hl				; Get channel number from stack.
 	ld a, l
 	ld (v_curchan), a		; store current channel value
 	call F_close_main
-	jr c, .closeerr
+	jr c, .closeerr2
 	call F_leave
 	call EXIT_SUCCESS
 
-.closeerr
+.closeerr2:
 	call F_leave
 	ld hl, STR_closeerr
 	jp REPORTERR
 
-F_close_main
+.globl F_close_main
+F_close_main:
 	call F_findmetadata_a
-F_close_ix
+.globl F_close_ix
+F_close_ix:
 	ld a, (ix+STRM_FD)		; fetch the FD
 	and a				; Valid FD?
 	ret z				; Stream not open, do nothing.
 	ld l, (ix+STRM_FLAGS)		; get the flags
 	push ix	
 	bit BIT_ISFILE, l		; is a file?
-	jr nz, .isfile
+	jr nz, .isfile4
 	bit BIT_ISDIR, l		; is a directory?
-	jr nz, .isdir
+	jr nz, .isdir4
 	bit BIT_ISCTRL, l		; control channel?
-	jr nz, .closedone		; nothing to do.
+	jr nz, .closedone4		; nothing to do.
 	call CLOSE			; close the socket
-.closedone
+.closedone4:
 	pop hl				; get chan metadata start address
 	ld d, h
 	ld e, l
@@ -187,21 +199,22 @@ F_close_ix
 	call F_freemem			; Mark memory as free
 	pop af
 	ret
-.isfile
+.isfile4:
 	call VCLOSE
-	jr .closedone
-.isdir
+	jr .closedone4
+.isdir4:
 	call CLOSEDIR
-	jr .closedone
+	jr .closedone4
 
 ;------------------------------------------------------------------------
 ; F_listen_impl
 ; Implementation of the listen command
 ; Arguments on the stack: port number, channel number
-F_listen_impl
+.globl F_listen_impl
+F_listen_impl:
 	call F_fetchpage		; fetch our memory
 	call c, F_allocpage
-	jr c, .memerr			; one already
+	jr c, .memerr5			; one already
 
 	pop bc				; Get stream number
 	ld (v_bcsave), bc		; save it
@@ -209,14 +222,14 @@ F_listen_impl
 	; create the socket and make it listen.
 	ld c, SOCK_STREAM
 	call SOCKET
-	jr c, .sockerr
+	jr c, .sockerr5
 	ld (INTERPWKSPC), a		; save the socket number
 	pop de				; get the port number
 	call BIND			; and bind to the socket
-	jr c, .sockerr
+	jr c, .sockerr5
 	ld a, (INTERPWKSPC)		; fd
 	call LISTEN			; make it listen
-	jr c, .sockerr
+	jr c, .sockerr5
 
 	; a listening socket has been created - now create the BASIC
 	; structures
@@ -239,12 +252,12 @@ F_listen_impl
 	set 6, (ix+IOWCHAN)
 	call F_leave
 	jp EXIT_SUCCESS
-.sockerr
+.sockerr5:
 	pop bc				; fix the stack
 	call F_leave
 	ld hl, STR_sockerr
 	jp REPORTERR
-.memerr
+.memerr5:
 	pop bc				; fix the stack
 	pop bc
 	ld hl, STR_nomem
@@ -253,10 +266,11 @@ F_listen_impl
 ;------------------------------------------------------------------------
 ; F_ctrl_impl
 ; Set up a control channel. Desired stream in A.
-F_ctrl_impl
+.globl F_ctrl_impl
+F_ctrl_impl:
 	call F_fetchpage		; fetch our memory
 	call c, F_allocpage
-	jr c, .memerr			; one already
+	jr c, .memerr6			; one already
 
 	ex af, af'
 	call F_findmetadata_a		; find the metadata area
@@ -269,14 +283,15 @@ F_ctrl_impl
 	set 5, (ix+IOWCHAN)
 	call F_leave
 	jp EXIT_SUCCESS
-.memerr
+.memerr6:
 	ld hl, STR_nomem
 	jp REPORTERR
 
 ;------------------------------------------------------------------------
 ; F_accept_impl
 ; Accepts an incoming connection
-F_accept_impl
+.globl F_accept_impl
+F_accept_impl:
 	call F_fetchpage
 
 	pop bc				; Get stream number
@@ -292,7 +307,7 @@ F_accept_impl
 	ld l, a				; form the pointer in HL
 	ld a, (hl)			; get the fd and try to accept
 	call ACCEPT
-	jr c, .sockerr
+	jr c, .sockerr7
 	ld (INTERPWKSPC), a		; save the fd
 
 	; Now create the metadata for this socket - like with connect,
@@ -308,11 +323,11 @@ F_accept_impl
 	ld l, a
 
 	call F_findfreebuf		; create a write buffer
-	jr c, .nobufcleanup
+	jr c, .nobufcleanup7
 	ld (hl), a			; save the buffer number
 	inc l
 	call F_findfreebuf		; create a read buffer
-	jr c, .nobufcleanup
+	jr c, .nobufcleanup7
 	ld (hl), a
 	inc l
 
@@ -325,20 +340,21 @@ F_accept_impl
 
 	call F_leave			; restore memory page A
 	jp EXIT_SUCCESS
-.sockerr
+.sockerr7:
 	ld hl, STR_sockerr
 	jp REPORTERR
-.memerr
+.memerr7:
 	ld hl, STR_nomem
 	jp REPORTERR
-.nobufcleanup
+.nobufcleanup7:
 	ld a, (INTERPWKSPC)		; clean up the socket
 	jp NOBUFCLEANUP
 
 ;------------------------------------------------------------------------
 ; F_createchan
 ; Creates the channel in BASIC and connects it to a stream
-F_createchan
+.globl F_createchan
+F_createchan:
 	ld (v_asave), a			; Save the argument
 	call F_allocmem			; Allocate memory in ZX RAM
 	push hl				; save the returned address
@@ -395,12 +411,13 @@ F_createchan
 ; Allocates memory for the new stream.
 ; Stream number should be in v_asave.
 ; Returns the address of the memory block in HL
-F_allocmem
+.globl F_allocmem
+F_allocmem:
 	call F_has_zxprog_fallen	; check local vars are valid
 	ld hl, (stream_memptr)		; look for a free memory slot
 	ld a, h
 	or l
-	jr z, .makeroom			; Make a new one
+	jr z, .makeroom9			; Make a new one
 	dec l				; Point at the top most entry
 	dec l				; on the list of free blocks.
 	ld e, (hl)			; We have a slot, get its
@@ -409,21 +426,21 @@ F_allocmem
 	dec l				; rewind HL to point at current entry
 	ld a, memptr_bottom % 256	; have we hit the bottom?
 	cp l
-	jr nz, .updatememptr
+	jr nz, .updatememptr9
 	ld hl, 0			; no free blocks - clear the pointer
-.updatememptr
+.updatememptr9:
 	ld (stream_memptr), hl		; zero it, since there's no slots
 	ex de, hl
-	jr .setusedblock
+	jr .setusedblock9
 
-.makeroom
+.makeroom9:
 	ld hl, (ZX_PROG)		; get the start of the program area
 	ld bc, (original_zx_prog)
 	ld a, b
 	or c
-	jr nz, .makeroom1
+	jr nz, .makeroom19
 	ld (original_zx_prog), hl	; save the original PROG variable
-.makeroom1
+.makeroom19:
 	dec hl				; pointer to where to make space
 	ld bc, CHAN_LEN			; request this many bytes
 	rst CALLBAS
@@ -432,10 +449,10 @@ F_allocmem
 	ld (current_zx_prog), de	; save current PROG address
 	inc hl				; point at 1st byte of channel area
 
-.setusedblock
+.setusedblock9:
 	ld a, (v_asave)			; get stream number
 	rlca				; multiply by 2
-	add chmemptr_bottom % 256	; and add the bottom offset
+	add a, chmemptr_bottom % 256	; and add the bottom offset
 	ex de, hl			; move block address to DE
 	ld h, chmemptr_bottom / 256	; get address to save the block
 	ld l, a				; address into HL
@@ -449,9 +466,10 @@ F_allocmem
 ;--------------------------------------------------------------------------
 ; F_freemem
 ; Puts the block associated with this stream in the free block list.
-F_freemem
+.globl F_freemem
+F_freemem:
 	rlca				; multiply by 2 the stream number
-	add chmemptr_bottom % 256	; add the offset
+	add a, chmemptr_bottom % 256	; add the offset
 	ld h, chmemptr_bottom / 256
 	ld l, a				; HL = address
 	ld e, (hl)
@@ -461,9 +479,9 @@ F_freemem
 	ld hl, (stream_memptr)
 	ld a, h
 	or l
-	jr nz, .saveblockaddr
+	jr nz, .saveblockaddr10
 	ld hl, memptr_bottom		; First entry
-.saveblockaddr
+.saveblockaddr10:
 	ld (hl), e			; save the address of the free
 	inc l				; block.
 	ld (hl), d
@@ -474,12 +492,13 @@ F_freemem
 ;------------------------------------------------------------------------
 ; F_reclaim_strmem
 ; Gets the ZX ROM to reclaim all the memory we used for channel stubs.
-F_reclaim_strmem
+.globl F_reclaim_strmem
+F_reclaim_strmem:
 	ld de, (original_zx_prog)	; First byte to reclaim
 	ld hl, (current_zx_prog)	; First byte to leave untouched
 	rst CALLBAS
 	defw ZX_RECLAIM_1		; move the BASIC program back
-J_resetvars
+J_resetvars:
 	ld hl, 0
 	ld (current_zx_prog), hl	; clear down the variables
 	ld (original_zx_prog), hl
@@ -490,7 +509,8 @@ J_resetvars
 ; F_has_zxprog_fallen
 ; If ZX_PROG is smaller than current_zx_prog it is likely the user
 ; has done NEW. At this point we should reset everything.
-F_has_zxprog_fallen
+.globl F_has_zxprog_fallen
+F_has_zxprog_fallen:
 	or a				; make sure carry is cleared
 	ld hl, (ZX_PROG)
 	ld de, (current_zx_prog)
@@ -500,7 +520,7 @@ F_has_zxprog_fallen
 	; ZX_PROG has fallen so something (NEW, likely) has just
 	; killed all of our streams.
 	ld a, 1
-.closeall
+.closeall12:
 	ld (v_curchan), a
 	call F_findmetadata_a
 	ld a, (ix+STRM_FD)		; open stream?
@@ -509,11 +529,12 @@ F_has_zxprog_fallen
 	ld a, (v_curchan)
 	inc a
 	cp 0x10				; last possible stream is 0x0F
-	jr nz, .closeall
+	jr nz, .closeall12
 	jr J_resetvars			; reset our sysvars
 
 ; debugging
-F_debugA
+.globl F_debugA
+F_debugA:
 	push af
 	push hl
 	push de
@@ -522,7 +543,7 @@ F_debugA
 	call ITOH8
 	ld hl, 0x3600
 	call PRINT42
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 	pop bc
 	pop de
@@ -532,23 +553,23 @@ F_debugA
 
 ;--------------
 
-IOROUTINE
+IOROUTINE:
 	ld h, STREAM_ROM_ID		; our ROM ID
-IOWCHAN	equ ($+1)-IOROUTINE		; the byte to modify
+IOWCHAN:	equ ($+1)-IOROUTINE		; the byte to modify
 	ld l, 0				; will be modified to provide channel
 	call MODULECALL
 	ret
 IOWROUTINE_LEN	equ $-IOROUTINE
 
-IORROUTINE
+IORROUTINE:
 	ld h, STREAM_ROM_ID
-IORCHAN equ ($+1)-IOROUTINE
+IORCHAN: equ ($+1)-IOROUTINE
 	ld l, 0
 	call MODULECALL
 	bit 0, l			; need to do stack munging?
-	jr z, .munge
+	jr z, .munge13
 	ret
-.munge
+.munge13:
 	ld sp, (ZX_ERR_SP)		; Clear machine stack
 	pop de				; Remove ED-ERROR
 	pop de				; Old value of SP is restored
@@ -556,6 +577,6 @@ IORCHAN equ ($+1)-IOROUTINE
 	ret
 
 IOROUTINE_LEN 	equ $-IOROUTINE
-CHAN_LEN	equ (IOROUTINE_LEN * 2) + 5
+CHAN_LEN	equ IOROUTINE_LEN + IOROUTINE_LEN + 5
 IORROUTINE_LEN	equ $-IORROUTINE
 

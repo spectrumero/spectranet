@@ -1,5 +1,0 @@
-#!/bin/sh
-echo `pwd`/basext.out >> ../../build.out
-sjasmplus basext.asm --lst=basext.lst
-exit $?
-
