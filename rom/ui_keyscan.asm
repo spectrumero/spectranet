@@ -22,8 +22,9 @@
 ;
 ; This file is a slightly modified version of the ZX key scanning routines
 ; from Matt Westcott's (gasman) Open ZX ROM.
-flags2			equ 23658
-key_table
+.data
+flags2:			equ 23658
+key_table:
 			; mapping from key codes (as returned in E by key_scan) to 'base characters'
 			db "BHY65TGVNJU74RFC"
 			db "MKI83EDX", 0x0e, "LO92WSZ"
@@ -31,16 +32,16 @@ key_table
 			
 ;			block 0x8060-$,0
 			; table of control codes produced by keys 0-9 in conjunction with caps shift
-key_table_caps_digits
+key_table_caps_digits:
 			db 0x0c,0x07,0x06,0x04,0x05,0x08,0x0a,0x0b,0x09,0x0f
 ; 0x026a
 			; table of symbols / tokens produced by keys A-Z in conjunction with symbol shift
-key_table_sym_letters
+key_table_sym_letters:
 			db 0xe2, '*', '?', 0xcd, 0xc8, 0xcc, 0xcb, '^'
 			db 0xac, '-', '+', '=', '.', ',', ';', '"'
 			db 0xc7, '<', 0xc3, '>', 0xc5, '/', 0xc9, 0x60, 0xc6, ':'
-
-key_scan
+.text
+key_scan:
 			; scan keyboard, returning key code(s) in DE.
 			; Numbering rows B-Sp=0, H-En=1, Y-P=2, 6-0=3, 1-5=4, Q-T=5, A-G=6, Cs-V=7,
 			; key code is rownum + ((5 - bit number) << 3).
@@ -53,12 +54,12 @@ key_scan
 			ld de,0xffff
 			ld b,7							; scan each of 8 rows
 			ld a,0xfe						; with each bit in turn held low
-key_scan_row
+key_scan_row:
 			push af
 			in a,(0xfe)
 			ld c,a							; pick apart result of IN in register C
 			ld a,0x20						; count down bit number in A, premultiplied by 8
-key_scan_bit
+key_scan_bit:
 			push af
 			rr c
 			jr c,key_scan_bit_done			; if bit is nonzero (-> carry set), key not pressed; move on
@@ -67,16 +68,16 @@ key_scan_bit
 			jr nz,key_scan_e_not_vacant
 			ld e,a
 			jr key_scan_bit_done
-key_scan_e_not_vacant
+key_scan_e_not_vacant:
 			dec e							; e is already occupied; restore value
 			inc d							; check if d register is vacant
 			jr z,key_scan_d_vacant
 			pop hl							; if not, there are too many keys;
 			pop hl							; restore stack and exit with Z reset
 			ret
-key_scan_d_vacant
+key_scan_d_vacant:
 			ld d,a
-key_scan_bit_done
+key_scan_bit_done:
 			pop af
 			sub 8							; if counter in A does not roll over,
 			jr nc,key_scan_bit				; there are bits remaining to check
@@ -86,7 +87,7 @@ key_scan_bit_done
 			jr c,key_scan_row				; doesn't fall off the end of A
 			; keys collected; now handle shifts
 			ld a,d
-			inc a							; see if d is still 0xff (i.e. only one key)
+			inc a							; see if d is still 0xff (i.e0. only one key)
 			ret z							; if so, exit with Z set
 			ld a,e
 			cp 0x27							; check E for caps shift
@@ -96,20 +97,20 @@ key_scan_bit_done
 			ld e,d							; if E is caps shift, switch D and E
 			ld d,a							; and exit with Z set
 			ret
-key_scan_no_cs
+key_scan_no_cs:
 			cp 0x18							; check E for symbol shift
 			jr nz,key_scan_no_ss
 			ld e,d							; if E is sym shift, switch D and E
 			ld d,a							; and exit with Z set
 			ret
-key_scan_no_ss
+key_scan_no_ss:
 			ld a,d							; only remaining valid condition is if D is
 			cp 0x18							; symbol shift; check for this condition and
 			ret								; return with Z flag indicating the result
 
-key_test
+key_test:
 			; Test that a successful (zero flag set) response from key_scan is indeed
-			; a real key (i.e. not just a shift key on its own). As described by Toni Baker
+			; a real key (i.e0. not just a shift key on its own). As described by Toni Baker
 			; (Mastering Machine Code on your ZX Spectrum, ch11):
 			;   i) B will be made to contain the value formerly held by D
 			;  ii) D will be made to contain zero
@@ -126,14 +127,14 @@ key_test
 			ret nc				; return with carry reset if so
 			cp 0x18				; is low byte 0x18?
 			ret z					; return with carry reset if so
-key_test_not_ff
+key_test_not_ff:
 			ld hl,key_table
 			add hl,de
 			ld a,(hl)
 			scf
 			ret
 ; 0x0333
-key_code
+key_code:
 			; Convert base character to ASCII code, respecting shifts and current key mode.
 			; entry: E = base character
 			; B = shift code (FF, 27 or 18)
@@ -157,7 +158,7 @@ key_code
 			add a,0x20		; otherwise, translate to lower case by adding 0x20
 			ret
 			
-key_code_sshift
+key_code_sshift:
 			ld a,e
 			cp '0'
 			ret c					; return keycode unchanged if <'0' (= space or enter)
@@ -170,21 +171,21 @@ key_code_sshift
 			jr z,key_code_at				; to make it overly complicated...
 			sub 0x10			; for all others, just subtract 0x10 to get the resulting ASCII symbol
 			ret
-key_code_underline
+key_code_underline:
 			ld a,'_'
 			ret
-key_code_at
+key_code_at:
 			ld a,'@'
 			ret
 			
-key_code_sshift_letter
+key_code_sshift_letter:
 			ld d,0				; look up letter in the table key_table_sym_letters
 			ld hl,key_table_sym_letters - 'A' ; fiddle base address of table to count from ASCII 'A'
 			add hl,de
 			ld a,(hl)
 			ret
 			
-key_code_cshift
+key_code_cshift:
 			ld a,e
 			cp '0'				; return keycode unchanged if <'0' (space, enter or symbol shift);
 			ret c				; NB key code for symbol shift is 0x0E = extend mode, which is correct here

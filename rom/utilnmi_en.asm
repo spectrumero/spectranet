@@ -19,22 +19,37 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"ctrlchars.inc"
 
 ; English NMI menu strings
-
-STR_config	defb "Configure network settings",0
-STR_rom		defb "Add and remove ROM modules",0
-STR_loader	defb "Load arbitrary data to RAM",0
-STR_snapshot	defb "Take snapshot",0
-STR_exit	defb "Exit",0
-STR_nmimenu	defb "Spectranet NMI menu\n\n",0
-STR_send	defb "Listening on ",0
-STR_port	defb " port 2000\n",0
-STR_start	defb " Start: ",0
-STR_len		defb "Length: ",0
-STR_xtoexit	defb "\nPress 'x' to exit.\n",0
-STR_borked	defb "\nOperation failed with rc=",0
-STR_est		defb "Connection established\n",0
-STR_ident	defb "Spectranet utility ROM",0
+.data
+.globl STR_config
+STR_config:	defb "Configure network settings",0
+.globl STR_rom
+STR_rom:	defb "Add and remove ROM modules",0
+.globl STR_loader
+STR_loader:	defb "Load arbitrary data to RAM",0
+.globl STR_snapshot
+STR_snapshot:	defb "Take snapshot",0
+.globl STR_exit
+STR_exit:	defb "Exit",0
+.globl STR_nmimenu
+STR_nmimenu:	defb "Spectranet NMI menu",NEWLINE,NEWLINE,0
+.globl STR_send
+STR_send:	defb "Listening on ",0
+.globl STR_port
+STR_port:	defb " port 2000",NEWLINE,0
+.globl STR_start
+STR_start:	defb " Start: ",0
+.globl STR_len
+STR_len:	defb "Length: ",0
+.globl STR_xtoexit
+STR_xtoexit:	defb NEWLINE,"Press 'x' to exit.",NEWLINE,0
+.globl STR_borked
+STR_borked:	defb NEWLINE,"Operation failed with rc=",0
+.globl STR_est
+STR_est:	defb "Connection established",NEWLINE,0
+.globl STR_ident
+STR_ident:	defb "Spectranet utility ROM",0
 
 

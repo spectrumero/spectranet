@@ -19,6 +19,8 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"sysvars.inc"
+.include	"ctrlchars.inc"
 
 ; User interface output routines
 ; This is mostly about putting characters on the screen, and clearing the
@@ -31,26 +33,28 @@
 ; The 'core' of the putchar routine, F_print calls this directly (handling
 ; the paging itself)
 ; The routine could probably do with improvement.
-F_putc_5by8_impl
+.text
+.globl F_putc_5by8_impl
+F_putc_5by8_impl:
       	push hl
 	push bc
 	push de
 	ld h, a			; save character
 	ld a, (v_utf8)		; check UTF-8 state
 	and a			; if nonzero, process it
-	jp nz, .map_utf8
+	jp nz, .map_utf81
 	ld a, h			; restore character
 
-	cp '\n'     ; carriage return?
-	jr z, .nextrow
+	cp NEWLINE	     ; carriage return?
+	jr z, .nextrow1
 
 	cp 0xC1			; utf-8 character that we support
-	jp nc, .utf8		; which is 0xC2 and higher
+	jp nc, .utf81		; which is 0xC2 and higher
 
 	; find the address of the character in the bitmap table
 	sub 32      		; space = offset 0
 	ld l, a
-.utf8_continue			; we return here from the utf8 map subroutine
+.utf8_continue1:			; we return here from the utf8 map subroutine
 	ld h, 0
 
 	; multiply by 8 to get the byte offset
@@ -59,7 +63,7 @@ F_putc_5by8_impl
 	add hl, hl
 
 	; add the offset
-	ld bc, char_space
+	ld bc, CHARSET
 	add hl, bc
 
 	; Now find the address in the frame buffer to be written.
@@ -71,123 +75,124 @@ F_putc_5by8_impl
 	ld l, a        ; hl = pointer to byte in lookup table
 	ld a, (hl)     ; a = lookup table value
 	ld hl, (v_row) ; hl = framebuffer pointer for start of row
-	add l
+	add a,l
 	ld l, a        ; hl = frame buffer address
 
 ; de contains the address of the char bitmap
 ; hl contains address in the frame buffer
-.paintchar
+.paintchar1:
 	ld a, b           ; retrieve column
 	and 3             ; find out how much we need to rotate
-	jr z, .norotate   ; no need to rotate, character starts at MSB
+	jr z, .norotate1   ; no need to rotate, character starts at MSB
 	rla               ; multipy by 2
 	ld (v_pr_wkspc), a   ; save A
 	ld b, 8           ; byte copy count for outer loop
-.fbwriterotated
+.fbwriterotated1:
 	push bc           ; save outer loop count
 	ld a, (v_pr_wkspc)
 	ld b, a           ; set up rotate loop count
 	ld a, (de)        ; get character bitmap
 	ld c, a           ; C contains rightmost fragment of bitmap
 	xor a             ; set a=0 to accept lefmost fragment of bitmap
-.rotloop
+.rotloop1:
 	rl c             
 	rla               ; suck out leftmost bit from the carry flag 
-	djnz .rotloop
-.writerotated
+	djnz .rotloop1
+.writerotated1:
 	or (hl)           ; merge with existing character
 	ld (hl), a
 	ld a, c
 	cp 0
-	jr z, .writerotated.skip   ; nothing to do
+	jr z, .writerotated1_skip1   ; nothing to do
 	inc l             ; next char cell
 	or (hl)
 	ld (hl), a
 	dec l             ; restore l
-.writerotated.skip      
+.writerotated1_skip1:
 	inc h             ; next line
 	inc de            ; next line of character bitmap
 	pop bc            ; retrieve outer loop count
-	djnz .fbwriterotated
-.nextchar
+	djnz .fbwriterotated1
+.nextchar1:
 	ld a, (v_column)
 	inc a
 	cp 42
-	jr nz, .nextchar.done
-.nextrow      
+	jr nz, .nextchar1_done1
+.nextrow1:      
 	ld a, (v_rowcount) ; check the row counter
 	cp 23		; 24th line?
-	jr nz, .noscroll
+	jr nz, .noscroll1
 	call F_jumpscroll_impl
 	ld a, 16
 	ld (v_rowcount), a
 	ld hl, 0x5000     ; address of first row of bottom 1/3rd
-	jr .nextchar.saverow ; save row addr and complete
-.noscroll
+	jr .nextchar1_saverow1 ; save row addr and complete
+.noscroll1:
 	inc a
 	ld (v_rowcount), a
 	ld hl, (v_row)    ; advance framebuffer pointer to next character row
 	ld a, l
-	add 32
-	jr c, .nextthird
+	add a, 32
+	jr c, .nextthird1
 	ld l, a
-	jr .nextchar.saverow
-.nextthird
+	jr .nextchar1_saverow1
+.nextthird1:
 	ld l, 0
 	ld a, h
-	add 8
+	add a, 8
 	ld h, a
-.nextchar.saverow
+.nextchar1_saverow1:
 	ld (v_row), hl
 	xor a             ; a = 0
-.nextchar.done
+.nextchar1_done1:
 	ld (v_column), a
-.leave
+.leave1:
 	pop de
 	pop bc
 	pop hl
 	ret
 
-.norotate
+.norotate1:
 	ld b, 8
-.norotate.loop
+.norotate1_loop1:
 	ld a, (de)        ; move bitmap into the frame buffer
 	ld (hl), a
 	inc de            ; next line of bitmap
 	inc h             ; next line of frame buffer
-	djnz .norotate.loop
-	jr .nextchar
+	djnz .norotate1_loop1
+	jr .nextchar1
 
 	; Support for a subset of utf-8 - a few of the 0xC2 characters
 	; (€, ¡ and ¿) and all of the 0xC3 characters (mostly accented
 	; chars and the Spanish ñ character)
-.utf8
+.utf81:
 	cp 0xC3		; 0xC3 chars need no translation
-	jr z, .leave	
+	jr z, .leave1	
 	ld (v_utf8), a	; else set the UTF8 variable to the byte passed
-	jr .leave
+	jr .leave1
 
-.map_utf8
+.map_utf81:
 	xor a		; reset UTF8 state
 	ld (v_utf8), a
 	ld a, h		; get char
 	cp 0x80		; euro
-	ld l, (char_euro-char_space)/8
-	jp z, .utf8_continue
+	ld l, CHARSET_C2_DIST
+	jp z, .utf8_continue1
 	cp 0xA1		; ¡
-	ld l, (char_inverted_pling-char_space)/8
-	jp z, .utf8_continue
+	ld l, CHARSET_INVPLING_DIST
+	jp z, .utf8_continue1
 	cp 0xA2		; cent
 	inc l
-	jp z, .utf8_continue
-	ld l, (char_inverted_quest-char_space)/8
-	jp .utf8_continue
+	jp z, .utf8_continue1
+	ld l, CHARSET_INVQUEST_DIST
+	jp .utf8_continue1
 
 ;--------------------------------------------------------------------------
 ; F_jumpscroll:
 ; a simple 'jump scroll' which scrolls the screen by 1/3rd. Simpler
 ; than scrolling one line.
-F_jumpscroll_impl
+.globl F_jumpscroll_impl
+F_jumpscroll_impl:
 	push hl
 	push de
 	push bc
@@ -209,7 +214,8 @@ F_jumpscroll_impl
 ; F_erasechar
 ; Removes the character at the current 5by8 character position.
 ; No parameters.
-F_erasechar_impl
+.globl F_erasechar_impl
+F_erasechar_impl:
 	; Find the address in the frame buffer.
 	ld hl, col_lookup
 
@@ -219,11 +225,11 @@ F_erasechar_impl
 	ld l, a		; hl = pointer to byte in lookup table
 	ld a, (hl)	; a = lookup table value
 	ld hl, (v_row)	; hl = framebuffer pointer for start of row
-	add l
+	add a, l
 	ld l, a		; hl = frame buffer address
 	ld a, b		; retrieve column
 	and 3		; find out how much rotation is needed
-	jr z, .norotate	; no need to do any at all
+	jr z, .norotate3	; no need to do any at all
 
 	rla		; multiply by 2
 	ld b, a		; set loop count
@@ -232,15 +238,15 @@ F_erasechar_impl
 	; now create two masks - one for the left byte, and one for the
 	; right byte.
 	ld c, 0		; c will contain left mask
-.maskloop
+.maskloop3:
 	rla
 	rl c
-	djnz .maskloop
-.rotated
+	djnz .maskloop3
+.rotated3:
 	cpl		; turn it into the proper mask value
 	ld (v_pr_wkspc), a	; save right byte mask
 	ld b, 8		; 8 bytes high
-.rotated_loop
+.rotated_loop3:
 	inc l		; right hand byte
 	and (hl)	; make new value
 	ld (hl), a	; write it back
@@ -251,23 +257,24 @@ F_erasechar_impl
 	ld (hl), a	; write it back
 	inc h		; next line in frame buffer
 	ld a, (v_pr_wkspc)	; retrieve right byte mask
-	djnz .rotated_loop
+	djnz .rotated_loop3
 	ret		; done
 
-.norotate
+.norotate3:
 	ld b, 8		; 8 bytes high
-.norotate_loop
+.norotate_loop3:
 	ld a, 0x03	; mask out left 6 bits
 	and (hl)	; mask out character cell at current position
 	ld (hl), a	; write back to frame buffer
 	inc h
-	djnz .norotate_loop
+	djnz .norotate_loop3
 	ret		; done
 
 ;--------------------------------------------------------------------------
 ; F_backspace: Perform a backspace (move current character position 1
 ; back and delete the right most character).
-F_backspace_impl
+.globl F_backspace_impl
+F_backspace_impl:
 	ld a, (v_column)
 	and a		; Are we at column 0?
 	ret z		; nothing more to do (possible TODO - go back a line)
@@ -277,7 +284,8 @@ F_backspace_impl
 	
 ;--------------------------------------------------------------------------
 ; F_clear: Clears the screen to spectranet UI colours.
-F_clear_impl
+.globl F_clear_impl
+F_clear_impl:
 	ld a, 1
 	out (254), a	; border
 	ld hl, 16384
