@@ -2,8 +2,7 @@
 OUTPUT_FORMAT("binary")
 OUTPUT_ARCH("z80")
 MEMORY {
-/*   pagez : ORIGIN = 0x007D, LENGTH = 0x0F83 */
-   pagez : ORIGIN = 0x007D, LENGTH = 0x1100
+   pagez : ORIGIN = 0x007D, LENGTH = 0x0F83 
    rst0 : ORIGIN = 0x0000, LENGTH = 0x0008
    rst8 : ORIGIN = 0x0008, LENGTH = 0x0008
    rst10 : ORIGIN = 0x0010, LENGTH = 0x0018

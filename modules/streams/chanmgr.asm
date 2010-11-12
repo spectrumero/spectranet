@@ -26,6 +26,7 @@
 .include	"defs.inc"
 .include	"ctrlchars.inc"
 .include	"streamvars.inc"
+.include	"sockdefs.inc"
 .text
 ; Channel manager - handles creation and deletion of channels
 
