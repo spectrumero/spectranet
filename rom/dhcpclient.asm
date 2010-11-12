@@ -25,6 +25,7 @@
 .include	"sysvars.inc"
 .include	"dhcpdefs.inc"
 .include	"ctrlchars.inc"
+.include	"sockdefs.inc"
 .text
 ;-------------------------------------------------------------------------
 ; F_dhcp

@@ -26,13 +26,6 @@
 ; so the fields are defined here so they get flashed into the ROM.
 ; See RFC 1035 for full descriptions of the fields.
 
-query		defb 0x01,0x00	; 16 bit flags field - std. recursive query
-qdcount		defb 0x00,0x01	; we only ever ask one question at a time
-ancount		defw 0x0000	; No answers in a query
-nscount		defw 0x0000	; No NS RRs in a query
-arcount		defw 0x0000	; No additional records
-queryend
-
 ; Definitions
 dns_headerlen	equ 12		; 12 bytes long
 dns_Arecord	equ 1		; A record indicator in query/answer

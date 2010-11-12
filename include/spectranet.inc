@@ -120,9 +120,6 @@ RESALLOC	equ 0x3EED
 
 
 ; Definitions
-SOCK_STREAM	equ 1
-SOCK_DGRAM	equ 2
-
 ALLOCFD		equ 1
 FREEFD		equ 0
 ALLOCDIRHND	equ 3

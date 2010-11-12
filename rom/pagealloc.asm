@@ -31,6 +31,8 @@
 ; The rest of RAM should only be used after being reserved to ensure that
 ; you don't trample on the workspace of a ROM module. Reservation routines
 ; are here and work on the level of 1 page (4K).
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
 
 ;---------------------------------------------------------------------------
 ; F_reservepage
@@ -38,30 +40,33 @@
 ; Pass 0xFF if it's just a general program, and not a module.
 ; On return, A contains the page reserved. If no pages are free the carry
 ; flag is set.
-F_reservepage
+.text
+.globl F_reservepage
+F_reservepage:
 	ld b, 25		; number of RAM pages that can be reserved
 	ld hl, pagealloc	; search the page allocation table for a page 
 	ex af, af'		; save A
-.searchloop
+.searchloop1:
 	ld a, (hl)		; examine current page
 	and a			; is it zero (unallocated) ?
-	jr z, .pagefound
+	jr z, .pagefound1
 	inc l			; advance to the next
-	djnz .searchloop
+	djnz .searchloop1
 	scf			; if we get here no free pages were found.
 	ret
-.pagefound
+.pagefound1:
 	ex af, af'		; get originally passed value
 	ld (hl), a		; mark the page allocated
 	ld a, l			; calculate the page
 	sub pagealloc % 256 	; by looking at the table position
-	add LOWEST_PAGE		; and adding the lowest possible page
+	add a, LOWEST_PAGE		; and adding the lowest possible page
 	ret
 
 ;--------------------------------------------------------------------------
 ; F_freepage
 ; Frees a page. Pass the page number in A.
-F_freepage
+.globl F_freepage
+F_freepage:
 	ld hl, pagealloc
 	sub LOWEST_PAGE		; find offset in table
 	add a, l		; add table base address

@@ -20,6 +20,10 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 ;
+.include	"w5100_defs.inc"
+.include	"sysvars.inc"
+.include	"sockdefs.inc"
+
 ;
 ; send/sendto and recv/recvfrom send data to a socket and get data
 ; from it.
@@ -31,15 +35,17 @@
 ;             BC = size of source buffer
 ; On return,  BC = number of bytes sent
 ; Carry flag is set on error and A contains error code.
-F_send
+.text
+.globl F_send
+F_send:
 	call F_gethwsock	; H is socket reg. MSB address
 	jp c, J_leavesockfn	; error finding socket if carry set
 	ld a, b			; MSB of send buffer size
 	cp 0x08			; greater than 2K if compare result is pos.
-	jp p, .multisend	; TODO: send buffers >2k
+	jp p, .multisend1	; TODO: send buffers >2k
 	call F_copytxbuf
 	jp J_leavesockfn
-.multisend			; see TODO above!
+.multisend1:			; see TODO above!
 	ld bc, 0x7FF		; send as much as possible for now.
 	call F_copytxbuf
 	jp J_leavesockfn
@@ -52,35 +58,37 @@ F_send
 ; Parameters : A  = file descriptor
 ;              DE = address of memory to fill with data
 ;              BC = number of bytes to get
-F_recv
+.globl F_recv
+F_recv:
 	call F_gethwsock	; H is socket reg MSB
 	jp c, J_leavesockfn	; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register
 
-.waitforrecv
+.waitforrecv2:
 	ld a, (hl)
 	bit BIT_IR_RECV, a	; see if the recv bit is set
-	jr nz, .rxdata		; Data is ready
+	jr nz, .rxdata2		; Data is ready
 	bit BIT_IR_DISCON, a	; check for RST condition
-	jr z, .waitforrecv	; no, so keep waiting
+	jr z, .waitforrecv2	; no, so keep waiting
 	ld a, ECONNRESET	; connection reset by peer
 	scf
 	jp J_leavesockfn
 
-.rxdata
+.rxdata2:
 	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
 	jp J_leavesockfn
 
 ;=========================================================================
 ; Sendto:
-; send data to a non-stream socket (i.e. SOCK_DGRAM, a UDP socket). 
+; send data to a non-stream socket (i.e2. SOCK_DGRAM, a UDP socket). 
 ;
 ; Parameters:  A = file descriptor
 ;             HL = address of 8 byte socket info structure
 ;             DE = address of buffer to send
 ;             BC = size of buffer to send
-F_sendto	
+.globl F_sendto
+F_sendto:	
 	ld (v_bufptr), hl	; save socket info buffer pointer
 	call F_gethwsock	; H is socket reg. MSB address
 	jp c, J_leavesockfn	; error finding socket if carry set
@@ -92,17 +100,17 @@ F_sendto
 	pop de			; retrieve data buffer
 	ld a, b			; MSB of send buffer size
 	cp 0x08			; greater than 2K if compare result is pos.
-	jp p, .multisend	; TODO: send buffers >2k
+	jp p, .multisend3	; TODO: send buffers >2k
 	call F_copytxbuf
 	jp J_leavesockfn
-.multisend			; see TODO above!
+.multisend3:			; see TODO above!
 	ld bc, 0x7FF		; send as much as possible for now.
 	call F_copytxbuf
 	jp J_leavesockfn
 
 ;=========================================================================
 ; Recvfrom - receive data from a socket. Usually used for a SOCK_DGRAM
-; socket, i.e. UDP.
+; socket, i.e3. UDP.
 ;
 ; Parameters:  A = file descriptor
 ;             HL = address of buffer to fill with connection information
@@ -111,28 +119,29 @@ F_sendto
 ;
 ; On error, the carry flag is set and the return code is returned in A.
 ; On successful return, BC contains the number of bytes transferred.
-F_recvfrom
+.globl F_recvfrom
+F_recvfrom:
 	ld (v_bufptr), hl	; save the connection buffer ptr
 	call F_gethwsock	; H is socket reg MSB
 	jp c, J_leavesockfn	; carry is set if the fd is not valid
 	ld l, Sn_IR % 256	; get the interrupt register
 
-.waitforrecv
+.waitforrecv4:
 	ld a, (hl)
 	bit BIT_IR_RECV, a	; see if the recv bit is set
-	jr nz, .rxdata		; Data is ready
+	jr nz, .rxdata4		; Data is ready
 	bit BIT_IR_DISCON, a	; check for RST condition
-	jr z, .waitforrecv	; no, so keep waiting
+	jr z, .waitforrecv4	; no, so keep waiting
 	ld a, ECONNRESET	; connection reset by peer
 	scf
 	jp J_leavesockfn
 
-.rxdata
+.rxdata4:
 	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
 	ld l, Sn_MR % 256	; inspect mode register
 	ld a, (hl)
 	cp SOCK_DGRAM		; Is this a SOCK_DGRAM (UDP) socket?
-	jr z, .rxudp	
+	jr z, .rxudp4	
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
 	ld de, (v_bufptr)	; retrieve the buffer pointer
 	call F_sockinfo		; get socket information
@@ -143,8 +152,8 @@ F_recvfrom
 	; first we pull off this 8 byte header and put it into the
 	; socket info buffer. Then we receive the data proper.
 	; The structure of the socket info buffer is documented in
-	; w5100_sockinfo.asm.
-.rxudp
+	; w5100_sockinfo.asm4.
+.rxudp4:
 	push bc			; save the max length requested
 	push de			; save the data buffer address
 	ld bc, 8		; length of the header
@@ -185,35 +194,36 @@ F_recvfrom
 ; flags that caused the condition in B. If no sockets are ready, A is 0 
 ; and the zero flag is set. On error, the carry flag is set and A is set 
 ; to the error.
-F_poll
+.globl F_poll
+F_poll:
 	ld a, (v_pga)		; save original page A
 	ld (v_buf_pga), a
 	ld a, REGPAGE
 	call F_setpageA
 
-.sockloop
+.sockloop5:
 	ld a, (de)		; get the first socket
 	ld c, a			; save the file descriptor
 	ld h, v_fd1hwsock / 256	; set (hl) to point at fd map
 	ld l, a			; (hl) = fd address
 	ld a, (hl)		; a = hw socket MSB
 	and SOCKMASK		; mask out closed/virtual bits
-	jr nz, .poll		; nonzero means it's an open hw socket
+	jr nz, .poll5		; nonzero means it's an open hw socket
 	inc de			; next socket
-	djnz .sockloop
-	jr .noneready
-.poll
+	djnz .sockloop5
+	jr .noneready5
+.poll5:
 	ld h, a			; (hl) = socket register
 	ld l, Sn_IR % 256	; interrupt register
 	ld a, (hl)
 	and S_IR_CON|S_IR_RECV|S_IR_DISCON
-	jr nz, .ready		; an event has occurred
+	jr nz, .ready5		; an event has occurred
 	inc de			; next file descriptor
-	djnz .sockloop		
-.noneready
+	djnz .sockloop5		
+.noneready5:
 	xor a			; loop finished, no sockets were ready
 	jp J_leavesockfn
-.ready
+.ready5:
 	ld b, a			; save flags
 	ld a, c			; retrieve fd
 	jp J_leavesockfn
@@ -233,7 +243,8 @@ F_poll
 ; No parameters. The first file descriptor found to be ready will be returned
 ; in A. If none are ready, A=0 and the zero flag is set. If an fd is ready,
 ; it is returned in A, and C contains the flags that triggered the condition.
-F_pollall
+.globl F_pollall
+F_pollall:
 	ld a, (v_pga)		; save current page A
 	ld (v_buf_pga), a
 	ld a, REGPAGE
@@ -241,36 +252,36 @@ F_pollall
 	ld d, v_fd1hwsock / 256
 	ld a, (v_lastpolled)	; get addr. of socket to start at
 	cp MAX_FD_NUMBER+1	; wrap if this puts us off the end
-	jr nz, .setaddr
+	jr nz, .setaddr6
 	ld a, v_fd1hwsock % 256	; wrap
-.setaddr
+.setaddr6:
 	ld e, a			; (de) points at socket to poll
 	ld b, MAX_FDS
-.sockloop
+.sockloop6:
 	ld a, (de)		; get hardware socket register ptr
 	and SOCKMASK		; check it's a real socket
-	jr nz, .poll
-.nextsock
+	jr nz, .poll6
+.nextsock6:
 	inc e			; next socket
 	ld a, MAX_FD_NUMBER+1
 	cp e			; wrap around to first fd?
-	jr nz, .continue	; no
+	jr nz, .continue6	; no
 	ld e, v_fd1hwsock % 256	; wrap back to first file descriptor
-.continue
-	djnz .sockloop
-	jr .noneready
-.poll
+.continue6:
+	djnz .sockloop6
+	jr .noneready6
+.poll6:
 	ld h, a			; (hl) = socket register
 	call F_checksock
-	jr z, .nextsock		; advance to next socket fd
-.ready
+	jr z, .nextsock6		; advance to next socket fd
+.ready6:
 	ld c, a			; copy flags into C
 	ld a, e			; ready fd in e
 	inc a
 	ld (v_lastpolled), a	; save last polled sockfd+1
 	dec a			; restore A to proper value
 	jp J_leavesockfn
-.noneready
+.noneready6:
 	xor a			; A=0, zero flag set
 	jp J_leavesockfn
 
@@ -284,7 +295,8 @@ F_pollall
 ; Zero flag is set if not ready.
 ; For a ready fd, the reason for readiness is returned in C
 ; Carry is set on error.
-F_pollfd
+.globl F_pollfd
+F_pollfd:
 	call F_gethwsock	; H is socket reg MSB
 	jp c, J_leavesockfn	; carry is set if the fd is not valid
 
@@ -294,7 +306,8 @@ F_pollfd
 
 ; Check a socket's interrupt and status register. Register bank must
 ; be set in H prior to entry.
-F_checksock
+.globl F_checksock
+F_checksock:
 	ld l, Sn_IR % 256	; check interrupt register
 	ld a, (hl)
 	and S_IR_CON|S_IR_RECV|S_IR_DISCON
@@ -302,12 +315,12 @@ F_checksock
 	ld l, Sn_SR % 256	; check status register for closedness
 	ld a, (hl)
 	cp S_SR_SOCK_CLOSE_WAIT
-	jr z, .closed
+	jr z, .closed8
 	and a			; 0 = S_SR_SOCK_CLOSED
-	jr z, .closed
+	jr z, .closed8
 	xor a			; return with Z set (and no status flags)
 	ret	
-.closed
+.closed8:
 	ld a, S_IR_DISCON	; set "disconnect" flag
 	or a			; ensure Z flag is reset
 	ret

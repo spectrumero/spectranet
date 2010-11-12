@@ -20,9 +20,6 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-	include "rom.sym"
-	org 0x1F00
-
 ; The jump table
 ; --------------
 ;
@@ -51,6 +48,12 @@
 ;
 ; This jump table is copied to 0x3E00 on reset (the fixed upper 4k page,
 ; which is RAM).
+
+; until copied to RAM this is just data.
+.include	"page0.xinc"
+.data
+.globl X_JUMPTABLE
+X_JUMPTABLE:
 	jp F_socket
 	jp F_sockclose
 	jp F_listen
@@ -136,9 +139,13 @@
 	jp F_setmountpoint	; Set the current mount point in use
 	jp F_freemountpoint	; Free a mount point
 	jp F_resalloc		; Allocate/free directory and file handles
-	
+.globl X_JUMPTABLE_SIZE
+X_JUMPTABLE_SIZE:	equ $-X_JUMPTABLE
+	defb 0xff,0xff,0xff,0xff	; 8 padding bytes
+	defb 0xff,0xff,0xff,0xff
 
-	block 0x1FF8-$,0xFF
+.globl X_UPPER_ENTRYPT
+X_UPPER_ENTRYPT:
 ; The upper entry point.
 ; CALL instructions to 0x3FF8 and higher cause a ROM page-in. A small
 ; amount of code can live here to dispatch these calls elsewhere.
@@ -146,4 +153,6 @@
 	ret		; A way of paging in without using an OUT
 	jp J_hldispatch	; HLCALL - 0x3FFA
 	jp J_ixdispatch	; IXCALL - 0x3FFD
+.globl X_UPPER_ENTRYPT_SIZE
+X_UPPER_ENTRYPT_SIZE: 	equ $-X_UPPER_ENTRYPT
 

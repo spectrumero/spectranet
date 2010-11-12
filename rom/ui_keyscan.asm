@@ -41,7 +41,8 @@ key_table_sym_letters:
 			db 0xac, '-', '+', '=', '.', ',', ';', '"'
 			db 0xc7, '<', 0xc3, '>', 0xc5, '/', 0xc9, 0x60, 0xc6, ':'
 .text
-key_scan:
+.globl F_key_scan
+F_key_scan:
 			; scan keyboard, returning key code(s) in DE.
 			; Numbering rows B-Sp=0, H-En=1, Y-P=2, 6-0=3, 1-5=4, Q-T=5, A-G=6, Cs-V=7,
 			; key code is rownum + ((5 - bit number) << 3).
@@ -108,7 +109,8 @@ key_scan_no_ss:
 			cp 0x18							; symbol shift; check for this condition and
 			ret								; return with Z flag indicating the result
 
-key_test:
+.globl F_key_test
+F_key_test:
 			; Test that a successful (zero flag set) response from key_scan is indeed
 			; a real key (i.e0. not just a shift key on its own). As described by Toni Baker
 			; (Mastering Machine Code on your ZX Spectrum, ch11):
@@ -134,7 +136,8 @@ key_test_not_ff:
 			scf
 			ret
 ; 0x0333
-key_code:
+.globl F_key_code
+F_key_code:
 			; Convert base character to ASCII code, respecting shifts and current key mode.
 			; entry: E = base character
 			; B = shift code (FF, 27 or 18)

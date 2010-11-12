@@ -19,7 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"w5100_defs.inc"
+.include	"sysvars.inc"
+.include	"sockdefs.inc"
 
 ; Copy from rx buffer and copy into txbuffer.
 ; These routines assume 2K buffers for both tx and rx (so they don't bother
@@ -41,7 +43,9 @@
 ;		BC = size of destination buffer
 ; On return	BC = bytes copied
 ; Unchanged	IX, IY, shadow registers
-F_copyrxbuf
+.text
+.globl F_copyrxbuf
+F_copyrxbuf:
 	; check whether page A is being used.
 	; (note: will use page B if this is the case)
 	call F_checkpageA
@@ -55,41 +59,41 @@ F_copyrxbuf
 	; checking the RX interrupt flag but RSR is still zero.
 	; The datasheet doesn't of course guarantee that the socket
 	; is actually ready to read even if the interrupt is set :-)
-.testzero
+.testzero1:
 	ld l, Sn_RX_RSR0 % 256	; (hl) = RSR's MSB
 	ld d, (hl)
 	inc l
 	ld e, (hl)
 	ld a, d
 	or e
-	jr nz, .continue
+	jr nz, .continue1
 
 	; note that if there's a buffer to unload, unload it. Only
 	; check for RST when there's no data pending.
 	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
 	bit BIT_IR_DISCON, (hl)
 	jp nz, J_resetbypeer_pop
-	jr .testzero
+	jr .testzero1
 
-.continue
+.continue1:
 	; check whether it exceeds the buffer. If so just use value of
 	; BC as number of bytes to copy. If not, use the RSR as number
 	; of bytes to copy.
 	ld a, b			; MSB of length of our buffer
 	cp d			; MSB of RSR
-	jr c, .findoffset	; RSR > buffer
-	jr nz, .setlen		; RSR < buffer, set actual length to RSR
+	jr c, .findoffset1	; RSR > buffer
+	jr nz, .setlen1		; RSR < buffer, set actual length to RSR
 	ld a, c			; LSB of RSR
 	cp e			; LSB of length of our buffer
-	jr c, .findoffset	; RSR > buffer len
+	jr c, .findoffset1	; RSR > buffer len
 
 	; BC now should equal actual size to copy
-.setlen
+.setlen1:
 	ld b, d
 	ld c, e
 
 	; de = offset when were are done here.
-.findoffset
+.findoffset1:
 	ld l, Sn_RX_RD0 % 256	; RX read pointer register for socket
 	ld a, (hl)		; MSB of RX offset
 	and gSn_RX_MASK / 256	; mask with 0x07
@@ -98,39 +102,39 @@ F_copyrxbuf
 	ld e, (hl)
 
 	; page in the correct bit of W5100 buffer memory
-.setpage
+.setpage1:
 	ld (v_sockptr), hl	; Save the current socket register pointer
 	ld a, h
 	sub Sn_MR / 256		; derive socket number
 	bit 1, a		; upper page or lower page?
-	jr nz, .upperpage
+	jr nz, .upperpage1
 	ld a, RX_LWRDATAPAGE	; W5100 phys. address 0x6000
 	call F_setpageA
-	jr .willitblend
-.upperpage
+	jr .willitblend1
+.upperpage1:
 	ld a, RX_UPRDATAPAGE	; W5100 phys. address 0x7000
 	call F_setpageA
 
 	; Does the circular buffer wrap around?
-.willitblend
-	dec bc			; ...to check for >, not >=
+.willitblend1:
+	dec bc			; ...to1 check for >, not >=
 	ld h, d			; not ex hl, de because we need to preserve it
 	ld l, e
 	add hl, bc
 	inc bc			; undo previous dec
 	ld a, h
 	cp 0x08			; Does copy go over 2k boundary?
-	jp p, .wrappedcopy	; The circular buffer wraps.
+	jp p, .wrappedcopy1	; The circular buffer wraps.
 
 	; A straight copy from the W5100 buffer to our memory.
-.straightcopy
+.straightcopy1:
 	ld hl, (v_sockptr)	; retrieve socket register pointer
 	call F_getbaseaddr	; hl now = source address
 	pop de			; retrieve destination address
 	ld (v_copylen), bc	; preserve length
 	ldir			; copy buffer contents
 
-.completerx
+.completerx1:
 	ld a, REGPAGE		; Registers are in W5100 physmem 0x0000
 	call F_setpageA
 	ld hl, (v_sockptr)	; retrieve socket pointer
@@ -157,7 +161,7 @@ F_copyrxbuf
 	; Stack contains the destination address
 	; BC contains length to copy
 	; DE contains offset
-.wrappedcopy
+.wrappedcopy1:
 	ld (v_copylen), bc	; save length
 	ld hl, 0x0800		; the highest offset you can have
 	sbc hl, de		; hl = how many bytes before we hit the end
@@ -178,7 +182,7 @@ F_copyrxbuf
 	ld c, l
 	pop hl			; retrieve address
 	ldir			; transfer remainder
-	jr .completerx		; done
+	jr .completerx1		; done
 
 ;============================================================================
 ; F_copytxbuf:
@@ -193,32 +197,33 @@ F_copyrxbuf
 ; Notes: If sending >2k of data, data should only be fed into this routine
 ; in chunks of <=2k a time or it'll hang. The socket library's send() 
 ; call should do this.
-F_copytxbuf
+.globl F_copytxbuf
+F_copytxbuf:
 	; check whether page A is being used.
 	; (note: will use page B if this is the case)
 	call F_checkpageA
 
-.waitformsb
+.waitformsb2:
 	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
 	bit BIT_IR_DISCON, (hl)
 	jp nz, J_resetbypeer
 	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
 	ld a, b			; MSB of argment
 	cp (hl)			; compare with FSR
-	jr c, .getoffset	; definitely enough free space
-	jr nz, .waitformsb	; Buffer MSB > FSR MSB
+	jr c, .getoffset2	; definitely enough free space
+	jr nz, .waitformsb2	; Buffer MSB > FSR MSB
 				; Buffer MSB = FSR MSB, check LSB value
 	inc l			; (hl) = LSB of hw register
-.waitforlsb
+.waitforlsb2:
 	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
 	bit BIT_IR_DISCON, (hl)
 	jp nz, J_resetbypeer
 	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
 	ld a, (hl)		; get LSB of FSR
 	cp c			; and compare with LSB of passed value
-	jr c, .waitforlsb	; if C > (hl) wait until it's not.
+	jr c, .waitforlsb2	; if C > (hl) wait until it's not.
 
-.getoffset
+.getoffset2:
 	ld (v_sockptr), hl	; save the socket register pointer
 	ld (v_copylen), bc	; save the buffer length
 	push de			; save the source buffer pointer
@@ -232,38 +237,38 @@ F_copytxbuf
 	; page in the correct bit of W5100 buffer memory. TX buffer for
 	; socket 0 and 1 in page 0x0104 and for 2 and 3 in 0x0105, mapping
 	; socket 0 and 2 to 0x1000, 1 and 3 to 0x1800.
-.setpage
+.setpage2:
 	ld a, h
 	sub Sn_MR / 256		; derive socket number
 	bit 1, a		; upper page or lower page?
-	jr nz, .upperpage
+	jr nz, .upperpage2
 	ld a, TX_LWRDATAPAGE	; W5100 phys. address 0x4000
 	call F_setpageA
-	jr .willitblend
-.upperpage
+	jr .willitblend2
+.upperpage2:
 	ld a, TX_UPRDATAPAGE	; W5100 phys. address 0x5000
 	call F_setpageA
 
 	; add de (offset) and bc (length) and see if it's >0x0800, in
 	; which case buffer copy needs to wrap.
-.willitblend
-	dec bc			; ...to check for >, not >=
+.willitblend2:
+	dec bc			; ...to2 check for >, not >=
 	ld h, d			; not ex hl, de because we need to preserve it
 	ld l, e
 	add hl, bc
 	inc bc			; undo previous dec
 	ld a, h
 	cp 0x08			; Does copy go over 2k boundary?
-	jp p, .wrappedcopy	; The circular buffer wraps.
+	jp p, .wrappedcopy2	; The circular buffer wraps.
 
-.straightcopy
+.straightcopy2:
 	ld hl, (v_sockptr)	; restore socket pointer
 	call F_getbaseaddr
 	ex de, hl		; for LDIR
 	pop hl			; get stacked source address
 	ldir
 
-.completetx
+.completetx2:
 	ld a, REGPAGE		; registers in W5100 phys. 0x0000
 	call F_setpageA
 	ld hl, (v_sockptr)	; get the socket pointer back
@@ -285,7 +290,7 @@ F_copytxbuf
 	jp nz, F_setpageB	; yes - restore page B and return.
 	ret			; no, return.
 
-.wrappedcopy
+.wrappedcopy2:
 	ld hl, 0x0800		; the highest offset you can have
 	sbc hl, de		; hl = how many bytes before we hit the end
 	ld (v_copied), hl	; save it
@@ -306,11 +311,11 @@ F_copytxbuf
 	ld c, l
 	pop hl			; retrieve source buffer ptr
 	ldir			; transfer remainder
-	jr .completetx		; done
+	jr .completetx2		; done
 
-J_resetbypeer_pop
+J_resetbypeer_pop:
 	pop de
-J_resetbypeer
+J_resetbypeer:
 	ld a, (v_buf_pgb)	; check to see whether to re-page area B
 	and a			; zero?
 	call nz, F_setpageB	; yes - restore page B and return.
@@ -324,7 +329,8 @@ J_resetbypeer
 ; On entry: 	de = offset
 ;		h  = high order of socket register address
 ; On exit:	hl = base address
-F_getbaseaddr
+.globl F_getbaseaddr
+F_getbaseaddr:
 	ld l, 0
 	ld a, h
 	sub Sn_BASE		; a = 0x10 for skt 0, 0x11 for skt 1, 0x12 etc. 
@@ -336,12 +342,12 @@ F_getbaseaddr
 	; 0x1000-0x1FFF, so the physical address should either end up
 	; being 0x1000 (skt 0 and 2) or 0x1800 (skt 1 and 3)
 	bit 0, a		; bit 0 set = odd numbered socket at 0x1800
-	jr nz, .oddsock
+	jr nz, .oddsock3
 	ld h, a
 	add hl, de		; hl = physical address
 	ret
-.oddsock
-	add 0x07		; odd sockets are 0x18xx addresses	
+.oddsock3:
+	add a, 0x07		; odd sockets are 0x18xx addresses	
 	ld h, a
 	add hl, de
 	ret
@@ -349,15 +355,16 @@ F_getbaseaddr
 ;=========================================================================
 ; F_checkpageA
 ; On entry: DE = buffer start
-F_checkpageA
+.globl F_checkpageA
+F_checkpageA:
 	ld a, d
 	and 0xF0		; mask off top 4 bits
 	cp 0x10			; are we in 0x1000 - 0x1FFF?
-	jr z, .swappages	; yes, swap pages.
+	jr z, .swappages4	; yes, swap pages.
 	xor a			; reset the sysvar
 	ld (v_buf_pgb), a
 	ret
-.swappages
+.swappages4:
 	ld a, d
 	xor 0x30		; flip bits 4 and 5 to convert 0x1xxx to 0x2xxx
 	ld d, a

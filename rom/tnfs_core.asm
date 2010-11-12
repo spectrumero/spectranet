@@ -24,6 +24,7 @@
 .include	"spectranet.inc"
 .include	"sysvars.inc"
 .include	"fcntl.inc"
+.include	"sockdefs.inc"
 
 ; General TNFS core utility functions.
 ;------------------------------------------------------------------------

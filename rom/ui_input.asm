@@ -27,38 +27,42 @@
 ; routine, but before the ZX ROM has done the same).
 ; The routines are designed to work regardless of the maskable interrupt
 ; state.
+.include	"sysdefs.inc"
+.include	"sysvars.inc"
+.include	"page1.xinc"
 
 ;===========================================================================
 ; Definitions - special keys returned by K_DECODE (and therefore F_getkey)
-KEY_TRUEVID	equ 0x04
-KEY_INVVID	equ 0x05
-KEY_CAPSLOCK	equ 0x06
-KEY_EDIT	equ 0x07
-KEY_LEFT	equ 0x08
-KEY_RIGHT	equ 0x09
-KEY_DOWN	equ 0x0A
-KEY_UP		equ 0x0B
-KEY_BACKSPACE	equ 0x0C
-KEY_ENTER	equ 0x0D
-KEY_EXTEND	equ 0x0E
-KEY_GRAPH	equ 0x0F
+KEY_TRUEVID:	equ 0x04
+KEY_INVVID:	equ 0x05
+KEY_CAPSLOCK:	equ 0x06
+KEY_EDIT:	equ 0x07
+KEY_LEFT:	equ 0x08
+KEY_RIGHT:	equ 0x09
+KEY_DOWN:	equ 0x0A
+KEY_UP:		equ 0x0B
+KEY_BACKSPACE:	equ 0x0C
+KEY_ENTER:	equ 0x0D
+KEY_EXTEND:	equ 0x0E
+KEY_GRAPH:	equ 0x0F
 
 ;===========================================================================
 ; F_getkey:
 ; Waits for a key to be pressed, and returns the key in A.
 ; The routine returns the key on keydown. The calling routine should then
 ; wait for keyup before getting the next key.
-F_getkey
+.globl F_getkey
+F_getkey:
 	ld a, DATAROM		; key scan routines live here
 	call F_pushpageA
-.loop
-	call key_scan
-	call key_test
-	jr nc, .loop
+.loop1:
+	call F_key_scan
+	call F_key_test
+	jr nc, .loop1
 	ld e, a			; partially decoded key is in A, copy it to E
 	ld d, 8			; not in 'K' cursor mode
 	ld c, 0			; FLAGS = 0
-	call key_code		; decode keypress into actual ascii value
+	call F_key_code		; decode keypress into actual ascii value
 	ld c, a
 	call F_poppageA		; restore original page A
 	ld a, c
@@ -68,13 +72,14 @@ F_getkey
 ; F_keyup:
 ; Waits for the keyboard not being pressed anywhere that will generate
 ; a character.
-F_keyup
+.globl F_keyup
+F_keyup:
 	ld a, DATAROM		; key scan routines live here
 	call F_pushpageA
-.loop
-	call key_scan
-	call key_test
-	jr c, .loop		; carry set = key being pressed
+.loop2:
+	call F_key_scan
+	call F_key_test
+	jr c, .loop2		; carry set = key being pressed
 	call F_poppageA
 	ret
 
@@ -83,36 +88,37 @@ F_keyup
 ; Get a string from the keyboard, and null terminate.
 ; Parameters: DE = pointer to memory to store the string.
 ;              C = size of buffer (string length + 1, for the null terminator)
-F_inputstring
+.globl F_inputstring
+F_inputstring:
 	ld b, c			; save length in b
 	ld (v_stringptr), de	; save the pointer
 	ld (v_stringlen), bc	; save the string lengths
-.inputloop
+.inputloop3:
 	ld a, '_'		; cursor - possible TODO - flashing cursor?
 	call F_putc_5by8	; display it
-.keyloop
+.keyloop3:
 	call F_keyup		; wait for keyup before doing anything
 	call F_getkey		; wait for a key to be pressed.
 	push hl
 	ld hl, 0x1000		; wait some more time so that 
-.loop				; multi key contacts on Spectrum + / 128
+.loop3:				; multi key contacts on Spectrum + / 128
 	dec hl			; membranes all make. Use a delay loop
 	ld a, h			; rather than halt so this routine works
 	or l			; with interrupts disabled.
-	jr nz, .loop
+	jr nz, .loop3
 	pop hl
 
 	call F_getkey		; closed.
 	cp KEY_ENTER		; enter pressed?
-	jr z, .enter		; handle enter
+	jr z, .enter3		; handle enter
 	cp KEY_BACKSPACE	; backspace pressed?
-	jr z, .backspace	; handle it
+	jr z, .backspace3	; handle it
 	cp ' '			; space - lowest printable character
-	jp m, .keyloop		; do nothing for non-printable char
+	jp m, .keyloop3		; do nothing for non-printable char
 	ex af, af'
 	ld a, (v_stringlen)	; get remaining buffer size back
 	cp 1			; and if only one byte is left,
-	jr z, .keyloop		; don't accept more input.
+	jr z, .keyloop3		; don't accept more input.
 	call F_backspace	; backspace over the cursor
 	ex af, af'		; get keypress back
 	ld hl, (v_stringptr)	; get current string pointer
@@ -123,12 +129,12 @@ F_inputstring
 	ld a, (v_stringlen)	; get the remaining byte count
 	dec a			; decrement it
 	ld (v_stringlen), a	; save remaining length	
-	jr .inputloop		; and wait for the next key.	
-.backspace
+	jr .inputloop3		; and wait for the next key.	
+.backspace3:
 	ld bc, (v_stringlen)	; is the cursor at the start
 	ld a, c			; of the string?
 	cp b			
-	jr z, .keyloop		; yes - so just wait for another key.
+	jr z, .keyloop3		; yes - so just wait for another key.
 
 	; To update the screen, the cursor and the character behind
 	; it must be removed, hence two calls to F_backspace.
@@ -139,8 +145,8 @@ F_inputstring
 	ld (v_stringptr), hl	; save it
 	call F_backspace	; remove cursor
 	call F_backspace	; remove last character
-	jr .inputloop
-.enter
+	jr .inputloop3
+.enter3:
 	call F_keyup		; wait until keyup
 	call F_backspace	; erase the cursor
 	ld hl, (v_stringptr)	; get the string pointer

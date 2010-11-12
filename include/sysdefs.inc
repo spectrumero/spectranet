@@ -58,3 +58,5 @@ RESRVD5_VECTOR	equ 0x200E
 ; Page definitions
 LOWEST_PAGE	equ 0xC1
 
+DATAROM		equ 0x01
+UTILROM		equ 0x02

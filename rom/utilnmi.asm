@@ -22,6 +22,7 @@
 .include	"spectranet.inc"
 .include	"sysvars.inc"
 .include	"ctrlchars.inc"
+.include	"sockdefs.inc"
 
 ; Utility ROM - NMI handler
 .text

@@ -24,6 +24,7 @@
 .include	"spectranet.inc"
 .include	"ctrlchars.inc"
 .include	"sysvars.inc"
+.include	"sockdefs.inc"
 
 ;--------------------------------------------------------------------------
 ; F_romconfigmain: Main loop

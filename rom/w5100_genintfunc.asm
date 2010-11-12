@@ -23,13 +23,18 @@
 ;
 ; General internal functions for the socket library.
 ;
+.include	"w5100_defs.inc"
+.include	"sysvars.inc"
+.include	"sockdefs.inc"
 ;
 ; F_gethwsock:
 ; Get the hardware socket for a file descriptor. If no hardware socket
 ; is associated with the fd, set the carry flag and return with the error
 ; code in A. Otherwise, return the hardware socket register area MSB in
 ; H.
-F_gethwsock
+.text
+.globl F_gethwsock
+F_gethwsock:
 	ex af, af'
 	ld a, (v_pga)		; save current page A
 	ld (v_buf_pga), a
@@ -42,14 +47,15 @@ F_gethwsock
 	ld h, a			; point hl at putative hardware socket
 	and NOTSOCKMASK		; is this not a hardware socket?
 	ret z			; OK - return with hw sock register in H
-.nohwsock
+.nohwsock1:
 	ld a, ESBADF
 	scf
 	ret
 
 ;----------------------------------------------------------------------------
 ; J_leavesockfn - jump point to restore original page A
-J_leavesockfn
+.globl J_leavesockfn
+J_leavesockfn:
 	ex af, af'
 	ld a, (v_buf_pga)
 	call F_setpageA
