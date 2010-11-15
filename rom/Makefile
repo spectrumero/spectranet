@@ -5,9 +5,10 @@ P0OUT = page0.bin
 P0LDFLAGS = -T page0.ld -Map $(P0OUT).map -L ../syslib
 P0LIBS = -lpager
 
-P1OBJS = ui_charset.o ui_keyscan.o ui_output.o ui_lookup.o 
+P1OBJS = ui_keyscan.o ui_funcs.o
 P1OUT = page1.bin
-P1LDFLAGS = -T page1.ld -Map $(P1OUT).map
+P1LDFLAGS = -T page1.ld -Map $(P1OUT).map -L ../syslib
+P1LIBS = -lromui
 
 P2OBJS = utilromvectors.o utility_impl.o utilnmi.o save7ffd.o utilnmi_en.o
 P2OUT = page2.bin
