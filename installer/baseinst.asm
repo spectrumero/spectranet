@@ -42,16 +42,6 @@ F_erase:
 	call F_print
 	xor a
 	call F_FlashEraseSector
-	jr c, .erasefail
-	ld hl, STR_erase1
-	call F_print
-	ld a, 4
-	call F_FlashEraseSector
-	jr c, .erasefail
-	ld hl, STR_erase2
-	call F_print
-	ld a, 8
-	call F_FlashEraseSector
 	ret nc
 .erasefail:
 	ld hl, STR_erasefailed
@@ -97,7 +87,7 @@ F_writepages:
 	ld de, 0x2000
 	ld bc, PAGE3LEN
 	call F_FlashWriteBlock
-	jp c, .writefailed
+	jr c, .writefailed
 
 	ld hl, STR_jumptable
 	call F_print
@@ -105,56 +95,7 @@ F_writepages:
 	ld de, 0x2F00
 	ld bc, JUMPTABLELEN
 	call F_FlashWriteBlock
-	jp c, .writefailed
 
-	ld hl, STR_basext
-	call F_print
-	ld a, 0x04
-	call F_setpageB
-	ld hl, BASEXT
-	ld de, 0x2000
-	ld bc, BASEXTLEN
-	call F_FlashWriteBlock
-	jr c, .writefailed
-
-	ld hl, STR_streams
-	call F_print
-	ld a, 0x05
-	call F_setpageB
-	ld hl, STREAMS
-	ld de, 0x2000
-	ld bc, STREAMSLEN
-	call F_FlashWriteBlock
-	jr c, .writefailed
-
-	ld hl, STR_messages
-	call F_print
-	ld a, 0x06
-	call F_setpageB
-	ld hl, MESSAGES
-	ld de, 0x2000
-	ld bc, MESSAGESLEN
-	call F_FlashWriteBlock
-	jr c, .writefailed
-
-	ld hl, STR_config
-	call F_print
-	ld a, 0x07
-	call F_setpageB
-	ld hl, CONFIG
-	ld de, 0x2000
-	ld bc, CONFIGLEN
-	call F_FlashWriteBlock
-	jr c, .writefailed
-	
-	ld hl, STR_snapman
-	call F_print
-	ld a, 0x08
-	call F_setpageB
-	ld hl, SNAPMAN
-	ld de, 0x2000
-	ld bc, SNAPMANLEN
-	call F_FlashWriteBlock
 	ret nc
 
 .writefailed:
@@ -190,19 +131,12 @@ F_print:
 
 .data
 STR_erase0:	defb "Erasing sector 0",NEWLINE,0
-STR_erase1:	defb "Erasing sector 1",NEWLINE,0
-STR_erase2:	defb "Erasing sector 2",NEWLINE,0
 STR_erasefailed: defb "Erase failed.",NEWLINE,0
 STR_page0:	defb "Writing page 0", NEWLINE,0
 STR_page1:	defb "Writing page 1", NEWLINE,0
 STR_page2:	defb "Writing page 2", NEWLINE,0
 STR_page3:	defb "Writing page 3", NEWLINE,0
 STR_jumptable:	defb "Writing jump table", NEWLINE,0
-STR_basext:	defb "Adding basext module",NEWLINE,0
-STR_streams:	defb "Adding streams module", NEWLINE,0
-STR_messages:	defb "Adding messages module",NEWLINE,0
-STR_config:	defb "Adding config module",NEWLINE,0
-STR_snapman:	defb "Adding snapman module",NEWLINE,0
 STR_writefailed: defb "Write failed.",NEWLINE,0
 
 .bss

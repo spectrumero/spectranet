@@ -1,4 +1,4 @@
-SUBDIRS = syslib rom modules
+SUBDIRS = syslib rom modules installer
 
 .PHONY:	subdirs	$(SUBDIRS)
 
@@ -17,4 +17,6 @@ clean:
 rom:	syslib
 
 modules:	syslib
+
+installer:	syslib rom modules
 
