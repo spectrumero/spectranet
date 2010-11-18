@@ -52,7 +52,7 @@ F_startmsg:
 	call PUTCHAR42
 	ret
 .data
-STR_rel:		defb "Alioth Spectranet\nBuild: ",0
+STR_rel:		defb "Alioth Spectranet",NEWLINE,"Build: ",0
 STR_ip:		defb "   IP: ",0
 STR_date:	defb " Date: ",0
 .include	"date.xinc"
