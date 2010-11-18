@@ -1,4 +1,4 @@
-SUBDIRS = syslib rom modules installer
+SUBDIRS = syslib rom modules installer utils
 
 .PHONY:	subdirs	$(SUBDIRS)
 
@@ -18,5 +18,5 @@ rom:	syslib
 
 modules:	syslib
 
-installer:	syslib rom modules
+installer:	syslib rom modules utils
 
