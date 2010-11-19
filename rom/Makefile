@@ -61,7 +61,7 @@ $(DATEFILE):
 
 ver:	$(VERFILE)
 $(VERFILE):
-	echo "bldstr: defb \"gnubinutils\",0x0a,0" > $(VERFILE)
+	echo "bldstr: defb \"`whoami`@`hostname` R`svn info .|grep -P ^Rev.*n:|cut -d " " -f 2`\",0x0a,0" > $(VERFILE)
 
 p0syms: page0 $(P0SYMS)
 $(P0SYMS):
