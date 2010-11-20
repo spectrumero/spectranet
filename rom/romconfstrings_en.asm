@@ -45,7 +45,6 @@ STR_exit:	defb "Exit",0
 .globl STR_borked
 .globl STR_est
 .globl STR_len
-.globl STR_len
 .globl STR_noroom
 .globl STR_writingmod
 STR_send:	defb "Listening on ",0
@@ -53,7 +52,7 @@ STR_port:	defb " port 2000",NEWLINE,0
 STR_xtoexit:	defb NEWLINE,"Press 'x' to exit.",NEWLINE,0
 STR_borked:	defb NEWLINE,"Operation failed with rc=",0
 STR_est:		defb "Connection established",NEWLINE,0
-STR_len:		defb "Length: ",NEWLINE
+STR_len:		defb "Length: ",0
 STR_noroom:	defb "No space left in flash.",NEWLINE,0
 STR_writingmod:	defb NEWLINE,"Writing module to flash page ",0
 
