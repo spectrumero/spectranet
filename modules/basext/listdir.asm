@@ -45,7 +45,7 @@ F_listdir:
 	call F_statentry		; show some information about it
         ld hl, INTERPWKSPC
         call F_tbas_zxprint             ; print a C string to #2
-        ld a, NEWLINE                    ; newline
+        ld a, ZXNEWLINE                 ; newline
         rst CALLBAS
         defw 0x10
         jr .catloop1
