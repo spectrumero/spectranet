@@ -3,7 +3,7 @@ LD = z80-unknown-coff-ld
 RM = rm
 ASFLAGS = -I../../include
 MAPFILE = $(OUT).map
-LDFLAGS = -T ../modules.ld -Map $(MAPFILE)
+LDFLAGS = -T ../modules.ld -Map $(MAPFILE) -L ../../syslib
 
 .PHONY: clean
 

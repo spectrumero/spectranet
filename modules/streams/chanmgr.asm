@@ -386,9 +386,12 @@ F_createchan:
 	ldir				; copy the stub
 	pop ix				; get start addr into IX
 	ld a, (v_asave)			; get the stream number
-	ld (ix+IOWCHAN), a		; Set write ID
+;	ld (ix + IOWCHAN), a		; Set write ID
+	ld (ix + 3), a
 	set 7, a			; set MSB
-	ld (IX+IORCHAN), a		; Set read ID
+;	ld (ix + IORCHAN), a		; Set read ID
+	ld (ix + 0x0b), a
+
 	pop hl				; retrieve the 2nd byte address
 	ld de, (ZX_CHANS)		; get CHANS sysvar
 	and a				; and calculate the offset
@@ -553,7 +556,14 @@ F_debugA:
 	ret
 
 ;--------------
-
+.globl IOROUTINE
+.globl IOWCHAN
+.globl IOWROUTINE_LEN
+.globl IORROUTINE
+.globl IORCHAN
+.globl IOROUTINE_LEN
+.globl CHAN_LEN
+.globl IORROUTINE_LEN
 IOROUTINE:
 	ld h, STREAM_ROM_ID		; our ROM ID
 IOWCHAN:	equ ($+1)-IOROUTINE		; the byte to modify

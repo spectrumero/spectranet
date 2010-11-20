@@ -14,7 +14,10 @@ FWOUT = libflashwrite.a
 PGROBJS = pager.o dispatcher.o
 PGROUT = libpager.a
 
-all:	libui libflashwrite libpager
+DBGOBJS = debug.o
+DBGOUT = libdebug.a
+
+all:	libui libflashwrite libpager libdebug
 
 libui:	$(UIOBJS)
 	$(AR) $(ARFLAGS) $(UIOUT) $(UIOBJS)
@@ -27,6 +30,10 @@ libflashwrite:	$(FWOBJS)
 libpager:	$(PGROBJS)
 	$(AR) $(ARFLAGS) $(PGROUT) $(PGROBJS)
 	$(RANLIB) $(PGROUT)
+
+libdebug:	$(DBGOBJS)
+	$(AR) $(ARFLAGS) $(DBGOUT) $(DBGOBJS)
+	$(RANLIB) $(DBGOUT)
 
 %.o : %.asm
 	$(AS) $(ASFLAGS) $< -o $@

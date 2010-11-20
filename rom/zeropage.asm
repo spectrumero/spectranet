@@ -53,10 +53,10 @@ CALLBAS:
 	pop hl
 	jp do_callbas
 .section rst28
-MODULECALL_NOPAGE:
+MODULECALL_NOPAGE_28:
 	jp J_moduledispatch
 .section rst30
-MODULECALL:
+MODULECALL_30:
 	call J_moduledispatch
 	ex (sp), hl		; throw away return to 0x3FF9
 	pop hl			
