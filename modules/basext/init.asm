@@ -22,6 +22,7 @@
 .include	"spectranet.inc"
 .include	"defs.inc"
 .include	"zxrom.inc"
+.include	"ctrlchars.inc"
 .text
 ;------------------------------------------------------------------------
 ; F_init: Initializes the interpreter
@@ -54,8 +55,9 @@ F_init:
         ld hl, STR_basinsterr
         call PRINT42
         ret
-STR_basicinit:   defb    "BASIC extensions installed\n",0
-STR_basinsterr:  defb    "Failed to install BASIC extensions\n",0
+.data
+STR_basicinit:   defb    "BASIC extensions installed",NEWLINE,0
+STR_basinsterr:  defb    "Failed to install BASIC extensions",NEWLINE,0
 
 NUMCMDS:         equ     13
 PARSETABLE:      

@@ -286,29 +286,3 @@ F_findmetadata_a:		; stream number.
 	pop ix			; transfer the address to IX
 	ret
 
-;F_debugprint
-;	ld (0x3200), ix
-;	pop ix
-;	inc ix
-;	inc ix
-;	push ix
-;	push af
-;	push bc
-;	push de
-;	push hl
-;	ld h, (ix-1)
-;	ld l, (ix-2)
-;	call PRINT42
-;	pop hl
-;	pop de
-;	pop bc
-;	pop af
-;	ld ix, (0x3200)
-;	ret
-;STR_CHECKFORMORE defb "checkformore\n",0
-;STR_READDONE	defb "readdone\n",0
-;STR_INPUT	defb "input\n",0
-;STR_CLEARDOWN	defb "cleardown\n",0
-;STR_SAVEPOS	defb "savepos\n",0
-
-

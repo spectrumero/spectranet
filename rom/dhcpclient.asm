@@ -145,14 +145,14 @@ F_dhcp:
 	
 	ret
 
-STR_dhcpinit:	defb "Press BREAK to interrupt.\n",0
+STR_dhcpinit:	defb "Press BREAK to interrupt.",NEWLINE,0
 STR_dhcpdiscover:	defb "DHCPDISCOVER",0
-STR_dhcpoffer:		defb "\nDHCPOFFER\n",0
-STR_dhcprequest:		defb "DHCPREQUEST\n",0
-STR_dhcpack:		defb "DHCPACK\n",0
+STR_dhcpoffer:		defb NEWLINE,"DHCPOFFER",NEWLINE,0
+STR_dhcprequest:		defb "DHCPREQUEST",NEWLINE,0
+STR_dhcpack:		defb "DHCPACK",NEWLINE,0
 STR_failed:		defb "DHCP failed with return code ",0
 STR_ipaddr:		defb "Allocated IP address ",0
-STR_interrupted:		defb "\nBREAK pressed\n",0
+STR_interrupted:		defb NEWLINE,"BREAK pressed",NEWLINE,0
 
 ;-------------------------------------------------------------------------
 ; F_dhcpdiscover

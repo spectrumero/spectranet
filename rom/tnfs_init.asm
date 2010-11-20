@@ -21,6 +21,7 @@
 ;THE SOFTWARE.
 .include	"spectranet.inc"
 .include	"sysvars.inc"
+.include	"ctrlchars.inc"
 
 ; Initialization routines
 .text
@@ -59,8 +60,8 @@ F_init:
         call PRINT42
         ret
 .data
-STR_allocfailed: defb    "tnfs: No memory pages available\n",0
-STR_init:        defb    "TNFS 1.01 initialized\n",0
+STR_allocfailed: defb    "tnfs: No memory pages available",NEWLINE,0
+STR_init:        defb    "TNFS 1.01 initialized",NEWLINE,0
 .text
 ;-----------------------------------------------------------------------------
 ; F_fetchpage

@@ -19,6 +19,8 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"ctrlchars.inc"
+
 .data
 .globl UI_STRINGS
 .globl INPUTTABLE
@@ -64,9 +66,9 @@ STR_loading:	defb	"Loading...",0
 STR_saving:	defb	"Saving...",0
 STR_cwd:	defb	".",0
 STR_ident:	defb	"Snapshot manager 1.0",0
-STR_initialized: defb	"Snapshot manager initialized\n",0
-STR_failed:	defb	"Snapmgr. failed to alloc memory\n",0
-STR_nomempage:	defb	"No page was allocated!\n",0
+STR_initialized: defb	"Snapshot manager initialized",NEWLINE,0
+STR_failed:	defb	"Snapmgr. failed to alloc memory",NEWLINE,0
+STR_nomempage:	defb	"No page was allocated!",NEWLINE,0
 STR_curfile:	defb	"Current: ",0
 STR_nofile:	defb	"(none)",0
 STR_newname:	defb	"New name> ",0

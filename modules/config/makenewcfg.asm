@@ -55,9 +55,9 @@ J_exit
 	jp PAGEOUT
 
 str_creating
-	defb "Creating new configuration\n",0
+	defb "Creating new configuration",NEWLINE,0
 str_commiterr
-	defb "Unable to commit to flash\n",0
+	defb "Unable to commit to flash",NEWLINE,0
 str_done
-	defb "Done.\n",0
+	defb "Done.",NEWLINE,0
 
