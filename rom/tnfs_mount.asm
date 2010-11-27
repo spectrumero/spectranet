@@ -143,6 +143,8 @@ F_tnfs_mount:
 	ld h, 0x3F		; point HL at the address in sysvars
 	ld a, (v_pgb)		; Fetch our ROM number
 	ld (hl), a		; and store it in the mount point table
+
+	; set initial poll time
 	or 1			; reset Z and C flags - mounted OK.
 	jp F_leave
 

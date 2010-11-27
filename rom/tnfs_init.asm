@@ -22,6 +22,8 @@
 .include	"spectranet.inc"
 .include	"sysvars.inc"
 .include	"ctrlchars.inc"
+.include	"tnfs_defs.inc"
+.include	"tnfs_sysvars.inc"
 
 ; Initialization routines
 .text
@@ -50,6 +52,11 @@ F_init:
 	ld bc, 0xFFF
 	ld (hl), l
 	ldir
+
+	; initialize poll time values
+	ld a, tnfs_polltime
+	ld (v_tnfs_initpolltime), a
+
 	call F_restorepage
 	
         ld hl, STR_init

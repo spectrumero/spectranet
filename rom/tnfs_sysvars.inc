@@ -48,11 +48,14 @@ v_tnfs_sockinfo1	equ 0x1028
 v_tnfs_sockinfo2	equ 0x1030
 v_tnfs_sockinfo3	equ 0x1038
 
+; TODO: each mount point should have its own poll time parameters
 v_tnfs_polltime		equ 0x1040	; current poll time in 50ths/sec
 v_tnfs_backoff		equ 0x1041	; have we backed off yet?
 v_tnfs_tx_de		equ 0x1042	; DE for transmit
 v_tnfs_tx_bc		equ 0x1044	; BC for transmit
 v_tnfs_tx_hl		equ 0x1046	; HL for transmit
+v_tnfs_initpolltime	equ 0x1048	; poll time to use on first poll
+v_tnfs_lastpolladj	equ 0x1049	; how many packets since last adjust.
 
 HANDLESPACE		equ 0x1100	; Handle information storage space
 HMETASPACE		equ 0x1200	; Handle metadata storage space
