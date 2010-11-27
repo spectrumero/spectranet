@@ -115,6 +115,8 @@ F_dhcp:
 	call PRINT42
 	ld a, NEWLINE
 	call PUTCHAR42
+	ld hl, v_ethflags	; set "have an IP" bit
+	set 0, (hl)
 	ret
 
 .borked1:
@@ -463,8 +465,7 @@ F_dhcprecvack:
 	inc hl			; message is 1 byte long
 	jr z, .optloop5		; if so, continue
 	ld a, DHCP_NAK		; if not set error code and exit
-	scf
-	ret
+	jp F_error
 
 ;---------------------------------------------------------------------------
 ; F_dhcpgetoption
@@ -491,9 +492,8 @@ F_dhcpgetoption:
 	ld b, a		; get back the option
 	jr F_dhcpgetoption
 .notfound6:
-	scf		; indicate option not found
 	ld a, DHCP_OPTNOTFOUND	; return code
-	ret
+	jp F_error
 
 ;--------------------------------------------------------------------------
 ; F_comparexid
@@ -515,8 +515,7 @@ F_comparexid:
 	ret
 .badxid7:
 	ld a, DHCP_BAD_XID
-	scf
-	ret
+	jp F_error
 
 ;--------------------------------------------------------------------------
 ; F_waitfordhcpmsg
@@ -557,6 +556,11 @@ F_closeonerror:
 	ld a, (v_dhcpfd)
 	call CLOSE
 	pop af
+; F_error
+; Set flag bits and return
+F_error:
+	ld hl, v_ethflags
+	res 0, (hl)
 	scf
 	ret
 
