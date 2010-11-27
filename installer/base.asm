@@ -24,27 +24,27 @@
 .data
 .globl PAGE0
 PAGE0:
-.incbin "../rom/page0.bin"
+.incbin "page0.bin"
 .globl PAGE0LEN
 PAGE0LEN:	equ $-PAGE0
 .globl PAGE1
 PAGE1:
-.incbin "../rom/page1.bin"
+.incbin "page1.bin"
 .globl PAGE1LEN
 PAGE1LEN:	equ $-PAGE1
 .globl PAGE2
 PAGE2:
-.incbin "../rom/page2.bin"
+.incbin "page2.bin"
 .globl PAGE2LEN
 PAGE2LEN:	equ $-PAGE2
 .globl PAGE3
 PAGE3:
-.incbin "../rom/page3.bin"
+.incbin "page3.bin"
 .globl PAGE3LEN
 PAGE3LEN:	equ $-PAGE3
 .globl JUMPTABLE
 JUMPTABLE:
-.incbin "../rom/jumptable.bin"
+.incbin "jumptable.bin"
 .globl JUMPTABLELEN
 JUMPTABLELEN:	equ $-JUMPTABLE
 

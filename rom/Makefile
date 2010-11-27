@@ -35,25 +35,33 @@ P2SYMS = page2.xinc
 P1SYMS = page1.xinc
 P0SYMS = page0.xinc
 
+INSTALLDIR = ../installer
+CP = cp -f
+
 all:	page0 page1 page2 page3 jptable
 
 page0:	ver p1syms p2syms p3syms $(P0OBJS)
 	$(LD) -o $(P0OUT) $(P0OBJS) $(P0LDFLAGS) $(P0LIBS)
+	$(CP) $(P0OUT) $(INSTALLDIR)
 
 page1:	$(P1OBJS)
 	$(LD) -o $(P1OUT) $(P1OBJS) $(P1LDFLAGS) $(P1LIBS)
+	$(CP) $(P1OUT) $(INSTALLDIR)
 
 page2:	modman $(P2OBJS)
 	$(LD) -o $(P2OUT) $(P2OBJS) $(P2LDFLAGS) $(P2LIBS)
+	$(CP) $(P2OUT) $(INSTALLDIR)
 
 page3:	date ver $(P3OBJS)
 	$(LD) -o $(P3OUT) $(P3OBJS) $(P3LDFLAGS) $(P3LIBS)
+	$(CP) $(P3OUT) $(INSTALLDIR)
 
 modman:	$(MODMANOBJS)
 	$(LD) -o $(MODMANOUT) $(MODMANOBJS) $(MODMANLDFLAGS) $(MODMANLIBS)
 
 jptable:	p0syms $(JPTABLEOBJS)
 	$(LD) -o $(JPTABLEOUT) $(JPTABLEOBJS) $(JPTABLELDFLAGS)
+	$(CP) $(JPTABLEOUT) $(INSTALLDIR)
 
 date:	$(DATEFILE)
 $(DATEFILE):

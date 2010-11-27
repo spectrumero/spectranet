@@ -24,27 +24,27 @@
 .data
 .globl BASEXT
 BASEXT:
-.incbin "../modules/basext/basext.module"
+.incbin "basext.module"
 .globl BASEXTLEN
 BASEXTLEN:	equ $-BASEXT
 .globl STREAMS
 STREAMS:
-.incbin "../modules/streams/streams.module"
+.incbin "streams.module"
 .globl STREAMSLEN
 STREAMSLEN:	equ $-STREAMS
 .globl MESSAGES
 MESSAGES:
-.incbin "../modules/messages/msgrom.module"
+.incbin "msgrom.module"
 .globl MESSAGESLEN
 MESSAGESLEN:	equ $-MESSAGES
 .globl CONFIG
 CONFIG:
-.incbin "../modules/config/config.module"
+.incbin "config.module"
 .globl CONFIGLEN
 CONFIGLEN:	equ $-CONFIG
 .globl SNAPMAN
 SNAPMAN:
-.incbin "../modules/snapman/snapman.module"
+.incbin "snapman.module"
 .globl SNAPMANLEN
 SNAPMANLEN:	equ $-SNAPMAN
 
