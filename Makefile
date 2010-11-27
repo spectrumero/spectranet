@@ -4,7 +4,12 @@ SUBDIRS = syslib rom modules installer utils
 
 .PHONY:	clean
 
+.PHONY: z88dk
+
 subdirs:	$(SUBDIRS)
+
+z88dk:
+	$(MAKE) -C z88dk
 
 $(SUBDIRS):
 	$(MAKE) -C $@
