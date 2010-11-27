@@ -19,41 +19,43 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.text
 
 ; Get an error message.
-F_getmessage
+.globl F_getmessage
+F_getmessage: 
 	ld a, l			; Get message ID from caller.
 	bit 7, a		; MSB set?
-	jr z, .lowtable
+	jr z,  .lowtable1
 	ld hl, STR_HITABLE
-        ld bc, HITABLE_END - STR_HITABLE
+        ld bc, HITABLE_LEN
 	sub HITABLE_LOWEST
-	jr .continue
-.lowtable
-        ld hl, STR_SUCCESS      ; pointer at start of table
-        ld bc, ERR_TABLE_END - STR_SUCCESS
-.continue
+	jr  .continue1
+.lowtable1: 
+        ld hl, STRING_TABLE     ; pointer at start of table
+        ld bc, ERR_TABLE_LEN
+.continue1: 
         and a                   ; code 0 (success?)
         ret z                   ; return now.
 	push de			; Save destination address
         ld d, a                 ; set counter
         xor a                   ; reset A to search for terminator
-.findloop
+.findloop1: 
         cpir                    ; find next null
-        jp po, .nomsg           ; cpir ran out of data?
+        jp po,  .nomsg1           ; cpir ran out of data?
         dec d                   ; decrement loop counter
-        jr nz, .findloop        ; if Z is not set go for another run
+        jr nz,  .findloop1        ; if Z is not set go for another run
 
 	pop de			; get destination address back
 	xor a
-.strcpy
+.strcpy1: 
 	ldi
 	cp (hl)			; End of the string?
-	jr nz, .strcpy
+	jr nz,  .strcpy1
 	ld (de), a		; stick the null on the end
 	ret
 
-.nomsg
+.nomsg1: 
 	pop de
 	scf
 	ret

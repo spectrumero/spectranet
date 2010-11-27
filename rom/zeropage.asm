@@ -19,9 +19,12 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"sysdefs.inc"
+.include	"sysvars.inc"
+.include	"spectranet.inc"
 
 ; ZEROPAGE ENTRY POINTS
-; This file should be included first in "rom.asm"; it sets the org.
+; This file should be included first in "rom.asm0"; it sets the org.
 ;
 ; RST 0xNN instructions - This is where all the restarts live:
 ; 00	Reset
@@ -35,32 +38,31 @@
 ; 
 ; NMI entry point at 0x0066
 ; Unpage entry point at 0x007C
-
-	org 0x0000
-RESET
+.section rst0
+RESET:
 	di		; This should be done already for a real reset.
 	jp J_reset
 
-	block 0x08-$,0xFF
-TRAPBAS
+.section rst8
+TRAPBAS:
 	jp do_rst8
-	block 0x10-$,0xFF
-CALLBAS
+.section rst10
+CALLBAS:
 	ld (v_hlsave), hl
 	ld (v_desave), de
 	pop hl
 	jp do_callbas
-	block 0x28-$,0xFF
-MODULECALL_NOPAGE
+.section rst28
+MODULECALL_NOPAGE_28:
 	jp J_moduledispatch
-	block 0x30-$,0xFF
-MODULECALL
+.section rst30
+MODULECALL_30:
 	call J_moduledispatch
 	ex (sp), hl		; throw away return to 0x3FF9
 	pop hl			
 	jr UNPAGE		; unpage and return to caller
-	block 0x38-$,0xFF
-INTERRUPT
+.section isr
+INTERRUPT:			; 0x0038
 	push hl
 	ld hl, (v_intcount)	; really, just to indicate that an
 	inc hl			; interrupt took place
@@ -69,8 +71,7 @@ INTERRUPT
 	ei
 	reti			; TODO - do something!
 
-	block 0x66-$,0xFF
-NMI
+.section nmi			; 0x0066
 	ld (NMISTACK), sp	; save SP
 	ld sp, NMISTACK-4	; set up new stack
 
@@ -84,24 +85,25 @@ NMI
 	ld hl, (NMISTACK)	; HL = address of the return address
 	jr NMI2
 
-	block 0x7B-$,0xFF
 	; When unpaging, put the address where you want to end up on
 	; the stack, and the RET instruction will set the PC to this address.
+.section unpage			; 0x007B
 	ei
-UNPAGE
+UNPAGE:
 	ret
-NMI2
+.text
+NMI2:
 	ld bc, CTRLREG		; test for trap enable
 	in a, (c)
 	and MASK_PROGTRAP_EN
-	jr z, .nmimenu		; not enabled
+	jr z, .nmimenu0		; not enabled
 	ld a, (v_trapcomefrom)	; get comefrom address LSB
 	cp (hl)			; equal to low order?
-	jr nz, .nmimenu		; no
+	jr nz, .nmimenu0		; no
 	inc hl			; return address MSB
 	ld a, (v_trapcomefrom+1) ; comefrom MSB
 	cp (hl)			; equal to high order?
-	jr nz, .nmimenu		; no
+	jr nz, .nmimenu0		; no
 
 	; Set up the environment ready to handle the trap.
 	ld a, (v_trappage)	; get the page to page in
@@ -110,17 +112,17 @@ NMI2
 	ld hl, (v_trapaddr)	; no paging to be done - just get the call addr
 	jp (hl)			; jump to it
 	
-.nmimenu
+.nmimenu0:
 	ld a, 0x02		; Utility ROM
 	call F_setpageB
 	ld hl, (NMI_VECTOR)	; Test NMI_VECTOR
 	ld a, 0xFF
 	cp h			; FF = unset
-	jr z, .nmidone
-	ld de, .nmidone		; get return address
+	jr z, .nmidone0
+	ld de, .nmidone0		; get return address
 	push de			; save it, so subsequent RET comes back
 	jp (hl)			; jump to the NMI vector
-.nmidone
+.nmidone0:
 	pop af
 	ex af, af'
 	pop af

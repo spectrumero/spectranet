@@ -21,7 +21,8 @@
 ;THE SOFTWARE.
 
 ; BASIC extensions vector table
-ROM_ID	equ  0xFD
+.include	"defs.inc"
+.section vectors
 	defb 0xAA		; This is a code ROM
 	defb ROM_ID		; ROM ID = 0xFD
 	defw F_init		; RESET vector
@@ -33,7 +34,6 @@ ROM_ID	equ  0xFD
         defw STR_ident          ; Pointer to a string that identifies this mod
 	ret
 	;jp F_snaptest		; Modulecall
-	block 0x2020-$,0xFF
-
-STR_ident	defb	"VFS BASIC extensions",0
+.data
+STR_ident:	defb	"VFS BASIC extensions",0
 

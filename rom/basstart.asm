@@ -19,12 +19,16 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
 
 ; Basstart.asm runs module functions that should be run once BASIC has
 ; shown the copyright message. The basstart function gets called from
 ; a trap.
-
-F_basstart
+.text
+.globl F_basstart
+F_basstart:
 	call DISABLETRAP	; release the trap
 
 	; we have to do a bit of a trick here, page this page into area
@@ -32,12 +36,13 @@ F_basstart
 	ld a, (v_pgb)
 	call SETPAGEA
 	jp F_basstart_go-0x1000
-F_basstart_go
+.globl F_basstart_go
+F_basstart_go:
 	ld hl, vectors
-.searchloop
+.searchloop2:
 	ld a, (hl)
 	and a			; last entry done?
-	jr z, .done
+	jr z, .done2
 	inc hl
 	push hl
 
@@ -49,24 +54,25 @@ F_basstart_go
 	ld a, h			; by examining the MSB and finding
 	and 0xF0		; if it is between 0x20-0x2F
 	cp 0x20
-	jr nz, .continue	; not 0x20, try the next one.
+	jr nz, .continue2	; not 0x20, try the next one.
 
-	ld de, .continue-0x1000	; set up the return point
+	ld de, .continue2-0x1000	; set up the return point
 	push de			; on the stack so RET comes here
 	jp (hl)			; and jump to the vector address	
-.continue
+.continue2:
 	pop hl
-	jr .searchloop
-.done
+	jr .searchloop2
+.done2:
 	jp PAGETRAPRETURN
 
 ;-------------------------------------------------------------------------
 ; F_basstart_setup
 ; Set the execution trap.
-F_basstart_setup
+.globl F_basstart_setup
+F_basstart_setup:
 	ld hl, STARTTRAPBLOCK
 	jp SETTRAP
-STARTTRAPBLOCK
+STARTTRAPBLOCK:
 	defb	0xFF		; this page
 	defw	F_basstart	; function to call
 	defw	0x1299		; stacked address at time of NMI

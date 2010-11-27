@@ -20,11 +20,13 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
+.text 
 ; Utility functions.
 ;-------------------------------------------------------------------------
 ; F_strcpy
 ; Copy a string from HL to DE
-F_strcpy
+.globl F_strcpy
+F_strcpy: 
 	ld a, (hl)
 	and a
 	ldi
@@ -34,7 +36,8 @@ F_strcpy
 ;-------------------------------------------------------------------------
 ; F_strcmp
 ; Compare a string with another. Strings pointed to by HL and DE
-F_strcmp
+.globl F_strcmp
+F_strcmp: 
 	ld a, (de)
 	cpi
 	ret nz

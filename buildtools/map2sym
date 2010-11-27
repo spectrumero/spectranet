@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+my $mapfile=shift;
+my $outputfile=shift;
+if(!$outputfile)
+{
+	print("Usage: map2sym <mapfile> <outputfile>\n");
+	exit -1;
+}
+
+open FHND, "< $mapfile" or die("Unable to open $mapfile: $!");
+open SYMHND, "> $outputfile" or die("Unable to write to $outputfile: $!");
+while(my $line=<FHND>)
+{
+	chomp $line;
+	if($line =~ /^\s{1,}0x[a-zA-Z0-9]{1,}\s{1,}(F|J)_/)
+	{
+		$line=~s/^\s{1,}//g;
+		my ($addr, $symbol)=split(/\s{1,}/, $line, 2);
+		print SYMHND "$symbol equ $addr\n";
+	}
+}
+close(FHND);
+close(SYMHND);
+

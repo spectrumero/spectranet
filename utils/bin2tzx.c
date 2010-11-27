@@ -11,16 +11,28 @@ int main(int argc, char **argv)
 {
 	FILE *infile, *outfile;
 	unsigned short length;
+	unsigned int start=0x8000;
 	struct stat fileinfo;
 	unsigned char header[20];
 	unsigned char tzxhdr[6];
 	unsigned char checksum;
 	unsigned char *buf;
 
-	if(argc < 2)
+	if(argc < 3 || argc > 4)
 	{
-		printf("Usage: %s <infile> <outfile.tzx>\n", argv[0]);
+		fprintf(stderr, "Usage: %s <infile> <outfile.tzx> [start-addr]\n", argv[0]);
+		fprintf(stderr, "Default start address is 32768\n");
+		printf("argc=%d\n",argc);
 		exit(255);
+	}
+	if(argc == 4)
+	{
+		start=strtol(argv[3], NULL, 0);
+		if(start > 65535)
+		{
+			fprintf(stderr,"Start address too large\n");
+			exit(255);
+		}
 	}
 
 	if(stat(argv[1], &fileinfo) < 0)
@@ -55,10 +67,10 @@ int main(int argc, char **argv)
 	/* little-endian size */
 	header[12]=length % 256;
 	header[13]=length / 256;
-	header[14]=0;	 /* LSB of 0x8000 */
-	header[15]=0x80; /* MSB of 0x8000 */
-	header[16]=0;	 /* and again */
-	header[17]=0x80;
+	header[14]=start & (0xFF);
+	header[15]=(start >> 8) & (0xFF);
+	header[16]=header[14];	 /* and again */
+	header[17]=header[15];
 
 	header[18]=getChecksum(header, 18);
 

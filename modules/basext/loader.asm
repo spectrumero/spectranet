@@ -19,7 +19,13 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"fcntl.inc"
+.include	"spectranet.inc"
+.include	"zxrom.inc"
+.include	"defs.inc"
+.include	"sysvars.inc"
+.include	"zxsysvars.inc"
+.text
 ; TAP load/save functions
 ;------------------------------------------------------------------------
 ; F_tbas_readrawfile
@@ -28,7 +34,8 @@
 ; Parameters: HL = pointer to filename
 ;             DE = memory location to place the result
 ; Returns with carry set and A=error number on error.
-F_tbas_readrawfile
+.globl F_tbas_readrawfile
+F_tbas_readrawfile:
 	push de			; save pointer
 	ld e, O_RDONLY		; LOADing is read only
 	ld d, 0x00		; No file flags
@@ -36,16 +43,16 @@ F_tbas_readrawfile
 	pop de
 	ret c
 	ld (v_vfs_curfd), a	; save the filehandle
-.readloop
+.readloop1:
 	ld a, (v_vfs_curfd)	; restore filehandle
 	ld bc, 512		; read max 512 bytes
 	call READ
-	jr nc, .readloop	; keep going until nothing more can be read
+	jr nc, .readloop1	; keep going until nothing more can be read
 	cp EOF			; End of file?
-	jr nz, .failed		; No - something went wrong
+	jr nz, .failed1		; No - something went wrong
 	ld a, (v_vfs_curfd)	; Close the file
 	jp VCLOSE
-.failed
+.failed1:
 	push af			; preserve return code
 	ld a, (v_vfs_curfd)
 	call VCLOSE		; close the file
@@ -60,7 +67,8 @@ F_tbas_readrawfile
 ; Parameters	HL = pointer to filename
 ;		DE = memory address to load to for CODE files
 ;               A  = type to expect
-F_tbas_loader
+.globl F_tbas_loader
+F_tbas_loader:
 	ld (INTERPWKSPC+21), a	; save the type parameter
 	ld (v_desave), de	; save address
 	ld e, O_RDONLY		; Open file read only
@@ -74,28 +82,28 @@ F_tbas_loader
 	ld ix, INTERPWKSPC+3	; start of "tape" header in a TAP file
 	ld a, (INTERPWKSPC+21)	; get the type byte
 	cp (ix+0)		; check that it's the right type
-	jr nz, .wrongtype
+	jr nz, .wrongtype2
 	and a			; type 0? BASIC program
-	jr nz, .testcode	; No, test for CODE
+	jr nz, .testcode2	; No, test for CODE
 	call F_tbas_loadbasic	; Load a BASIC program
 	jp c, J_cleanuperror	; handle errors
-.cleanup
+.cleanup2:
 	ld a, (v_vfs_curfd)
 	call VCLOSE
 	ret
-.testcode
+.testcode2:
 	cp 0x03			; type CODE
-	jr nz, .unktype		; not a type we know
+	jr nz, .unktype2		; not a type we know
 	ld de, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
 	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; and the expected length
 	call F_tbas_loadblock	; and load the TAP block
-	jr .cleanup
-.wrongtype
+	jr .cleanup2
+.wrongtype2:
 	; TODO: handle CODE files
 	ld a, TBADTYPE
 	scf
 	ret
-.unktype
+.unktype2:
 	ld a, TUNKTYPE
 	scf
 	ret
@@ -108,7 +116,8 @@ F_tbas_loader
 ; and places the complete header into the memory address specified 
 ; by DE. On error, it returns with carry set and A containing the error
 ; number. On success, the file type is returned in A.
-F_tbas_getheader
+.globl F_tbas_getheader
+F_tbas_getheader:
 	push de			; save pointer
 	ld a, (v_vfs_curfd)	; get the current file descriptor
 	ld bc, TNFS_HDR_LEN	; 19 bytes (length + ZX header block)
@@ -117,23 +126,23 @@ F_tbas_getheader
 	ret c			; error occurred in read
 	ld a, (hl)
 	cp 0x13			; first byte must be 0x13
-	jr nz, .wronglen
+	jr nz, .wronglen3
 	inc hl
 	ld a, (hl)		; second byte must be 0x00
 	and a
-	jr nz, .wronglen
+	jr nz, .wronglen3
 	inc hl
 	ld a, (hl)		; type must be 0x00 - "header"
 	and a
-	jr nz, .wrongblktype
+	jr nz, .wrongblktype3
 	inc hl
 	ld a, (hl)		; return the type byte
 	ret			; TODO: Check the checksum etc.
-.wronglen
+.wronglen3:
 	ld a, TBADLENGTH
 	scf
 	ret
-.wrongblktype
+.wrongblktype3:
 	ld a, TBADTYPE
 	scf
 	ret
@@ -144,7 +153,8 @@ F_tbas_getheader
 ; Parameters: DE = where to copy in memory
 ;	      BC = expected length
 ;             v_vfs_curfd contains the file descriptor
-F_tbas_loadblock
+.globl F_tbas_loadblock
+F_tbas_loadblock:
 	push de			; save destination ptr
 	push bc			; save length
 	ld de, INTERPWKSPC	; get the length from TAP block
@@ -158,12 +168,12 @@ F_tbas_loadblock
 	dec hl			; which should be length in ZX header + 2
 	dec hl
 	sbc hl, bc		; zero flag is set if length is correct
-	jr nz, .lengtherr
-.loadloop
+	jr nz, .lengtherr4
+.loadloop4:
 	ld a, (v_vfs_curfd)	; get file descriptor
 	call READ
 	ret
-.lengtherr
+.lengtherr4:
 	ld a, TMISMCHLENGTH	; Length of data block doesn't match header
 	scf
 	ret
@@ -171,10 +181,11 @@ F_tbas_loadblock
 ;----------------------------------------------------------------------------
 ; F_tbas_loadbasic
 ; Load a program written in BASIC.
-; Parameters: IX points to the "tape" header (i.e. TAP block + 2)
+; Parameters: IX points to the "tape" header (i.e4. TAP block + 2)
 ;             v_vfs_curfd contains the file descriptor
 ; Much of this is modelled on the ZX ROM loader.
-F_tbas_loadbasic
+.globl F_tbas_loadbasic
+F_tbas_loadbasic:
 	ld hl, (ZX_E_LINE)	; End marker of current variables area
 	ld de, (ZX_PROG)	; Destination address
 	dec hl
@@ -198,13 +209,13 @@ F_tbas_loadbasic
 	ld h, (ix+0x0e)		; Check for LINE number
 	ld a, h
 	and 0xC0
-	jr nz, .loadblock	; No line number - skip to loader
+	jr nz, .loadblock5	; No line number - skip to loader
 	ld l, (ix+0x0d)		; HL = line number
 	ld (ZX_NEWPPC), hl	; set line number to jump to
 	xor a
 	ld (ZX_NSPPC), a	; Statement number 0
 
-.loadblock
+.loadblock5:
 	pop bc			; fetch the length
 	pop de			; fetch the start
 
@@ -216,7 +227,8 @@ F_tbas_loadbasic
 ; Parameters		A = type
 ;			DE = filename
 ;			BC = filename length
-F_tbas_mktapheader
+.globl F_tbas_mktapheader
+F_tbas_mktapheader:
 	push de
 	push bc
 	; Create the header
@@ -227,26 +239,26 @@ F_tbas_mktapheader
 	ld (INTERPWKSPC+2), a	; is a header block, set to 0x00
 	ld a, 10		; > 10 chars in the filename?
 	cp b
-	jr nc, .continue
+	jr nc, .continue6
 	ld c, 10		; copy max of 10
-.continue
+.continue6:
 	ld b, c			; prepare to copy string
 	ld hl, INTERPWKSPC+4
-.loop
+.loop6:
 	ld a, (de)		; copy the string
 	ld (hl), a
 	inc de
 	inc hl
-	djnz .loop
+	djnz .loop6
 	ld a, 10		; find remaining bytes
 	sub c
-	jr z, .exit		; nothing to do!
+	jr z, .exit6		; nothing to do!
 	ld b, a			; A now contains the loop count
-.spaces
+.spaces6:
 	ld (hl), 0x20		; fill the rest with spaces
 	inc hl
-	djnz .spaces
-.exit
+	djnz .spaces6
+.exit6:
 	pop bc
 	pop de
 	ld hl, 0		; make the parameters default to 0
@@ -260,9 +272,10 @@ F_tbas_mktapheader
 ; Writes a file from a %SAVE command. The header must be complete and stored
 ; in INTERPWKSPC.
 ; Parameters:		DE = pointer to filename
-;			BC = length of filename (i.e. from ZX_STK_FETCH)
+;			BC = length of filename (i.e6. from ZX_STK_FETCH)
 ; On error returns with carry set and A = errno.
-F_tbas_writefile
+.globl F_tbas_writefile
+F_tbas_writefile:
 	ld hl, INTERPWKSPC+21	; convert filename to a C string
 	call F_basstrcpy
 
@@ -297,25 +310,25 @@ F_tbas_writefile
 	call WRITE		; write it out
 	jp c, J_cleanuperror
 
-.writedata
+.writedata7:
 	ld a, (INTERPWKSPC+OFFSET_TYPE)	; find the type of block we´re saving
 	and a			; if zero, it is BASIC
-	jr nz, .testcode	; if not jump forward
+	jr nz, .testcode7	; if not jump forward
 	ld hl, (ZX_PROG)	; find the start of the program
-	jr .save
-.testcode
+	jr .save7
+.testcode7:
 	cp 3			; type CODE
-	jr nz, .badtype		; TODO: character/number arrays
+	jr nz, .badtype7		; TODO: character/number arrays
 	ld hl, (INTERPWKSPC+OFFSET_PARAM1)	; get the start address
-.save
+.save7:
 	ld bc, (INTERPWKSPC+OFFSET_LENGTH)	; length
 	push hl			; save values so we can calculate the
 	push bc			; checksum (TODO optimize)
-.saveloop
+.saveloop7:
 	ld a, (v_vfs_curfd)	; get file descriptor
 	call WRITE
-	jr c, .cleanuperror	; exit on error
-.done
+	jr c, .cleanuperror7	; exit on error
+.done7:
 	pop bc			; retrieve original size
 	pop hl			; and start address
 	ld a, 0xFF		; start with 0xFF for data block
@@ -329,11 +342,11 @@ F_tbas_writefile
 	ld a, (v_vfs_curfd)	; close the file.
 	call VCLOSE
 	ret
-.badtype
+.badtype7:
 	ld a, TBADTYPE
 	scf
 	jp J_cleanuperror
-.cleanuperror
+.cleanuperror7:
 	pop bc			; restore stack
 	pop hl
 	jp J_cleanuperror
@@ -345,8 +358,9 @@ F_tbas_writefile
 ;			BC = size
 ;			A = initial byte
 ; Result is returned in A.
-F_tbas_mkchecksum
-.loop
+.globl F_tbas_mkchecksum
+F_tbas_mkchecksum:
+.loop8:
 	xor (hl)		; the checksum is made just by XORing each
 	inc hl			; byte.
 	dec bc
@@ -354,12 +368,12 @@ F_tbas_mkchecksum
 	ld a, b
 	or c			; BC = 0?
 	ld a, e			; restore A
-	jr nz, .loop
+	jr nz, .loop8
 	ret
 
 ;----------------------------------------------------------------------------
 ; Generic 'clean up and leave'
-J_cleanuperror
+J_cleanuperror:
 	push af			; save error code
 	ld a, (v_vfs_curfd)	; and attempt to close the file
 	call VCLOSE

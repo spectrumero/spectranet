@@ -19,7 +19,7 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"sysvars.inc"
 
 ; A collection of utility functions:
 
@@ -29,9 +29,11 @@
 ; long word. Carry set if the string isn't an IP address.
 ; HL = pointer to string
 ; DE = pointer to 4 byte buffer for return value
-F_ipstring2long_u_impl
+.text
+.globl F_ipstring2long_u_impl
+F_ipstring2long_u_impl:
 	ld b, 4		; number of octets to convert
-.loop
+.loop1:
 	push bc
 	push de
 	call F_atoi8_u_impl	; convert an octet
@@ -43,13 +45,13 @@ F_ipstring2long_u_impl
 	inc de
 	ld hl, (v_stringptr)
 	inc hl		; advance past the '.'
-	djnz .loop
+	djnz .loop1
 	dec hl		; unwind last increment
 	ld a, (hl)
 	and a		; if it's not a null terminator, it's not an IP!
-	jr nz, .setcarry ; not an IP - there's more to this string.
+	jr nz, .setcarry1 ; not an IP - there's more to this string.
 	ret
-.setcarry
+.setcarry1:
 	scf
 	ret
 
@@ -58,10 +60,11 @@ F_ipstring2long_u_impl
 ; Converts a 4 byte big-endian long word into a null terminated IP string.
 ; hl = pointer to 4 byte buffer containing the IP address
 ; de = pointer to a buffer where the IP address string will be returned
-F_long2ipstring_u_impl
+.globl F_long2ipstring_u_impl
+F_long2ipstring_u_impl:
 	ex de, hl
 	ld b, 3		; 3 octets separated by '.' (last has a null)
-.loop
+.loop2:
 	ld a, (de)
 	push bc
 	call F_itoa8_u_impl	; convert byte to string (not null terminated)
@@ -70,7 +73,7 @@ F_long2ipstring_u_impl
 	ld (hl), a	; insert point
 	inc hl
 	inc de
-	djnz .loop
+	djnz .loop2
 	ld a, (de)
 	call F_itoa8_u_impl
 	ld (hl), 0	; null terminator
@@ -81,16 +84,17 @@ F_long2ipstring_u_impl
 ; Converts the MAC address pointed to by hl to a string
 ; Parameters: hl - address of MAC address
 ;             de - pointer to string buffer
-F_mac2string_u_impl
+.globl F_mac2string_u_impl
+F_mac2string_u_impl:
 	ex de, hl
 	ld b, 5		; MAC is 6 bytes long, handle first 5
-.loop
+.loop3:
 	ld a, (de)
 	call F_itoh8_u_impl
 	ld (hl), ':'	; replace NULL with :
 	inc hl
 	inc de
-	djnz .loop
+	djnz .loop3
 	ld a, (de)
 	call F_itoh8_u_impl	; last byte, so we have a NULL rather than :
 	ret
@@ -101,16 +105,17 @@ F_mac2string_u_impl
 ; Carry flag is set if the string isn't a MAC address.
 ; Parameters: hl - address of MAC string
 ;             de - address of 6 byte MAC address buffer
-F_string2mac_u_impl
+.globl F_string2mac_u_impl
+F_string2mac_u_impl:
 	ld b, 6
-.loop
+.loop4:
 	call F_htoi8_u_impl
 	ret c		; non hex digit encounter
 	ld (de), a
 	inc de
 	inc hl
 	inc hl		; go past the separator
-	djnz .loop
+	djnz .loop4
 	ret
 
 ;-----------------------------------------------------------------------
@@ -118,27 +123,28 @@ F_string2mac_u_impl
 ; Carry flag set on error. Returns value in c. Either a '.' or a null
 ; terminates the string. (The . being a delimiter in an IP address)
 ; This routine undoubtedly leaves some room for improvement...
-F_atoi8_u_impl
+.globl F_atoi8_u_impl
+F_atoi8_u_impl:
 	; go to end of string
 	ld b, 0
-.endloop
+.endloop5:
 	ld a, (hl)
 	and a
-	jr z, .endstring
+	jr z, .endstring5
 	cp '.'
-	jr z, .endstring
+	jr z, .endstring5
 	inc hl
 	inc b
-	jr .endloop
-.endstring
+	jr .endloop5
+.endstring5:
 	ld (v_stringptr), hl		; save pointer to string end
 	ld a, b
 	cp 4
-	jp p, .error
+	jp p, .error5
 
 	; empty string - return with carry set 
 	and a
-	jr z, .error
+	jr z, .error5
 
 	; units
 	dec hl		; point at last char of string
@@ -174,17 +180,17 @@ F_atoi8_u_impl
 	ld a, (hl)
 	sub '0'
 	cp 3
-	jp p, .error	; hundreds >=3 won't fit in a byte
+	jp p, .error5	; hundreds >=3 won't fit in a byte
 	ld b, a
 	xor a
-.hundred
+.hundred5:
 	add a, 100
-	djnz .hundred
+	djnz .hundred5
 	add a, c	; add to result so far
 	ld c, a
 	ret		
 
-.error
+.error5:
 	scf
 	ret
 
@@ -194,19 +200,20 @@ F_atoi8_u_impl
 ; a = number to convert
 ; hl = pointer to string buffer. On exit, hl points to string's end.
 ; No null terminator is added!
-F_itoa8_u_impl
+.globl F_itoa8_u_impl
+F_itoa8_u_impl:
 	ld b, -100
-	call .conv1
+	call .conv16
 	ld b, -10
-	call .conv1
+	call .conv16
 	ld b, -1
 
-.conv1
+.conv16:
 	ld c, '0'-1
-.conv2
+.conv26:
 	inc c
 	add a, b
-	jr c, .conv2
+	jr c, .conv26
 	sbc a, b
 	ld (hl), c
 	inc hl
@@ -217,25 +224,26 @@ F_itoa8_u_impl
 ; Converts an 8 bit number in A to a hex string.
 ; Parameters: HL - buffer to fill
 ; This routine is a minor modification of the one at 
-; http://map.tni.nl/sources/external/z80bits.html
-F_itoh8_u_impl
+; http://map.tni6.nl6/sources/external/z80bits.html6
+.globl F_itoh8_u_impl
+F_itoh8_u_impl:
 	push af
 	push bc
 	ld b, a
-	call .Num1
+	call .Num17
 	ld a, b
-	call .Num2
+	call .Num27
 	xor a
 	ld (hl), a	; add null
 	pop bc
 	pop af
 	ret
 
-.Num1	rra
+.Num17:	rra
 	rra
 	rra
 	rra
-.Num2	or 0xF0
+.Num27:	or 0xF0
 	daa
 	add a,0xA0
 	adc a,0x40
@@ -249,15 +257,16 @@ F_itoh8_u_impl
 ; Converts the ascii at (hl) and (hl+1) to an int, returned in A.
 ; carry flag set on error
 ; Modifies hl, c and a.
-F_htoi8_u_impl
+.globl F_htoi8_u_impl
+F_htoi8_u_impl:
 	ld a, (hl)
 	sub '0'
 	cp 0x0A		; greater than digit 9?
-	jr c, .next
+	jr c, .next8
 	sub 'A'-'0'-10	; A-F part
 	cp 0x10		; out of range?
-	jr nc, .err
-.next
+	jr nc, .err8
+.next8:
 	or a		; clear carry
 	rla		; shift into upper nibble
 	rla
@@ -268,14 +277,14 @@ F_htoi8_u_impl
 	ld a, (hl)	; next digit
 	sub '0'
 	cp 0x0A
-	jr c, .next1
+	jr c, .next18
 	sub 'A'-'0'-10	; A-F
 	cp 0x10
-	jr nc, .err
-.next1
+	jr nc, .err8
+.next18:
 	or c		; merge in high nibble
 	ret
-.err
+.err8:
 	ccf		; carry flag = error
 	ret
 	
@@ -283,35 +292,36 @@ F_htoi8_u_impl
 ;-------------------------------------------------------------------------
 ; F_crc16:
 ; Calculate a 16 bit CRC on an arbitrary region of memory.
-; This was adapted from http://map.tni.nl/sources/external/z80bits.html
+; This was adapted from http://map.tni8.nl8/sources/external/z80bits.html8
 ; Parameters: DE = start address for CRC calculation
 ;             BC = end number of bytes to check 
 ; 16 bit CRC is returned in HL.
 ; Note: byte counter is modified compared to orginal code.
-F_crc16_u_impl
+.globl F_crc16_u_impl
+F_crc16_u_impl:
 	ld hl, 0xFFFF
-.read
+.read9:
 	push bc		; save byte counter
    	ld a,(de)
 	inc de
 	xor h
 	ld h,a
 	ld b,8
-.crcbyte
+.crcbyte9:
    	add hl,hl
-	jr nc, .next
+	jr nc, .next9
 	ld a,h
 	xor 0x10
 	ld h,a
 	ld a,l
 	xor 0x21
 	ld l,a
-.next
-   	djnz .crcbyte
+.next9:
+   	djnz .crcbyte9
 	pop bc		; get back the byte counter
 	dec bc
 	ld a, b		; and see if it's got to zero
 	or c
-	jr nz, .read
+	jr nz, .read9
 	ret
 

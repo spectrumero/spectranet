@@ -19,11 +19,13 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"spectranet.inc"
+.text
 ;-----------------------------------------------------------------------
 ; F_saveconfig
 ; Saves the configuration the user just entered.
-F_saveconfig
+.globl F_saveconfig
+F_saveconfig: 
 	ld a, 4
 	out (254), a
         ld hl, STR_saving
@@ -33,7 +35,7 @@ F_saveconfig
 	ld a, 3
 	out (254), a
         ret nc
-.bork
+.bork1: 
         call PRINT42
         call GETKEY             ; give the user a chance to see the msg
         or 1

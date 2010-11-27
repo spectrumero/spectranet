@@ -22,6 +22,10 @@
 
 ; These functions just wrap the character output routines, giving a
 ; ROM 0 entry point to get to them.
+.include	"page1.xinc"
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
+.include	"spectranet.inc"
 
 ;--------------------------------------------------------------------------
 ; F_putc_5by8 
@@ -29,7 +33,9 @@
 ; The 'core' of the putchar routine, F_print calls this directly (handling
 ; the paging itself)
 ; The routine could probably do with improvement.
-F_putc_5by8
+.text
+.globl F_putc_5by8
+F_putc_5by8:
 	call F_pr_getroutine
 	call F_putc_5by8_impl
 	jp F_pr_restore
@@ -37,21 +43,23 @@ F_putc_5by8
 ;--------------------------------------------------------------------------
 ; F_print: Prints a null terminated string.
 ; Parameters: HL = pointer to string
-F_print
-.loop
+.globl F_print
+F_print:
+.loop2:
         ld a, (hl)
         and a                   ; NULL?
-        jr z, .done
+        jr z, .done2
         call F_putc_5by8	; print the char
         inc hl
-        jr .loop
-.done
+        jr .loop2
+.done2:
         ret
 	
 
 ;--------------------------------------------------------------------------
 ; F_clear: Clears the screen to spectranet UI colours.
-F_clear
+.globl F_clear
+F_clear:
 	call F_pr_getroutine
 	call F_clear_impl
 	jp F_pr_restore
@@ -59,7 +67,8 @@ F_clear
 ;--------------------------------------------------------------------------
 ; F_backspace:  Perform a backspace (move current character position 1
 ; back and delete the right most character).
-F_backspace
+.globl F_backspace
+F_backspace:
 	call F_pr_getroutine
 	call F_backspace_impl
 	jp F_pr_restore
@@ -67,7 +76,8 @@ F_backspace
 ;--------------------------------------------------------------------------
 ; The following routines just fetch and restore the ROM page where the
 ; output routines are kept.
-F_pr_getroutine
+.globl F_pr_getroutine
+F_pr_getroutine:
 	push af
 	ld a, (v_pga)		; save page A value
 	ld (v_pr_pga), a
@@ -76,7 +86,8 @@ F_pr_getroutine
 	pop af
 	ret
 
-F_pr_restore
+.globl F_pr_restore
+F_pr_restore:
 	push af
 	ld a, (v_pr_pga)
 	call F_setpageA

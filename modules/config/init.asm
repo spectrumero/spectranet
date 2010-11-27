@@ -19,17 +19,20 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.text
 
 ; Initialize the module - install our BASIC command
-F_init
+.globl F_init
+F_init: 
         ld hl, PARSETABLE
         ld b, numcmds
-.loop
+.loop1: 
 	push bc
         call ADDBASICEXT
 	pop bc
-        jr c, .installerror
-	djnz .loop
+        jr c,  .installerror1
+	djnz  .loop1
 
 	; init local 8 byte sysvar area.
 	call F_getsysvar
@@ -39,51 +42,52 @@ F_init
         ld hl, STR_basicinit
         call PRINT42
         ret
-.installerror
+.installerror1: 
         ld hl, STR_basinsterr
         call PRINT42
         ret
 
-PARSETABLE
-numcmds		equ 8
-P_fsconfig      defb 0x0b       ; Trap C Nonsense in BASIC
+.data
+PARSETABLE:
+numcmds:	equ 8
+P_fsconfig:     defb 0x0b       ; Trap C Nonsense in BASIC
                 defw CMD_FSCONFIG
                 defb 0xFF       ; this page
                 defw F_start
-P_ifconfig      defb 0x0b       ; Trap C Nonsense in BASIC
+P_ifconfig:     defb 0x0b       ; Trap C Nonsense in BASIC
                 defw CMD_IFCONFIG
                 defb 0xFF       ; this page
                 defw F_ifconfig
-P_cfgset	defb 0x0b
+P_cfgset:	defb 0x0b
 		defw CMD_CFGSET
 		defb 0xFF
 		defw F_cfgset
-P_cfgsetstr	defb 0x0b
+P_cfgsetstr:	defb 0x0b
 		defw CMD_CFGSET_STR
 		defb 0xFF
 		defw F_cfgset_string
-P_cfgcommit	defb 0x0b
+P_cfgcommit:	defb 0x0b
 		defw CMD_CFGCOMMIT
 		defb 0xFF
 		defw F_cfgcommit
-P_cfgabandon	defb 0x0b
+P_cfgabandon:	defb 0x0b
 		defw CMD_CFGABANDON
 		defb 0xFF
 		defw F_cfgabandon
-P_cfgnew	defb 0x0b
+P_cfgnew:	defb 0x0b
 		defw CMD_CFGNEW
 		defb 0xFF
 		defw F_cfgnew
-P_cfgnewsec	defb 0x0b
+P_cfgnewsec:	defb 0x0b
 		defw CMD_CFGNEWSEC
 		defb 0xFF
 		defw F_cfgnewsec
-CMD_FSCONFIG    defb "%fsconfig",0
-CMD_IFCONFIG	defb "%ifconfig",0
-CMD_CFGSET	defb "%cfgset",0
-CMD_CFGSET_STR	defb "%cfgset$",0
-CMD_CFGCOMMIT	defb "%cfgcommit",0
-CMD_CFGABANDON	defb "%cfgabandon",0
-CMD_CFGNEW	defb "%cfgnew",0
-CMD_CFGNEWSEC	defb "%cfgnewsec",0
+CMD_FSCONFIG:   defb "%fsconfig",0
+CMD_IFCONFIG:	defb "%ifconfig",0
+CMD_CFGSET:	defb "%cfgset",0
+CMD_CFGSET_STR:	defb "%cfgset$",0
+CMD_CFGCOMMIT:	defb "%cfgcommit",0
+CMD_CFGABANDON:	defb "%cfgabandon",0
+CMD_CFGNEW:	defb "%cfgnew",0
+CMD_CFGNEWSEC:	defb "%cfgnewsec",0
 

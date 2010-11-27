@@ -19,14 +19,16 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"ctrlchars.inc"
+.include	"flashconf.inc"
+.include	"sysvars.inc"
 
-; Configuration UI functions.
-	; Various library functions.
-	include "../../rom/ui_menu.asm"
-
+.text
 ;---------------------------------------------------------------------------
 ; Handle BASIC entry/exit
-F_start
+.globl F_start
+F_start: 
 	call STATEMENT_END
 
 	; runtime
@@ -35,24 +37,26 @@ F_start
 
 ;---------------------------------------------------------------------------
 ; Main configuration menu.
-F_fsconfigmain
-	call F_copyconfig
+.globl F_fsconfigmain
+F_fsconfigmain: 
+	call F_cond_copyconfig
 	ld a, 0x1D		; first configuration table
 	ld (v_workspace), a
-.fsconfigloop
+.fsconfigloop2: 
 	call CLEAR42
 	call F_showfs
 	ld hl, MENU_setfs
 	call F_genmenu
 	ld hl, MENU_setfs
 	call F_getmenuopt
-	jr z, .fsconfigloop	; user has not finished
+	jr z,  .fsconfigloop2	; user has not finished
 	ret
 
 ;---------------------------------------------------------------------------
 ; F_showfs
 ; Shows details of two mountpoints.
-F_showfs
+.globl F_showfs
+F_showfs: 
 	ld a, (v_workspace)	; form the base address
 	ld h, a
 	ld l, 0x00		; HL = 0x10..
@@ -72,7 +76,8 @@ F_showfs
 ; Shows a configuration. (A tedious routine...)
 ; HL = base address of configuration set.
 ; A = intended mount point
-F_showconfig
+.globl F_showconfig
+F_showconfig: 
 	push af
 	ld (v_hlsave), hl	; keep a copy
 	ld hl, STR_curfs
@@ -113,25 +118,27 @@ F_showconfig
 
 ;---------------------------------------------------------------------------
 ; F_printifset: Only prints the item if it's actually set to something.
-F_printifset
+.globl F_printifset
+F_printifset: 
 	ld a, (hl)
 	cp 0xFF			; Not set at all?
-	jr z, .notset
+	jr z,  .notset5
 	and a			; Set to null?
-	jr nz, .printit
+	jr nz,  .printit5
 	ld hl, STR_null
-	jr .printit
-.notset
+	jr  .printit5
+.notset5: 
 	ld hl, STR_unset
-.printit
+.printit5: 
 	call PRINT42
-F_cr
-	ld a, '\n'
+.globl F_cr
+F_cr: 
+	ld a, NEWLINE
 	jp PUTCHAR42
 
 
 ; Menu definitions
-MENU_setfs
+MENU_setfs:
 	defw	STR_show0and1, F_show0and1
 	defw	STR_show1and2, F_show1and2
 	defw	STR_chgproto, F_chgproto
@@ -145,18 +152,21 @@ MENU_setfs
 ;----------------------------------------------------------------------------
 ; F_show0and1
 ; Show details for FS0 and FS1
-F_show0and1
+.globl F_show0and1
+F_show0and1: 
 	ld a, 0x1D		; MSB for FS0
 	ld (v_workspace), a
 	xor a			; set zero flag
 	ret
-F_show1and2
+.globl F_show1and2
+F_show1and2: 
 	ld a, 0x1E		; MSB for FS2A
 	ld (v_workspace), a
 	xor a
 	ret
 
-F_chgproto
+.globl F_chgproto
+F_chgproto: 
 	call F_askfsnum
 	jr c, zeroexit		; user abandoned
 	push hl
@@ -165,7 +175,8 @@ F_chgproto
 	ld c, 6			; max size
 	jp F_getprotostring
 
-F_chghost
+.globl F_chghost
+F_chghost: 
 	call F_askfsnum
 	jr c, zeroexit		; user abandoned
 	push hl
@@ -174,7 +185,8 @@ F_chghost
 	ld c, 41		; max size
 	jp F_getprotostring
 
-F_chgrempath
+.globl F_chgrempath
+F_chgrempath: 
 	call F_askfsnum
 	jr c, zeroexit		; user abandoned
 	push hl
@@ -182,18 +194,20 @@ F_chgrempath
 	ld de, DEF_FS_SRCPTH0 % 256	; requested address
 	ld c, 48		; max size
 
-F_getprotostring	
+.globl F_getprotostring
+F_getprotostring: 
 	call F_cr		; carriage return
 	call PRINT42		; print requested string
 	pop hl			; get the base address
 	add hl, de		; calculate address of protocol string
 	ex de, hl
 	call INPUTSTRING
-zeroexit
+zeroexit:
 	xor a			; set Z
 	ret
 
-F_chguserpasswd
+.globl F_chguserpasswd
+F_chguserpasswd: 
 	call F_askfsnum
 	jr c, zeroexit
 	push hl
@@ -212,7 +226,8 @@ F_chguserpasswd
 	ld c, 16
 	jp F_getprotostring	; will pop HL
 	
-F_saveexit
+.globl F_saveexit
+F_saveexit: 
 	ld hl, STR_updating
 	call PRINT42
 
@@ -225,17 +240,19 @@ F_saveexit
 	jr c, borked
 	ld hl, STR_flashdone
 	call PRINT42
-F_abandon
+.globl F_abandon
+F_abandon: 
 	or 1			; reset zero flag
 	ret
-borked
+borked:
 	ld hl, STR_writebork
 	call PRINT42
 	jr F_abandon
 
 ;----------------------------------------------------------------------------
 ; F_askfsnum: Ask the user to enter a filesystem number.
-F_askfsnum
+.globl F_askfsnum
+F_askfsnum: 
 	ld hl, STR_fsnum
 	call PRINT42
 	ld c, 2			; Only one character
@@ -243,24 +260,24 @@ F_askfsnum
 	call INPUTSTRING
 	ld a, (v_workspace+1)
 	and a			; user abandoned?
-	jr z, .abandon
+	jr z,  .abandon16
 	sub '0'			; convert to int
 	cp 4
-	jr nc, .invalid		; too big!
+	jr nc,  .invalid16		; too big!
 	ccf			; reset carry
 	ld l, 0			; set LSB
 	rra			; half and set carry if odd
 	rr l			; and suck into msb of L
-	add 0x1D		; set MSB
+	add a, 0x1D		; set MSB
 	ld h, a			; HL now points at base address
 	ret
 
-.invalid	
+.invalid16: 
 	ld hl, STR_invalidfs
 	call PRINT42
 	jr F_askfsnum
 
-.abandon
+.abandon16: 
 	scf
 	ret
 	

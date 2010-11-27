@@ -19,7 +19,11 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"zxrom.inc"
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"configdefs.inc"
+.text
 ; Simple BASIC interface to allow the setting/getting of config values.
 ; The format of all set commands is:
 ; %cfgset section,id,value
@@ -29,7 +33,8 @@
 ; To commit, %cfgcommit, to abandon, %cfgabandon
 ;--------------------------------------------------------------------------
 ; F_cfgcommit. Takes no args. Commits configuration to flash.
-F_cfgcommit
+.globl F_cfgcommit
+F_cfgcommit: 
 	call STATEMENT_END
 
 	; runtime
@@ -39,7 +44,8 @@ F_cfgcommit
 
 ;--------------------------------------------------------------------------
 ; F_cfgabandon. Abandons RAM copy of configuration.
-F_cfgabandon
+.globl F_cfgabandon
+F_cfgabandon: 
 	call STATEMENT_END
 
 	; runtime
@@ -49,7 +55,8 @@ F_cfgabandon
 ;--------------------------------------------------------------------------
 ; F_cfgset
 ; Sets byte and word values
-F_cfgset
+.globl F_cfgset
+F_cfgset: 
 	; Syntax check time
 	call F_cfgset_common
 
@@ -85,7 +92,8 @@ F_cfgset
 ;--------------------------------------------------------------------------
 ; F_cfgset_string
 ; Sets a string
-F_cfgset_string
+.globl F_cfgset_string
+F_cfgset_string: 
 	; Syntax check time
 	call F_cfgset_common
 
@@ -114,7 +122,8 @@ F_cfgset_string
 
 ;--------------------------------------------------------------------------
 ; Common syntax checks
-F_cfgset_common
+.globl F_cfgset_common
+F_cfgset_common: 
 	rst CALLBAS
 	defw ZX_EXPT1_NUM	; check for section ID
 	cp ','			; comma
@@ -132,8 +141,9 @@ F_cfgset_common
 ; F_prepwrite
 ; Actions that have to be done for any writeable cfg item.
 ; Section to use in DE
-F_prepwrite
-	call F_copyconfig
+.globl F_prepwrite
+F_prepwrite: 
+	call F_cond_copyconfig
 	ld d, (ix+1)
 	ld e, (ix+0)
 	call F_findsection
@@ -146,7 +156,8 @@ F_prepwrite
 ; IX+3 = id
 ; IX+4 = value or pointer to string
 ; note all values are 16 bit
-F_do_cfgset_byte
+.globl F_do_cfgset_byte
+F_do_cfgset_byte: 
 	call F_prepwrite
 	jr c, F_handle_error
 	ld a,(ix+2)
@@ -155,7 +166,8 @@ F_do_cfgset_byte
 	call F_setCFByte
 	jp EXIT_SUCCESS
 
-F_do_cfgset_word
+.globl F_do_cfgset_word
+F_do_cfgset_word: 
 	call F_prepwrite
 	jr c, F_handle_error
 	ld a,(ix+2)
@@ -165,7 +177,8 @@ F_do_cfgset_word
 	call F_setCFWord
 	jp EXIT_SUCCESS
 
-F_do_cfgset_string
+.globl F_do_cfgset_string
+F_do_cfgset_string: 
 	call F_prepwrite
 	jr c, F_handle_error
 	ld a,(ix+2)
@@ -178,12 +191,13 @@ F_do_cfgset_string
 ;-------------------------------------------------------------------------
 ; F_cfgnew
 ; Create a brand new config (wiping any that may already exist)
-F_cfgnew
+.globl F_cfgnew
+F_cfgnew: 
 	; Syntax time
 	call STATEMENT_END	; no args
 
 	; Run time
-	call F_copyconfig	; not necessary to actually copy it but
+	call F_cond_copyconfig	; not necessary to actually copy it but
 				; this sets up sysvars ready so we can commit
 	call F_createnewconfig	; overwrite whatever's already there with
 	jp EXIT_SUCCESS		; a new config.
@@ -191,14 +205,15 @@ F_cfgnew
 ;------------------------------------------------------------------------
 ; F_cfgnewsec
 ; Create a new section with the ID supplied.
-F_cfgnewsec
+.globl F_cfgnewsec
+F_cfgnewsec: 
 	; Syntax time
 	rst CALLBAS
 	defw ZX_EXPT1_NUM	; expect a single 16 bit number
 	call STATEMENT_END
 
 	; run time
-	call F_copyconfig	; ensure config is in RAM
+	call F_cond_copyconfig	; ensure config is in RAM
 	rst CALLBAS		; get the argument
 	defw ZX_FIND_INT2	; which is now in BC.
 	ld d, b
@@ -209,31 +224,34 @@ F_cfgnewsec
 ;-------------------------------------------------------------------------
         ; Copy a BASIC string to a C string.
         ; BASIC string in DE, C string (dest) in HL
-F_basstrcpy
+.globl F_basstrcpy
+F_basstrcpy: 
         ld a, b                         ; end of string?
         or c
-        jr z, .terminate
+        jr z,  .terminate12
         ld a, (de)
         ld (hl), a
         inc hl
         inc de
         dec bc
         jr F_basstrcpy
-.terminate
+.terminate12: 
         xor a                           ; put the null on the end
         ld (hl), a
         inc hl
         ret
 
-F_handle_error
+.globl F_handle_error
+F_handle_error: 
 	; TODO: integrate with messages module
 	ld hl, STR_cfgerr
 	jp REPORTERR
-J_badid	
+J_badid:
 	ld hl, STR_badid
 	jp REPORTERR
 
-STR_cfgerr
+.data
+STR_cfgerr:
 	defb "Configuration error",0
-STR_badid
+STR_badid:
 	defb "Bad config ID",0

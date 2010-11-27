@@ -19,11 +19,13 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.text
 
-FLASHPROGSTART
-        ; Flash writer. This *MUST* be at the end because we change ORG
-        org 0x3000
-F_updateflash
+FLASHPROGSTART:
+.globl F_updateflash
+F_updateflash: 
         di
         ld a, (v_pga)
         push af
@@ -31,10 +33,10 @@ F_updateflash
         push af
         ld a, 0x1C              ; last sector of flash
         call F_FlashEraseSector
-        jr c, .cleanup
+        jr c,  .cleanup1
         ld a, 0x1C              ; start page to write
         call F_writesector
-.cleanup
+.cleanup1: 
         ex af, af'              ; preserve flags
         pop af
         call SETPAGEB
@@ -43,7 +45,4 @@ F_updateflash
         ex af, af'
         ei
         ret
-
-        include "../../rom/flashwrite.asm"
-FLASHPROGLEN    equ $-0x3000
 

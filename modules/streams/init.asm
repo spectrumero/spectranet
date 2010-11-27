@@ -19,82 +19,84 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
-INTERPWKSPC	equ 0x3000
+.include	"defs.inc"
+.include	"spectranet.inc"
+.text
 ;-----------------------------------------------------------------------------
 ; F_init: Initializes the interpreter
-F_init
+.globl F_init
+F_init:
         ld hl, PARSETABLE
         ld b, NUMCMDS
-.loop
+.loop1:
         push bc
         call ADDBASICEXT
         pop bc
-        jr c, .installerror
-        djnz .loop
+        jr c, .installerror1
+        djnz .loop1
         ld hl, STR_basicinit
         call PRINT42
         ret
-.installerror
+.installerror1:
         ld hl, STR_basinsterr
         call PRINT42
         ret
 
 NUMCMDS		equ 9
 STREAMPAGE	equ 0xFF		; This ROM
-PARSETABLE
-P_connect	defb	0x0b
+PARSETABLE:
+P_connect:	defb	0x0b
 		defw	CMD_CONNECT
 		defb	STREAMPAGE
 		defw	F_connect
 
-P_close		defb	0x0b
+P_close:		defb	0x0b
 		defw	CMD_CLOSE
 		defb	STREAMPAGE
 		defw	F_close
 
-P_listen	defb	0x0b
+P_listen:	defb	0x0b
 		defw	CMD_LISTEN
 		defb	STREAMPAGE
 		defw	F_listen
 
-P_accept	defb	0x0b
+P_accept:	defb	0x0b
 		defw	CMD_ACCEPT
 		defb	STREAMPAGE
 		defw	F_accept
 		
-P_fopen		defb	0x0b
+P_fopen:		defb	0x0b
 		defw	CMD_FOPEN
 		defb	STREAMPAGE
 		defw	F_fopen
 
-P_opendir	defb	0x0b
+P_opendir:	defb	0x0b
 		defw	CMD_OPENDIR
 		defb	STREAMPAGE
 		defw	F_opendir
 
-P_oneof		defb 	0x0b
+P_oneof:		defb 	0x0b
 		defw	CMD_ONEOF
 		defb	STREAMPAGE
 		defw	F_oneof
 
-P_reclaim	defb	0x0b
+P_reclaim:	defb	0x0b
 		defw	CMD_RECLAIM
 		defb	STREAMPAGE
 		defw	F_reclaim
 
-P_ctrl		defb	0x0b
+P_ctrl:		defb	0x0b
 		defw	CMD_CONTROL
 		defb	STREAMPAGE
 		defw	F_ctrl
 
-CMD_CONNECT	defb	"%connect",0
-CMD_CLOSE	defb	"%close",0
-CMD_LISTEN	defb	"%listen",0
-CMD_ACCEPT	defb	"%accept",0
-CMD_FOPEN	defb	"%fopen",0
-CMD_OPENDIR	defb	"%opendir",0
-CMD_ONEOF	defb	"%oneof",0
-CMD_RECLAIM	defb	"%reclaim",0
-CMD_CONTROL	defb	"%control",0
+CMD_CONNECT:	defb	"%connect",0
+CMD_CLOSE:	defb	"%close",0
+CMD_LISTEN:	defb	"%listen",0
+CMD_ACCEPT:	defb	"%accept",0
+CMD_FOPEN:	defb	"%fopen",0
+CMD_OPENDIR:	defb	"%opendir",0
+CMD_ONEOF:	defb	"%oneof",0
+CMD_RECLAIM:	defb	"%reclaim",0
+CMD_CONTROL:	defb	"%control",0
 

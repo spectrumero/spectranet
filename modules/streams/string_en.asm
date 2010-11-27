@@ -19,15 +19,24 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"ctrlchars.inc"
 
 ; English strings
-
-STR_basicinit	defb	"BASIC streams support initialized\n",0
-STR_basinsterr	defb	"BASIC streams initialization failed\n",0
-STR_nomem	defb	"Out of memory pages",0
-STR_sockerr	defb	"Socket error",0
-STR_closeerr	defb	"Could not close socket",0
-STR_nobuferr	defb	"Out of buffers",0
-STR_fileerr	defb	"Error opening file",0
-STR_direrr	defb	"Error opening directory",0
+.data
+.globl STR_basicinit
+.globl STR_basinsterr
+.globl STR_nomem
+.globl STR_sockerr
+.globl STR_closeerr
+.globl STR_nobuferr
+.globl STR_fileerr
+.globl STR_direrr
+STR_basicinit:	defb	"BASIC streams support initialized",NEWLINE,0
+STR_basinsterr:	defb	"BASIC streams initialization failed",NEWLINE,0
+STR_nomem:	defb	"Out of memory pages",0
+STR_sockerr:	defb	"Socket error",0
+STR_closeerr:	defb	"Could not close socket",0
+STR_nobuferr:	defb	"Out of buffers",0
+STR_fileerr:	defb	"Error opening file",0
+STR_direrr:	defb	"Error opening directory",0
 

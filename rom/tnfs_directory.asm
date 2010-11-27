@@ -19,6 +19,13 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"tnfs_defs.inc"
+.include	"tnfs_sysvars.inc"
+.include	"stat.inc"
+.include	"fcntl.inc"
+.text
 
 ; TNFS directory functions - opendir, readdir. closedir
 
@@ -28,7 +35,8 @@
 ; Arguments:	HL = pointer to null-terminated string containing the path
 ; On success, returns the directory handle in A.
 ; On error, sets the carry flag and sets A to the error number.
-F_tnfs_opendir
+.globl F_tnfs_opendir
+F_tnfs_opendir:
 	call F_fetchpage		; get our sysvars at 0x1000
 	ret c
 
@@ -39,14 +47,14 @@ F_tnfs_opendir
 	jp c, F_leave			; return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; return code is zero?
-	jr z, .gethandle
+	jr z, .gethandle1
 	scf				; return with tnfs error
 	jp F_leave
-.gethandle
+.gethandle1:
 	ld a, (v_pgb)			; allocate a
 	ld c, ALLOCDIRHND
 	call RESALLOC			; directory handle.
-	jr c, .cleanupandexit
+	jr c, .cleanupandexit1
 	ld h, HANDLESPACE / 256		; create our private sysvar addr
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
 	ld (hl), a			; save TNFS handle
@@ -55,7 +63,7 @@ F_tnfs_opendir
 	ld (hl), a
 	ld a, l				; move dirhandle into A
 	jp F_leave			; return the directory handle
-.cleanupandexit
+.cleanupandexit1:
 	push af
 	ld a, (tnfs_recv_buffer+tnfs_msg_offset)
 	ld b, a
@@ -74,7 +82,8 @@ F_tnfs_opendir
 ; 		DE = pointer to a buffer for the result
 ; On success, returns with carry cleared, and the buffer at DE filled
 ; with the result. On error, sets the carry flag and A to the error number
-F_tnfs_readdir
+.globl F_tnfs_readdir
+F_tnfs_readdir:
 	call F_fetchpage
 	ret c
 
@@ -94,10 +103,10 @@ F_tnfs_readdir
 	jp c, F_leave			; but return on network error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; if rc is zero then copy the
-	jr z, .copybuf			; buffer to DE
+	jr z, .copybuf2			; buffer to DE
 	scf
 	jp F_leave
-.copybuf
+.copybuf2:
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset
 	ld b, 255			; max filename length
 	call F_restorepage		; ... in case it's 0x1000-0x1FFF
@@ -109,7 +118,8 @@ F_tnfs_readdir
 ; Arguments:	A = directory handle
 ; On success, returns with carry cleared. On error, returns with carry
 ; set and A as the error.
-F_tnfs_closedir
+.globl F_tnfs_closedir
+F_tnfs_closedir:
 	call F_fetchpage
 	ret c
 
@@ -141,7 +151,8 @@ F_tnfs_closedir
 ; path (which gets prepended to subsequent file operations).
 ; Parameters	HL = path to chdir to
 ; Returns with carry set on error and A=error code
-F_tnfs_chdir
+.globl F_tnfs_chdir
+F_tnfs_chdir:
 	call F_fetchpage
 	ret c
 
@@ -149,27 +160,27 @@ F_tnfs_chdir
 	ld (v_curmountpt), a	; set the mount point being worked upon
 	ld a, TNFS_OP_STAT	
 	call F_tnfs_pathcmd	; stat the path
-	jr c, .error		; stat returned an error
+	jr c, .error4		; stat returned an error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	jr nz, .scferror
+	jr nz, .scferror4
 	ld hl, tnfs_recv_buffer+tnfs_msg_offset+1 ; MSB of stat filemode bitfield
 	ld a, S_IFDIR / 256	; MSB of S_IFDIR bitfield
 	and (hl)		; AND it all together...
-	jr z, .notadir		; ...if zero, it wasn't a directory.
+	jr z, .notadir4		; ...if4 zero, it wasn't a directory.
 	pop hl
 
 	ld a, (v_curmountpt)
-	add v_cwd0 / 256	; add the MSB of the CWD storage
+	add a, v_cwd0 / 256	; add the MSB of the CWD storage
 	ld d, a			; DE = pointer to this mount point's CWD
 	ld e, 0			; copy the directory we just got
 	call F_tnfs_abspath	; as an absolute path.
 	jp F_leave
-.notadir
+.notadir4:
 	ld a, ENOTDIR
-.scferror
+.scferror4:
 	scf
-.error	
+.error4:	
 	pop hl
 	jp F_leave
 
@@ -178,7 +189,8 @@ F_tnfs_chdir
 ; Create a directory on the server.
 ; Parameters		HL = pointer to directory name
 ; Returns with carry set on error and A=error code.
-F_tnfs_mkdir
+.globl F_tnfs_mkdir
+F_tnfs_mkdir:
 	ld b, TNFS_OP_MKDIR
 	jp F_tnfs_simplepathcmd
 
@@ -187,7 +199,8 @@ F_tnfs_mkdir
 ; Removes a directory on the server.
 ; Parameters		HL = pointer to the directory
 ; Returns with carry set on error and A=error code.
-F_tnfs_rmdir
+.globl F_tnfs_rmdir
+F_tnfs_rmdir:
 	ld b, TNFS_OP_RMDIR
 	jp F_tnfs_simplepathcmd
 
@@ -195,19 +208,20 @@ F_tnfs_rmdir
 ; F_tnfs_getcwd
 ; Gets the current working directory
 ; Parameters		DE = pointer to memory to copy result
-F_tnfs_getcwd
+.globl F_tnfs_getcwd
+F_tnfs_getcwd:
 	call F_fetchpage
 	ret c
 
-	add v_cwd0 / 256	; add the MSB of the CWD storage
+	add a, v_cwd0 / 256	; add the MSB of the CWD storage
 	ld h, a			; 
 	ld l, 0			; HL = pointer to CWD
-.cploop
+.cploop7:
 	ld a, (hl)
 	ld (de), a
 	and a			; null terminator?
 	jp z, F_leave
 	inc hl
 	inc de
-	jr .cploop
+	jr .cploop7
 

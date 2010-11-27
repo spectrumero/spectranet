@@ -19,7 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"w5100_defs.inc"
+.include	"sysvars.inc"
+.include	"sockdefs.inc"
 
 ; Socket control routines. In this file:
 ; F_bind
@@ -54,7 +56,9 @@
 ; Parameters: A  = socket fd
 ;             DE = port
 ; On error, carry flag is set and A contains error number.
-F_bind
+.text
+.globl F_bind
+F_bind:
 	call F_gethwsock	; H now is hardware socket MSB address
 	jp c, J_leavesockfn	; carry is set on error
 	ld l, Sn_PORT0 % 256	; port register
@@ -70,7 +74,8 @@ F_bind
 ; Parameters: A  = socket fd
 ;
 ; On error, the carry flag is set and A contains the error number.
-F_listen
+.globl F_listen
+F_listen:
 	call F_gethwsock	; H is now hardware socket MSB address
 	jp c, J_leavesockfn	; unless carry is set because of an error
 
@@ -93,7 +98,8 @@ F_listen
 ;            BC = port number
 ; On error, the carry flag is set and A contains the error number.
 ; On success, returns zero in A
-F_connect
+.globl F_connect
+F_connect:
 	call F_gethwsock	; H = socket register bank MSB
 	ld l, Sn_DPORT0 % 256	; destination port register
 	ld (hl), b		; high order of port
@@ -119,22 +125,22 @@ F_connect
 	ld (hl), S_CR_CONNECT	; instruction to connect to remote host
 
 	ld l, Sn_IR % 256	; interrupt register
-.waitforconn
+.waitforconn3:
 	ld a, (hl)
 	bit BIT_IR_CON, a
-	jr nz, .connected
+	jr nz, .connected3
 	and a			; if not, is it zero (no flags set?)
-	jr z, .waitforconn
+	jr z, .waitforconn3
 	and S_IR_DISCON		; connection refused?
-	jr nz, .refused
+	jr nz, .refused3
 	ld a, ETIMEDOUT		; connection timed out
 	scf
 	jp J_leavesockfn
-.refused
+.refused3:
 	ld a, ECONNREFUSED
 	scf
 	jp J_leavesockfn
-.connected
+.connected3:
 	set BIT_IR_CON, (hl)	; reset interrupt bit
 	xor a			; connection OK
 	jp J_leavesockfn

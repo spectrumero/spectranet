@@ -21,6 +21,9 @@
 ;THE SOFTWARE.
 
 ; Snapshot manager extensions vector table
+.include	"snapheader.inc"
+.section vectors
+.vectorstart:
         defb 0xAA               ; This is a code ROM
         defb 0xFB               ; ROM ID = 0xFC
         defw F_init             ; RESET vector
@@ -31,18 +34,25 @@
         defw 0xFFFF
         defw STR_ident          ; Pointer to a string that identifies this mod
         jp F_modulecall
-        block 0x2020-$,0xFF
+.fillstart:
+	.fill 0x20-(.fillstart-.vectorstart), 1, 0xFF
 
+.section isr
 ;-----------------------------------------------------------------------
 ; F_im2 - Detect interrupt mode 2 ISR
-F_im2
+.globl F_im2
+.globl F_im2_lsb
+F_im2_lsb	equ 0x20
+F_im2: 
         push af
         ld a, 2
         ld (SNA_IM), a
         pop af
         reti
 
-F_modulecall
+.text
+.globl F_modulecall
+F_modulecall: 
 	ld a, l
 	and a			; call 0 = start UI
 	jp z, F_startui

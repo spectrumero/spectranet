@@ -19,10 +19,17 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"zxsysvars.inc"
+.include	"zxrom.inc"
+.include	"defs.inc"
+.include	"ctrlchars.inc"
+.include	"spectranet.inc"
+.include	"streamvars.inc"
+.text
 ; Handle BASIC flow control
 
-F_eofhandler
+.globl F_eofhandler
+F_eofhandler:
 	call F_fetchpage
 	ld hl, (oneof_line)
 	ld (ZX_NEWPPC), hl	; set line number
@@ -33,7 +40,8 @@ F_eofhandler
 	jp EXIT_SUCCESS
 
 ; Munge the stack to cause the program to continue.
-F_basic_continue
+.globl F_basic_continue
+F_basic_continue:
 	ld hl, (ZX_RAMTOP)
 	dec hl
 	dec hl
@@ -47,18 +55,19 @@ F_basic_continue
 	ei
 	jp 0x007C		; and page out via this address.
 
-F_showzxstack
+.globl F_showzxstack
+F_showzxstack:
 	push ix
 	push hl
 	push de
 	push bc
 	push af
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 
 	ld ix, (ZX_ERR_SP)
 	ld b, 8
-.loop
+.loop3:
 	push bc
 	ld hl, 0x3000
 	push ix
@@ -91,14 +100,14 @@ F_showzxstack
 	ld hl, 0x3000
 	call PRINT42
 
-	ld a, '\n'
+	ld a, NEWLINE
 	call PUTCHAR42
 
 	inc ix
 	inc ix
 	ld hl, (ZX_RAMTOP)
 	pop bc
-	djnz .loop
+	djnz .loop3
 
 	pop af
 	pop bc

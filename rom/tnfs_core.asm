@@ -19,21 +19,29 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"tnfs_defs.inc"
+.include	"tnfs_sysvars.inc"
+.include	"spectranet.inc"
+.include	"sysvars.inc"
+.include	"fcntl.inc"
+.include	"sockdefs.inc"
 
 ; General TNFS core utility functions.
 ;------------------------------------------------------------------------
 ; F_tnfs_strcpy
 ; Copy a null terminated string in HL to the buffer in DE, up to B bytes long
 ; Returns with DE set to the buffer end + 1
-F_tnfs_strcpy
-.loop
+.text
+.globl F_tnfs_strcpy
+F_tnfs_strcpy:
+.loop1:
 	ld a, (hl)
 	ld (de), a
 	inc de
 	and a			; NULL terminator?
 	ret z
 	inc hl
-	djnz .loop
+	djnz .loop1
 	xor a			; if we exhaust the maximum length,
 	ld (de), a		; make sure there's a NULL on the end.
 	inc de
@@ -46,21 +54,22 @@ F_tnfs_strcpy
 ;			DE = pointer to string to concatenate
 ;			BC = buffer size in bytes
 ; On return, carry is set if the buffer was too small
-F_tnfs_strcat
+.globl F_tnfs_strcat
+F_tnfs_strcat:
 	; find the end of the first string
 	dec bc			; guarantee that we can null terminate it
-.findend
+.findend2:
 	ld a, (hl)
 	and a
-	jr z, .string_end
+	jr z, .string_end2
 	inc hl
 	dec bc
 	ld a, b
 	or c
-	jr nz, .findend
+	jr nz, .findend2
 	scf			; buffer too short
 	ret
-.string_end
+.string_end2:
 	ld a, (de)		; second string
 	ld (hl), a
 	and a			; null?
@@ -70,7 +79,7 @@ F_tnfs_strcat
 	dec bc
 	ld a, b
 	or c
-	jr nz, .string_end
+	jr nz, .string_end2
 	ld (hl), 0		; add a terminator
 	scf			; buffer too small
 	ret
@@ -82,10 +91,11 @@ F_tnfs_strcat
 ;		DE = pointer to a buffer to store the resulting path
 ; In use mountpoint must be in v_curmountpt
 ; On return DE points to the end of the new string.
-F_tnfs_abspath
+.globl F_tnfs_abspath
+F_tnfs_abspath:
 	ld a, (hl)		
 	and a			; Empty string?
-	jr z, .donothing	; Do nothing. 
+	jr z, .donothing3	; Do nothing. 
 	cp '/'			; Absolute path?
 	ld b, 255
 	jp z, F_tnfs_strcpy	; yes, so just copy it verbatim.
@@ -93,60 +103,60 @@ F_tnfs_abspath
 	push hl
 	ld (v_desave), de	; save start of buffer
 	ld a, (v_curmountpt)	; get the mount point we're working on
-	add v_cwd0 / 256	; calculate the MSB
+	add a, v_cwd0 / 256	; calculate the MSB
 	ld h, a
 	ld l, 0			; set HL to the cwd
-.cploop
+.cploop3:
 	ld a, (hl)
 	and a			; zero?
-	jr z, .stringend
+	jr z, .stringend3
 	ld (de), a
 	inc hl
 	inc de
-	djnz .cploop
-.stringend
+	djnz .cploop3
+.stringend3:
 	ld a, 255		; did we actually copy anything?
 	cp b
-	jr z, .addslash		; no, so put on a leading /
+	jr z, .addslash3		; no, so put on a leading /
 	dec de
 	ld a, (de)		; check for trailing /
 	cp '/'
 	inc de
-	jr z, .parsepath	; trailing / is present, nothing to do
-.addslash
+	jr z, .parsepath3	; trailing / is present, nothing to do
+.addslash3:
 	ld a, '/'
 	ld (de), a		; add the trailing /
 	inc de
-.parsepath
+.parsepath3:
 	pop hl
 
 	; Build up the actual path. If we encounter a ../, remove the
 	; top path entry. If we encounter a ./, skip it.
-.loop
+.loop3:
 	ld a, (hl)		; check for end of string
 	and a
-	jr z, .addnull		; finished so add a null to the destination
-	call .relativepath	; check for relative path ../ or ./
-	jr c, .loop		; relative path processed, don't copy any more
-.copypath
+	jr z, .addnull3		; finished so add a null to the destination
+	call .relativepath3	; check for relative path ../ or ./
+	jr c, .loop3		; relative path processed, don't copy any more
+.copypath3:
 	ld a, (hl)		; copy the byte
 	ld (de), a
 	inc hl
 	inc de
 	cp '/'			; up to a /
-	jr z, .loop		; when we go for the next bit.
+	jr z, .loop3		; when we go for the next bit.
 	and a			; hit the NULL at the end?
 	ret z			; all done
-	jr .copypath
+	jr .copypath3
 
-.donothing			; simply advance DE to the end of
+.donothing3:			; simply advance DE to the end of
 	ld a, (de)		; the current path string
 	and a
 	ret z
 	inc de
-	jr .donothing
+	jr .donothing3
 
-.addnull
+.addnull3:
 	xor a
 	ld (de), a
 	inc de
@@ -155,60 +165,60 @@ F_tnfs_abspath
 	; Deal with relative paths. When a ../ is encountered, the last
 	; dir should be removed (stopping at the start of the string).
 	; If a ./ is encountered it should be skipped.
-.relativepath
+.relativepath3:
 	ld (v_hlsave), hl	; save pointer
 	ld a, (hl)
 	cp '.'
-	jr nz, .notrelative	; definitely not a relative path
+	jr nz, .notrelative3	; definitely not a relative path
 	inc hl
 	ld a, (hl)
 	cp '/'
-	jr z, .omit		; It's a ./ - omit it
+	jr z, .omit3		; It's a ./ - omit it
 	and a			; or a . (null), same thing
-	jr z, .omitnull
+	jr z, .omitnull3
 	cp '.'
-	jr nz, .notrelative	; It's .somethingelse
+	jr nz, .notrelative3	; It's .somethingelse3
 	inc hl
 	ld a, (hl)
 	cp '/'
-	jr z, .relative		; relative path
+	jr z, .relative3		; relative path
 	and 0			; null terminator? also relative path
-	jr z, .relativenull	; 
-	jr .notrelative		; something else
-.relative
+	jr z, .relativenull3	; 
+	jr .notrelative3		; something else
+.relative3:
 	inc hl			; make HL point at next byte for return.
-.relativenull
+.relativenull3:
 	ex de, hl		; do the work in HL
 	push hl			; save the pointer.
 	ld bc, (v_desave)	; get the pointer to the start of the buffer
 	inc bc			; add 1 to it
 	sbc hl, bc		; compare with the current address
 	pop hl			; get current address back into HL
-	jr z, .relativedone	; at the root already, so do nothing
+	jr z, .relativedone3	; at the root already, so do nothing
 
 	dec hl			; get rid of the topmost path element
 	ld (hl), 0		; remove the trailing /
-.chewpath
+.chewpath3:
 	dec hl
 	ld a, (hl)		; is it a / ?
 	cp '/'			; if so we're nearly done
-	jr z, .relativealmostdone
+	jr z, .relativealmostdone3
 	ld (hl), 0		; erase char
-	jr .chewpath
-.relativealmostdone
+	jr .chewpath3
+.relativealmostdone3:
 	inc hl			; HL points at next char
-.relativedone
+.relativedone3:
 	ex de, hl
 	scf			; indicate that path copy shouldn't take place
 	ret
 
-.notrelative
+.notrelative3:
 	ld hl, (v_hlsave)
 	and a			; set Z flag if zero
 	ret
-.omit
+.omit3:
 	inc hl			; advance pointer to next element of the path
-.omitnull
+.omitnull3:
 	scf			; set carry
 	ret
 
@@ -216,11 +226,12 @@ F_tnfs_abspath
 ; F_tnfs_header_w
 ; Creates a TNFS header at a fixed address, buf_tnfs_wkspc, with the
 ; extant session id
-F_tnfs_header_w
+.globl F_tnfs_header_w
+F_tnfs_header_w:
 	push af
 	ld a, (v_curmountpt)	; find the SID for this mount point
 	rlca			; mutiply by two
-	add v_tnfs_sid0 % 256	; and add the offset
+	add a, v_tnfs_sid0 % 256	; and add the offset
 	ld h, v_tnfs_sid0 / 256	; set HL = pointer to SID
 	ld l, a
 	ld e, (hl)		; set DE to the SID
@@ -232,14 +243,15 @@ F_tnfs_header_w
 ; Creates a TNFS header. Session ID in DE. Command in A. HL is a pointer
 ; to the buffer to fill.
 ; HL points to the end of the header on exit.
-F_tnfs_header
+.globl F_tnfs_header
+F_tnfs_header:
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	inc hl
 	push af
 	ld a, (v_curmountpt)	; calculate the sequence number storage
-	add v_tnfs_seqno0 % 256
+	add a, v_tnfs_seqno0 % 256
 	ld e, a
 	ld d, v_tnfs_seqno0 / 256
 	ld a, (de)
@@ -258,12 +270,13 @@ F_tnfs_header
 ; just set up the connection data for the datagrams.
 ; Returns with carry set and A=error on error.
 ; HL=pointer to 4 byte IP address
-F_tnfs_prepsock
+.globl F_tnfs_prepsock
+F_tnfs_prepsock:
 	ld a, (v_curmountpt)	; calculate the offset to the socket info
 	rlca			; multiply by 8
 	rlca
 	rlca
-	add v_tnfs_sockinfo0 % 256
+	add a, v_tnfs_sockinfo0 % 256
 	ld e, a			; set DE to the address of the sockinfo
 	ld d, v_tnfs_sockinfo0 / 256
 	
@@ -293,9 +306,11 @@ F_tnfs_prepsock
 ;------------------------------------------------------------------------
 ; F_tnfs_message_w
 ; Sends the block of data starting at buf_tnfs_wkspc and ending at DE.
-F_tnfs_message_w
+.globl F_tnfs_message_w
+F_tnfs_message_w:
 	ex de, hl		; end pointer into HL for length calc
-F_tnfs_message_w_hl		; entry point for when HL is already set
+.globl F_tnfs_message_w_hl
+F_tnfs_message_w_hl:		; entry point for when HL is already set
 	ld de, buf_tnfs_wkspc	; start of block
 	sbc hl, de		; calculate length
 	ld b, h
@@ -304,7 +319,8 @@ F_tnfs_message_w_hl		; entry point for when HL is already set
 ; F_tnfs_message
 ; Sends the block of data pointed to by DE for BC bytes and gets the
 ; response.
-F_tnfs_message
+.globl F_tnfs_message
+F_tnfs_message:
 	ld a, tnfs_max_retries	; number of retries
 	ld (v_tnfs_retriesleft), a	; into memory
 	ld (v_tnfs_tx_de), de	; save pointer
@@ -314,33 +330,33 @@ F_tnfs_message
 	rlca			; multiply by 8 to find the sockinfo
 	rlca
 	rlca
-	add v_tnfs_sockinfo0 % 256	; LSB
+	add a, v_tnfs_sockinfo0 % 256	; LSB
 	ld h, v_tnfs_sockinfo0 / 256	; MSB
 	ld l, a
 	ld (v_tnfs_tx_hl), hl	; save sockinfo pointer
-.retryloop
+.retryloop9:
 	ld hl, (v_tnfs_tx_hl)	; Fetch parameters
 	ld de, (v_tnfs_tx_de)
 	ld bc, (v_tnfs_tx_bc)
 	ld a, (v_tnfs_sock)	; socket descriptor
 	call SENDTO		; send the data
-	jr nc, .pollstart
+	jr nc, .pollstart9
 	ret			; error, leave now
 	
 	; wait for the response by polling
-.pollstart
+.pollstart9:
 	call F_tnfs_poll
-	jr nc, .continue	; a message is ready
+	jr nc, .continue9	; a message is ready
 	ld a, (v_tnfs_retriesleft) ; get retries left
 	dec a			; decrement it
 	ld (v_tnfs_retriesleft), a ; and store it
 	and a			; is it at zero?
-	jr nz, .retryloop
-	ld a, TTIMEOUT		; error code - we tried...but gave up
+	jr nz, .retryloop9
+	ld a, TTIMEOUT		; error code - we tried...but9 gave up
 	scf			; timed out
 	ret
 
-.continue
+.continue9:
 	ld ix, (v_tnfs_tx_de)	; start of the block we sent
 	ld a, (ix+tnfs_cmd_offset)	; check the command
 	cp TNFS_OP_READ		; and see if it's a read operation
@@ -348,7 +364,7 @@ F_tnfs_message
 	ld hl, v_vfs_sockinfo	; Address to receive remote datagram IP/port
 	ld de, tnfs_recv_buffer	; Address to receive data
 	ld a, (v_tnfs_sock)	; The tnfs socket
-	jr z, .read		; ...if the command was READ, handle it
+	jr z, .read9		; ...if9 the command was READ, handle it
 
 	ld bc, 1024		; max message size
 	call RECVFROM
@@ -357,36 +373,36 @@ F_tnfs_message
 	push bc
 	ld b, a
 	ld a, (v_curmountpt)	; find the sequence number storage
-	add v_tnfs_seqno0 % 256
+	add a, v_tnfs_seqno0 % 256
 	ld l, a
 	ld h, v_tnfs_seqno0 / 256
 	ld a, (hl)
 	cp b			; sequence number match? if not
 	pop bc
-	jr nz, .pollstart	; see if the real message is still to come
+	jr nz, .pollstart9	; see if the real message is still to come
 	ret
 
 	; read is done in two phases - first get the header, then
 	; once we've got that copy the data directly to the required
 	; memory address instead of via the tnfs buffer.
-.read
+.read9:
 	ld bc, TNFS_READHEADERSZ ; just pull out the header
 	call RECVFROM
 	ret c			; leave on error
 	ld a, (tnfs_recv_buffer + tnfs_seqno_offset)
 	ld b, a
 	ld a, (v_curmountpt)	; find the sequence number storage
-	add v_tnfs_seqno0 % 256
+	add a, v_tnfs_seqno0 % 256
 	ld l, a
 	ld h, v_tnfs_seqno0 / 256
 	ld a, (hl)		; Consume rest of packet when no match
 	cp b			; sequence number match? if not
-	jr nz, .consume		; consume and discard the non-match data
+	jr nz, .consume9		; consume and discard the non-match data
 
 	; check for error conditions
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
-	jr nz, .leaveread
+	jr nz, .leaveread9
 
 	ld de, (v_read_destination)	; get destination address
 	push de
@@ -403,57 +419,58 @@ F_tnfs_message
 	ex de, hl
 	or a			; ensure carry is reset
 	ret
-.leaveread
+.leaveread9:
 	scf			; indicate error
 	ret
 
-.consume			; consume and discard data we don't want
+.consume9:			; consume and discard data we don't want
 	ld a, (v_tnfs_sock)	; if there is any data to be consumed
 	call POLLFD		; (a non data datagram or an error datagram
-	jp z, .retryloop	; may not have any more data)
+	jp z, .retryloop9	; may not have any more data)
 	
 	ld de, tnfs_recv_buffer
 	ld bc, 256
 	ld a, (v_tnfs_sock)
 	call RECV		; unload any remaining data from the socket
-	jr .consume
+	jr .consume9
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_poll
 ; Polls the tnfs fd for 1 time unit. Returns with carry set if the time
 ; expired.
-F_tnfs_poll
+.globl F_tnfs_poll
+F_tnfs_poll:
 	ld a, (v_tnfs_backoff)
 	and a
-	jr z, .setstart
+	jr z, .setstart10
 	ld a, (v_tnfs_polltime)
 	ld c, a
 	rla			; multiply backoff time by 2
-	jr nc, .setsysvar
+	jr nc, .setsysvar10
 	ld a, c			; can't back off any more, restore value
-	jr .setb
-.setsysvar
+	jr .setb10
+.setsysvar10:
 	ld (v_tnfs_polltime), a	; save new poll time
-.setb
+.setb10:
 	ld b, a
 	ei			; ensure interrupts are enabled
-.loop
+.loop10:
 	push bc
 	ld a, (v_tnfs_sock)
 	call POLLFD
 	pop bc
-	jr nz, .done		; data has arrived
+	jr nz, .done10		; data has arrived
 	halt			; timing: wait for next 50Hz interrupt
-	djnz .loop
+	djnz .loop10
 	scf			; poll time has expired
 	ret
-.setstart
+.setstart10:
 	inc a
 	ld (v_tnfs_backoff), a	; set backoff flag
 	ld a, tnfs_polltime	; initial polltime
 	ld (v_tnfs_polltime), a
-	jr .setb
-.done
+	jr .setb10
+.done10:
 	xor a
 	ld (v_tnfs_backoff), a	; reset backoff flag
 	ret
@@ -462,7 +479,8 @@ F_tnfs_poll
 ; F_tnfs_mounted
 ; Ask if a volume is mounted. Returns with carry reset if so, and
 ; carry set if not, with A set to the error number.
-F_tnfs_mounted
+.globl F_tnfs_mounted
+F_tnfs_mounted:
 	ld a, (v_tnfs_sock)
 	and a
 	ret nz			; valid handle exists, return
@@ -476,7 +494,8 @@ F_tnfs_mounted
 ; This routine handles the assembly of the data block for all of these.
 ; Arguments: A = command
 ;           HL = pointer to string argument
-F_tnfs_pathcmd
+.globl F_tnfs_pathcmd
+F_tnfs_pathcmd:
 	push hl
 	call F_tnfs_header_w	; create the header in the workspace area
 	ex de, hl		; de now points at current address
@@ -488,14 +507,16 @@ F_tnfs_pathcmd
 ; As above but handles the return code too.
 ; A = current mount point
 ; B = command
-F_tnfs_simplepathcmd
+.globl F_tnfs_simplepathcmd
+F_tnfs_simplepathcmd:
 	call F_fetchpage
 	ret c
 	ld (v_curmountpt), a
 	ld a, b
 	call F_tnfs_pathcmd
 ; Entry point for simple exit handler
-F_tnfs_simpleexit
+.globl F_tnfs_simpleexit
+F_tnfs_simpleexit:
 	jp c, F_leave
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a
@@ -506,26 +527,27 @@ F_tnfs_simpleexit
 ;---------------------------------------------------------------------------
 ; F_tnfs_checkclose
 ; Checks to see if the socket should be closed, and if so, closes it.
-F_tnfs_checkclose
+.globl F_tnfs_checkclose
+F_tnfs_checkclose:
 	push hl
 	push bc
 	push af
 	ld b,4
 	ld hl, v_tnfs_sid0
-.loop
+.loop15:
 	ld a, (hl)
 	inc hl
 	or (hl)
-	jr nz, .done
+	jr nz, .done15
 	inc hl
-	djnz .loop
+	djnz .loop15
 	
 	; no SIDs were found, so the socket isn't needed; close it.
 	ld a, (v_tnfs_sock)
 	call CLOSE
 	xor a
 	ld (v_tnfs_sock), a		; clear down the socket storage
-.done
+.done15:
 	pop af
 	pop bc
 	pop hl

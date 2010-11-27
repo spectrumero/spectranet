@@ -19,6 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"sysdefs.inc"
+.include	"sysvars.inc"
+.include	"spectranet.inc"
 
 ; This code is used to set up the programmable trap.
 ; The programmable trap may be anywhere in memory. When the CPU fetches
@@ -34,13 +37,15 @@
 ;         byte 1,2 - Address to call when trap fires
 ;         byte 3,4 - Address that trap comes from
 ;         byte 5,6 - Address of the actual trap
-F_settrap
+.text
+.globl F_settrap
+F_settrap:
 	ld de, v_trappage	; Copy trap details to sysvars
 	ld a, (hl)		; check for 0xFF as the page
 	cp 0xFF			; since this indicates 'current page B rom'
-	jr z, .usecurrent
+	jr z, .usecurrent1
 	ldi			; copy page
-.cprest
+.cprest1:
 	ldi			; copy lsb of call address
 	ldi			; copy msb of call address
 	ldi			; call lsb of comefrom address
@@ -60,17 +65,18 @@ F_settrap
 	out (c), a		; write new register value
 	ret
 
-.usecurrent
+.usecurrent1:
 	ld a, (v_pgb)
 	ld (de), a
 	inc de
 	inc hl
-	jr .cprest
+	jr .cprest1
 
 ;--------------------------------------------------------------------------
 ; F_disabletrap
 ; Disables the programmable trap.
-F_disabletrap
+.globl F_disabletrap
+F_disabletrap:
 	ld bc, CTRLREG
 	in a, (c)		; get current control register value
 	res BIT_PROGTRAP_EN, a	; reset the trap enable bit
@@ -80,7 +86,8 @@ F_disabletrap
 ;--------------------------------------------------------------------------
 ; F_enabletrap
 ; Enables the programmable trap
-F_enabletrap
+.globl F_enabletrap
+F_enabletrap:
 	ld bc, CTRLREG
 	in a, (c)		; get current control register value
 	or MASK_PROGTRAP_EN	; set the trap enable bit
@@ -91,12 +98,14 @@ F_enabletrap
 ; J_pagetrapreturn
 ; Returns from a trap, restoring page area B, the stack, and unpaging
 ; the Spectranet
-J_pagetrapreturn
+.globl J_pagetrapreturn
+J_pagetrapreturn:
 	call F_poppageB
 ;--------------------------------------------------------------------------
 ; J_trapreturn
 ; Returns from a trap, restoring the stack and unpaging the Spectranet
-J_trapreturn
+.globl J_trapreturn
+J_trapreturn:
 	pop af
 	ex af, af'
 	pop af
@@ -105,7 +114,7 @@ J_trapreturn
 	pop hl
 	ld sp, (NMISTACK)	; restore SP
 	push hl			; swap HL with the stack to put
-	ld hl, UNPAGE		; the page out address there for RETN
+	ld hl, PAGEOUT		; the page out address there for RETN
 	ex (sp), hl		; restore hl, put page out on stack
 	retn
 

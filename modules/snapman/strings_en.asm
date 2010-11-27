@@ -19,8 +19,27 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"ctrlchars.inc"
 
-UI_STRINGS      defb    0,5,"- SPECTRANET SNAPSHOT MANAGER -",0
+.data
+.globl UI_STRINGS
+.globl INPUTTABLE
+.globl INPUTADDRS
+.globl STR_filename
+.globl STR_cfoverwrite
+.globl STR_loading
+.globl STR_saving
+.globl STR_cwd
+.globl STR_ident
+.globl STR_initialized
+.globl STR_failed
+.globl STR_nomempage
+.globl STR_curfile
+.globl STR_nofile
+.globl STR_newname
+.globl STR_cferase
+.globl CHAR_YES
+UI_STRINGS:     defb    0,5,"- SPECTRANET SNAPSHOT MANAGER -",0
                 defb    1,0,"Use arrow keys to move, Enter to select",0
                 defb    3,28,"[D] Directory/",0
                 defb    4,32,"file view",0
@@ -31,8 +50,8 @@ UI_STRINGS      defb    0,5,"- SPECTRANET SNAPSHOT MANAGER -",0
                 defb    18,28,"[Q] Quit",0
                 defb    20,0,"Dir: ",0
                 defb    0xFF,0xFF
-INPUTTABLE      defb    "qd",0x0d,"csre",0
-INPUTADDRS      defw    F_exit
+INPUTTABLE:     defb    "qd",0x0d,"csre",0
+INPUTADDRS:     defw    F_exit
                 defw    F_switchdirview
                 defw    F_enterpressed
                 defw    F_saveas
@@ -40,17 +59,18 @@ INPUTADDRS      defw    F_exit
 		defw	F_rename
 		defw	F_erase
 
-CHAR_YES        equ     'y'
-STR_filename    defb    "Filename: ",0
-STR_cfoverwrite defb    "Overwrite selected file? (y/n): ",0
-STR_loading	defb	"Loading...",0
-STR_saving	defb	"Saving...",0
-STR_cwd		defb	".",0
-STR_ident	defb	"Snapshot manager 1.0",0
-STR_initialized	defb	"Snapshot manager initialized\n",0
-STR_failed	defb	"Snapmgr. failed to alloc memory\n",0
-STR_nomempage	defb	"No page was allocated!\n",0
-STR_curfile	defb	"Current: ",0
-STR_nofile	defb	"(none)",0
-STR_newname	defb	"New name> ",0
-STR_cferase	defb	"Erase the selected file? (y/n): ",0
+CHAR_YES:       equ     'y'
+STR_filename:   defb    "Filename: ",0
+STR_cfoverwrite: defb    "Overwrite selected file? (y/n): ",0
+STR_loading:	defb	"Loading...",0
+STR_saving:	defb	"Saving...",0
+STR_cwd:	defb	".",0
+STR_ident:	defb	"Snapshot manager 1.0",0
+STR_initialized: defb	"Snapshot manager initialized",NEWLINE,0
+STR_failed:	defb	"Snapmgr. failed to alloc memory",NEWLINE,0
+STR_nomempage:	defb	"No page was allocated!",NEWLINE,0
+STR_curfile:	defb	"Current: ",0
+STR_nofile:	defb	"(none)",0
+STR_newname:	defb	"New name> ",0
+STR_cferase:	defb	"Erase the selected file? (y/n): ",0
+

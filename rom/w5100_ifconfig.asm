@@ -23,6 +23,8 @@
 ; Interface configuration functions - to abstract the W5100 away from
 ; software that needs to configure the interface.
 ;
+.include	"w5100_defs.inc"
+.include	"sysvars.inc"
 
 ;-------------------------------------------------------------------------
 ; F_ifconfig_ routines: F_ifconfig_inet, F_ifconfig_gw, F_ifconfig_netmask
@@ -30,22 +32,26 @@
 ; Parameters: HL - pointer to the 4 byte block of memory with the IPv4
 ; info.
 ; DE is incremented by 4.
-F_ifconfig_gw
+.text
+.globl F_ifconfig_gw
+F_ifconfig_gw:
 	call F_regpage
 	ld de, GAR0	; gateway address register
 	jr J_copy_cfg
 
-F_ifconfig_inet
+.globl F_ifconfig_inet
+F_ifconfig_inet:
 	call F_regpage
 	ld de, SIPR0
 	jr J_copy_cfg
 
-F_ifconfig_netmask
+.globl F_ifconfig_netmask
+F_ifconfig_netmask:
 	call F_regpage
 	ld de, SUBR0
 	jr J_copy_cfg
 
-J_copy_cfg
+J_copy_cfg:
 	ld bc, 4
 	ldir
 	jp J_leavesockfn
@@ -54,22 +60,26 @@ J_copy_cfg
 ; F_get_ifconfig routines: F_get_ifconfig_inet, gw, netmask:
 ; Returns the inet settings into a 4-byte buffer pointed to by DE
 ; in big-endian format.
-F_get_ifconfig_gw
+.globl F_get_ifconfig_gw
+F_get_ifconfig_gw:
 	call F_regpage
 	ld hl, GAR0
 	jr J_copy_cfg
 
-F_get_ifconfig_inet
+.globl F_get_ifconfig_inet
+F_get_ifconfig_inet:
 	call F_regpage
 	ld hl, SIPR0
 	jr J_copy_cfg
 
-F_get_ifconfig_netmask
+.globl F_get_ifconfig_netmask
+F_get_ifconfig_netmask:
 	call F_regpage
 	ld hl, SUBR0
 	jr J_copy_cfg
 	
-F_regpage
+.globl F_regpage
+F_regpage:
 	ld a, (v_pga)		; copy original page A value
 	ld (v_buf_pga), a
 	ld a, REGPAGE
@@ -81,7 +91,8 @@ F_regpage
 ; Configures the W5100 hardware (MAC) address.
 ; Parameters: HL - pointer to a 6 byte buffer containing the hardware addr.
 ; Returns with carry set if the readback fails to give the same result.
-F_sethwaddr
+.globl F_sethwaddr
+F_sethwaddr:
 	call F_regpage
 	push hl		; preserve buffer pointer
 	ld de, SHAR0	; hardware address register
@@ -91,15 +102,15 @@ F_sethwaddr
 	pop hl
 	ld de, SHAR0	; readback
 	ld bc, 6	; check 6 bytes
-.readback
+.readback8:
 	ld a, (de)
 	cpi
-	jr nz, .readbackerr
+	jr nz, .readbackerr8
 	inc de
-	jp pe, .readback ; keep going till BC=0
+	jp pe, .readback8 ; keep going till BC=0
 	or 0		; ensure carry is cleared
 	jp J_leavesockfn
-.readbackerr
+.readbackerr8:
 	scf
 	jp J_leavesockfn
 
@@ -107,7 +118,8 @@ F_sethwaddr
 ; F_gethwaddr
 ; Read the hardware address and fill a 6 byte buffer.
 ; Parameters: DE = pointer to buffer to fill.
-F_gethwaddr
+.globl F_gethwaddr
+F_gethwaddr:
 	call F_regpage
 	ld hl, SHAR0
 	ld bc, 6
@@ -118,7 +130,8 @@ F_gethwaddr
 ; F_deconfig
 ; Deconfigure the interface (reset the inet, gateway and netmask fields).
 ; Parameters: None.
-F_deconfig
+.globl F_deconfig
+F_deconfig:
 	call F_regpage
 	ld hl, GAR0
 	ld de, GAR1

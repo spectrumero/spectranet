@@ -19,9 +19,12 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"tnfs_defs.inc"
+.include	"tnfs_sysvars.inc"
+.include	"spectranet.inc"
+.include	"sysvars.inc"
 
 ; The TNFS mount and umount functions.
-
 ;-----------------------------------------------------------------------
 ; F_tnfs_mount: Mount a remote filesystem.
 ; Parameters: IX - pointer to 10 byte VFS mount structure:
@@ -34,7 +37,8 @@
 ;
 ; On success, returns the session number in HL. On error, returns the
 ; error number in HL and sets the carry flag.
-F_tnfs_mount
+.globl F_tnfs_mount
+F_tnfs_mount:
 	call F_fetchpage	; get our private RAM page
 	ret c			; which was allocated on startup.
 	ld (v_curmountpt), a	; save the mount point for later
@@ -44,12 +48,12 @@ F_tnfs_mount
 	ld d, (ix+1)
 	ld hl, STR_tnfstype
 	ld bc, 5
-.cploop
+.cploop1:
         ld a, (de)              ; Effectively this is a "strncmp" to check
         cpi                     ; that the passed protocol is "tnfs" plus
-        jp nz, .notourfs        ; a null.
+        jp nz, .notourfs1        ; a null.
         inc de
-        jp pe, .cploop
+        jp pe, .cploop1
 
 	; It is now certain that the requested FS is TNFS.
 	ld de, buf_tnfs_wkspc	; Look up the host
@@ -71,7 +75,7 @@ F_tnfs_mount
 	ld de, 0		; no session id yet
 	xor a			; cmd is 0x00
 	call F_tnfs_header	; create the header, HL now at the next byte
-	ld (hl), 0		; version 1.0, little endian
+	ld (hl), 0		; version 1.01, little endian
 	inc hl
 	ld (hl), 1		; msb of protocol version
 	inc hl
@@ -96,18 +100,18 @@ F_tnfs_mount
 	ld b, h			; move into bc
 	ld c, l
 	call F_tnfs_message	; send msg/get response
-	jr c, .mounterr		; clean up on error
+	jr c, .mounterr1		; clean up on error
 
 	; decode the result - first, check for error conditions
 	ld a, (tnfs_recv_buffer + tnfs_err_offset)
 	and a			; zero = no error
-	jr nz, .mounterr	; clean up on error
+	jr nz, .mounterr1	; clean up on error
 
 	ld hl, (tnfs_recv_buffer + tnfs_sid_offset)
 	ld d, v_tnfs_sid0 / 256	; start with the lowest SID storage offset
 	ld a, (v_curmountpt)	; get the intended mount point number
 	rlca			; multiply by two
-	add v_tnfs_sid0 % 256	; calculate the offset
+	add a, v_tnfs_sid0 % 256	; calculate the offset
 	ld e, a			; DE = storage for the session id
 	ex de, hl
 	ld (hl), e		; save the session identifier
@@ -115,7 +119,7 @@ F_tnfs_mount
 	ld (hl), d
 
 	ld a, (v_curmountpt)	; now calculate the address of the CWD
-	add v_cwd0 / 256	; storage area (A=MSB)
+	add a, v_cwd0 / 256	; storage area (A=MSB)
 	ld h, a			; and point HL there
 	ld l, 0
 	ld (hl), '/'
@@ -124,7 +128,7 @@ F_tnfs_mount
 
 	; set up mount point in VFS mount table
 	ld a, (v_curmountpt)	; get the mount point
-	add VFSVECBASE % 256	; find it in the sysvars
+	add a, VFSVECBASE % 256	; find it in the sysvars
 	ld l, a
 	ld h, 0x3F		; point HL at the address in sysvars
 	ld a, (v_pgb)		; Fetch our ROM number
@@ -132,19 +136,20 @@ F_tnfs_mount
 	or 1			; reset Z and C flags - mounted OK.
 	jp F_leave
 
-.mounterr
+.mounterr1:
 	call F_tnfs_checkclose	; close the socket if necessary
 	scf			; set the carry flag
 	jp F_leave
-.notourfs
+.notourfs1:
 	xor a			; signal 'not our filesystem' by setting
 	jp F_leave		; the zero flag.
-STR_tnfstype defb "tnfs",0
+STR_tnfstype: defb "tnfs",0
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_umount
 ; Unmounts the TNFS filesystem and closes the socket.
-F_tnfs_umount
+.globl F_tnfs_umount
+F_tnfs_umount:
 	call F_fetchpage
 	ret c
 	ld (v_curmountpt), a
@@ -156,11 +161,11 @@ F_tnfs_umount
 	ret c				; communications error
 	ld a, (tnfs_recv_buffer+tnfs_err_offset)
 	and a				; no error?
-	jr nz, .error
+	jr nz, .error2
 
 	ld a, (v_curmountpt)
 	rlca				; calculate the SID address
-	add v_tnfs_sid0 % 256
+	add a, v_tnfs_sid0 % 256
 	ld h, v_tnfs_sid0 / 256		; hl points at the sid
 	ld l, a
 	ld (hl), 0			; clear down the sid
@@ -172,6 +177,6 @@ F_tnfs_umount
 
 	call F_tnfs_checkclose		; close the socket if necessary
 	jp F_leave
-.error
+.error2:
 	scf				; flag the error condition
 	jp F_leave

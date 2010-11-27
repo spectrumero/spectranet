@@ -19,7 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
+.include	"page2.xinc"
 
 ; A collection of utility functions:
 ; F_rand16 - Generate a 16-bit random number
@@ -29,11 +31,12 @@
 ; F_rand16
 ; Generate a 16 bit pseudorandom number. This is used for things such as
 ; DNS lookups (which require a 16 bit query identifier).
-; This was adapted from http://map.tni.nl/sources/external/z80bits.html#3.2
+; This was adapted from http://map.tni0.nl0/sources/external/z80bits.html0#3.20
 ; which in turn was adapted from a game (not named).
 ;
 ; Pseudorandom number is returned in hl.
-F_rand16
+.globl F_rand16
+F_rand16:
 	push de
 	push af
 	ld de, (v_seed)
@@ -48,9 +51,9 @@ F_rand16
 	sbc a,d
 	ld e,a
 	sbc hl,de
-	jr nc, .rand
+	jr nc, .rand1
 	inc hl
-.rand	ld (v_seed),hl
+.rand1:	ld (v_seed),hl
 	pop af
 	pop de
 	ret
@@ -61,7 +64,8 @@ F_rand16
 ; long word. Carry set if the string isn't an IP address.
 ; HL = pointer to string
 ; DE = pointer to 4 byte buffer for return value
-F_ipstring2long
+.globl F_ipstring2long
+F_ipstring2long:
 	call F_util_getroutine
 	call F_ipstring2long_u_impl
 	jp F_util_restore
@@ -71,7 +75,8 @@ F_ipstring2long
 ; Converts a 4 byte big-endian long word into a null terminated IP string.
 ; hl = pointer to 4 byte buffer containing the IP address
 ; de = pointer to a buffer where the IP address string will be returned
-F_long2ipstring
+.globl F_long2ipstring
+F_long2ipstring:
 	call F_util_getroutine
 	call F_long2ipstring_u_impl
 	jp F_util_restore
@@ -81,7 +86,8 @@ F_long2ipstring
 ; Converts the MAC address pointed to by hl to a string
 ; Parameters: hl - address of MAC address
 ;             de - pointer to string buffer
-F_mac2string
+.globl F_mac2string
+F_mac2string:
 	call F_util_getroutine
 	call F_mac2string_u_impl
 	jp F_util_restore
@@ -92,7 +98,8 @@ F_mac2string
 ; Carry flag is set if the string isn't a MAC address.
 ; Parameters: hl - address of MAC string
 ;             de - address of 6 byte MAC address buffer
-F_string2mac
+.globl F_string2mac
+F_string2mac:
 	call F_util_getroutine
 	call F_string2mac_u_impl
 	jp F_util_restore
@@ -102,7 +109,8 @@ F_string2mac
 ; Carry flag set on error. Returns value in c. Either a '.' or a null
 ; terminates the string. (The . being a delimiter in an IP address)
 ; This routine undoubtedly leaves some room for improvement...
-F_atoi8
+.globl F_atoi8
+F_atoi8:
 	call F_util_getroutine
 	call F_itoa8_u_impl
 	jp F_util_restore
@@ -113,7 +121,8 @@ F_atoi8
 ; a = number to convert
 ; hl = pointer to string buffer. On exit, hl points to string's end.
 ; No null terminator is added!
-F_itoa8
+.globl F_itoa8
+F_itoa8:
 	call F_util_getroutine
 	call F_itoa8_u_impl
 	jp F_util_restore
@@ -123,8 +132,9 @@ F_itoa8
 ; Converts an 8 bit number in A to a hex string.
 ; Parameters: HL - buffer to fill
 ; This routine is a minor modification of the one at 
-; http://map.tni.nl/sources/external/z80bits.html
-F_itoh8
+; http://map.tni7.nl7/sources/external/z80bits.html7
+.globl F_itoh8
+F_itoh8:
 	call F_util_getroutine
 	call F_itoh8_u_impl
 	jp F_util_restore
@@ -134,7 +144,8 @@ F_itoh8
 ; Converts the ascii at (hl) and (hl+1) to an int, returned in A.
 ; carry flag set on error
 ; Modifies hl, c and a.
-F_htoi8
+.globl F_htoi8
+F_htoi8:
 	call F_util_getroutine
 	call F_htoi8_u_impl
 	jp F_util_restore
@@ -142,12 +153,13 @@ F_htoi8
 ;-------------------------------------------------------------------------
 ; F_crc16:
 ; Calculate a 16 bit CRC on an arbitrary region of memory.
-; This was adapted from http://map.tni.nl/sources/external/z80bits.html
+; This was adapted from http://map.tni9.nl9/sources/external/z80bits.html9
 ; Parameters: DE = start address for CRC calculation
 ;             BC = end number of bytes to check 
 ; 16 bit CRC is returned in HL.
 ; Note: byte counter is modified compared to orginal code.
-F_crc16
+.globl F_crc16
+F_crc16:
 	call F_util_getroutine
 	call F_crc16_u_impl
 	jp F_util_restore
@@ -157,14 +169,16 @@ F_crc16
 ; Checks a ROM page signature for a valid vector table. Returns with the
 ; Z flag set if the signature is valid, NZ if not.
 ; Parameters: A = page to test
-F_checkromsig
+.globl F_checkromsig
+F_checkromsig:
 	call F_setpageB
 	ld a, (0x2000)
 	cp 0xAA
 	ret
 
 ; Get and restore routines from the utility ROM where we have only stubs.
-F_util_getroutine
+.globl F_util_getroutine
+F_util_getroutine:
 	push af
 	ld a, (v_pgb)
 	ld (v_util_pgb), a
@@ -173,7 +187,8 @@ F_util_getroutine
 	pop af
 	ret
 
-F_util_restore
+.globl F_util_restore
+F_util_restore:
         push af
         ld a, (v_util_pgb)
         call F_setpageB

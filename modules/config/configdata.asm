@@ -19,58 +19,77 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"configdefs.inc"
+.include	"sysvars.inc"
+.include	"spectranet.inc"
+.text
 
 ; Find, read and insert configuration data.
-;	include "debug.asm"
+;	include "debug.asm"A
+;-----------------------------------------------------------------------
+; F_cond_copyconfig: Conditionally copy the configuration (if it's not
+; been copied already)
+.globl F_cond_copyconfig
+F_cond_copyconfig:
+        call F_getsysvar        ; see if we've already copied it
+        inc hl
+        ld a, 1
+        cp (hl)                 ; if Z we've already made a copy
+        ret z
+        ld (hl), 1              ; Indicate a copy has been made.
+	jp F_copyconfig
+
 ;-----------------------------------------------------------------------
 ; F_findsection: Finds where in memory a configuration section lives
 ; and returns the address in HL.
 ; Section ID to find is in DE.
 ; Carry is set if the section was not found.
-F_findsection
+.globl F_findsection
+F_findsection: 
 	call F_mappage
 	call F_findsection_core
 	jp F_leave
 
-F_findsection_core
+.globl F_findsection_core
+F_findsection_core: 
 	ld hl, CONFIG_BASE_ADDR		; Start here.
 	ld a, (hl)
 	inc hl
 	or (hl)				; check that there's actually data
-	jr z, .notfound			; no configuration data at all
+	jr z,  .notfound2			; no configuration data at all
 
-.findloop	
+.findloop2: 
 	inc hl				; point to first section
 	ld a, (hl)			; compare against DE
 	inc hl
 	cp e
-	jr nz, .findnext
+	jr nz,  .findnext2
 	ld a, (hl)
 	cp d
-	jr nz, .findnext
+	jr nz,  .findnext2
 	inc hl				; HL points at the section size
 	ld (v_configptr), hl		; save the pointer
 	ret
 
-.findnext
+.findnext2: 
 	cp 0xFF				; Check we've not hit the end.
-	jr z, .checkend
-.findnext1
+	jr z,  .checkend2
+.findnext12: 
 	inc hl
 	ld c, (hl)			; LSB of the section size word
 	inc hl
 	ld b, (hl)			; MSB
 	add hl, bc			; point HL at the next entry
-	jr .findloop
-.checkend
+	jr  .findloop2
+.checkend2: 
 	dec hl
 	ld a, (hl)
 	cp 0xFF
-	jr z, .notfound
+	jr z,  .notfound2
 	inc hl				; undo the DEC operation
-	jr .findnext1
+	jr  .findnext12
 
-.notfound
+.notfound2: 
 	scf
 	ret
 
@@ -78,7 +97,8 @@ F_findsection_core
 ; F_createsection: Creates a new empty section.
 ; DE = id of section to create
 ; Carry is set if the section can't be created.
-F_createsection
+.globl F_createsection
+F_createsection: 
 	call F_mappage
 	push de
 	call F_findsection_core		; does the section already exist?
@@ -112,7 +132,8 @@ F_createsection
 ;-------------------------------------------------------------------------
 ; F_createnewconfig
 ; Creates a brand new empty config area.
-F_createnewconfig
+.globl F_createnewconfig
+F_createnewconfig: 
 	call F_mappage
 
 	xor a
@@ -128,7 +149,8 @@ F_createnewconfig
 ; F_getcfgstring: Get an item that is a string.
 ; A = id of item to get.
 ; DE = where to place the result
-F_getCFString
+.globl F_getCFString
+F_getCFString: 
 	ex af, af'		; get arg
 	call F_mappage
 
@@ -137,19 +159,20 @@ F_getCFString
 	pop de
 	jp c, F_leave	
 	inc hl
-.cpstring
+.cpstring5: 
 	ldi
 	ld a, (hl)
 	and a
-	jr nz, .cpstring
-.addnull
+	jr nz,  .cpstring5
+.addnull5: 
 	ld (de), a		; put the NULL on the end
 	jp F_leave
 
 ;-------------------------------------------------------------------------
 ; F_getCFWord: Get a 2 byte configuration item into HL
 ; A = id of the item.
-F_getCFWord
+.globl F_getCFWord
+F_getCFWord: 
 	ex af, af'		; get arg
 	call F_mappage
 
@@ -165,7 +188,8 @@ F_getCFWord
 ;-------------------------------------------------------------------------
 ; F_getCFByte: Get a 1 byte configuration item into A
 ; A = id of the item
-F_getCFByte
+.globl F_getCFByte
+F_getCFByte: 
 	ex af, af'		; get arg
 	call F_mappage
 
@@ -179,11 +203,12 @@ F_getCFByte
 ; F_addCFByte: Add 1 byte configuration item.
 ; A = id of the item
 ; C = value to add
-F_addCFByte
+.globl F_addCFByte
+F_addCFByte: 
 	push af
 	and 0xC0
 	cp 0x80			; check that this is a valid byte id
-	jr nz, .error
+	jr nz,  .error8
 	push bc
 	ld hl, (v_configptr)	; set HL to where room is to be made
 	inc hl
@@ -193,14 +218,14 @@ F_addCFByte
 	call F_makeroom
 	pop hl
 	pop bc
-	jr c, .error
+	jr c,  .error8
 	pop af
 	ld (hl), a		; id of the item
 	inc hl
 	ld (hl), c		; value of the item
 	jp F_leave
 
-.error
+.error8: 
 	pop af
 	scf
 	jp F_leave
@@ -209,11 +234,12 @@ F_addCFByte
 ; F_addCFWord: Add 2 byte configuration item.
 ; A = id of the item
 ; BC = value to add
-F_addCFWord
+.globl F_addCFWord
+F_addCFWord: 
 	push af
 	and 0xC0
 	cp 0xC0			; check that this is a valid word id
-	jr nz, .error
+	jr nz,  .error9
 	push bc
 	ld hl, (v_configptr)	; set HL to where room is to be made
 	inc hl
@@ -223,7 +249,7 @@ F_addCFWord
 	call F_makeroom
 	pop hl
 	pop bc
-	jr c, .error
+	jr c,  .error9
 	pop af
 	ld (hl), a		; id of the item
 	inc hl
@@ -232,7 +258,7 @@ F_addCFWord
 	ld (hl), b
 	jp F_leave
 
-.error
+.error9: 
 	pop af
 	scf
 	jp F_leave
@@ -240,18 +266,20 @@ F_addCFWord
 ;-------------------------------------------------------------------------
 ; F_addCFString: Adds a string value. Null terminated string should be
 ; pointed to by DE, with its ID in A
-F_addCFString
+.globl F_addCFString
+F_addCFString: 
 	ex af, af'		; get arg
 	call F_mappage
 	call F_addCFString_core
 	jp F_leave
 
-F_addCFString_core
+.globl F_addCFString_core
+F_addCFString_core: 
 	push de
 	push af
 	and 0xC0
 	and a			; check that this is a valid string id
-	jr nz, .error
+	jr nz,  .error11
 
 	ex de, hl
 	ld bc, 0xFF
@@ -268,7 +296,7 @@ F_addCFString_core
 	call F_makeroom
 	pop hl			; get address of 1st byte of new space
 	pop bc
-	jr c, .error
+	jr c,  .error11
 	pop af
 	ld (hl), a
 	inc hl
@@ -277,7 +305,7 @@ F_addCFString_core
 	
 	ldir			; copy the string
 	ret
-.error
+.error11: 
 	pop af
 	pop de
 	ret
@@ -286,7 +314,8 @@ F_addCFString_core
 ; F_setCFString
 ; Config strings can be variable length so we delete it first and recreate
 ; it.
-F_setCFString
+.globl F_setCFString
+F_setCFString: 
 	ex af, af'
 	call F_mappage
 	push af
@@ -301,21 +330,22 @@ F_setCFString
 ; F_setCFWord
 ; Set or change a word value.
 ; A = byte ID, BC = new value
-F_setCFWord
+.globl F_setCFWord
+F_setCFWord: 
 	ex af, af'
 	call F_mappage
 	push af
 	push bc
 	call F_findcfgitem
 	pop bc
-	jp c, .add			; not found, add it
+	jp c,  .add13			; not found, add it
 	pop af
 	inc hl				; point at word's LSB
 	ld (hl), c
 	inc hl
 	ld (hl), b
 	jp F_leave
-.add
+.add13: 
 	pop af
 	jp F_addCFWord
 
@@ -323,19 +353,20 @@ F_setCFWord
 ; F_setCFByte
 ; Change a byte value.
 ; A = byte ID, C = new value
-F_setCFByte
+.globl F_setCFByte
+F_setCFByte: 
 	ex af, af'
 	call F_mappage
 	push af
 	push bc
 	call F_findcfgitem		; get the address of the byte 
 	pop bc
-	jr c, .add			; Not found, add it
+	jr c,  .add14			; Not found, add it
 	pop af
 	inc hl				; point at value
 	ld (hl), c
 	jp F_leave
-.add
+.add14: 
 	pop af
 	jp F_addCFByte
 
@@ -345,71 +376,74 @@ F_setCFByte
 ; Finds a configuration item with the supplied ID.
 ; Returns with HL set to the address of the item on success. Carry set
 ; on error.
-F_findcfgitem
+.globl F_findcfgitem
+F_findcfgitem: 
 	ld hl, (v_configptr)
 	ld c, (hl)			; LSB of section size
 	inc hl
 	ld b, (hl)			; MSB of section size
 	inc hl
 
-.findloop
+.findloop15: 
 	ld e, a				; save A
 	ld a, b
 	or c				; check that the section is not done
-	jr z, .notfound
+	jr z,  .notfound15
 	ld a, e				; restore A
 	cp (hl)				; Is this the section we're after?
 	ret z				; Found - return.
 
 	bit 7, (hl)			; String value?
-	jr z, .skipstring
+	jr z,  .skipstring15
 
 	bit 6, (hl)			; Word or byte?
 	inc hl
 	dec bc
 	inc hl
 	dec bc
-	jr z, .findloop			; byte is skipped at this stage
+	jr z,  .findloop15			; byte is skipped at this stage
 	inc hl
 	dec bc
-	jr .findloop			; word is skipped at this stage
-.skipstring
+	jr  .findloop15			; word is skipped at this stage
+.skipstring15: 
 	ld e, a				; save A
 	inc hl
 	dec bc
 	xor a				; find the next NULL terminator
 	cpir
 	ld a, e
-	jr .findloop
+	jr  .findloop15
 
-.notfound
+.notfound15: 
 	scf
 	ret
 
 ;-------------------------------------------------------------------------
 ; F_rmcfgitem
 ; A = config item to remove
-F_rmcfgitem
+.globl F_rmcfgitem
+F_rmcfgitem: 
 	ex af, af'			; retrieve arg in A
 	call F_mappage
 	call F_rmcfgitem_core
 	jp F_leave
 
-F_rmcfgitem_core
+.globl F_rmcfgitem_core
+F_rmcfgitem_core: 
 	call F_findcfgitem
 	ret c				; Not found
 	bit 7, (hl)			; String value?
-	jr z, .rmstring
+	jr z,  .rmstring17
 	bit 6, (hl)			; Word or byte?
-	jr z, .compact2
+	jr z,  .compact217
 	ld bc, 3
 	call F_compact
 	ret
-.compact2
+.compact217: 
 	ld bc, 2
 	call F_compact
 	ret
-.rmstring
+.rmstring17: 
 	push hl				; find the length of the
 	ld bc, 0xFF			; string.
 	xor a
@@ -425,7 +459,8 @@ F_rmcfgitem_core
 ; F_compact
 ; Compact the configuration area by BC bytes, deleting the item (that's BC
 ; bytes long) at HL.
-F_compact
+.globl F_compact
+F_compact: 
 	ex de, hl
 	ld ix, (v_configptr)
 	ld l, (ix+0)
@@ -461,7 +496,8 @@ F_compact
 ; F_makeroom
 ; Makes some space for a new configuration item.
 ; BC = how much to make
-F_makeroom
+.globl F_makeroom
+F_makeroom: 
 	; update sizes
 	ld hl, (v_totalcfgsz)
 	ld (v_hlsave), hl		; save it for later
@@ -502,7 +538,8 @@ F_makeroom
 	ret
 
 	; returns with C set if the size is too great.
-F_checkcfgsize
+.globl F_checkcfgsize
+F_checkcfgsize: 
 	ld a, MAXCFGSZ/256
 	cp h
 	ret c
@@ -514,7 +551,8 @@ F_checkcfgsize
 ;------------------------------------------------------------------------
 ; F_abandonConfig: Abandon the RAM copy of the configuration (mark it
 ; uncopied, so further accesses to config go to flash)
-F_abandonConfig
+.globl F_abandonConfig
+F_abandonConfig: 
 	call F_getsysvar
 	inc hl
 	ld (hl), 0		; reset "RAM copy" flag
@@ -522,12 +560,13 @@ F_abandonConfig
 
 ;------------------------------------------------------------------------
 ; F_commitConfig: Commits the configuration in RAM to flash.
-F_commitConfig
+.globl F_commitConfig
+F_commitConfig: 
 	call F_getsysvar	; make sure that a RAM copy has been made
 	inc hl
 	ld a, 1
 	cp (hl)
-	jr nz, .notpaged
+	jr nz,  .notpaged22
 	ld (hl), 0		; clear down "RAM copy" flag
 
 	; copy the flash programmer
@@ -541,7 +580,7 @@ F_commitConfig
 
 	ret
 
-.notpaged			; do not write flash if it hasn't already
+.notpaged22: 		; do not write flash if it hasn't already
 	scf			; been copied to RAM.
 	ret
 
@@ -549,7 +588,8 @@ F_commitConfig
 ; F_mappage
 ; Maps the page. If we've copied the configuration, RAM should be mapped,
 ; if not, flash.
-F_mappage
+.globl F_mappage
+F_mappage: 
 	push af
 	push hl
 	call F_getsysvar
@@ -558,7 +598,7 @@ F_mappage
 	inc hl
 	ld a, (hl)		; has a shadow copy been made?
 	cp 1			; 1 = yes
-	jr nz, .getflash
+	jr nz,  .getflash23
 
 	ld a, CFG_RAM_PAGE	; set page A to the flash config
 	call SETPAGEA
@@ -567,14 +607,15 @@ F_mappage
 	pop af
 	ret
 
-.getflash
+.getflash23: 
 	ld a, CFG_FLASH_PAGE
 	call SETPAGEA
 	pop hl
 	pop af
 	ret
 
-F_getsysvar
+.globl F_getsysvar
+F_getsysvar: 
 	ld a, (v_pgb)		; what's our page?
 	rlca
 	rlca
@@ -583,7 +624,8 @@ F_getsysvar
 	ld l, a
 	ret			; hl points at private area
 
-F_leave	
+.globl F_leave
+F_leave: 
 	push af
 	push hl
 	call F_getsysvar

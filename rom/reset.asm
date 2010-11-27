@@ -19,13 +19,20 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
+.include	"spectranet.inc"
+.include	"w5100_defs.inc"
+.include	"flashconf.inc"
+.include	"ctrlchars.inc"
+.include	"page3.xinc"
 
 ; Locations in the data rom that need to be copied.
 ; The jump table lives in the first 256 bytes of ROM3
-JUMPTABLE_COPYFROM 	equ 0x1F00
-JUMPTABLE_SIZE		equ 0xF8
-UPPER_ENTRYPT		equ 0x1FF8
-UPPER_ENTRYPT_SIZE	equ 0x08
+JUMPTABLE_COPYFROM: 	equ 0x1F00
+JUMPTABLE_SIZE:		equ 0xF8
+UPPER_ENTRYPT:		equ 0x1FF8
+UPPER_ENTRYPT_SIZE:	equ 0x08
 
 ; Initialization routines that are run on reset.
 ;
@@ -34,16 +41,18 @@ UPPER_ENTRYPT_SIZE	equ 0x08
 ; (page 0x20, chip 0). From this we can figure out what we're supposed
 ; to do next.
 ;
-J_reset
+.text
+.globl J_reset
+J_reset:
 	; a delay loop to allow the rubber key machine's very slow reset
 	; circuit to become quiescent.
 	ld bc, 0xFFFF
-.delay	
+.delay0:	
 	ld (ix+7), a		; a nice long instruction
 	dec bc
 	ld a, b
 	or c
-	jr nz, .delay
+	jr nz, .delay0
 	
 	; Clear upper page.
 	ld sp, NMISTACK		; use our own memory for the stack
@@ -135,7 +144,7 @@ J_reset
 	ld sp, 32767		; lowest guaranteed stack addr
 	ld hl, 0		; We're done so put 0x0000 
 	push hl			; on the stack
-	jp UNPAGE		; unpage (a ret instruction)
+	jp PAGEOUT		; unpage (a ret instruction)
 
 ;------------------------------------------------------------------------
 ; F_initroms
@@ -145,25 +154,26 @@ J_reset
 ; Note this is how the W5100 actually gets configured - for the 
 ; Spectranet to work at all, the Spectranet utility ROM must occupy some
 ; page somewhere in the flash chip and get initialized.
-F_initroms
+.globl F_initroms
+F_initroms:
 	ld b, 1		; start from page 2 (page 0=fixed, page 1=data)
 	ld hl, vectors	; pointer to the valid vector table
-.initloop
+.initloop1:
 	inc b
 	ld a, 0x1F
 	cp b		; last ROM?
 	ret z		; finished
 	ld a, b
 	call F_checkromsig	; Z = valid signature found for executable
-	jr z, .rominit		; Valid sig found
+	jr z, .rominit1		; Valid sig found
 	cp 0xFF			; empty slot
-	jr z, .skip
+	jr z, .skip1
 	ld (hl), 0xFF		; "occupied but not executable"
-.skip
+.skip1:
 	inc hl
-	jr .initloop
+	jr .initloop1
 
-.rominit	
+.rominit1:	
 	; Put an entry in the vector table to indicate the ROM page has
 	; a valid vector table.
 	ld a, (0x2001)		; fetch the ROM ID
@@ -174,20 +184,21 @@ F_initroms
 	ld hl, (ROM_INIT_VECTOR) ; get initialization vector from ROM
 	ld a, 0xFF
 	cp h			; does the vector point somewhere useful?
-	jr z, .returnaddr	; no - skip calling it
-	ld de, .returnaddr	; get return address
+	jr z, .returnaddr1	; no - skip calling it
+	ld de, .returnaddr1	; get return address
 	push de			; stack it to simulate CALL
 	jp (hl)			; and call it
-.returnaddr	
+.returnaddr1:	
 	pop bc
 	pop hl
-	jr .initloop
+	jr .initloop1
 
 ;-------------------------------------------------------------------------
 ; F_initfs
 ; Initializes filesystems.
 ; TODO: Initialize multiple filesystems.
-F_initfs
+.globl F_initfs
+F_initfs:
 	ld a, CONFIGPAGE	; config page
 	call F_setpageA
 	ld a, (0x1000+DEF_FS_PROTO0)
@@ -204,9 +215,9 @@ F_initfs
 	ld ix, FSTAB
 	ld a, 0
 	call F_mount
-	jr c, .error
+	jr c, .error2
 	ret
-.error
+.error2:
 	ld hl, 0x3000
 	call F_itoh8
 	ld hl, 0x3000
@@ -216,7 +227,8 @@ F_initfs
 ;-------------------------------------------------------------------------
 ; F_w5100init
 ; Initialize the W5100 - MAC address and hardware registers.
-F_w5100init
+.globl F_w5100init
+F_w5100init:
 	; Set up memory pages to configure the hardware
 	ld a, REGPAGE		; registers are in page 0 of the W5100
 	call F_setpageA		; page it into area A
@@ -239,17 +251,16 @@ F_w5100init
 	ld a, %11101111		; set the IMR
 	ld (IMR), a
 	ret
-
-STR_bootmsg
+.data
+STR_bootmsg:
 	defb "Alioth Spectranet ",0
-	include "ver.asm"	; include the build number file
-STR_mounting
-	defb "FS mount\n",0
-FSTAB
+	include "ver.xinc"	; include the build number file
+STR_mounting:
+	defb "FS mount",NEWLINE,0
+FSTAB:
 	defw 0x3001		; TODO - proper filesystem things
 	defw 0x3007
 	defw 0x3030
 	defw 0x3060
 	defw 0x3070
-MOUNT	equ  0x3EA8
 

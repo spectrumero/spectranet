@@ -21,31 +21,55 @@
 ;THE SOFTWARE.
 ;
 ; ROM configuration utility - strings
+.include	"ctrlchars.inc"
+.data
+.globl STR_installed
+.globl STR_datarom
+STR_installed:	defb "Current configuration",NEWLINE,"=====================",NEWLINE,NEWLINE,0
+STR_datarom:	defb "-- data --",NEWLINE,0
 
-STR_installed	defb "Current configuration\n=====================\n\n",0
-STR_datarom	defb "-- data --\n",0
+.globl STR_menutitle
+.globl STR_addmodule
+.globl STR_remmodule
+.globl STR_repmodule
+.globl STR_exit
+STR_menutitle:	defb NEWLINE,NEWLINE,"ROM configuration menu",NEWLINE,"======================",NEWLINE,NEWLINE,0
+STR_addmodule:	defb "Add a new ROM module",0
+STR_repmodule:	defb "Replace an existing module",0
+STR_remmodule:	defb "Remove a ROM module",0
+STR_exit:	defb "Exit",0
 
-STR_menutitle	defb "\n\nROM configuration menu\n======================\n\n",0
-STR_addmodule	defb "Add a new ROM module",0
-STR_repmodule	defb "Replace an existing module",0
-STR_remmodule	defb "Remove a ROM module",0
-STR_exit	defb "Exit",0
+.globl STR_send
+.globl STR_port
+.globl STR_xtoexit
+.globl STR_borked
+.globl STR_est
+.globl STR_len
+.globl STR_noroom
+.globl STR_writingmod
+STR_send:	defb "Listening on ",0
+STR_port:	defb " port 2000",NEWLINE,0
+STR_xtoexit:	defb NEWLINE,"Press 'x' to exit.",NEWLINE,0
+STR_borked:	defb NEWLINE,"Operation failed with rc=",0
+STR_est:		defb "Connection established",NEWLINE,0
+STR_len:		defb "Length: ",0
+STR_noroom:	defb "No space left in flash.",NEWLINE,0
+STR_writingmod:	defb NEWLINE,"Writing module to flash page ",0
 
-STR_send	defb "Listening on ",0
-STR_port	defb " port 2000\n",0
-STR_xtoexit	defb "\nPress 'x' to exit.\n",0
-STR_borked	defb "\nOperation failed with rc=",0
-STR_est		defb "Connection established\n",0
-STR_len		defb "Length: ",0
-STR_noroom	defb "No space left in flash.\n",0
-STR_writingmod	defb "\nWriting module to flash page ",0
-
-STR_entermod	defb "Enter hex number of ROM to replace: ",0
-STR_delrom	defb "Enter hex number of ROM to delete:",0
-STR_notvalid	defb "\nNot a valid ROM number.\nPlese re-enter: ",0
-STR_erasebork	defb "Erase failed\n",0
-STR_writebork	defb "Write failed\n",0
-STR_defragment	defb "Defragmenting...\n",0
-STR_erasing	defb "\nErasing...\n",0
-STR_eraseok	defb "Erase complete\n",0
+.globl STR_entermod
+.globl STR_delrom
+.globl STR_notvalid
+.globl STR_erasebork
+.globl STR_writebork
+.globl STR_defragment
+.globl STR_erasing
+.globl STR_eraseok
+STR_entermod:	defb "Enter hex number of ROM to replace: ",0
+STR_delrom:	defb "Enter hex number of ROM to delete:",0
+STR_notvalid:	defb NEWLINE,"Not a valid ROM number.",NEWLINE,"Plese re-enter: ",0
+STR_erasebork:	defb "Erase failed",NEWLINE,0
+STR_writebork:	defb "Write failed",NEWLINE,0
+STR_defragment:	defb "Defragmenting...",NEWLINE,0
+STR_erasing:	defb NEWLINE,"Erasing...",NEWLINE,0
+STR_eraseok:	defb "Erase complete",NEWLINE,0
 	

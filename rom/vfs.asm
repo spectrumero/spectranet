@@ -57,10 +57,15 @@
 ; For functions that are not implemented, an address to a short routine
 ; that sets the carry flag and makes A the appropriate return code should
 ; be provided.
-	include "moduledefs.asm"
+.include	"moduledefs.inc"
+.include	"sysvars.inc"
+.include	"sysdefs.inc"
+.include	"sockdefs.inc"
+
 ;----------------------------------------------------------------------------
 ; Dispatcher routines.
-F_fd_dispatch
+.globl F_fd_dispatch
+F_fd_dispatch:
 	ex (sp), hl		; fetch return address, saving HL
 	push de
 	ld d, 0x3F		; point DE at memory address containing
@@ -71,14 +76,15 @@ F_fd_dispatch
 	jr nz, J_notopen
 	ld de, FDVECBASE	; set base address of the descriptor table
 	jr F_dispatch
-J_notopen
+J_notopen:
 	pop de
 	pop hl
-	ld a, 0x06		; TODO: errno.asm - EBADF
+	ld a, 0x06		; TODO: errno.asm1 - EBADF
 	scf
 	ret
 
-F_vfs_dispatch
+.globl F_vfs_dispatch
+F_vfs_dispatch:
 	call F_cleanpath	; remove leading/trailing space
 	call F_resolvemp	; See if a mount point is specified
 	ex (sp), hl
@@ -90,15 +96,16 @@ F_vfs_dispatch
 	ld a, (de)
 	and a			; not mounted if the VFS ROM no. was 0
 	jr nz, F_dispatch_3
-.notmounted
+.notmounted2:
 	pop af			; fix the stack
 	pop de
 	pop hl
-	ld a, 0x23		; TODO: errno.asm
+	ld a, 0x23		; TODO: errno.asm2
 	scf
 	ret
 
-F_dir_dispatch
+.globl F_dir_dispatch
+F_dir_dispatch:
 	ex (sp), hl
 	push de
 	ld d, 0x3F		; point DE at the address containing
@@ -115,20 +122,25 @@ F_dir_dispatch
 ; F_dispatch
 ; Find the appropriate ROM page for the file (or whatever) descriptor,
 ; and fetch the jump address from the jump table within.
-F_dispatch_notfd
+.globl F_dispatch_notfd
+F_dispatch_notfd:
 	push af
 	jr F_dispatch_1
-F_dispatch
+.globl F_dispatch
+F_dispatch:
 	push af
 	sub FDBASE%256
-F_dispatch_1
+.globl F_dispatch_1
+F_dispatch_1:
 	add a, e		; Calculate the address in the fd table
-F_dispatch_2
+.globl F_dispatch_2
+F_dispatch_2:
 	ld e, a			; make DE point to it
 	ld a, (de)		; get the ROM to page
 	and a			; ROM 0 is handled specially
 	jr z, isasocket
-F_dispatch_3
+.globl F_dispatch_3
+F_dispatch_3:
 	ex af, af'		; save AF while copying the current page
 	ld a, (v_pgb)		; save current page
 	ld (v_vfspgb_vecsave), a
@@ -152,38 +164,38 @@ F_dispatch_3
 ; If someone access a socket via read/write rather than send/recv 
 ; it's handled here. There are only four functions that can be done to
 ; a socket via the VFS interface.
-isasocket
+isasocket:
 	ld a, 0xCC		; Check for READ. Note the LSB addresses
 	cp l			; are +3 on the actual (because CALL put
-	jr z, .sockread		; the return address, not the actual
+	jr z, .sockread8		; the return address, not the actual
 	ld a, 0xCF		; address on the stack!)
 	cp l
-	jr z, .sockwrite
+	jr z, .sockwrite8
 	ld a, 0xD8		; POLL
 	cp l
-	jr z, .sockpoll
+	jr z, .sockpoll8
 	ld a, 0xD5		; CLOSE
-	jr nz, .badcall
+	jr nz, .badcall8
 	pop af
 	pop de
 	pop hl
 	jp F_sockclose
-.sockread
+.sockread8:
 	pop af
 	pop de
 	pop hl
 	jp F_recv
-.sockwrite
+.sockwrite8:
 	pop af
 	pop de
 	pop hl
 	jp F_send
-.sockpoll
+.sockpoll8:
 	pop af
 	pop de
 	pop hl
 	jp F_pollfd
-.badcall
+.badcall8:
 	pop af
 	pop de
 	pop hl
@@ -206,15 +218,16 @@ isasocket
 ; - If the protocol is supported, mount the FS and return with Z and C reset
 ; - If the proto is supported, but the FS can't be mounted, return with C set
 ; - If the proto is not recognised, return with Z set
-F_mount
+.globl F_mount
+F_mount:
 	; First search for a ROM that handles this protocol.
 	ld (v_mountnumber), a	; save device number
 	ld hl, vectors
-.findrom
+.findrom9:
 	ld a, (hl)		; get ROM ID
 	and a			; check for the terminator
-	jr z, .notfound		; no ROM found that handles this protocol
-.testproto
+	jr z, .notfound9		; no ROM found that handles this protocol
+.testproto9:
 	push hl			; save current vector table address
 	ld a, l
 	sub ROMVECOFFS		; subtract the base addr to get the ROM slot
@@ -224,38 +237,38 @@ F_mount
 	ld a, h			; H must be 0x20-0x2F for a valid MOUNT routine
 	and 0xF0		; mask out low nibble
 	cp 0x20			; result should be 0x20 for valid MOUNT
-	jr nz, .testnext
-	ld de, .return		; simulate CALL instruction with JP (HL)
+	jr nz, .testnext9
+	ld de, .return9		; simulate CALL instruction with JP (HL)
 	push de
 	ld a, (v_mountnumber)
 	jp (hl)
-.return
-	jr c, .mountfailed	; Tried but failed to mount?
-	jr z, .testnext		; Protocol is not ours?
+.return9:
+	jr c, .mountfailed9	; Tried but failed to mount?
+	jr z, .testnext9		; Protocol is not ours?
 	call F_poppageB		; restore original page B
 	ld a, (v_mountnumber)	; get device number
-	add VFSVECBASE%256	; and calculate the address in sysvars
+	add a, VFSVECBASE%256	; and calculate the address in sysvars
 	ld h, 0x3F		; MSB of the sysvars area
 	ld l, a			; LSB - HL now has the addr of the fs table
 	pop af			; restore ROM page number
 	ld (hl), a		; Put the ROM number in the filesystem table
 	pop hl			; restore the stack
 	ret
-.testnext
+.testnext9:
 	call F_poppageB		; restore stack
 	pop af			; ROM slot number
 	pop hl			; table pointer
 	inc l			; and point it to the next ROM list entry
-	jr .findrom
+	jr .findrom9
 
-.mountfailed
+.mountfailed9:
 	ex af, af'
 	call F_poppageB		; restore stack and page
 	pop af			; unwind stack	
 	pop hl			; restore HL
 	ex af, af'
 	ret
-.notfound
+.notfound9:
 	ld a, 0xFE		; TODO: proper return code here
 	scf
 	ret
@@ -263,8 +276,9 @@ F_mount
 ;--------------------------------------------------------------------------
 ; F_freemountpoint
 ; Frees a mount point, passed in A
-F_freemountpoint
-	add VFSVECBASE % 256	; calculate the address in sysvars
+.globl F_freemountpoint
+F_freemountpoint:
+	add a, VFSVECBASE % 256	; calculate the address in sysvars
 	ld h, 0x3F		; sysvars page
 	ld l, a
 	ld (hl), 0		; clear it down
@@ -273,7 +287,8 @@ F_freemountpoint
 ;--------------------------------------------------------------------------
 ; F_setmountpoint
 ; Sets the default mountpoint in use, passed in A
-F_setmountpoint
+.globl F_setmountpoint
+F_setmountpoint:
 	cp 4			; mount point must be <= 3
 	ccf			; flip the carry flag
 	ret c			; so if there's an error we return with C
@@ -287,7 +302,8 @@ F_setmountpoint
 ;             Flags in C
 ; C bit 0 = Set=Allocate, reset=free
 ; C bit 1 = Set=Directory, reset=File
-F_resalloc
+.globl F_resalloc
+F_resalloc:
 	bit 1, c
 	jr nz, F_allocdirhnd
 ;--------------------------------------------------------------------------
@@ -297,26 +313,27 @@ F_resalloc
 ; On return HL = address of fd. Functions that use this should set this
 ; to a value that means something (and bit 7 must be reset). L = actual
 ; fd number.
-F_allocfd
+.globl F_allocfd
+F_allocfd:
 	bit 0, c
 	jr z, F_freefd
 	push bc
 	ld hl, v_fd1hwsock	; lowest address in fd table
 	ld b, MAX_FDS
-.findloop
+.findloop13:
 	bit 7, (hl)		; not allocated yet?
-	jr nz, .alloc
+	jr nz, .alloc13
 	inc l
-	djnz .findloop		; keep looking until none left
+	djnz .findloop13		; keep looking until none left
 	scf			; out of free file descriptors
 	pop bc
 	ret
-.alloc
+.alloc13:
 	res 7, (hl)		; basic allocation
 	push hl			; save FD address and FD number
 	ld b, a			; save parameter
 	ld a, l
-	add VECOFFS		; find the address of the vector table
+	add a, VECOFFS		; find the address of the vector table
 	ld l, a			; and make HL point to it
 	ld a, b			; retrieve param
 	ld (hl), a		; set vector table page address
@@ -327,13 +344,14 @@ F_allocfd
 ;-------------------------------------------------------------------------
 ; F_freefd
 ; Frees the file descriptor passed in A.
-F_freefd
+.globl F_freefd
+F_freefd:
 	push hl
 	push af
 	ld h, v_fd1hwsock / 256
 	ld l, a
 	ld (hl), 0x80		; Set bit 7 to mark the fd as freed.
-	add VECOFFS		; add the vector table offset
+	add a, VECOFFS		; add the vector table offset
 	ld l, a			; and point HL to it
 	ld (hl), 0x00		; clear it down
 	pop af
@@ -345,23 +363,24 @@ F_freefd
 ; Allocates a directory handle.
 ; Parameters	A = ROM number for the handle
 ; On return HL = address of the handle, L is the handle itself
-F_allocdirhnd
+.globl F_allocdirhnd
+F_allocdirhnd:
 	bit 0, c
 	jr z, F_freedirhnd
 	push bc
 	ld hl, v_dhnd1page
 	ld b, MAX_DIRHNDS
 	ex af, af'
-.findloop
+.findloop15:
 	ld a, (hl)
 	and a			; 0 = free
-	jr z, .alloc
+	jr z, .alloc15
 	inc l
-	djnz .findloop
+	djnz .findloop15
 	scf			; all are used up
 	pop bc
 	ret
-.alloc
+.alloc15:
 	ex af, af'
 	ld (hl), a		; allocate it by setting the page number
 	pop bc
@@ -370,7 +389,8 @@ F_allocdirhnd
 ;-----------------------------------------------------------------------
 ; F_freedirhnd
 ; Frees the directory handle passed in A
-F_freedirhnd
+.globl F_freedirhnd
+F_freedirhnd:
 	push hl
 	ld h, v_dhnd1page / 256
 	ld l, a
@@ -385,24 +405,25 @@ F_freedirhnd
 ; is ^[0-3]: in regexp terms.
 ; HL = pointer to the string.
 ; Returns with A = mount point handle.
-F_resolvemp
+.globl F_resolvemp
+F_resolvemp:
 	push hl
 	inc hl			; check for the :
 	ld a, (hl)
 	cp ':'
-	jr nz, .returncurrent	; Return the current mount point.
+	jr nz, .returncurrent17	; Return the current mount point.
 	dec hl
 	ld a, (hl)		; Get the putative FS number
 	sub '0'			; Subtract ascii '0' to make the actual number
-	jr c, .returncurrent
+	jr c, .returncurrent17
 	cp 4			; Greater than 3?
-	jr nc, .returncurrent
+	jr nc, .returncurrent17
 	pop hl
 	inc hl			; effectively strip off the "n:"
 	inc hl
 	ret
 
-.returncurrent
+.returncurrent17:
 	pop hl
 	ld a, (v_vfs_curmount)
 	ret
@@ -410,20 +431,21 @@ F_resolvemp
 ;----------------------------------------------------------------------
 ; F_cleanpath
 ; Gets rid of leading/trailing white spaces
-F_cleanpath
+.globl F_cleanpath
+F_cleanpath:
 	push hl
 	ld bc, 256
 	xor a
 	cpir			; find the argument's end
 	dec hl			; end - 1
-.spaceloop
+.spaceloop18:
 	dec hl			
 	ld a, (hl)
 	cp ' '
-	jr nz, .done
+	jr nz, .done18
 	ld (hl), 0		; remove trailing white space
-	jr .spaceloop
-.done
+	jr .spaceloop18
+.done18:
 	pop hl
 	ret
 

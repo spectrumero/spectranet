@@ -21,21 +21,36 @@
 ;THE SOFTWARE.
 
 ; Strings (English)
-
-STR_filetype	defb	"File type: ",0
-STR_tap		defb	"TAP file",0
-STR_data	defb	"Data",0
-STR_basic	defb	"Program: ",0
-STR_numarray	defb	"Number array: ",0
-STR_strarray	defb	"String array: ",0
-STR_code	defb	"Bytes: ",0
-STR_unknown	defb	"Unknown: ",0
-STR_size	defb	"File size: ",0
-STR_blksize	defb	"Block size : ",0
-STR_param1	defb	"Paramater 1: ",0
-STR_param2	defb	"Parameter 2: ",0
-STR_directory	defb	"Directory: size ",0
-STR_bytes	defb	" bytes",0
-STR_headerless	defb	"Headerless block: ",0
+.data
+.globl STR_filetype
+.globl STR_tap
+.globl STR_data
+.globl STR_basic
+.globl STR_numarray
+.globl STR_strarray
+.globl STR_code
+.globl STR_unknown
+.globl STR_size
+.globl STR_blksize
+.globl STR_param1
+.globl STR_param2
+.globl STR_directory
+.globl STR_bytes
+.globl STR_headerless
+STR_filetype:	defb	"File type: ",0
+STR_tap:		defb	"TAP file",0
+STR_data:	defb	"Data",0
+STR_basic:	defb	"Program: ",0
+STR_numarray:	defb	"Number array: ",0
+STR_strarray:	defb	"String array: ",0
+STR_code:	defb	"Bytes: ",0
+STR_unknown:	defb	"Unknown: ",0
+STR_size:	defb	"File size: ",0
+STR_blksize:	defb	"Block size : ",0
+STR_param1:	defb	"Paramater 1: ",0
+STR_param2:	defb	"Parameter 2: ",0
+STR_directory:	defb	"Directory: size ",0
+STR_bytes:	defb	" bytes",0
+STR_headerless:	defb	"Headerless block: ",0
 
 

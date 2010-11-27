@@ -25,20 +25,17 @@
 ; This allows the configuration to be edited. (The next step is to erase
 ; the last 16k sector, then copy back the updated configuration plus the
 ; existing content in the remainder of the last sector of flash).
-F_copyconfig
-	call F_getsysvar	; see if we've already copied it
-	inc hl
-	ld a, 1
-	cp (hl)			; if Z we've already made a copy
-	ret z
-	ld (hl), 1		; Indicate a copy has been made.
+.include	"spectranet.inc"
+.text
+.globl F_copyconfig
+F_copyconfig: 
 	
-        ld hl, .copier  ; first, copy to RAM workspace
+        ld hl, .copier1  ; first, copy to RAM workspace
         ld de, 0x3000   ; fixed workspace page at 0x3000
-        ld bc, .copierend-.copier
+        ld bc, copiersz
         ldir
         jp 0x3000
-.copier
+.copier1: 
         ld a, 0xDC      ; chip 3 page 0x1C - RAM
         call SETPAGEA   ; page it into page area A
         ld a, 0x1C      ; chip 0 page 0x1C - flash
@@ -73,7 +70,7 @@ F_copyconfig
         ldir
         call POPPAGEB   ; reset page B settings before returning (to page B!)
 
-
         ret             ; configuration settings are in RAM mapped in page AA
-.copierend
+.copierend1:
+copiersz	equ .copierend1 - .copier1
 

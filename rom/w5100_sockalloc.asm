@@ -19,7 +19,9 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-
+.include	"w5100_defs.inc"
+.include	"sysvars.inc"
+.include	"sockdefs.inc"
 
 ; Socket allocation routines. In this file:
 ; F_socket
@@ -45,7 +47,9 @@
 ; Returns: file descriptor in A
 ;
 ; Preserves: BC
-F_socket
+.text
+.globl F_socket
+F_socket:
 	ld a, (v_pga)		; save page A
 	ld (v_buf_pga), a
 	ld a, REGPAGE
@@ -54,27 +58,27 @@ F_socket
 	; Find a free socket. HL will contain the pointer to the socket
 	; register.
 	call F_hwallocsock	; carry is set when no hw sockets left.
-	jr nc, .foundsock
-.nosockets
+	jr nc, .foundsock1
+.nosockets1:
 	ld a, ESNFILE		; no more hardware sockets, sorry
 	jp J_leavesockfn
-.foundsock
+.foundsock1:
 	ld de, v_fd1hwsock	; (de) = fd map first entry
 	ex de, hl
-.findfd
+.findfd1:
 	bit 7, (hl)		; is bit 7 (not allocated) set?
-	jr nz, .allocfd
+	jr nz, .allocfd1
 	inc l			; next fd
-	jr .findfd
-.allocfd
+	jr .findfd1
+.allocfd1:
 	ld (hl), d		; associate the hw socket with the fd
 	ex de, hl
 	call F_hwopensock	; h = msb of socket register
-	jr nc, .sockopen	; if carry not set, socket was opened
+	jr nc, .sockopen1	; if carry not set, socket was opened
 	ld a, EBUGGERED		; TODO: better return code
 	jp J_leavesockfn
 
-.sockopen
+.sockopen1:
 	ld a, e			; a = file descriptor
 	jp J_leavesockfn
 
@@ -86,7 +90,8 @@ F_socket
 ; Parameters: A = file descriptor
 ;
 ; Carry flag is set if an error occurs reopening a virtual socket.
-F_sockclose
+.globl F_sockclose
+F_sockclose:
 	push af
 	ld a, (v_pga)		; save page A
 	ld (v_buf_pga), a
@@ -105,25 +110,25 @@ F_sockclose
 	ld l, Sn_MR % 256	; check for non-stream socket
 	ld a, (hl)
 	and S_MR_TCP		; if it's not TCP jump forward
-	jr z, .close		; straight to closing the hardware resource
+	jr z, .close2		; straight to closing the hardware resource
 
 	ld l, Sn_SR % 256	; check the status register
 	ld a, (hl)
 	cp S_SR_SOCK_INIT	; nothing has been done yet
-	jr z, .close		; so skip disconnect part.
+	jr z, .close2		; so skip disconnect part.
 
 	cp S_SR_SOCK_LISTEN	; still nothing has been done
-	jr z, .close		; so skip disconnect part.
+	jr z, .close2		; so skip disconnect part.
 
 	ld l, Sn_CR % 256	; (hl) = socket's command register
 	ld (hl), S_CR_DISCON	; disconnect remote host
 	ld l, Sn_IR % 256	; (hl) = interrupt register
-.waitfordiscon
+.waitfordiscon2:
 	ld a, (hl)
 	and S_IR_DISCON
-	jr z, .waitfordiscon
+	jr z, .waitfordiscon2
 	ld (hl), S_IR_DISCON	; reset interrupt register
-.close
+.close2:
 	ld l, Sn_CR % 256	; (hl) = command register
 	ld (hl), S_CR_CLOSE	; close the socket.
 	ex de, hl		; store socket register pointer in DE
@@ -135,21 +140,21 @@ F_sockclose
 	; it to the first fd that we find that's in need of one.
 	ld hl, v_fd1hwsock
 	ld b, MAX_FDS
-.vsearch
+.vsearch2:
 	bit 6, (hl)		; virtual bit set?
-	jr nz, .realloc		; reallocate the hardware socket to this fd
+	jr nz, .realloc2		; reallocate the hardware socket to this fd
 	inc l			; check the next fd
-	djnz .vsearch
+	djnz .vsearch2
 	jp J_leavesockfn	; nothing more to do - function complete.
 
 	; To reallocate a hardware socket to a file descriptor that's
 	; gone virtual, it must be opened.
-.realloc
+.realloc2:
 	; The hardware needs a delay before a socket is re-opened.
 	; TODO: write to Wiznet and see if there's a better way of doing this.
 	ld b, 255
-.waitloop
-	djnz .waitloop
+.waitloop2:
+	djnz .waitloop2
 
 	ex de, hl		; socket register pointer back to HL
 	ld a, (v_virtualmr)	; get socket type for the socket we're doing
@@ -170,10 +175,10 @@ F_sockclose
 	cp S_SR_SOCK_LISTEN	; should be listening
 	ex de, hl		; move sock register addr to de
 	pop hl			; retrieve fd
-	jr nz, .reallocerr
+	jr nz, .reallocerr2
 	ld (hl), d		; store socket register ptr MSB in fd map
 	jp J_leavesockfn
-.reallocerr
+.reallocerr2:
 	ld a, EBUGGERED
 	scf
 	jp J_leavesockfn
@@ -192,7 +197,8 @@ F_sockclose
 ; Returns: A = file descriptor of accepted connection
 ;
 ; On error carry is set and A contains the error number.
-F_accept
+.globl F_accept
+F_accept:
 	push af			; save the fd
 	ld a, (v_pga)		; save page A
 	ld (v_buf_pga), a
@@ -205,34 +211,34 @@ F_accept
 	ld d, (hl)		; d = MSB of socket register address
 	ex de, hl		; h = MSB of socket register address
 	ld l, Sn_SR % 256	; (hl) = socket's SR
-.waitforestablished
+.waitforestablished3:
 	ld a, (hl)
 	cp S_SR_SOCK_CLOSE_WAIT	; a really short connection can mean we
-	jr z, .continue		; are in CLOSE_WAIT before we ever got
+	jr z, .continue3		; are in CLOSE_WAIT before we ever got
 	cp S_SR_SOCK_ESTABLISHED ; an opportunity to accept...
-	jr nz, .waitforestablished
-.continue
+	jr nz, .waitforestablished3
+.continue3:
 	ld l, Sn_IR % 256	; clear the interrupt flag for this socket
 	ld (hl), S_IR_CON
 
 	; Now allocate a new fd for the accepted connection.
 	ld b, h			; save socket register pointer MSB
 	ld hl, v_fd1hwsock
-.findfd
+.findfd3:
 	bit 7, (hl)		; is bit 7 (not allocated) set?
-	jr nz, .allocfd
+	jr nz, .allocfd3
 	inc l			; next fd
-	jr .findfd
-.allocfd
+	jr .findfd3
+.allocfd3:
 	ld (hl), b		; associate new fd with accepted socket
 	push hl			; save address of new fd
 	ld h, b			; point hl at accepted socket to get type
 	ld l, Sn_MR % 256	; (hl) = socket's MR
 	ld c, (hl)		; save MR in c
 	call F_hwallocsock	; try to open a new hardware socket
-	jr c, .virtualize	; no sockets left, so virtualize the fd
+	jr c, .virtualize3	; no sockets left, so virtualize the fd
 	call F_hwopensock	; (hl) points at new registers, try to open
-	jr c, .virtualize	; failed
+	jr c, .virtualize3	; failed
 	ex de, hl		; get original fd address into hl
 	ld (hl), d		; save the new listening socket's MSB in fd map
 	ld h, b			; get MSB of original socket
@@ -246,16 +252,16 @@ F_accept
 	ld l, Sn_SR % 256	; hl = status register ptr
 	ld a, (hl)
 	cp S_SR_SOCK_LISTEN	; check for listening state
-	jr nz, .listenfail
+	jr nz, .listenfail3
 	pop hl			; get fd back to return to caller
 	ld a, l			; set fd number in A
 	jp J_leavesockfn
-.listenfail
+.listenfail3:
 	ld a, EBUGGERED		; set error code and return with carry set
 	scf
 	jp J_leavesockfn
 
-.virtualize
+.virtualize3:
 	ex de, hl		; get original fd address
 	ld (hl), FD_VIRTUAL	; mark as virtual
 	ld h, b			; get MSB of socket register into H for HL
@@ -274,31 +280,33 @@ F_accept
 ; An internal function.
 ; No parameters.
 ; On return (hl) = status register of available hardware socket.
-F_hwallocsock
+.globl F_hwallocsock
+F_hwallocsock:
 	; Find a free socket.
 	ld hl, Sn_SR		; hl points at the first socket register
-.sockloop
+.sockloop4:
 	ld a, (hl)		; get status register value
 	cp S_SR_SOCK_CLOSED	; a closed socket?
-	jr z, .foundsock	; yes, allocate it
+	jr z, .foundsock4	; yes, allocate it
 	inc h			; next socket register
 	ld a, h			; check whether hardware sockets are
 	cp Sn_MAX		; exhausted
-	jr nz, .sockloop	; and check the next if not.
+	jr nz, .sockloop4	; and check the next if not.
 	scf			; out of sockets - set C
-.foundsock
+.foundsock4:
 	ret
 
 ; Open a hardware socket. Carry flag is set if no free sockets.
 ; An internal function.
 ; Parameters: C = socket type (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW etc)
 ; 	      HL = pointer to socket register area
-F_hwopensock
+.globl F_hwopensock
+F_hwopensock:
 	ld a, SOCK_STREAM	; for SOCK_STREAM ensure delayed ACK is off
 	cp c
-	jr nz, .continue
+	jr nz, .continue5
 	set 5, c		; set 'use no delayed ACK'
-.continue
+.continue5:
 	ld l, Sn_IR % 256	; (hl) = interrupt register
 	ld (hl), 0x1F		; clear all interrupt flags
 	ld l, Sn_MR % 256	; (hl) = socket mode register
@@ -308,20 +316,20 @@ F_hwopensock
 	ld l, Sn_SR % 256	; (hl) = status register
 	ld a, SOCK_DGRAM	; is this a UDP socket?
 	cp c
-	jr z, .checkudpstat	; do status check for UDP socket.
+	jr z, .checkudpstat5	; do status check for UDP socket.
 	ld a, (hl)		; TCP socket (SOCK_STREAM)
 	cp S_SR_SOCK_INIT	; did it initialize ok?
 	ret z
 
 	; Bad things happened. Clean up and return an error.
-.failed
+.failed5:
 	ld l, Sn_CR % 256	; (hl) = command register so...
 	ld (hl), S_CR_CLOSE	; clean up.
 	scf
 	ret
-.checkudpstat
+.checkudpstat5:
 	ld a, (hl)
 	cp S_SR_SOCK_UDP	; Successfully initialized?
 	ret z
-	jr .failed
+	jr .failed5
 
