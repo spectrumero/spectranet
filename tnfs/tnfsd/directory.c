@@ -29,15 +29,18 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "tnfs.h"
 #include "config.h"
 #include "directory.h"
+#include "tnfs_file.h"
 #include "datagram.h"
 #include "errortable.h"
 #include "bsdcompat.h"
 
 char root[MAX_ROOT];	/* root for all operations */
+char dirbuf[MAX_FILEPATH];
 
 int tnfs_setroot(char *rootdir)
 {
@@ -103,7 +106,9 @@ void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 	 * has problems with multiple delimiters... */
 	int count=0;
 	int slash=0;
+#ifdef WIN32
 	char *nbstart=newbuf;
+#endif
 
 	while(*oldbuf && count < bufsz-1)
 	{
@@ -240,3 +245,50 @@ void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	tnfs_send(s, hdr, NULL, 0);
 }
 
+/* Make a directory */
+void tnfs_mkdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
+{
+        if(*(buf+bufsz-1) != 0 ||
+	           tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
+        {
+		hdr->status=TNFS_EINVAL;
+	        tnfs_send(s, hdr, NULL, 0);
+        }
+        else
+	{
+		if(mkdir(dirbuf, 0755) == 0)
+		{
+			hdr->status=TNFS_SUCCESS;
+			tnfs_send(s, hdr, NULL, 0);
+		}
+		else
+		{
+			hdr->status=tnfs_error(errno);
+			tnfs_send(s, hdr, NULL, 0);
+		}
+	}
+}
+
+/* Remove a directory */
+void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
+{
+        if(*(buf+bufsz-1) != 0 ||
+	           tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
+        {
+		hdr->status=TNFS_EINVAL;
+	        tnfs_send(s, hdr, NULL, 0);
+        }
+        else
+	{
+		if(rmdir(dirbuf) == 0)
+		{
+			hdr->status=TNFS_SUCCESS;
+			tnfs_send(s, hdr, NULL, 0);
+		}
+		else
+		{
+			hdr->status=tnfs_error(errno);
+			tnfs_send(s, hdr, NULL, 0);
+		}
+	}
+}

@@ -458,12 +458,36 @@ F_tbas_rm:
 	call STATEMENT_END
 
 	;-------- runtime ---------
-	rst CALLBAS
-	defw ZX_STK_FETCH
-	ld hl, INTERPWKSPC
-	call F_basstrcpy
-	ld hl, INTERPWKSPC
+	call F_get_stringarg
 	call UNLINK			; remove the file
+	jp nc, EXIT_SUCCESS
+	jp J_tbas_error
+
+;----------------------------------------------------------------------------
+; F_tbas_mkdir: Makes a directory
+.globl F_tbas_mkdir
+F_tbas_mkdir:
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; directory to create
+	call STATEMENT_END
+	
+	; ------- runtime ------
+	call F_get_stringarg
+	call MKDIR
+	jp nc, EXIT_SUCCESS
+	jp J_tbas_error
+
+;----------------------------------------------------------------------------
+; F_tbas_rmdir: Makes a directory
+.globl F_tbas_rmdir
+F_tbas_rmdir:
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; directory to create
+	call STATEMENT_END
+	
+	; ------- runtime ------
+	call F_get_stringarg
+	call RMDIR
 	jp nc, EXIT_SUCCESS
 	jp J_tbas_error
 
@@ -505,6 +529,18 @@ F_geterrstr:
 	rst MODULECALL_NOPAGE
 	ld hl, 0x3000		; address of the message
 	ret
+
+;---------------------------------------------------------------------------
+; F_get_stringarg: gets a single string arg, returning a pointer to the
+; null-terminated string in HL
+F_get_stringarg:
+	rst CALLBAS
+	defw ZX_STK_FETCH
+	ld hl, INTERPWKSPC
+	call F_basstrcpy
+	ld hl, INTERPWKSPC
+	ret
+
 .data
 .globl STR_BOOTDOTZX
 .globl STR_BOOTDOTZXLEN

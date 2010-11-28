@@ -50,7 +50,8 @@ TNFS daemon datagram handler
 int sockfd;		/* global socket file descriptor */
 
 tnfs_cmdfunc dircmd[NUM_DIRCMDS]=
-	{ &tnfs_opendir, &tnfs_readdir, &tnfs_closedir };
+	{ &tnfs_opendir, &tnfs_readdir, &tnfs_closedir,
+          &tnfs_mkdir, &tnfs_rmdir };
 tnfs_cmdfunc filecmd[NUM_FILECMDS]=
 	{ &tnfs_open, &tnfs_read, &tnfs_write, &tnfs_close,
 	  &tnfs_stat, &tnfs_lseek, &tnfs_unlink, &tnfs_chmod, &tnfs_rename };
@@ -160,7 +161,6 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 		tnfs_resend(sess, cliaddr);
 		return;
 	}
-
 
 	/* find the command class and pass it off to the right
 	 * function */
