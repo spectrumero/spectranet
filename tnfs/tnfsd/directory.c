@@ -256,7 +256,11 @@ void tnfs_mkdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
         }
         else
 	{
+#ifdef WIN32
+		if(mkdir(dirbuf) == 0)
+#else
 		if(mkdir(dirbuf, 0755) == 0)
+#endif
 		{
 			hdr->status=TNFS_SUCCESS;
 			tnfs_send(s, hdr, NULL, 0);
