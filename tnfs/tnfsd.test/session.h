@@ -1,5 +1,6 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
+#ifndef _SESSION_H
+#define _SESSION_H
+
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -22,28 +23,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
+ * TNFS session declarations
  *
  * */
+#include <sys/types.h>
 
 #include "tnfs.h"
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
+/* Initialize TNFS */
+void tnfs_init();
 
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
+/* Returns 0 on success, -1 on error */
+int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz);
+void tnfs_umount(Header *hdr, Session *s, int sindex);
 
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
+/* Manage sessions */
+/* Most functions also return the index of the session array
+ * via the sindex pointer */
+Session *tnfs_allocsession(int *sindex);
+void tnfs_freesession(Session *s, int sindex);
+Session *tnfs_findsession_sid(uint16_t sid, int *sindex);
+Session *tnfs_findsession_ipaddr(in_addr_t ipaddr, int *sindex);
+uint16_t tnfs_newsid();
 
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 #endif

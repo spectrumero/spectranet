@@ -1,5 +1,3 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -22,28 +20,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
+ * Endian-ness conversions
+ * Converts a fragment of a TNFS message into the correct endian int
+ * or long
  *
  * */
 
-#include "tnfs.h"
+#include "endian.h"
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
+/* Since most 8 bit micros are little-endian, the TNFS protocol is also
+ * little endian. Big endian archs must convert. It also deals with
+ * alignment issues you get with certain little endian archs by moving
+ * data in a portable manner. (For 8 bit systems it may be worth
+ * adding a faster method, since these don't have alignment issues) */
+uint16_t tnfs16uint(unsigned char *value)
+{
+	return (*(value+1) << 8) + *value;
+}
 
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
+uint32_t tnfs32uint(unsigned char *value)
+{
+	return ((uint32_t)*(value+3) << 24) + 
+		((uint32_t)*(value+2) << 16) + 
+		((uint32_t)*(value+1) << 8) + *value;
+}
 
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
+void uint16tnfs(unsigned char *buf, uint16_t value)
+{
+	*buf=value & 0xFF;
+	*(buf+1)=(value >> 8) & 0xFF;
+}
 
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-#endif
+void uint32tnfs(unsigned char *buf, uint32_t value)
+{
+	*buf=value & 0xFF;
+	*(buf+1)=(value >> 8) & 0xFF;
+	*(buf+2)=(value >> 16) & 0xFF;
+	*(buf+3)=(value >> 24) & 0xFF;
+}

@@ -1,5 +1,8 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
+#ifdef NEED_BSDCOMPAT
+
+#ifndef _BSDCOMPAT_H
+#define _BSDCOMPAT_H
+
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -22,28 +25,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
+ * BSD compatibility
  *
  * */
 
-#include "tnfs.h"
+size_t strlcat(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
-
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
-
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
-
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 #endif
+#endif
+

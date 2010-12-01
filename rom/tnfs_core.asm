@@ -379,8 +379,11 @@ F_tnfs_message:
 	ld a, (hl)
 	cp b			; sequence number match? if not
 	pop bc
-	jr nz, .pollstart9	; see if the real message is still to come
+	jr nz, .backoff		; see if the real message is still to come
 	ret
+.backoff:
+	call F_tnfs_incpolltime
+	jr .pollstart9
 
 	; read is done in two phases - first get the header, then
 	; once we've got that copy the data directly to the required
@@ -432,6 +435,7 @@ F_tnfs_message:
 	ld bc, 256
 	ld a, (v_tnfs_sock)
 	call RECV		; unload any remaining data from the socket
+	call F_tnfs_incpolltime	; increase initial poll time
 	jr .consume9
 
 ;-------------------------------------------------------------------------
@@ -453,27 +457,65 @@ F_tnfs_poll:
 	ld (v_tnfs_polltime), a	; save new poll time
 .setb10:
 	ld b, a
-	ei			; ensure interrupts are enabled
 .loop10:
 	push bc
-	ld a, (v_tnfs_sock)
+	ld bc, 0x7ffe		; check BREAK
+	in a, (c)
+	cp 0xBE
+	jr z, .break
+
+	ld a, (v_tnfs_sock)	; Poll for data
 	call POLLFD
-	pop bc
 	jr nz, .done10		; data has arrived
-	halt			; timing: wait for next 50Hz interrupt
+.wait:
+	ld bc, TNFS_POLLITER
+.waitloop:
+	dec bc
+	ld a, b
+	or c
+	jr nz, .waitloop
+
+	pop bc
 	djnz .loop10
 	scf			; poll time has expired
 	ret
 .setstart10:
 	inc a
 	ld (v_tnfs_backoff), a	; set backoff flag
-	ld a, tnfs_polltime	; initial polltime
+	ld a, (v_tnfs_initpolltime)	; get current initial poll time
 	ld (v_tnfs_polltime), a
 	jr .setb10
 .done10:
+	pop bc
 	xor a
 	ld (v_tnfs_backoff), a	; reset backoff flag
 	ret
+.break:
+	pop bc
+	ld a, 0xCB		; TODO: error inc file
+	scf
+	ret
+
+;-------------------------------------------------------------------------
+; F_tnfs_incpolltime
+; Increase the initial poll time for any subsequent command.
+; This is called when we start getting duplicate packets, meaning we're
+; not suffering congestion or packet loss but we're overwhelming the
+; server.
+.globl F_tnfs_incpolltime
+F_tnfs_incpolltime:
+	ld a, (v_tnfs_initpolltime)
+	rla				; double it
+	jr c, .max
+	ld (v_tnfs_initpolltime), a
+.resetcount:
+	xor a
+	ld (v_tnfs_lastpolladj), a
+	ret
+.max:
+	ld a, 255
+	ld (v_tnfs_initpolltime), a
+	jr .resetcount	
 
 ;-------------------------------------------------------------------------
 ; F_tnfs_mounted

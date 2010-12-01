@@ -24,6 +24,7 @@
 
 tnfs_polltime		equ 7	; How many 50ths/sec we should poll for
 tnfs_max_retries	equ 10	; maximum retries
+TNFS_POLLITER		equ 3043 ; number of iterations for 1/50th sec 
 
 ; Standard header offsets
 tnfs_sid_offset		equ 0

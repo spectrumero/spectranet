@@ -57,6 +57,8 @@ F_inetinit:
 	ld de, v_nameserver1
 	ld bc, 8		; two nameservers, 8 bytes
 	ldir
+	ld hl, v_ethflags	; set IP acquired flag
+	set 0, (hl)
 	ret
 
 ;------------------------------------------------------------------------

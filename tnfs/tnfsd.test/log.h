@@ -1,5 +1,5 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
+#ifndef _LOG_H
+#define _LOG_H
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -22,28 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
+ * TNFS message log functions
  *
  * */
-
 #include "tnfs.h"
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
+/* Log a message and exit */
+void die(const char *msg);
+void TNFSMSGLOG(Header *hdr, const char *msg);
+void MSGLOG(in_addr_t ipaddr, const char *msg);
 
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
-
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
-
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 #endif

@@ -26,6 +26,7 @@ TNFS daemon datagram handler
 
 #include <sys/types.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -50,8 +51,7 @@ TNFS daemon datagram handler
 int sockfd;		/* global socket file descriptor */
 
 tnfs_cmdfunc dircmd[NUM_DIRCMDS]=
-	{ &tnfs_opendir, &tnfs_readdir, &tnfs_closedir,
-          &tnfs_mkdir, &tnfs_rmdir };
+	{ &tnfs_opendir, &tnfs_readdir, &tnfs_closedir };
 tnfs_cmdfunc filecmd[NUM_FILECMDS]=
 	{ &tnfs_open, &tnfs_read, &tnfs_write, &tnfs_close,
 	  &tnfs_stat, &tnfs_lseek, &tnfs_unlink, &tnfs_chmod, &tnfs_rename };
@@ -110,6 +110,9 @@ void tnfs_mainloop()
 
 void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 {
+#ifdef TESTDROP
+	long rnd;
+#endif
 	Header hdr;
 	Session *sess;
 	int sindex;
@@ -131,7 +134,6 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 	TNFSMSGLOG(&hdr, "DEBUG: Decoding datagram");
 	fprintf(stderr, "DEBUG: cmd=%x msgsz=%d\n", hdr.cmd, rxbytes);
 #endif
-
 	/* The MOUNT command is the only one that doesn't need an
 	 * established session (since MOUNT is actually what will
 	 * establish the session) */
@@ -148,6 +150,24 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 			TNFSMSGLOG(&hdr, "Session and IP do not match");
 			return;
 		}
+#ifdef TESTDROP
+		/* Testing - drop random packets */
+#define DROPTHRESH	0x50000000
+		rnd=random();
+		fprintf(stderr,"----test----: rnd = %lx\n", rnd);
+		if(rnd > DROPTHRESH)
+		{
+			fprintf(stderr,
+				"***TEST***: Dropping packet (rnd=%lx\n", rnd);
+			return;
+		}
+	
+#endif
+#ifdef TESTDELAY
+		/* Testing - delay replies */
+		usleep(300000);	/* deliberately slow the replies */
+#endif
+
 	}
 	else
 	{
@@ -158,9 +178,14 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 	/* client is asking for a resend */
 	if(hdr.seqno == sess->lastseqno)
 	{
+#ifdef DEBUG
+		fprintf(stderr, "DEBUG: resending; session=%x cmd=%x\n",
+				sess->sid, hdr.cmd);
+#endif
 		tnfs_resend(sess, cliaddr);
 		return;
 	}
+
 
 	/* find the command class and pass it off to the right
 	 * function */

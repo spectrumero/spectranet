@@ -1,5 +1,3 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -22,28 +20,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
+ * TNFS daemon logging functions
  *
  * */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+
+#include "log.h"
 #include "tnfs.h"
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
+void die(const char *msg)
+{
+	fprintf(stderr, "%s\n", msg);
+	exit(-1);
+}
 
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
-
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
-
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
+void TNFSMSGLOG(Header *hdr, const char *msg)
+{
+	unsigned char *ip=(unsigned char *)&hdr->ipaddr;
+	fprintf(stderr, "Cli: %d.%d.%d.%d Session: %x : %s\n",
+			ip[0], ip[1], ip[2], ip[3],
+			hdr->sid, msg);
+#ifdef WIN32
+	fflush(stderr);
 #endif
+}
+
+void MSGLOG(in_addr_t ipaddr, const char *msg)
+{
+	unsigned char *ip=(unsigned char *)&ipaddr;
+	fprintf(stderr, "Cli: %d.%d.%d.%d: %s\n",
+			ip[0], ip[1], ip[2], ip[3],
+			msg);
+#ifdef WIN32
+	fflush(stderr);
+#endif
+}

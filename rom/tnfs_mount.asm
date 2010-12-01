@@ -23,6 +23,7 @@
 .include	"tnfs_sysvars.inc"
 .include	"spectranet.inc"
 .include	"sysvars.inc"
+.include	"fcntl.inc"
 
 ; The TNFS mount and umount functions.
 ;-----------------------------------------------------------------------
@@ -56,6 +57,15 @@ F_tnfs_mount:
         jp pe, .cploop1
 
 	; It is now certain that the requested FS is TNFS.
+	; Check that we have an IP address set
+	ld a, (v_ethflags)
+	and 1			; if bit 0 is not 1 then we don't have
+	jr nz, .lookup		; a valid IP
+
+	ld a, EIO		; set the error number
+	scf
+	jp F_leave
+.lookup:
 	ld de, buf_tnfs_wkspc	; Look up the host
 	ld l, (ix+2)
 	ld h, (ix+3)
@@ -133,6 +143,8 @@ F_tnfs_mount:
 	ld h, 0x3F		; point HL at the address in sysvars
 	ld a, (v_pgb)		; Fetch our ROM number
 	ld (hl), a		; and store it in the mount point table
+
+	; set initial poll time
 	or 1			; reset Z and C flags - mounted OK.
 	jp F_leave
 

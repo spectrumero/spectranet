@@ -1,5 +1,3 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -22,28 +20,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
+ * The main()
  *
  * */
 
-#include "tnfs.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
+#include "datagram.h"
+#include "session.h"
+#include "directory.h"
+#include "errortable.h"
 
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
+/* declare the main() - it won't be used elsewhere so I'll not bother
+ * with putting it in a .h file */
+int main(int argc, char **argv);
 
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
+int main(int argc, char **argv)
+{
+	if(argc < 2)
+	{
+		fprintf(stderr, "Usage: tnfsd <root dir>\n");
+		exit(-1);
+	}
 
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
+	if(tnfs_setroot(argv[1]) < 0)
+	{
+		fprintf(stderr, "Invalid root directory\n");
+		exit(-1);
+	}
 
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-#endif
+	tnfs_init();		/* initialize structures etc. */
+	tnfs_init_errtable();	/* initialize error lookup table */
+	tnfs_sockinit();	/* initialize communications */
+	tnfs_mainloop();	/* run */
+	return 0;
+}
+

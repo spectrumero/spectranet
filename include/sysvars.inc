@@ -123,3 +123,7 @@ v_border: equ 0x00003FEF
 v_machinetype: equ 0x00003FF0
 v_intcount: equ 0x00003FF1
 v_configptr: equ 0x00003FF3
+
+; flags: bit 0 - IP set (either static or via DHCP)
+v_ethflags: equ 0x3FF5
+

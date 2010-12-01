@@ -1,9 +1,7 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
+#ifndef _CONFIG_H
+#define _CONFIG_H
 /* The MIT License
- *
  * Copyright (c) 2010 Dylan Smith
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -22,28 +20,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * TNFS daemon directory functions
- *
- * */
+ * tnfs daemon compile time configuration */
 
-#include "tnfs.h"
+#define TNFSD_PORT	16384	/* UDP port to listen on */
+#define MAXMSGSZ	532	/* maximum size of a TNFS message */
+#define MAX_FD_PER_CONN	16	/* maximum open file descriptors per client */
+#define MAX_DHND_PER_CONN 8	/* max open directories per client */
+#define MAX_CLIENTS	256	/* maximum number of clients */
+#define TNFS_HEADERSZ	4	/* minimum header size */
+#define MAX_TNFSPATH	256	/* maximum path length */
+#define MAX_FILEPATH	384	/* Maximum path + filename */
+#define MAX_ROOT	128	/* maximum root dir length */
+#define PROTOVERSION_LSB 0x00	/* Protocol version, LSB */
+#define PROTOVERSION_MSB 0x01	/* Protocol version, MSB */
+#define TIMEOUT_LSB	0xE8	/* Timeout LSB (1 sec) */
+#define TIMEOUT_MSB	0x03	/* Timeout MSB (1 sec) */
+#define MAX_FILENAME_LEN 256	/* longest filename supported */
+#define MAX_IOSZ	512	/* maximum size of an IO operation */
 
-/* initialize and set the root dir */
-int tnfs_setroot(char *rootdir);
 
-/* validates a path points to an actual directory */
-int validate_dir(Session *s, const char *path);
-void normalize_path(char *dst, char *src, int pathsz);
-
-/* get the root directory for the given session */
-void get_root(Session *s, char *buf, int bufsz);
-
-/* open, read, close directories */
-void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-
-/* create and remove directories */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 #endif
