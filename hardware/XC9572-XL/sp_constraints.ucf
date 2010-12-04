@@ -57,4 +57,5 @@ net NMI_L loc=p92;
 net ROMCS_SENSE loc=p93;
 net A15OUT loc=p96;
 #net INT_L loc=p97;
-
+net W5100_RESET_L loc=p25;
+net LINK_L loc=p23;
