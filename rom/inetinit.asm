@@ -36,6 +36,7 @@
 .text
 .globl F_inetinit
 F_inetinit:
+	call F_iface_wait
 	ld a, 0x1F		; flash page containing configuration
 	call SETPAGEA
 	ld hl, 0x1F00		; last 256 bytes of config
@@ -59,6 +60,79 @@ F_inetinit:
 	ldir
 	ld hl, v_ethflags	; set IP acquired flag
 	set 0, (hl)
+	ret
+
+;------------------------------------------------------------------------
+; F_iface_wait
+; Wait for the interface to come up. Work around the W5100 hardware bug
+; by resetting the chip if we don't get a stable link.
+F_iface_wait:
+	ld hl, STR_wait
+	call PRINT42
+	ei			; using HALT for timing
+	call .reset		; ensure chip is reset
+
+	ld b, 5			; how many times to try
+.linkloop:
+	push bc
+	ld d, 200		; wait for 200 frames (4 seconds) maximum
+.waitloop:
+	ld bc, CTRLREG
+	in a, (c)
+	bit 6, a		; if the light's on this goes to zero
+	jr z, .testlinked
+	halt			; wait 20ms
+	dec d
+	jr nz, .waitloop 	; check register again
+.reenter:
+	call .reset		; try again
+	pop bc
+	djnz .linkloop
+
+	di
+	ld hl, STR_fail
+	call PRINT42
+	scf			; interface didn't come up
+	ret
+.linked:
+	di
+	pop bc			; restore stack
+	ld hl, STR_linkup
+	call PRINT42
+	or a			; ensure carry is cleared
+	ret
+	; check the link is stable - the link light must remain on for
+	; 50% of the time for 1 second.
+.testlinked:
+	ld a, '>'
+	call PUTCHAR42
+	ld h, 50		; frames to wait
+	ld e, 0			; count of LED lit
+.linktestloop:
+	in a, (c)		; get status register
+	bit 6, a		; test LINK value
+	jr nz, .continue	; not lit - do not increment counter
+	inc e
+.continue:
+	halt
+	dec h			; decrement loop count
+	jr nz, .linktestloop
+	ld a, 25		; link light must be on >= this amount
+	cp e
+	jr c, .linked		; exit the routine
+	jr .reenter		; re-enter wait-for-link loop
+
+.reset:
+	ld a, '.'
+	call PUTCHAR42		; print a dot
+	ld bc, CTRLREG
+	in a, (c)		; get current control register
+	res 7, a		; reset RESET bit
+	out (c), a		; ensure RESET bit is low
+	halt			; wait at least 20ms
+	halt
+	set 7, a		; release RESET bit
+	out (c), a
 	ret
 
 ;------------------------------------------------------------------------
@@ -93,4 +167,7 @@ F_showaddr:
 STR_staticip:	defb "I:",0
 STR_staticmask:	defb "M:",0
 STR_staticgw:	defb "G:",0
+STR_wait:	defb "Link",0
+STR_linkup:	defb "OK",NEWLINE,0
+STR_fail:	defb "Not detected",NEWLINE,0
 
