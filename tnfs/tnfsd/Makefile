@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-Wall -DDEBUG -DUNIX -DNEED_ERRTABLE
+CFLAGS=-Wall -DDEBUG -DUNIX -DNEED_ERRTABLE -DUSE_ZZIP
 OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o strlcpy.o strlcat.o
-LIBS=
+LIBS=-lzzip
 EXEC=tnfsd
 
 all:	$(OBJS)

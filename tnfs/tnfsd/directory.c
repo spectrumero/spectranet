@@ -145,7 +145,7 @@ void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 /* Open a directory */
 void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	DIR *dptr;
+	T_DIR *dptr;
 	char path[MAX_TNFSPATH];
 	unsigned char reply[2];
 	int i;
@@ -173,7 +173,10 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 			snprintf(path, MAX_TNFSPATH, "%s/%s/%s", 
 					root, s->root, databuf);
 			normalize_path(path, path, MAX_TNFSPATH);
-			if((dptr=opendir(path)) != NULL)
+#ifdef DEBUG
+			fprintf(stderr,"Path: %s\n", path);
+#endif
+			if((dptr=T_OPENDIR(path)) != NULL)
 			{
 				s->dhnd[i]=dptr;
 
@@ -201,7 +204,7 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 /* Read a directory entry */
 void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	struct dirent *entry;
+	T_DIRENT *entry;
 	char reply[MAX_FILENAME_LEN];
 
 	if(datasz != 1 || 
@@ -213,10 +216,13 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		return;
 	}
 
-	entry=readdir(s->dhnd[*databuf]);
+	entry=T_READDIR(s->dhnd[*databuf]);
 	if(entry)
 	{
 		strlcpy(reply, entry->d_name, MAX_FILENAME_LEN);
+#ifdef DEBUG
+		fprintf(stderr, "Entry: %s\n", entry->d_name);
+#endif
 		hdr->status=TNFS_SUCCESS;
 		tnfs_send(s, hdr, (unsigned char *)reply, strlen(reply)+1);
 	}
@@ -239,7 +245,7 @@ void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		return;
 	}
 
-	closedir(s->dhnd[*databuf]);
+	T_CLOSEDIR(s->dhnd[*databuf]);
 	s->dhnd[*databuf]=0;
 	hdr->status=TNFS_SUCCESS;
 	tnfs_send(s, hdr, NULL, 0);

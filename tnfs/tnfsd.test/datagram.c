@@ -26,6 +26,7 @@ TNFS daemon datagram handler
 
 #include <sys/types.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -109,6 +110,9 @@ void tnfs_mainloop()
 
 void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 {
+#ifdef TESTDROP
+	long rnd;
+#endif
 	Header hdr;
 	Session *sess;
 	int sindex;
@@ -146,8 +150,23 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 			TNFSMSGLOG(&hdr, "Session and IP do not match");
 			return;
 		}
-		/* Testing */
+#ifdef TESTDROP
+		/* Testing - drop random packets */
+#define DROPTHRESH	0x50000000
+		rnd=random();
+		fprintf(stderr,"----test----: rnd = %lx\n", rnd);
+		if(rnd > DROPTHRESH)
+		{
+			fprintf(stderr,
+				"***TEST***: Dropping packet (rnd=%lx\n", rnd);
+			return;
+		}
+	
+#endif
+#ifdef TESTDELAY
+		/* Testing - delay replies */
 		usleep(300000);	/* deliberately slow the replies */
+#endif
 
 	}
 	else

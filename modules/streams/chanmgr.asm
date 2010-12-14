@@ -386,11 +386,9 @@ F_createchan:
 	ldir				; copy the stub
 	pop ix				; get start addr into IX
 	ld a, (v_asave)			; get the stream number
-;	ld (ix + IOWCHAN), a		; Set write ID
-	ld (ix + 3), a
+	ld (ix + IOWCHAN), a		; Set write ID
 	set 7, a			; set MSB
-;	ld (ix + IORCHAN), a		; Set read ID
-	ld (ix + 0x0b), a
+	ld (ix + IORCHAN), a		; Set read ID
 
 	pop hl				; retrieve the 2nd byte address
 	ld de, (ZX_CHANS)		; get CHANS sysvar
