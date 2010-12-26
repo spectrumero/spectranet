@@ -25,6 +25,7 @@
 .include	"w5100_defs.inc"
 .include	"flashconf.inc"
 .include	"ctrlchars.inc"
+.include	"stdmodules.inc"
 .include	"page3.xinc"
 
 ; Locations in the data rom that need to be copied.
@@ -129,7 +130,8 @@ J_reset:
 	ld (v_tabletop), hl
 	
 	call F_initroms		; Initialize any ROM modules we may have
-	call F_initfs
+	ld hl, AUTOMOUNT	; call the automounter
+	rst MODULECALL_NOPAGE
 
 	; Detect machine type
 ;	ld a, 0x03		; ROM with detect routine
@@ -194,37 +196,6 @@ F_initroms:
 	jr .initloop1
 
 ;-------------------------------------------------------------------------
-; F_initfs
-; Initializes filesystems.
-; TODO: Initialize multiple filesystems.
-.globl F_initfs
-F_initfs:
-	ld a, CONFIGPAGE	; config page
-	call F_setpageA
-	ld a, (0x1000+DEF_FS_PROTO0)
-	and a			; empty string?
-	ret z
-	cp 0xFF			; nothing set?
-	ret z
-	ld hl, STR_mounting
-	call F_print
-	ld hl, 0x1D00
-	ld de, 0x3000
-	ld bc, 0x80
-	ldir
-	ld ix, FSTAB
-	ld a, 0
-	call F_mount
-	jr c, .error2
-	ret
-.error2:
-	ld hl, 0x3000
-	call F_itoh8
-	ld hl, 0x3000
-	call F_print
-	ret
-
-;-------------------------------------------------------------------------
 ; F_w5100init
 ; Initialize the W5100 - MAC address and hardware registers.
 .globl F_w5100init
@@ -255,12 +226,3 @@ F_w5100init:
 STR_bootmsg:
 	defb "Alioth Spectranet ",0
 	include "ver.xinc"	; include the build number file
-STR_mounting:
-	defb "FS mount",NEWLINE,0
-FSTAB:
-	defw 0x3001		; TODO - proper filesystem things
-	defw 0x3007
-	defw 0x3030
-	defw 0x3060
-	defw 0x3070
-

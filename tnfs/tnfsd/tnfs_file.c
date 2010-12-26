@@ -75,7 +75,11 @@ void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 			 * get created with the process's umask (except
 			 * for the executable bit, which remains unset)
 			 * See open(2) and umask(2) */
+#ifdef WITH_ZIP
+			fd=zipopen(fnbuf, tnfs_make_mode(*buf, *(buf+1)), 0666);
+#else
 			fd=open(fnbuf, tnfs_make_mode(*buf, *(buf+1)), 0666);
+#endif
 #ifdef DEBUG
 			fprintf(stderr, "open: fd=%d\n", fd);
 #endif
@@ -261,34 +265,6 @@ void tnfs_stat(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 		tnfs_send(s, hdr, NULL, 0);
 	}
 }
-
-#ifdef USE_ZZIP
-int tnfs_do_zzip_stat(char *path, ZZIP_STAT *sinfo)
-{
-	/* zzip does not have a replacement for a simple stat() call, it
-	 * can only stat either a filehandle or directory handle so we
-	 * have to try opening it as a file, and if that fails, try it
-	 * as a directory */
-	ZZIP_DIR *dir;
-	ZZIP_FILE *fd;
-	int rc;
-
-	/* try as a file first */
-	fd=zzip_open(path, O_RDONLY);
-	if(fd)
-	{
-		rc=zzip_fstat(fd, sinfo);
-		zzip_close(fd);
-		return rc;
-	}
-
-	dir=zzip_opendir(path);
-	if(dir)
-	{
-		rc=zzip_dir_stat(dir,
-
-}
-#endif
 
 void tnfs_unlink(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {

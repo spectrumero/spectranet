@@ -69,44 +69,8 @@
 #define CLASS_SESSION	0x00
 #define CLASS_DIRECTORY	0x10
 #define CLASS_FILE	0x20
-#define NUM_DIRCMDS	5
+#define NUM_DIRCMDS	3
 #define NUM_FILECMDS	9
-
-#ifdef USE_ZZIP
-#include <zzip/zzip.h>
-#define T_DIR		ZZIP_DIR
-#define T_DIRENT	ZZIP_DIRENT
-#define T_READDIR	zzip_readdir
-#define T_OPENDIR	zzip_opendir
-#define T_CLOSEDIR	zzip_closedir
-
-#define T_OPEN		zzip_open
-#define T_READ		zzip_read
-#define T_WRITE		zzip_write
-#define T_SEEK		zzip_seek
-#define T_CLOSE		zzip_close
-#define T_STAT		tnfs_do_zzip_stat
-
-#define T_FD		ZZIP_FILE *
-#define T_STATINFO	ZZIP_STAT 
-#else
-
-#define T_DIR		DIR
-#define T_DIRENT	struct dirent
-#define T_READDIR	readdir
-#define T_OPENDIR	opendir
-#define T_CLOSEDIR	closedir
-
-#define T_OPEN		open
-#define T_READ		read
-#define T_WRITE		write
-#define T_SEEK		lseek
-#define T_CLOSE		close
-#define	T_STAT		stat
-
-#define T_FD		int
-#define T_STATINFO	struct stat
-#endif
 
 typedef struct _session
 {
@@ -114,7 +78,7 @@ typedef struct _session
 	in_addr_t ipaddr;		/* client addr */
 	uint8_t seqno;			/* last sequence number */
 	int fd[MAX_FD_PER_CONN];	/* file descriptors */
-	T_DIR *dhnd[MAX_DHND_PER_CONN];	/* directory handles */
+	DIR *dhnd[MAX_DHND_PER_CONN];	/* directory handles */
 	char *root;			/* requested root dir */
 	unsigned char lastmsg[MAXMSGSZ];/* last message sent */
 	int lastmsgsz;			/* last message's size inc. hdr */

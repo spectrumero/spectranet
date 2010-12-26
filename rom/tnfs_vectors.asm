@@ -23,7 +23,7 @@
 
 .section vectors
 sig:	defb 0xAA		; This is a ROM module
-romid:	defb 0xFF		; for a filesystem only.
+romid:	defb 0xFA		; for a filesystem only.
 reset:	defw F_init		; reset vector
 mount:	defw F_tnfs_mount	; The mount routine
 	defw 0xFFFF
@@ -31,7 +31,7 @@ mount:	defw F_tnfs_mount	; The mount routine
 	defw F_startmsg
 	defw 0xFFFF
 idstr:	defw STR_ident		; ROM identity string
-	defb 0,0,0		; no MODCALL, pad out three bytes
+	jp J_tnfs_modcall	; MODCALL entry point
 
 ; The VFS table. This is a jump table for all the VFS entry points.
 ; Only some are implemented, the rest point to a routine that returns

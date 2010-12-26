@@ -15,7 +15,7 @@ P2OUT = page2.bin
 P2LDFLAGS = -T ../modules/modules.ld -Map $(P2OUT).map -L ../syslib
 P2LIBS = -lromui
 
-P3OBJS = tnfs_vectors.o tnfs_init.o tnfs_core.o tnfs_mount.o tnfs_file.o tnfs_directory.o inetinit.o dhcpclient.o dhcp_data.o basstart.o startmsg.o
+P3OBJS = tnfs_vectors.o tnfs_init.o tnfs_core.o tnfs_mount.o tnfs_file.o tnfs_directory.o inetinit.o dhcpclient.o dhcp_data.o basstart.o startmsg.o tnfs_modcall.o parseurl.o automount.o
 P3OUT = page3.bin
 P3LDFLAGS = -T ../modules/modules.ld -Map $(P3OUT).map
 

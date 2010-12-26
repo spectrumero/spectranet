@@ -29,18 +29,15 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include "tnfs.h"
 #include "config.h"
 #include "directory.h"
-#include "tnfs_file.h"
 #include "datagram.h"
 #include "errortable.h"
 #include "bsdcompat.h"
 
 char root[MAX_ROOT];	/* root for all operations */
-char dirbuf[MAX_FILEPATH];
 
 int tnfs_setroot(char *rootdir)
 {
@@ -106,9 +103,7 @@ void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 	 * has problems with multiple delimiters... */
 	int count=0;
 	int slash=0;
-#ifdef WIN32
 	char *nbstart=newbuf;
-#endif
 
 	while(*oldbuf && count < bufsz-1)
 	{
@@ -145,7 +140,7 @@ void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 /* Open a directory */
 void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	T_DIR *dptr;
+	DIR *dptr;
 	char path[MAX_TNFSPATH];
 	unsigned char reply[2];
 	int i;
@@ -173,10 +168,7 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 			snprintf(path, MAX_TNFSPATH, "%s/%s/%s", 
 					root, s->root, databuf);
 			normalize_path(path, path, MAX_TNFSPATH);
-#ifdef DEBUG
-			fprintf(stderr,"Path: %s\n", path);
-#endif
-			if((dptr=T_OPENDIR(path)) != NULL)
+			if((dptr=opendir(path)) != NULL)
 			{
 				s->dhnd[i]=dptr;
 
@@ -204,7 +196,7 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 /* Read a directory entry */
 void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	T_DIRENT *entry;
+	struct dirent *entry;
 	char reply[MAX_FILENAME_LEN];
 
 	if(datasz != 1 || 
@@ -216,13 +208,10 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		return;
 	}
 
-	entry=T_READDIR(s->dhnd[*databuf]);
+	entry=readdir(s->dhnd[*databuf]);
 	if(entry)
 	{
 		strlcpy(reply, entry->d_name, MAX_FILENAME_LEN);
-#ifdef DEBUG
-		fprintf(stderr, "Entry: %s\n", entry->d_name);
-#endif
 		hdr->status=TNFS_SUCCESS;
 		tnfs_send(s, hdr, (unsigned char *)reply, strlen(reply)+1);
 	}
@@ -245,60 +234,9 @@ void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		return;
 	}
 
-	T_CLOSEDIR(s->dhnd[*databuf]);
+	closedir(s->dhnd[*databuf]);
 	s->dhnd[*databuf]=0;
 	hdr->status=TNFS_SUCCESS;
 	tnfs_send(s, hdr, NULL, 0);
 }
 
-/* Make a directory */
-void tnfs_mkdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
-{
-        if(*(buf+bufsz-1) != 0 ||
-	           tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
-        {
-		hdr->status=TNFS_EINVAL;
-	        tnfs_send(s, hdr, NULL, 0);
-        }
-        else
-	{
-#ifdef WIN32
-		if(mkdir(dirbuf) == 0)
-#else
-		if(mkdir(dirbuf, 0755) == 0)
-#endif
-		{
-			hdr->status=TNFS_SUCCESS;
-			tnfs_send(s, hdr, NULL, 0);
-		}
-		else
-		{
-			hdr->status=tnfs_error(errno);
-			tnfs_send(s, hdr, NULL, 0);
-		}
-	}
-}
-
-/* Remove a directory */
-void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
-{
-        if(*(buf+bufsz-1) != 0 ||
-	           tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
-        {
-		hdr->status=TNFS_EINVAL;
-	        tnfs_send(s, hdr, NULL, 0);
-        }
-        else
-	{
-		if(rmdir(dirbuf) == 0)
-		{
-			hdr->status=TNFS_SUCCESS;
-			tnfs_send(s, hdr, NULL, 0);
-		}
-		else
-		{
-			hdr->status=tnfs_error(errno);
-			tnfs_send(s, hdr, NULL, 0);
-		}
-	}
-}

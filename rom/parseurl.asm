@@ -19,7 +19,6 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
-.include	"defs.inc"
 .include	"sysvars.inc"
 .text
 ; Parse URLs for mounting filesystems.
@@ -27,9 +26,10 @@
 ;--------------------------------------------------------------------------
 ; F_parseurl: Break up incoming string into null-terminated strings.
 ; Parameters: IX - points to memory where the mount structure will be held
-;             HL - pointer to string
+;             DE - pointer to string
 .globl F_parseurl
 F_parseurl:
+	ex de, hl		; move passed parameter into HL
 	call F_findfstype	; if there's an fs type token
 	jr nc, .continue1	; then continue
 	push hl			; otherwise

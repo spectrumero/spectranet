@@ -27,6 +27,7 @@
 .include	"fcntl.inc"
 .include	"sysvars.inc"
 .include	"zxsysvars.inc"
+.include	"stdmodules.inc"
 .text
 ;---------------------------------------------------------------------------
 ; F_tbas_mount
@@ -59,8 +60,9 @@ F_tbas_mount:
 	ld hl, INTERPWKSPC+10
 	call F_basstrcpy		; copy string from BASIC
 	ld ix, INTERPWKSPC		; where to place the mount struct
-	ld hl, INTERPWKSPC+10		; location of the string to parse
-	call F_parseurl
+	ld de, INTERPWKSPC+10		; location of the string to parse
+	ld hl, PARSEURL			; call PARSEURL in the tnfs ROM
+	rst MODULECALL_NOPAGE
 	jr c, .badurl1
 
 	rst CALLBAS			; fetch the mount point
