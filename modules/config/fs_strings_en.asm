@@ -51,6 +51,8 @@ STR_bootflag:	defb	NEWLINE,"Autoboot: ",0
 ; Menu items.
 .globl STR_seturl
 STR_seturl:	defb	"Set a filesystem",0
+.globl STR_unseturl
+STR_unseturl:	defb	"Remove a filesystem",0
 .globl STR_setboot
 STR_setboot:	defb	"Set or unset autoboot",0
 .globl STR_saveexit

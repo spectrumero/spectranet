@@ -172,6 +172,18 @@ F_seturl:
 	ret
 
 ;--------------------------------------------------------------------------
+; F_unset_url
+F_unset_url:
+	call F_askfsnum
+	ret c
+
+	ld a, (AM_ASAVE)
+	call F_rmcfgitem_dct
+	jr c, .unable
+	xor a			; set zero flag
+	ret
+
+;--------------------------------------------------------------------------
 ; F_setboot: Sets/resets autoboot
 F_setboot:
 	ld a, AM_AUTOBOOT		; byte id
@@ -241,6 +253,7 @@ F_askfsnum:
 .data
 MENU_setfs:
 	defw	STR_seturl, F_seturl
+	defw	STR_unseturl, F_unset_url
 	defw	STR_setboot, F_setboot
 	defw	STR_saveexit, F_saveexit
 	defw	STR_abandon, F_abandon
