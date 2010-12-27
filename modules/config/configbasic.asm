@@ -159,7 +159,7 @@ F_prepwrite:
 .globl F_do_cfgset_byte
 F_do_cfgset_byte: 
 	call F_prepwrite
-	jr c, F_handle_error
+	jp c, F_handle_error
 	ld a,(ix+2)
 	ld c,(ix+4)
 	ex af, af'		; function expects value in af'
@@ -219,6 +219,35 @@ F_cfgnewsec:
 	ld d, b
 	ld e, c
 	call F_createsection
+	jp EXIT_SUCCESS
+
+;-------------------------------------------------------------------------
+; F_cfgrm
+; Removes the id passed from the section
+.globl F_cfgrm
+F_cfgrm:
+	; syntax time
+	rst CALLBAS
+	defw ZX_NEXT2_NUM	; Command is "section, item"
+	call STATEMENT_END
+
+	; runtime
+	call F_mappage
+	call F_cond_copyconfig
+	rst CALLBAS
+	defw ZX_FIND_INT2
+	push bc			; save the config item ID
+	rst CALLBAS
+	defw ZX_FIND_INT2
+	ld d, b			; transfer BC to DE, the section ID
+	ld e, c
+	call F_findsection_core	; get the section pointer
+	pop bc
+	jr c, F_handle_error
+	ld a, c			; get the LSB (= the id to remove)
+	call F_rmcfgitem_core
+	call F_leave
+	jr c, F_handle_error
 	jp EXIT_SUCCESS
 	
 ;-------------------------------------------------------------------------

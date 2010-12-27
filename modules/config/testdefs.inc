@@ -20,25 +20,18 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Standard module MODCALL definitions
+; Definitions
 
-; TNFS module
-PARSEURL	equ	0xFA00		; Parses an URL in DE, result in IX
-AUTOMOUNT	equ	0xFA01		; Runs the automounter
-
-; Configuration module
-CFG_COPYCONFIG          equ 0xFE01
-CFG_FINDSECTION         equ 0xFE02
-CFG_GETCFSTRING         equ 0xFE03
-CFG_GETCFBYTE           equ 0xFE04
-CFG_GETCFWORD           equ 0xFE05
-CFG_CREATESECTION       equ 0xFE06
-CFG_COMMITCFG           equ 0xFE07
-CFG_SETCFBYTE           equ 0xFE08
-CFG_SETCFWORD           equ 0xFE09
-CFG_SETCFSTRING         equ 0xFE0A
-CFG_ABANDONCFG          equ 0xFE0B
-CFG_RMCFGITEM		equ 0xFE0C
-
-CFG_CREATENEWCFG        equ 0xFEFF
+v_totalcfgsz		equ 0x8400	; Total configuration size location
+CONFIG_BASE_ADDR	equ 0x8400	; Base address of the config data
+MAXCFGSZ		equ 0xEFF	; last 256 byte page for core...
+CFG_RAM_PAGE		equ 0xDF
+CFG_FLASH_PAGE		equ 0x1F
+INTERPWKSPC		equ 0x9000
+v_configptr		equ 0x8300
+v_hlsave		equ 0x8302
+v_pga			equ 0x8304
+v_pgb			equ 0x8305
+FLASHPROGSTART		equ 0x0000
+FLASHPROGLEN		equ 0x0002
 

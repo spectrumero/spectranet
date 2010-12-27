@@ -20,25 +20,16 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 
-; Standard module MODCALL definitions
+; Configuration IDs
+AM_CONFIG_SECTION	equ	0x01ff		; decimal 511
+AM_FS0			equ	0x00
+AM_FS1			equ	0x01
+AM_FS2			equ	0x02
+AM_FS3			equ	0x03
+AM_MAX_FS		equ	4
+AM_AUTOBOOT		equ	0x81
 
-; TNFS module
-PARSEURL	equ	0xFA00		; Parses an URL in DE, result in IX
-AUTOMOUNT	equ	0xFA01		; Runs the automounter
-
-; Configuration module
-CFG_COPYCONFIG          equ 0xFE01
-CFG_FINDSECTION         equ 0xFE02
-CFG_GETCFSTRING         equ 0xFE03
-CFG_GETCFBYTE           equ 0xFE04
-CFG_GETCFWORD           equ 0xFE05
-CFG_CREATESECTION       equ 0xFE06
-CFG_COMMITCFG           equ 0xFE07
-CFG_SETCFBYTE           equ 0xFE08
-CFG_SETCFWORD           equ 0xFE09
-CFG_SETCFSTRING         equ 0xFE0A
-CFG_ABANDONCFG          equ 0xFE0B
-CFG_RMCFGITEM		equ 0xFE0C
-
-CFG_CREATENEWCFG        equ 0xFEFF
-
+; Memory locations
+AM_WORKSPACE_URL	equ	0x3000
+AM_ASAVE		equ	0x3100
+AM_WORKSPACE_MOUNT	equ	0x3101

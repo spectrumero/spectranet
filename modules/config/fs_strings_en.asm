@@ -23,60 +23,48 @@
 ; English strings for the configuration utility.
 .include	"ctrlchars.inc"
 .data
-.globl STR_ident
-.globl STR_basicinit
-.globl STR_basinsterr
-.globl STR_curfs
-.globl STR_under
-.globl STR_proto
-.globl STR_host
-.globl STR_rempath
-.globl STR_user
-.globl STR_unset
-.globl STR_null
-.globl STR_passwd
-STR_ident: defb	"Configtool  1.0",0
-STR_basicinit: defb	"configtool initialized",NEWLINE,0
-STR_basinsterr: defb	"Failed to initialize configtool",NEWLINE,0
-
-STR_curfs: defb	"Current settings for FS",0
-STR_under: defb	NEWLINE,"========================",NEWLINE,NEWLINE,0
-STR_proto: defb	"Proto: ",0
-STR_host: defb	"Host : ",0   
-STR_rempath: defb	"Path : ",0
-STR_user: defb	"User : ",0
-STR_unset: defb	"Not set",0
-STR_null: defb	"Null",0
-STR_passwd: defb	"Password: ",0
-
-.globl STR_show0and1
-.globl STR_show1and2
-.globl STR_chguser
-.globl STR_chgproto
-.globl STR_chghost
-.globl STR_chgpath
-.globl STR_saveexit
-.globl STR_abandon
-STR_show0and1: defb	"Show details for FS 0 and 1",0
-STR_show1and2: defb	"Show details for FS 2 and 3",0
-STR_chgproto: defb	"Select protocol for an FS",0
-STR_chghost: defb	"Select a host for an FS",0
-STR_chgpath: defb	"Select the path on the host",0
-STR_chguser: defb	"Set user/password for the host",0
-STR_saveexit: defb	"Save configuration and exit",0
-STR_abandon: defb	"Abandon changes and exit",0
-
 .globl STR_fsnum
+STR_fsnum:	defb	"Filesystem: ",0
+.globl STR_unset
+STR_unset:	defb	"<unset>",NEWLINE,0
+.globl STR_geturl
+STR_geturl:	defb	NEWLINE,"Enter filesystem URL:",NEWLINE,"> ",0
+.globl STR_invalidurl
+STR_invalidurl:	defb	"Not a valid URL",NEWLINE,0
+.globl STR_committed
+STR_committed:	defb	"Committed OK.",NEWLINE,0
+.globl STR_committing
+STR_committing:	defb	"Writing...",NEWLINE,0
+.globl STR_commitfail
+STR_commitfail:	defb	"Commit failed.",NEWLINE,0
+.globl STR_abandoned
+STR_abandoned:	defb	"Changes abandoned.",NEWLINE,0
 .globl STR_invalidfs
-STR_fsnum: defb	"Filesystem (0-3): ",0
-STR_invalidfs: defb	"Invalid FS number.",NEWLINE,0
+STR_invalidfs:	defb	"Not a valid URL",NEWLINE,0
+.globl STR_unable
+STR_unable:	defb	"Unable to set config item",NEWLINE,0
+.globl STR_createfail
+STR_createfail:	defb	"Unable to create section",NEWLINE,0
+.globl STR_bootflag
+STR_bootflag:	defb	NEWLINE,"Autoboot: ",0
 
-.globl STR_updating
-.globl STR_flashdone
-.globl STR_erasebork
-.globl STR_writebork
-STR_updating: defb	"Updating flash...",NEWLINE,0
-STR_flashdone: defb	"Complete.",NEWLINE,0
-STR_erasebork: defb	"Erase failed!",NEWLINE,0
-STR_writebork: defb	"Write failed!",NEWLINE,0
+; Menu items.
+.globl STR_seturl
+STR_seturl:	defb	"Set a filesystem",0
+.globl STR_setboot
+STR_setboot:	defb	"Set or unset autoboot",0
+.globl STR_saveexit
+STR_saveexit:	defb	"Save and exit",0
+.globl STR_abandon
+STR_abandon:	defb	"Abandon changes and exit",0
+.globl STR_separator
+STR_separator:	defb	NEWLINE,"========================================",NEWLINE,NEWLINE,0
+
+; Others.
+.globl STR_basicinit
+STR_basicinit:	defb	"Config extensions OK",NEWLINE,0
+.globl STR_basinsterr
+STR_basinsterr:	defb	"Unable to initialize config extensions",NEWLINE,0
+.globl STR_ident
+STR_ident:	defb	"Configuration 1.0",0
 

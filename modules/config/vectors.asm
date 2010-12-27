@@ -84,6 +84,10 @@ modcall:
 	cp l	
 	jp z, F_abandonConfig	; 0x0B
 
+	inc a
+	cp l
+	jp z, F_rmcfgitem	; 0x0C
+
 	ld a, l
 	cp 0xFF			; 0xFF
 	jp z, F_createnewconfig

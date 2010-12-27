@@ -1,4 +1,6 @@
 ASOBJS = configbasic.o configdata.o fs_config_ui.o fs_strings_en.o gen_copycfg.o if_config_ui.o if_configmain.o if_saveconfig.o if_strings_en.o init.o vectors.o
+TESTOBJS = cfgtest.o configdata.o
+CREATEOBJS = create.o
 LIBS = -lromui
 LIBPATH = -L ../../syslib
 FLOBJS = flashwrite.o
@@ -14,6 +16,8 @@ SAOUT = ifconfig.bin
 SALDFLAGS = -Ttext 0x8000 $(LIBPATH)
 SALIBS = -lflashwrite -lromui
 OUT = config.module
+TESTOUT = cfgtest.bin
+CREATEOUT = create.bin
 
 all:	flash module dumpcfg standalone
 include ../make.inc
@@ -26,4 +30,10 @@ dumpcfg:	$(DUMPOBJS)
 
 standalone:	$(SAOBJS)
 	$(LD) -o $(SAOUT) $(SAOBJS) $(SALDFLAGS) $(SALIBS)
+
+test:	$(TESTOBJS)
+	$(LD) -o $(TESTOUT) $(TESTOBJS) -Ttext=0x8000 -Tdata=0x8400
+
+create:	$(CREATEOBJS)
+	$(LD) -o $(CREATEOUT) $(CREATEOBJS) -Ttext=0x8000
 

@@ -19,8 +19,12 @@
 ;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
+.ifdef TEST
+.include	"testdefs.inc"
+.else
 .include	"configdefs.inc"
 .include	"sysvars.inc"
+.endif
 .include	"spectranet.inc"
 .text
 
@@ -46,7 +50,9 @@ F_cond_copyconfig:
 ; Carry is set if the section was not found.
 .globl F_findsection
 F_findsection: 
+.ifndef TEST
 	call F_mappage
+.endif
 	call F_findsection_core
 	jp F_leave
 
@@ -99,7 +105,9 @@ F_findsection_core:
 ; Carry is set if the section can't be created.
 .globl F_createsection
 F_createsection: 
+.ifndef TEST
 	call F_mappage
+.endif
 	push de
 	call F_findsection_core		; does the section already exist?
 	pop de
@@ -134,7 +142,9 @@ F_createsection:
 ; Creates a brand new empty config area.
 .globl F_createnewconfig
 F_createnewconfig: 
+.ifndef TEST
 	call F_mappage
+.endif
 
 	xor a
 	ld (CONFIG_BASE_ADDR+1), a	; msb of size
@@ -152,7 +162,11 @@ F_createnewconfig:
 .globl F_getCFString
 F_getCFString: 
 	ex af, af'		; get arg
+.globl F_getCFString_dct
+F_getCFString_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 
 	push de
 	call F_findcfgitem
@@ -174,7 +188,11 @@ F_getCFString:
 .globl F_getCFWord
 F_getCFWord: 
 	ex af, af'		; get arg
+.globl F_getCFWord_dct
+F_getCFWord_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 
 	call F_findcfgitem
 	jp c, F_leave
@@ -191,7 +209,11 @@ F_getCFWord:
 .globl F_getCFByte
 F_getCFByte: 
 	ex af, af'		; get arg
+.globl F_getCFByte_dct
+F_getCFByte_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 
 	call F_findcfgitem
 	jp c, F_leave
@@ -269,7 +291,11 @@ F_addCFWord:
 .globl F_addCFString
 F_addCFString: 
 	ex af, af'		; get arg
+.globl F_addCFString_dct
+F_addCFString_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 	call F_addCFString_core
 	jp F_leave
 
@@ -317,7 +343,11 @@ F_addCFString_core:
 .globl F_setCFString
 F_setCFString: 
 	ex af, af'
+.globl F_setCFString_dct
+F_setCFString_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 	push af
 	push de
 	call F_rmcfgitem_core	; if it already exists it must be removed
@@ -333,7 +363,11 @@ F_setCFString:
 .globl F_setCFWord
 F_setCFWord: 
 	ex af, af'
+.globl F_setCFWord_dct
+F_setCFWord_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 	push af
 	push bc
 	call F_findcfgitem
@@ -356,7 +390,11 @@ F_setCFWord:
 .globl F_setCFByte
 F_setCFByte: 
 	ex af, af'
+.globl F_setCFByte_dct
+F_setCFByte_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 	push af
 	push bc
 	call F_findcfgitem		; get the address of the byte 
@@ -424,7 +462,11 @@ F_findcfgitem:
 .globl F_rmcfgitem
 F_rmcfgitem: 
 	ex af, af'			; retrieve arg in A
+.globl F_rmcfgitem_dct
+F_rmcfgitem_dct:
+.ifndef TEST
 	call F_mappage
+.endif
 	call F_rmcfgitem_core
 	jp F_leave
 
@@ -626,6 +668,9 @@ F_getsysvar:
 
 .globl F_leave
 F_leave: 
+.ifdef TEST
+	ret
+.else
 	push af
 	push hl
 	call F_getsysvar
@@ -634,5 +679,5 @@ F_leave:
 	pop hl
 	pop af
 	ret
-
+.endif
 	

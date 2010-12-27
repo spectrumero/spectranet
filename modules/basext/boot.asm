@@ -41,7 +41,8 @@
 .include	"zxrom.inc"
 .include	"zxsysvars.inc"
 .include	"ctrlchars.inc"
-.include	"../config/config_interface.inc"
+.include	"stdmodules.inc"
+.include	"automount.inc"
 .text
 .globl F_boot
 F_boot:
@@ -105,14 +106,15 @@ F_boot:
 ; F_shouldboot: See if we should boot (either configured to do so or
 ; SHIFT is pressed down) Zero flag is set if we should boot, non zero
 ; return if not.
+; This configuration setting exists in the automounter's section.
 .globl F_shouldboot
 F_shouldboot:
-	ld de, ROM_ID		; section ID
+	ld de, AM_CONFIG_SECTION
 	ld hl, CFG_FINDSECTION	; go and find it
 	rst MODULECALL_NOPAGE
 	jr c, .bootonshift2	; we don't have a section, jump forward.
 	
-	ld a, AUTOBOOT		; get 'autoboot' option
+	ld a, AM_AUTOBOOT	; get 'autoboot' option
 	ld hl, CFG_GETCFBYTE
 	rst MODULECALL_NOPAGE
 	jr c, .bootonshift2	; not found, take no action

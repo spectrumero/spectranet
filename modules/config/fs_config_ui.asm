@@ -23,6 +23,8 @@
 .include	"ctrlchars.inc"
 .include	"flashconf.inc"
 .include	"sysvars.inc"
+.include	"automount.inc"
+.include	"stdmodules.inc"
 
 .text
 ;---------------------------------------------------------------------------
@@ -40,11 +42,13 @@ F_start:
 .globl F_fsconfigmain
 F_fsconfigmain: 
 	call F_cond_copyconfig
-	ld a, 0x1D		; first configuration table
-	ld (v_workspace), a
 .fsconfigloop2: 
 	call CLEAR42
-	call F_showfs
+	call F_showconfig
+
+	ld hl, STR_separator
+	call PRINT42
+
 	ld hl, MENU_setfs
 	call F_genmenu
 	ld hl, MENU_setfs
@@ -52,202 +56,158 @@ F_fsconfigmain:
 	jr z,  .fsconfigloop2	; user has not finished
 	ret
 
-;---------------------------------------------------------------------------
-; F_showfs
-; Shows details of two mountpoints.
-.globl F_showfs
-F_showfs: 
-	ld a, (v_workspace)	; form the base address
-	ld h, a
-	ld l, 0x00		; HL = 0x10..
-	sub 0x1D		; calculate fs number for display
-	rlca
-	push af
-	call F_showconfig
-	ld hl, (v_hlsave)	; retrieve original base address
-	ld l, 0x80		; set to second config
-	pop af
+;--------------------------------------------------------------------------
+; F_showconfig
+; Shows the current configuration.
+F_showconfig:
+	call F_cond_copyconfig
+	ld de, AM_CONFIG_SECTION
+	call F_findsection
+	jr c, .makesection
+.continue:
+	ld b, AM_MAX_FS			; number of times to loop
+	ld a, AM_FS0			; FS number to start with
+.disploop:
+	push bc
+	ld (AM_ASAVE), a
+	ld hl, STR_fsnum
+	call PRINT42
+	ld a, (AM_ASAVE)
+	add a, '0'
+	call PUTCHAR42
+	ld a, NEWLINE
+	call PUTCHAR42
+
+	ld a, (AM_ASAVE)		; Now get the existing FS details
+	ld de, AM_WORKSPACE_URL
+	call F_getCFString_dct
+	jr c, .nothing
+	ld hl, AM_WORKSPACE_URL
+	call PRINT42
+	ld a, NEWLINE
+	call PUTCHAR42
+
+.disploop1:
+	ld a, (AM_ASAVE)
 	inc a
-	call F_showconfig
+	ld (AM_ASAVE), a
+	pop bc
+	djnz .disploop	
+
+.showboot:
+	ld hl, STR_bootflag
+	call PRINT42
+	ld a, AM_AUTOBOOT
+	call F_getCFByte_dct
+	and a				; zero or 1?
+	jr z, .zero
+	ld hl, STR_yes
+	call PRINT42
+	ret
+.zero:
+	ld hl, STR_no
+	call PRINT42
 	ret
 
-;---------------------------------------------------------------------------
-; F_showconfig
-; Shows a configuration. (A tedious routine...)
-; HL = base address of configuration set.
-; A = intended mount point
-.globl F_showconfig
-F_showconfig: 
-	push af
-	ld (v_hlsave), hl	; keep a copy
-	ld hl, STR_curfs
-	call PRINT42
-	pop af			; get mount point back
-	add a, '0'		; turn it into a number
-	call PUTCHAR42
-	call F_cr
-
-	ld hl, STR_proto	; print "Proto:"
-	call PRINT42
-	ld hl, (v_hlsave)
-	inc l			; proto = base +1
-	call F_printifset
-
-	ld hl, STR_host		; Hostname
-	call PRINT42
-	ld hl, (v_hlsave)	; calculate the address of the config item
-	ld de, DEF_FS_HOST0 % 256
-	add hl, de
-	call F_printifset
-
-	ld hl, STR_rempath	; Path on server
-	call PRINT42
-	ld hl, (v_hlsave)
-	ld de, DEF_FS_SRCPTH0 % 256
-	add hl, de
-	call F_printifset
-
-	ld hl, STR_user
-	call PRINT42
-	ld hl, (v_hlsave)
-	ld de, DEF_FS_USER0 % 256
-	add hl, de
-	call F_printifset
-	jp F_cr
-	
-
-;---------------------------------------------------------------------------
-; F_printifset: Only prints the item if it's actually set to something.
-.globl F_printifset
-F_printifset: 
-	ld a, (hl)
-	cp 0xFF			; Not set at all?
-	jr z,  .notset5
-	and a			; Set to null?
-	jr nz,  .printit5
-	ld hl, STR_null
-	jr  .printit5
-.notset5: 
+.nothing:
 	ld hl, STR_unset
-.printit5: 
 	call PRINT42
-.globl F_cr
-F_cr: 
-	ld a, NEWLINE
-	jp PUTCHAR42
+	jr .disploop1
 
+.makesection:
+	ld de, AM_CONFIG_SECTION
+	call F_createsection
+	ld de, AM_CONFIG_SECTION
+	call F_findsection
+	jr c, .fatalerror
+	jr .continue
+.fatalerror:
+	ld hl, STR_createfail
+	call PRINT42
+	ret
 
-; Menu definitions
-MENU_setfs:
-	defw	STR_show0and1, F_show0and1
-	defw	STR_show1and2, F_show1and2
-	defw	STR_chgproto, F_chgproto
-	defw	STR_chghost, F_chghost
-	defw	STR_chgpath, F_chgrempath
-	defw	STR_chguser, F_chguserpasswd
-	defw	STR_saveexit, F_saveexit
-	defw	STR_abandon, F_abandon
-	defw	0,0
+;-------------------------------------------------------------------------
+; F_geturl
+; Asks for a filesystem url.
+F_geturl:
+	ld hl, STR_geturl
+	call PRINT42
+	ld c, 40		; allow up to 40 chars
+	ld de, AM_WORKSPACE_URL	; where to store
+	call INPUTSTRING
+	ld a, (AM_WORKSPACE_URL)
+	and a			; user abandoned?
+	jr z,  .abandonurl
+	ld ix, AM_WORKSPACE_MOUNT
+	ld hl, PARSEURL		; make sure the URL is valid
+	rst MODULECALL_NOPAGE
+	ret nc			; URL is OK.
+	ld hl, STR_invalidurl
+	call PRINT42
+	jr F_geturl
 
-;----------------------------------------------------------------------------
-; F_show0and1
-; Show details for FS0 and FS1
-.globl F_show0and1
-F_show0and1: 
-	ld a, 0x1D		; MSB for FS0
-	ld (v_workspace), a
+.abandonurl:
+	scf
+	ret
+
+;------------------------------------------------------------------------
+; F_seturl
+F_seturl:
+	call F_askfsnum	
+	ret c
+	call F_geturl
+	ret c
+.urlcont:
+	ld a, (AM_ASAVE)
+	ld de, AM_WORKSPACE_URL	; pointer to the URL
+	call F_setCFString_dct	; set the string
+	jr c, .unable
 	xor a			; set zero flag
 	ret
-.globl F_show1and2
-F_show1and2: 
-	ld a, 0x1E		; MSB for FS2A
-	ld (v_workspace), a
-	xor a
+
+.unable:
+	ld hl, STR_unable
+	call PRINT42
+	xor a			; set zero flag
 	ret
 
-.globl F_chgproto
-F_chgproto: 
-	call F_askfsnum
-	jr c, zeroexit		; user abandoned
-	push hl
-	ld hl, STR_proto	; question we want to ask
-	ld de, DEF_FS_PROTO0 % 256	; requested address
-	ld c, 6			; max size
-	jp F_getprotostring
-
-.globl F_chghost
-F_chghost: 
-	call F_askfsnum
-	jr c, zeroexit		; user abandoned
-	push hl
-	ld hl, STR_host		; question we want to ask
-	ld de, DEF_FS_HOST0 % 256	; requested address
-	ld c, 41		; max size
-	jp F_getprotostring
-
-.globl F_chgrempath
-F_chgrempath: 
-	call F_askfsnum
-	jr c, zeroexit		; user abandoned
-	push hl
-	ld hl, STR_rempath	; question we want to ask
-	ld de, DEF_FS_SRCPTH0 % 256	; requested address
-	ld c, 48		; max size
-
-.globl F_getprotostring
-F_getprotostring: 
-	call F_cr		; carriage return
-	call PRINT42		; print requested string
-	pop hl			; get the base address
-	add hl, de		; calculate address of protocol string
-	ex de, hl
-	call INPUTSTRING
-zeroexit:
-	xor a			; set Z
+;--------------------------------------------------------------------------
+; F_setboot: Sets/resets autoboot
+F_setboot:
+	ld a, AM_AUTOBOOT		; byte id
+	call F_getCFByte_dct
+	jr nc, .setup		; set it up if it's not set already
+	xor a			; reset A if it's not set
+.setup:
+	xor 1			; flip the bottom bit
+	ld c, a
+	ld a, AM_AUTOBOOT
+	call F_setCFByte_dct
+	xor a			; set Z flag
 	ret
 
-.globl F_chguserpasswd
-F_chguserpasswd: 
-	call F_askfsnum
-	jr c, zeroexit
-	push hl
-	ld hl, STR_user
-	ld de, DEF_FS_USER0 % 256
-	ld c, 16
-	call F_cr		; carriage return
-	call PRINT42		; print requested string
-	pop hl			; get the base address
-	push hl			; save it for passwd
-	add hl, de		; calculate address of protocol string
-	ex de, hl
-	call INPUTSTRING
-	ld hl, STR_passwd
-	ld de, DEF_FS_PASSWD0 % 256
-	ld c, 16
-	jp F_getprotostring	; will pop HL
-	
-.globl F_saveexit
-F_saveexit: 
-	ld hl, STR_updating
+;--------------------------------------------------------------------------
+; F_saveexit
+F_saveexit:
+	ld hl, STR_committing
 	call PRINT42
-
-	; copy flash writer into RAM
-	ld hl, FLASHPROGSTART
-	ld de, 0x3000
-	ld bc, FLASHPROGLEN
-	ldir
-	call 0x3000
-	jr c, borked
-	ld hl, STR_flashdone
+	call F_commitConfig
+	jr c, .commitfail
+	ld hl, STR_committed
 	call PRINT42
-.globl F_abandon
-F_abandon: 
-	or 1			; reset zero flag
+	or 1			; make sure Z is reset
 	ret
-borked:
-	ld hl, STR_writebork
+.commitfail:
+	ld hl, STR_commitfail
 	call PRINT42
-	jr F_abandon
+	or 1
+	ret
+F_abandon:
+	call F_abandonConfig
+	ld hl, STR_abandoned
+	call PRINT42
+	or 1			; make sure Z is reset
+	ret
 
 ;----------------------------------------------------------------------------
 ; F_askfsnum: Ask the user to enter a filesystem number.
@@ -256,20 +216,16 @@ F_askfsnum:
 	ld hl, STR_fsnum
 	call PRINT42
 	ld c, 2			; Only one character
-	ld de, v_workspace+1	; place to store the answer
+	ld de, AM_ASAVE		; place to store the answer
 	call INPUTSTRING
-	ld a, (v_workspace+1)
+	ld a, (AM_ASAVE)
 	and a			; user abandoned?
 	jr z,  .abandon16
 	sub '0'			; convert to int
 	cp 4
-	jr nc,  .invalid16		; too big!
-	ccf			; reset carry
-	ld l, 0			; set LSB
-	rra			; half and set carry if odd
-	rr l			; and suck into msb of L
-	add a, 0x1D		; set MSB
-	ld h, a			; HL now points at base address
+	jr nc,  .invalid16	; too big!
+	ld (AM_ASAVE), a
+	and a			; reset carry
 	ret
 
 .invalid16: 
@@ -281,3 +237,12 @@ F_askfsnum:
 	scf
 	ret
 	
+; Menu definitions
+.data
+MENU_setfs:
+	defw	STR_seturl, F_seturl
+	defw	STR_setboot, F_setboot
+	defw	STR_saveexit, F_saveexit
+	defw	STR_abandon, F_abandon
+	defw	0,0
+
