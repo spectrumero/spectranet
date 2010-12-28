@@ -162,8 +162,7 @@ F_do_cfgset_byte:
 	jp c, F_handle_error
 	ld a,(ix+2)
 	ld c,(ix+4)
-	ex af, af'		; function expects value in af'
-	call F_setCFByte
+	call F_setCFByte_dct
 	jp EXIT_SUCCESS
 
 .globl F_do_cfgset_word
@@ -173,8 +172,7 @@ F_do_cfgset_word:
 	ld a,(ix+2)
 	ld c,(ix+4)
 	ld b,(ix+5)
-	ex af, af'		; function expects value in af'
-	call F_setCFWord
+	call F_setCFWord_dct
 	jp EXIT_SUCCESS
 
 .globl F_do_cfgset_string
@@ -184,8 +182,7 @@ F_do_cfgset_string:
 	ld a,(ix+2)
 	ld e,(ix+4)
 	ld d,(ix+5)
-	ex af, af'		; function expects value in af'
-	call F_setCFString
+	call F_setCFString_dct
 	jp EXIT_SUCCESS
 
 ;-------------------------------------------------------------------------
@@ -241,7 +238,7 @@ F_cfgrm:
 	defw ZX_FIND_INT2
 	ld d, b			; transfer BC to DE, the section ID
 	ld e, c
-	call F_findsection_core	; get the section pointer
+	call F_findsection
 	pop bc
 	jr c, F_handle_error
 	ld a, c			; get the LSB (= the id to remove)
