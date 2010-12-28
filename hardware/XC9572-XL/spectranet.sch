@@ -99,7 +99,7 @@
         <signal name="TRAP_PORT" />
         <signal name="XLXN_518" />
         <signal name="XLXN_519" />
-        <signal name="XLXN_521" />
+        <signal name="SREG_REQ" />
         <signal name="RD_SREG" />
         <signal name="XLXN_537" />
         <signal name="HLDROMCS" />
@@ -107,13 +107,6 @@
         <signal name="NMIOUT_L" />
         <signal name="XLXN_561" />
         <signal name="XLXN_562" />
-        <signal name="XLXN_261" />
-        <signal name="XLXN_262" />
-        <signal name="XLXN_263" />
-        <signal name="XLXN_267" />
-        <signal name="XLXN_270" />
-        <signal name="XLXN_275" />
-        <signal name="XLXN_279" />
         <signal name="INT_ENABLE" />
         <signal name="XLXN_159" />
         <signal name="XLXN_630(7:0)" />
@@ -158,11 +151,24 @@
         <signal name="XLXN_595" />
         <signal name="XLXN_552" />
         <signal name="ROMCS_SENSE" />
-        <signal name="XLXN_776" />
         <signal name="MEMACTIVE" />
-        <signal name="A15OUT" />
         <signal name="HLDROMCS_ODL" />
-        <signal name="XLXN_781" />
+        <signal name="PGM_A15_HOLD" />
+        <signal name="D(5)" />
+        <signal name="A15OUT" />
+        <signal name="D(6)" />
+        <signal name="PGM_A15_HOLDM" />
+        <signal name="LINK_L" />
+        <signal name="XLXN_261" />
+        <signal name="XLXN_262" />
+        <signal name="XLXN_263" />
+        <signal name="XLXN_267" />
+        <signal name="XLXN_270" />
+        <signal name="XLXN_275" />
+        <signal name="XLXN_279" />
+        <signal name="W5100_RESET_L" />
+        <signal name="XLXN_759" />
+        <signal name="D(7)" />
         <port polarity="Input" name="M1_L" />
         <port polarity="Input" name="CLK" />
         <port polarity="Output" name="PA12" />
@@ -186,8 +192,10 @@
         <port polarity="Input" name="RESET_L" />
         <port polarity="Input" name="RD_L" />
         <port polarity="Input" name="ROMCS_SENSE" />
-        <port polarity="Output" name="A15OUT" />
         <port polarity="Output" name="HLDROMCS_ODL" />
+        <port polarity="Output" name="A15OUT" />
+        <port polarity="Input" name="LINK_L" />
+        <port polarity="Output" name="W5100_RESET_L" />
         <blockdef name="d2_4e">
             <timestamp>2000-1-1T10:10:10</timestamp>
             <rect width="256" x="64" y="-384" height="320" />
@@ -758,7 +766,7 @@
             <blockpin signalname="FFB(7:0)" name="Q(7:0)" />
         </block>
         <block symbolname="fdce" name="XLXI_173">
-            <blockpin signalname="XLXN_521" name="C" />
+            <blockpin signalname="SREG_REQ" name="C" />
             <blockpin signalname="WRITE_ENABLE" name="CE" />
             <blockpin signalname="XLXN_481" name="CLR" />
             <blockpin signalname="D(0)" name="D" />
@@ -804,11 +812,11 @@
         </block>
         <block symbolname="inv" name="XLXI_187">
             <blockpin signalname="XLXN_537" name="I" />
-            <blockpin signalname="XLXN_521" name="O" />
+            <blockpin signalname="SREG_REQ" name="O" />
         </block>
         <block symbolname="or2" name="XLXI_199">
             <blockpin signalname="RD_L" name="I0" />
-            <blockpin signalname="XLXN_521" name="I1" />
+            <blockpin signalname="SREG_REQ" name="I1" />
             <blockpin signalname="RD_SREG" name="O" />
         </block>
         <block symbolname="obufe" name="XLXI_221">
@@ -819,53 +827,8 @@
         <block symbolname="gnd" name="XLXI_222">
             <blockpin signalname="XLXN_553" name="G" />
         </block>
-        <block symbolname="and8" name="XLXI_87">
-            <blockpin signalname="XLXN_263" name="I0" />
-            <blockpin signalname="XLXN_262" name="I1" />
-            <blockpin signalname="A(2)" name="I2" />
-            <blockpin signalname="A(3)" name="I3" />
-            <blockpin signalname="A(4)" name="I4" />
-            <blockpin signalname="A(5)" name="I5" />
-            <blockpin signalname="A(6)" name="I6" />
-            <blockpin signalname="XLXN_261" name="I7" />
-            <blockpin signalname="XLXN_267" name="O" />
-        </block>
-        <block symbolname="inv" name="XLXI_88">
-            <blockpin signalname="A(7)" name="I" />
-            <blockpin signalname="XLXN_261" name="O" />
-        </block>
-        <block symbolname="inv" name="XLXI_89">
-            <blockpin signalname="A(1)" name="I" />
-            <blockpin signalname="XLXN_262" name="O" />
-        </block>
-        <block symbolname="inv" name="XLXI_90">
-            <blockpin signalname="A(0)" name="I" />
-            <blockpin signalname="XLXN_263" name="O" />
-        </block>
-        <block symbolname="and5b2" name="XLXI_142">
-            <blockpin signalname="MREQ_L" name="I0" />
-            <blockpin signalname="M1_L" name="I1" />
-            <blockpin signalname="XLXN_267" name="I2" />
-            <blockpin signalname="UAZERO" name="I3" />
-            <blockpin signalname="HLDROMCS" name="I4" />
-            <blockpin signalname="XLXN_270" name="O" />
-        </block>
-        <block symbolname="fd" name="XLXI_92">
-            <blockpin signalname="XLXN_279" name="C" />
-            <blockpin signalname="XLXN_270" name="D" />
-            <blockpin signalname="XLXN_275" name="Q" />
-        </block>
-        <block symbolname="inv" name="XLXI_97">
-            <blockpin signalname="CLK" name="I" />
-            <blockpin signalname="XLXN_279" name="O" />
-        </block>
-        <block symbolname="and2" name="XLXI_129">
-            <blockpin signalname="MREQ_L" name="I0" />
-            <blockpin signalname="XLXN_275" name="I1" />
-            <blockpin signalname="UNPAGE" name="O" />
-        </block>
         <block symbolname="fdce" name="XLXI_244">
-            <blockpin signalname="XLXN_521" name="C" />
+            <blockpin signalname="SREG_REQ" name="C" />
             <blockpin signalname="WRITE_ENABLE" name="CE" />
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(3)" name="D" />
@@ -1131,10 +1094,90 @@
             <blockpin signalname="ROMCS_SENSE" name="I1" />
             <blockpin signalname="XLXN_595" name="O" />
         </block>
-        <block symbolname="or2" name="XLXI_83">
+        <block symbolname="fdce" name="XLXI_340">
+            <blockpin signalname="SREG_REQ" name="C" />
+            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="RESET_H" name="CLR" />
+            <blockpin signalname="D(5)" name="D" />
+            <blockpin signalname="PGM_A15_HOLD" name="Q" />
+        </block>
+        <block symbolname="buft" name="XLXI_341">
+            <blockpin signalname="PGM_A15_HOLD" name="I" />
+            <blockpin signalname="RD_SREG" name="T" />
+            <blockpin signalname="D(5)" name="O" />
+        </block>
+        <block symbolname="or3" name="XLXI_342">
             <blockpin signalname="MEMACTIVE" name="I0" />
             <blockpin signalname="A(15)" name="I1" />
+            <blockpin signalname="PGM_A15_HOLDM" name="I2" />
             <blockpin signalname="A15OUT" name="O" />
+        </block>
+        <block symbolname="buft" name="XLXI_343">
+            <blockpin signalname="LINK_L" name="I" />
+            <blockpin signalname="RD_SREG" name="T" />
+            <blockpin signalname="D(6)" name="O" />
+        </block>
+        <block symbolname="and2b1" name="XLXI_347">
+            <blockpin signalname="MREQ_L" name="I0" />
+            <blockpin signalname="PGM_A15_HOLD" name="I1" />
+            <blockpin signalname="PGM_A15_HOLDM" name="O" />
+        </block>
+        <block symbolname="and8" name="XLXI_87">
+            <blockpin signalname="XLXN_263" name="I0" />
+            <blockpin signalname="XLXN_262" name="I1" />
+            <blockpin signalname="A(2)" name="I2" />
+            <blockpin signalname="A(3)" name="I3" />
+            <blockpin signalname="A(4)" name="I4" />
+            <blockpin signalname="A(5)" name="I5" />
+            <blockpin signalname="A(6)" name="I6" />
+            <blockpin signalname="XLXN_261" name="I7" />
+            <blockpin signalname="XLXN_267" name="O" />
+        </block>
+        <block symbolname="inv" name="XLXI_88">
+            <blockpin signalname="A(7)" name="I" />
+            <blockpin signalname="XLXN_261" name="O" />
+        </block>
+        <block symbolname="inv" name="XLXI_89">
+            <blockpin signalname="A(1)" name="I" />
+            <blockpin signalname="XLXN_262" name="O" />
+        </block>
+        <block symbolname="inv" name="XLXI_90">
+            <blockpin signalname="A(0)" name="I" />
+            <blockpin signalname="XLXN_263" name="O" />
+        </block>
+        <block symbolname="and5b2" name="XLXI_142">
+            <blockpin signalname="MREQ_L" name="I0" />
+            <blockpin signalname="M1_L" name="I1" />
+            <blockpin signalname="XLXN_267" name="I2" />
+            <blockpin signalname="UAZERO" name="I3" />
+            <blockpin signalname="HLDROMCS" name="I4" />
+            <blockpin signalname="XLXN_270" name="O" />
+        </block>
+        <block symbolname="fd" name="XLXI_92">
+            <blockpin signalname="XLXN_279" name="C" />
+            <blockpin signalname="XLXN_270" name="D" />
+            <blockpin signalname="XLXN_275" name="Q" />
+        </block>
+        <block symbolname="inv" name="XLXI_97">
+            <blockpin signalname="CLK" name="I" />
+            <blockpin signalname="XLXN_279" name="O" />
+        </block>
+        <block symbolname="and2" name="XLXI_129">
+            <blockpin signalname="MREQ_L" name="I0" />
+            <blockpin signalname="XLXN_275" name="I1" />
+            <blockpin signalname="UNPAGE" name="O" />
+        </block>
+        <block symbolname="fdce" name="XLXI_356">
+            <blockpin signalname="SREG_REQ" name="C" />
+            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="RESET_H" name="CLR" />
+            <blockpin signalname="D(7)" name="D" />
+            <blockpin signalname="W5100_RESET_L" name="Q" />
+        </block>
+        <block symbolname="buft" name="XLXI_357">
+            <blockpin signalname="W5100_RESET_L" name="I" />
+            <blockpin signalname="RD_SREG" name="T" />
+            <blockpin signalname="D(7)" name="O" />
         </block>
     </netlist>
     <sheet sheetnum="1" width="3520" height="2720">
@@ -1266,10 +1309,12 @@
             <wire x2="2208" y1="832" y2="1152" x1="2208" />
             <wire x2="2432" y1="1152" y2="1152" x1="2208" />
         </branch>
-        <branch name="XLXN_521">
+        <branch name="SREG_REQ">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1168" y="1488" type="branch" />
             <wire x2="816" y1="1488" y2="2352" x1="816" />
             <wire x2="1136" y1="2352" y2="2352" x1="816" />
-            <wire x2="1360" y1="1488" y2="1488" x1="816" />
+            <wire x2="1168" y1="1488" y2="1488" x1="816" />
+            <wire x2="1360" y1="1488" y2="1488" x1="1168" />
             <wire x2="1456" y1="1488" y2="1488" x1="1360" />
             <wire x2="2064" y1="1104" y2="1104" x1="1360" />
             <wire x2="1360" y1="1104" y2="1488" x1="1360" />
@@ -1758,20 +1803,25 @@
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="2736" y="1872" type="branch" />
             <wire x2="2800" y1="1872" y2="1872" x1="2736" />
         </branch>
-        <branch name="A15OUT">
-            <wire x2="3088" y1="1904" y2="1904" x1="3056" />
-        </branch>
         <instance x="2816" y="2624" name="XLXI_249" orien="R0" />
         <instance x="2624" y="2528" name="XLXI_215" orien="R90" />
         <instance x="2896" y="2208" name="XLXI_248" orien="R90" />
-        <instance x="2800" y="2000" name="XLXI_83" orien="R0" />
         <branch name="HLDROMCS_ODL">
             <wire x2="3056" y1="2592" y2="2592" x1="3040" />
             <wire x2="3072" y1="2592" y2="2592" x1="3056" />
         </branch>
         <iomarker fontsize="28" x="3072" y="2592" name="HLDROMCS_ODL" orien="R0" />
         <iomarker fontsize="28" x="3024" y="2176" name="ROMCS_SENSE" orien="R270" />
-        <iomarker fontsize="28" x="3088" y="1904" name="A15OUT" orien="R0" />
+        <instance x="2800" y="2000" name="XLXI_342" orien="R0" />
+        <branch name="A15OUT">
+            <wire x2="3088" y1="1872" y2="1872" x1="3056" />
+        </branch>
+        <iomarker fontsize="28" x="3088" y="1872" name="A15OUT" orien="R0" />
+        <branch name="PGM_A15_HOLDM">
+            <attrtext style="alignment:SOFT-VLEFT" attrname="Name" x="2736" y="1744" type="branch" />
+            <wire x2="2736" y1="1744" y2="1808" x1="2736" />
+            <wire x2="2800" y1="1808" y2="1808" x1="2736" />
+        </branch>
     </sheet>
     <sheet sheetnum="3" width="3520" height="2720">
         <branch name="A(15)">
@@ -2079,98 +2129,187 @@
         </branch>
     </sheet>
     <sheet sheetnum="4" width="3520" height="2720">
-        <instance x="848" y="2400" name="XLXI_87" orien="R0" />
+        <instance x="1088" y="880" name="XLXI_340" orien="R0" />
+        <instance x="1664" y="656" name="XLXI_341" orien="R0" />
+        <branch name="PGM_A15_HOLD">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1840" y="864" type="branch" />
+            <wire x2="1584" y1="624" y2="624" x1="1472" />
+            <wire x2="1664" y1="624" y2="624" x1="1584" />
+            <wire x2="1584" y1="624" y2="864" x1="1584" />
+            <wire x2="1840" y1="864" y2="864" x1="1584" />
+            <wire x2="1984" y1="864" y2="864" x1="1840" />
+        </branch>
+        <branch name="RD_SREG">
+            <attrtext style="alignment:SOFT-VLEFT" attrname="Name" x="1568" y="416" type="branch" />
+            <wire x2="1568" y1="416" y2="560" x1="1568" />
+            <wire x2="1664" y1="560" y2="560" x1="1568" />
+            <wire x2="1568" y1="560" y2="1200" x1="1568" />
+            <wire x2="1664" y1="1200" y2="1200" x1="1568" />
+            <wire x2="1568" y1="1200" y2="1440" x1="1568" />
+            <wire x2="1648" y1="1440" y2="1440" x1="1568" />
+        </branch>
+        <branch name="D(5)">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1983" y="624" type="branch" />
+            <wire x2="1983" y1="624" y2="624" x1="1888" />
+            <wire x2="2048" y1="624" y2="624" x1="1983" />
+        </branch>
+        <branch name="D(5)">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="912" y="624" type="branch" />
+            <wire x2="1088" y1="624" y2="624" x1="912" />
+        </branch>
+        <branch name="WRITE_ENABLE">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="912" y="688" type="branch" />
+            <wire x2="1056" y1="688" y2="688" x1="912" />
+            <wire x2="1088" y1="688" y2="688" x1="1056" />
+            <wire x2="1056" y1="688" y2="1568" x1="1056" />
+            <wire x2="1088" y1="1568" y2="1568" x1="1056" />
+        </branch>
+        <branch name="SREG_REQ">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="896" y="752" type="branch" />
+            <wire x2="1040" y1="752" y2="752" x1="896" />
+            <wire x2="1088" y1="752" y2="752" x1="1040" />
+            <wire x2="1040" y1="752" y2="1632" x1="1040" />
+            <wire x2="1088" y1="1632" y2="1632" x1="1040" />
+        </branch>
+        <branch name="RESET_H">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="960" y="848" type="branch" />
+            <wire x2="1024" y1="848" y2="848" x1="960" />
+            <wire x2="1088" y1="848" y2="848" x1="1024" />
+            <wire x2="1024" y1="848" y2="1728" x1="1024" />
+            <wire x2="1088" y1="1728" y2="1728" x1="1024" />
+        </branch>
+        <text style="fontsize:40;fontname:Arial" x="488" y="148">Bit 5 of the state register allows us to disable all downstream ROMs by setting A15 high regardless of paging state</text>
+        <instance x="1664" y="1296" name="XLXI_343" orien="R0" />
+        <branch name="D(6)">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2032" y="1264" type="branch" />
+            <wire x2="2032" y1="1264" y2="1264" x1="1888" />
+            <wire x2="2080" y1="1264" y2="1264" x1="2032" />
+        </branch>
+        <branch name="PGM_A15_HOLDM">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2335" y="896" type="branch" />
+            <wire x2="2335" y1="896" y2="896" x1="2240" />
+            <wire x2="2368" y1="896" y2="896" x1="2335" />
+        </branch>
+        <instance x="1984" y="992" name="XLXI_347" orien="R0" />
+        <branch name="MREQ_L">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1840" y="928" type="branch" />
+            <wire x2="1984" y1="928" y2="928" x1="1840" />
+        </branch>
+        <branch name="LINK_L">
+            <wire x2="1664" y1="1264" y2="1264" x1="1376" />
+        </branch>
+        <iomarker fontsize="28" x="1376" y="1264" name="LINK_L" orien="R180" />
+        <instance x="864" y="2720" name="XLXI_87" orien="R0" />
         <branch name="A(6)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="1952" type="branch" />
-            <wire x2="848" y1="1952" y2="1952" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2272" type="branch" />
+            <wire x2="864" y1="2272" y2="2272" x1="544" />
         </branch>
         <branch name="A(5)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="2016" type="branch" />
-            <wire x2="848" y1="2016" y2="2016" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2336" type="branch" />
+            <wire x2="864" y1="2336" y2="2336" x1="544" />
         </branch>
         <branch name="A(4)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="2080" type="branch" />
-            <wire x2="848" y1="2080" y2="2080" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2400" type="branch" />
+            <wire x2="864" y1="2400" y2="2400" x1="544" />
         </branch>
         <branch name="A(3)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="2144" type="branch" />
-            <wire x2="848" y1="2144" y2="2144" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2464" type="branch" />
+            <wire x2="864" y1="2464" y2="2464" x1="544" />
         </branch>
         <branch name="A(2)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="2208" type="branch" />
-            <wire x2="848" y1="2208" y2="2208" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2528" type="branch" />
+            <wire x2="864" y1="2528" y2="2528" x1="544" />
         </branch>
         <branch name="XLXN_261">
-            <wire x2="848" y1="1888" y2="1888" x1="816" />
+            <wire x2="864" y1="2208" y2="2208" x1="832" />
         </branch>
-        <instance x="592" y="1920" name="XLXI_88" orien="R0" />
+        <instance x="608" y="2240" name="XLXI_88" orien="R0" />
         <branch name="XLXN_262">
-            <wire x2="848" y1="2272" y2="2272" x1="816" />
+            <wire x2="864" y1="2592" y2="2592" x1="832" />
         </branch>
-        <instance x="592" y="2304" name="XLXI_89" orien="R0" />
+        <instance x="608" y="2624" name="XLXI_89" orien="R0" />
         <branch name="XLXN_263">
-            <wire x2="848" y1="2336" y2="2336" x1="816" />
+            <wire x2="864" y1="2656" y2="2656" x1="832" />
         </branch>
-        <instance x="592" y="2368" name="XLXI_90" orien="R0" />
+        <instance x="608" y="2688" name="XLXI_90" orien="R0" />
         <branch name="A(7)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="1888" type="branch" />
-            <wire x2="592" y1="1888" y2="1888" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2208" type="branch" />
+            <wire x2="608" y1="2208" y2="2208" x1="544" />
         </branch>
         <branch name="A(1)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="2272" type="branch" />
-            <wire x2="592" y1="2272" y2="2272" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2592" type="branch" />
+            <wire x2="608" y1="2592" y2="2592" x1="544" />
         </branch>
         <branch name="A(0)">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="528" y="2336" type="branch" />
-            <wire x2="592" y1="2336" y2="2336" x1="528" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="544" y="2656" type="branch" />
+            <wire x2="608" y1="2656" y2="2656" x1="544" />
         </branch>
         <branch name="XLXN_267">
-            <wire x2="1264" y1="2112" y2="2112" x1="1104" />
+            <wire x2="1280" y1="2432" y2="2432" x1="1120" />
         </branch>
         <branch name="UAZERO">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1216" y="2048" type="branch" />
-            <wire x2="1264" y1="2048" y2="2048" x1="1216" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1232" y="2368" type="branch" />
+            <wire x2="1280" y1="2368" y2="2368" x1="1232" />
         </branch>
         <branch name="M1_L">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1216" y="2176" type="branch" />
-            <wire x2="1264" y1="2176" y2="2176" x1="1216" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1232" y="2496" type="branch" />
+            <wire x2="1280" y1="2496" y2="2496" x1="1232" />
         </branch>
         <branch name="MREQ_L">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1216" y="2240" type="branch" />
-            <wire x2="1232" y1="2240" y2="2240" x1="1216" />
-            <wire x2="1264" y1="2240" y2="2240" x1="1232" />
-            <wire x2="1232" y1="2240" y2="2368" x1="1232" />
-            <wire x2="2368" y1="2368" y2="2368" x1="1232" />
-            <wire x2="2368" y1="2176" y2="2368" x1="2368" />
-            <wire x2="2384" y1="2176" y2="2176" x1="2368" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1232" y="2560" type="branch" />
+            <wire x2="1248" y1="2560" y2="2560" x1="1232" />
+            <wire x2="1280" y1="2560" y2="2560" x1="1248" />
+            <wire x2="1248" y1="2560" y2="2688" x1="1248" />
+            <wire x2="2384" y1="2688" y2="2688" x1="1248" />
+            <wire x2="2384" y1="2496" y2="2688" x1="2384" />
+            <wire x2="2400" y1="2496" y2="2496" x1="2384" />
         </branch>
-        <text style="fontsize:40;fontname:Arial" x="476" y="1596">The UNPAGE circuit provides an unpage pulse that lasts half a T-state (triggered by execution at 0x007C). Unpage pulse is active high.</text>
-        <text style="fontsize:40;fontname:Arial" x="476" y="1664">The UNPAGE signal is generated at the end of the M1 cycle for address 0x007C.</text>
-        <instance x="1264" y="2304" name="XLXI_142" orien="R0" />
+        <text style="fontsize:40;fontname:Arial" x="492" y="1916">The UNPAGE circuit provides an unpage pulse that lasts half a T-state (triggered by execution at 0x007C). Unpage pulse is active high.</text>
+        <text style="fontsize:40;fontname:Arial" x="492" y="1984">The UNPAGE signal is generated at the end of the M1 cycle for address 0x007C.</text>
+        <instance x="1280" y="2624" name="XLXI_142" orien="R0" />
         <branch name="HLDROMCS">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1216" y="1984" type="branch" />
-            <wire x2="1264" y1="1984" y2="1984" x1="1216" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1232" y="2304" type="branch" />
+            <wire x2="1280" y1="2304" y2="2304" x1="1232" />
         </branch>
         <branch name="XLXN_270">
-            <wire x2="1920" y1="2112" y2="2112" x1="1520" />
+            <wire x2="1936" y1="2432" y2="2432" x1="1536" />
         </branch>
         <branch name="XLXN_275">
-            <wire x2="2384" y1="2112" y2="2112" x1="2304" />
+            <wire x2="2400" y1="2432" y2="2432" x1="2320" />
         </branch>
         <branch name="UNPAGE">
-            <attrtext style="alignment:SOFT-LEFT" attrname="Name" x="2752" y="2144" type="branch" />
-            <wire x2="2752" y1="2144" y2="2144" x1="2640" />
+            <attrtext style="alignment:SOFT-LEFT" attrname="Name" x="2768" y="2464" type="branch" />
+            <wire x2="2768" y1="2464" y2="2464" x1="2656" />
         </branch>
-        <instance x="1920" y="2368" name="XLXI_92" orien="R0" />
+        <instance x="1936" y="2688" name="XLXI_92" orien="R0" />
         <branch name="XLXN_279">
-            <wire x2="1920" y1="2240" y2="2240" x1="1888" />
+            <wire x2="1936" y1="2560" y2="2560" x1="1904" />
         </branch>
-        <instance x="1664" y="2272" name="XLXI_97" orien="R0" />
+        <instance x="1680" y="2592" name="XLXI_97" orien="R0" />
         <branch name="CLK">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1600" y="2240" type="branch" />
-            <wire x2="1664" y1="2240" y2="2240" x1="1600" />
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1616" y="2560" type="branch" />
+            <wire x2="1680" y1="2560" y2="2560" x1="1616" />
         </branch>
-        <instance x="2384" y="2240" name="XLXI_129" orien="R0" />
+        <instance x="2400" y="2560" name="XLXI_129" orien="R0" />
+        <instance x="1088" y="1760" name="XLXI_356" orien="R0" />
+        <instance x="1648" y="1536" name="XLXI_357" orien="R0" />
+        <branch name="W5100_RESET_L">
+            <wire x2="1568" y1="1504" y2="1504" x1="1472" />
+            <wire x2="1648" y1="1504" y2="1504" x1="1568" />
+            <wire x2="1568" y1="1504" y2="1664" x1="1568" />
+            <wire x2="2080" y1="1664" y2="1664" x1="1568" />
+        </branch>
+        <branch name="D(7)">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2055" y="1504" type="branch" />
+            <wire x2="2055" y1="1504" y2="1504" x1="1872" />
+            <wire x2="2080" y1="1504" y2="1504" x1="2055" />
+        </branch>
+        <branch name="D(7)">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="880" y="1504" type="branch" />
+            <wire x2="1088" y1="1504" y2="1504" x1="880" />
+        </branch>
+        <iomarker fontsize="28" x="2080" y="1664" name="W5100_RESET_L" orien="R0" />
+        <text style="fontsize:40;fontname:Arial" x="496" y="200">Bit 6 indicates the state of the LINK light (inverted). Bit 7 is high for normal ops, low to reset the W5100</text>
     </sheet>
     <sheet sheetnum="5" width="3520" height="2720">
         <instance x="784" y="672" name="XLXI_334" orien="R0" />

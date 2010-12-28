@@ -106,7 +106,8 @@ F_romdetect:
         ld de, 0x0010                   ; only 0x7FFD set
 .exit2:
         ld bc, CTRLREG
-        ld a, 1                         ; page in Spectranet ROM
+	in a, (c)			; get current value
+        or 1	                        ; page in Spectranet ROM
         out (c), a
         ret
 .unknown2:
