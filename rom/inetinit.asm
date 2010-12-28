@@ -66,10 +66,19 @@ F_inetinit:
 ; F_iface_wait
 ; Wait for the interface to come up. Work around the W5100 hardware bug
 ; by resetting the chip if we don't get a stable link.
+; Check that the CPLD is a version that can detect link state.
 F_iface_wait:
+	ei			; HALT will be used for timing
+	halt			; ensure read occurs when ULA is not reading
+				; screen memory (prototype CPLD does not
+				; have this port and returns 0xFF)
+	ld bc, CPLDINFO		; CPLD information port
+	in a, (c)
+	cp 0xFF			; 0xFF = prototype CPLD which does not have
+	jr z, .prototype
 	ld hl, STR_wait
 	call PRINT42
-	ei			; using HALT for timing
+	ei			; HALT used for timing
 	call .reset		; ensure chip is reset
 
 	ld b, 5			; how many times to try
@@ -133,6 +142,15 @@ F_iface_wait:
 	halt
 	set 7, a		; release RESET bit
 	out (c), a
+	ret
+
+	; The prototype CPLD flips the toggle flip flop for programmable
+	; traps every time the trap port is touched; it is not mixed with
+	; the !WR signal. So we have to read it one more time to set it
+	; back to its proper start position.
+.prototype:
+	in a, (c)		; note: BC will already be set
+	di
 	ret
 
 ;------------------------------------------------------------------------

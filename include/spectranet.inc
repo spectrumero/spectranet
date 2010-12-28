@@ -33,6 +33,7 @@ IXCALL		equ 0x3FFD
 
 ; Port defines
 CTRLREG		equ 0x033B
+CPLDINFO	equ 0x023B
 
 ; Jump table entry points
 SOCKET		equ 0x3E00	; Allocate a socket
