@@ -20,60 +20,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * The main()
+ * Drops root privileges and chroots to the given directory.
  *
  * */
 
+#ifdef ENABLE_CHROOT
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <pwd.h>
 
-#include "datagram.h"
-#include "session.h"
-#include "directory.h"
-#include "errortable.h"
 #include "chroot.h"
 
-/* declare the main() - it won't be used elsewhere so I'll not bother
- * with putting it in a .h file */
-int main(int argc, char **argv);
-
-int main(int argc, char **argv)
+void chroot_tnfs(const char *user, const char *newroot)
 {
-	if(argc < 2)
+	struct passwd *entry;
+
+	/* Get the passed user's UID and change this process's UID
+	 * to this user */
+	entry=getpwnam(user);
+	if(entry == NULL)
 	{
-#ifdef ENABLE_CHROOT
-		fprintf(stderr, "Usage: tnfsd <root dir> [-c <username>]\n");
-#else
-		fprintf(stderr, "Usage: tnfsd <root dir>\n");
-#endif
+		perror("getpwnam");
 		exit(-1);
 	}
 
-#ifdef ENABLE_CHROOT
-	if(argc == 4)
+	/* Do the chroot */
+	if(chroot(newroot) == -1)
 	{
-		/* chroot into the specified directory and drop privs */
-		chroot_tnfs(argv[3], argv[1]);
-		if(tnfs_setroot("/") < 0)
-		{
-			fprintf(stderr, "Unable to chdir to /...\n");
-			exit(-1);
-		}
-	}
-	else if(tnfs_setroot(argv[1]) < 0)
-	{
-#else
-	if(tnfs_setroot(argv[1]) < 0)
-	{
-#endif
-		fprintf(stderr, "Invalid root directory\n");
+		perror("chroot");
 		exit(-1);
 	}
 
-	tnfs_init();		/* initialize structures etc. */
-	tnfs_init_errtable();	/* initialize error lookup table */
-	tnfs_sockinit();	/* initialize communications */
-	tnfs_mainloop();	/* run */
-	return 0;
+	/* Finally drop privileges */
+	if(setuid(entry->pw_uid) == -1)
+	{
+		perror("setuid");
+		exit(-1);
+	}
 }
+
+#endif
 
