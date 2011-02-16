@@ -26,6 +26,7 @@
 .include	"zxrom.inc"
 .include	"ctrlchars.inc"
 .include	"sysvars.inc"
+.include	"zxsysvars.inc"
 .text
 
 ; Show the directory listing. HL = directory to open.
@@ -34,6 +35,8 @@ F_listdir:
         call OPENDIR                    ; open the directory
         jp c, J_tbas_error
         ld (v_vfs_dirhandle), a         ; save the directory handle
+	ld a, 22
+	ld (SN_SCR_CT), a		; and save it
         ld a, 2
         rst CALLBAS                     ; set channel to 2
         defw 0x1601
@@ -45,9 +48,15 @@ F_listdir:
 	call F_statentry		; show some information about it
         ld hl, INTERPWKSPC
         call F_tbas_zxprint             ; print a C string to #2
+	ld a, 2				; set SCR_CT > 1
+	ld (ZX_SCR_CT), a		; prevent ZX ROM from doing "Scroll"
         ld a, ZXNEWLINE                 ; newline
         rst CALLBAS
         defw 0x10
+	ld a, (SN_SCR_CT)
+	dec a
+	jr z, .scroll
+	ld (SN_SCR_CT), a
         jr .catloop1
 .readdone1:
         push af                         ; save error code while
@@ -59,6 +68,40 @@ F_listdir:
         cp EOF                          ; EOF is good
         jp nz, J_tbas_error             ; everything else is bad, report it
         jp EXIT_SUCCESS
+
+	; Ask the user if they want to scroll. We don't let the ZX ROM
+	; do it or we can end up leaking directory handles.
+	; Effectively mirror what the standard ROM does.
+.scroll:
+	rst CALLBAS
+	defw ZX_CLS_LOWER
+	ld a, 1
+	rst CALLBAS
+	defw ZX_CHAN_OPEN
+	ld hl, STR_scroll		; print "Scroll?" message
+	call F_tbas_zxprint
+	call GETKEY			; get a keystroke
+	cp 0x20				; now test the keys that can
+	jr z, .report_d			; interrupt the directory
+	cp 0xE2				; listing
+	jr z, .report_d
+	or 0x20
+	cp 0x6E
+	jr z, .report_d
+	rst CALLBAS
+	defw ZX_CLS_LOWER
+	ld a, 2				; back to main screen
+	rst CALLBAS
+	defw ZX_CHAN_OPEN
+	ld a, 22			; reset our own scroll counter
+	ld (SN_SCR_CT), a
+	jp .catloop1			; back into dir listing routine
+
+.report_d:
+	ld a, (v_vfs_dirhandle)		; get the current dirhandle
+	call CLOSEDIR			; close the directory
+	ld hl, STR_errorD
+	jp REPORTERR
 
 ; Expects the filename to be in INTERPWKSPC
 .globl F_statentry
@@ -194,4 +237,8 @@ F_decimal:
 	rst CALLBAS
 	defw 0x0010
 	ret
-	
+
+.data
+STR_errorD:	defb	"D BREAK into listing",0
+STR_scroll:	defb	"scroll?",0
+

@@ -49,6 +49,9 @@ ZX_NEXT2_NUM    equ 0x1C79
 ZX_FIND_INT1    equ 0x1E94
 ZX_RECLAIM_1    equ 0x19E5
 ZX_MAKE_ROOM    equ 0x1655
+ZX_CHAN_OPEN	equ 0x1601	; Open a channel
+ZX_PO_MSG	equ 0x0C0A	; Print message
+ZX_WAIT_KEY	equ 0x15D4	; Wait for a key
 
 ; Token definitions
 TOKEN_CODE      equ 0xAF

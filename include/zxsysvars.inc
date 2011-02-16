@@ -49,6 +49,9 @@ ZX_FLAGS2	equ 23658	; 1 - More flags
 ZX_OLDPPC	equ 23662	; 2 - where CONTINUE jumps
 ZX_FLAGX	equ 23665
 ZX_E_LINE	equ 23641	; 2 - address of line being typed in
+ZX_SCR_CT	equ 23692	; 1 - Scroll count
+ZX_ATTR_T	equ 23695	; 1 - Temporary current colours
+ZX_P_FLAG	equ 23697	; 1 - More flags
 ZX_RAMTOP	equ 23730	
 
 ; Displacements
