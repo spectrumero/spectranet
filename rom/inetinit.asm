@@ -37,6 +37,7 @@
 .globl F_inetinit
 F_inetinit:
 	call F_iface_wait
+	call INITHW		; set MAC addr and initial hw registers
 	ld a, 0x1F		; flash page containing configuration
 	call SETPAGEA
 	ld hl, 0x1F00		; last 256 bytes of config
@@ -181,6 +182,7 @@ F_showaddr:
 	ld a, NEWLINE
 	call PUTCHAR42
 	ret
+
 .data
 STR_staticip:	defb "I:",0
 STR_staticmask:	defb "M:",0

@@ -81,7 +81,7 @@ X_JUMPTABLE:
 	jp F_ifconfig_inet
 	jp F_ifconfig_netmask
 	jp F_ifconfig_gw
-	jp F_sethwaddr
+	jp F_inithw
 	jp F_gethwaddr
 	jp F_deconfig
 	jp F_mac2string

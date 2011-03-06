@@ -87,28 +87,41 @@ F_regpage:
 	ret
 
 ;-------------------------------------------------------------------------
-; F_sethwaddr
-; Configures the W5100 hardware (MAC) address.
+; F_inithw
+; Configures the W5100 hardware (MAC) address and registers.
 ; Parameters: HL - pointer to a 6 byte buffer containing the hardware addr.
 ; Returns with carry set if the readback fails to give the same result.
-.globl F_sethwaddr
-F_sethwaddr:
+.globl F_inithw
+F_inithw:
 	call F_regpage
-	push hl		; preserve buffer pointer
-	ld de, SHAR0	; hardware address register
-	ld bc, 6	; is 6 bytes long
+	push hl			; preserve buffer pointer
+
+        ld a, MR_RST            ; Perform a software reset on the W5100
+        ld (MR), a
+        xor a                   ; memory mapped mode, all options off
+        ld (MR), a
+
+	ld de,SHAR0		; hardware address register
+	ld bc, 6		; is 6 bytes long
 	ldir
 
 	pop hl
-	ld de, SHAR0	; readback
-	ld bc, 6	; check 6 bytes
+	ld de, SHAR0		; readback
+	ld bc, 6		; check 6 bytes
 .readback8:
 	ld a, (de)
 	cpi
 	jr nz, .readbackerr8
 	inc de
-	jp pe, .readback8 ; keep going till BC=0
-	or 0		; ensure carry is cleared
+	jp pe, .readback8 	; keep going till BC=0
+
+        ld a, 0x55              ; initialize W5100 buffers - 2K each
+        ld (TMSR), a
+        ld (RMSR), a
+        ld a, %11101111         ; set the IMR
+        ld (IMR), a
+
+	or 0			; ensure carry is cleared
 	jp J_leavesockfn
 .readbackerr8:
 	scf

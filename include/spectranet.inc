@@ -63,7 +63,7 @@ REMOTEADDRESS	equ 0x3E45	; Fill struct sockaddr_in
 IFCONFIG_INET	equ 0x3E48	; Set IPv4 address
 IFCONFIG_NETMASK equ 0x3E4B	; Set netmask
 IFCONFIG_GW	equ 0x3E4E	; Set gateway
-SETHWADDR	equ 0x3E51	; Set the MAC address
+INITHW		equ 0x3E51	; Set the MAC address and initial hw registers
 GETHWADDR	equ 0x3E54	; Read the MAC address
 DECONFIG	equ 0x3E57	; Deconfigure inet, netmask and gateway
 MAC2STRING	equ 0x3E5A	; Convert 6 byte MAC address to a string

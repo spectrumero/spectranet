@@ -120,10 +120,6 @@ J_reset:
 	ld bc, UPPER_ENTRYPT_SIZE
 	ldir
 
-	; Initialize the W5100 - set the MAC address and initialize
-	; hardware registers.
-	call F_w5100init
-
 	ld hl, J_rst8handler	; Set the RST8 handler vector
 	ld (v_rst8vector), hl
 	ld hl, TABLE_basext	; Set the BASIC extension table pointer
@@ -195,33 +191,6 @@ F_initroms:
 	pop hl
 	jr .initloop1
 
-;-------------------------------------------------------------------------
-; F_w5100init
-; Initialize the W5100 - MAC address and hardware registers.
-.globl F_w5100init
-F_w5100init:
-	; Set up memory pages to configure the hardware
-	ld a, REGPAGE		; registers are in page 0 of the W5100
-	call F_setpageA		; page it into area A
-	ld a, CONFIGPAGE	; configuration page (flash)
-	call F_setpageB		; paged into area B
-
-	ld a, MR_RST		; Perform a software reset on the W5100
-	ld (MR), a
-	xor a			; memory mapped mode, all options off
-	ld (MR), a
-
-	ld hl, 0x2000+HW_ADDRESS
-	ld de, SHAR0		; hardware address register
-	ld bc, 6		; which is 6 bytes long.
-	ldir
-
-	ld a, 0x55		; initialize W5100 buffers - 2K each
-	ld (TMSR), a
-	ld (RMSR), a
-	ld a, %11101111		; set the IMR
-	ld (IMR), a
-	ret
 .data
 STR_bootmsg:
 	defb "Alioth Spectranet ",0
