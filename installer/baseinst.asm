@@ -25,10 +25,11 @@
 ; Spectranet firmware installer.
 .section main
 F_main:
+	call F_pagein			; page in and disable interrupts
+	call F_clear_impl
 	ld hl, 0
 	add hl, sp
 	ld (v_stack), hl		; save stack
-	call F_pagein			; page in and disable interrupts
 
 	call F_erase
 	call F_writepages

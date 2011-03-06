@@ -37,13 +37,14 @@
 .globl F_inetinit
 F_inetinit:
 	call F_iface_wait
-	call INITHW		; set MAC addr and initial hw registers
 	ld a, 0x1F		; flash page containing configuration
 	call SETPAGEA
 	ld hl, 0x1F00		; last 256 bytes of config
 	ld de, 0x3000		; RAM workspace
 	ld bc, 256
 	ldir			; copy to RAM
+	ld hl, 0x2100+HW_ADDRESS
+	call INITHW		; set MAC addr and initial hw registers
 	ld hl, 0x2100+INITFLAGS	; Check to see if we should
 	bit INIT_STATICIP, (hl)	; be using static settings or DHCP	
 	jp z, F_dhcp		; no, not static configuration - use DHCP.
