@@ -1,6 +1,6 @@
 CC = gcc
-B2TOBJS = bin2tzx.o
-B2TOUT = bin2tzx
+B2TOBJS = bin2tape.o
+B2TOUT = bin2tape
 RM = rm
 
 bin2tzx:	$(B2TOBJS)

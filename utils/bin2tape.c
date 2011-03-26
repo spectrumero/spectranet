@@ -17,15 +17,16 @@ int main(int argc, char **argv)
 	unsigned char tzxhdr[6];
 	unsigned char checksum;
 	unsigned char *buf;
+	char istap=0;
 
-	if(argc < 3 || argc > 4)
+	if(argc < 4 || argc > 5)
 	{
-		fprintf(stderr, "Usage: %s <infile> <outfile.tzx> [start-addr]\n", argv[0]);
+		fprintf(stderr, "Usage: %s <tzx|tap> <infile> <outfile> [start-addr]\n", argv[0]);
 		fprintf(stderr, "Default start address is 32768\n");
 		printf("argc=%d\n",argc);
 		exit(255);
 	}
-	if(argc == 4)
+	if(argc == 5)
 	{
 		start=strtol(argv[3], NULL, 0);
 		if(start > 65535)
@@ -34,21 +35,30 @@ int main(int argc, char **argv)
 			exit(255);
 		}
 	}
+	if(!strcmp(argv[1], "tap"))
+	{
+		printf("Creating TAP file: %s\n", argv[3]);
+		istap=1;
+	}
+	else
+	{
+		printf("Creating TZX file: %s\n", argv[3]);
+	}
 
-	if(stat(argv[1], &fileinfo) < 0)
+	if(stat(argv[2], &fileinfo) < 0)
 	{
 		perror("stat");
 		exit(255);
 	}
 
-	infile=fopen(argv[1], "rb");
+	infile=fopen(argv[2], "rb");
 	if(!infile)
 	{
 		perror("open for reading");
 		exit(255);
 	}
 
-	outfile=fopen(argv[2], "wb");
+	outfile=fopen(argv[3], "wb");
 	if(!outfile)
 	{
 		perror("open for writing");
@@ -56,8 +66,14 @@ int main(int argc, char **argv)
 	}
 	length=fileinfo.st_size;
 
-	/* write the tzx header */
-	fprintf(outfile, "ZXTape!\x1A\x01\x14");
+	if(istap) {
+		/* For tap, header is 0x13 bytes */
+		fputc(0x13, outfile);
+		fputc(0x00, outfile);
+	} else {
+		/* write the tzx header */
+		fprintf(outfile, "ZXTape!\x1A\x01\x14");
+	}
 
 	/* create the Spectrum header */
 	header[0]=0;	/* flag byte - header */
@@ -74,20 +90,30 @@ int main(int argc, char **argv)
 
 	header[18]=getChecksum(header, 18);
 
-	/* create the tzx block */
-	tzxhdr[0]=0x10;	/* standard block */
-	tzxhdr[1]=0xE8;	/* pause of 1000ms */
-	tzxhdr[2]=0x03;
-	tzxhdr[3]=19;	/* 19 bytes to come */
-	tzxhdr[4]=0;
-	fwrite(tzxhdr, 1, 5, outfile);
+	if(!istap)
+	{
+		/* create the tzx block */
+		tzxhdr[0]=0x10;	/* standard block */
+		tzxhdr[1]=0xE8;	/* pause of 1000ms */
+		tzxhdr[2]=0x03;
+		tzxhdr[3]=19;	/* 19 bytes to come */
+		tzxhdr[4]=0;
+		fwrite(tzxhdr, 1, 5, outfile);
+	}
 	fwrite(header, 1, 19, outfile);
 
-	/* create the data block */
-	/* tzx 0x10, as before */
-	tzxhdr[3]=(length+2) % 256;
-	tzxhdr[4]=(length+2) / 256;
-	fwrite(tzxhdr, 1, 5, outfile);
+	if(istap) {
+		fputc((length + 2) % 256, outfile);
+		fputc((length + 2) / 256, outfile);
+	} 
+	else
+	{
+		/* create the data block */
+		/* tzx 0x10, as before */
+		tzxhdr[3]=(length+2) % 256;
+		tzxhdr[4]=(length+2) / 256;
+		fwrite(tzxhdr, 1, 5, outfile);
+	}
 
 	/* write the ZX header */
 	fputc(0xFF, outfile);
