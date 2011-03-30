@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 
-unsigned char getChecksum(char *buf, unsigned short size);
+char getChecksum(char *buf, unsigned short size);
 
 int main(int argc, char **argv)
 {
@@ -13,10 +13,9 @@ int main(int argc, char **argv)
 	unsigned short length;
 	unsigned int start=0x8000;
 	struct stat fileinfo;
-	unsigned char header[20];
-	unsigned char tzxhdr[6];
-	unsigned char checksum;
-	unsigned char *buf;
+	char header[20];
+	char tzxhdr[6];
+	char *buf;
 	char istap=0;
 
 	if(argc < 4 || argc > 5)
@@ -28,7 +27,7 @@ int main(int argc, char **argv)
 	}
 	if(argc == 5)
 	{
-		start=strtol(argv[3], NULL, 0);
+		start=strtol(argv[4], NULL, 0);
 		if(start > 65535)
 		{
 			fprintf(stderr,"Start address too large\n");
@@ -118,7 +117,7 @@ int main(int argc, char **argv)
 	/* write the ZX header */
 	fputc(0xFF, outfile);
 
-	buf=(unsigned char *)malloc(length+1);
+	buf=(char *)malloc(length+1);
 	if(!buf)
 	{
 		perror("malloc");
@@ -135,10 +134,10 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-unsigned char getChecksum(char *buf, unsigned short size)
+char getChecksum(char *buf, unsigned short size)
 {
 	unsigned short i;
-	unsigned char result=0;
+	char result=0;
 
 	for(i=0; i<size; i++)
 	{
