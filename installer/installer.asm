@@ -22,22 +22,10 @@
 .include	"ctrlchars.inc"
 .include	"spectranet.inc"
 
-; Spectranet firmware installer.
-.section main
-F_main:
-	call F_pagein			; page in and disable interrupts
-	call F_clear_impl
-	ld hl, 0
-	add hl, sp
-	ld (v_stack), hl		; save stack
-
-	call F_erase
-	call F_writepages
-
-	jp F_exit
 .text
 ;---------------------------
 ; Erase all the sectors that we will occupy.
+.globl F_erase
 F_erase:
 	ld hl, STR_erase0
 	call F_print
@@ -59,6 +47,7 @@ F_erase:
 	call F_print
 	jp F_exit
 
+.globl F_writepages
 F_writepages:
 	ld hl, STR_page0
 	call F_print
@@ -165,6 +154,7 @@ F_writepages:
 
 ;---------------------
 ; Restore stack and leave.
+.globl F_exit
 F_exit:
 	ld sp, (v_stack)
 	ld bc, CTRLREG
@@ -173,6 +163,7 @@ F_exit:
 	ei
 	ret
 
+.globl F_pagein
 F_pagein:
 	di
 	ld bc, CTRLREG
@@ -180,6 +171,7 @@ F_pagein:
 	out (c), a
 	ret
 
+.globl F_print
 F_print:
 .loop:
 	ld a, (hl)
@@ -207,5 +199,6 @@ STR_snapman:	defb "Adding snapman module",NEWLINE,0
 STR_writefailed: defb "Write failed.",NEWLINE,0
 
 .bss
+.globl v_stack
 v_stack:	defw 0
 

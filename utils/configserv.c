@@ -39,17 +39,20 @@
 #include <string.h>
 
 #define DATASZ	24
-#define HOSTFILE "/home/winston/spectranet/snserial"
 
-void server(int port);
-void getdata(char *data);
+void server(char *file, int port);
+void getdata(char *file, char *data);
 
 int main(int argc, char **argv) {
-	server(2001);
+	if(argc < 2) {
+		fprintf(stderr, "Usage: %s <serialfile>\n", argv[0]);
+		exit(-1);
+	}
+	server(argv[1], 2001);
 	return 0;
 }
 
-void server(int port) {
+void server(char *file, int port) {
 	int sockfd, connfd, bytes;
 	struct sockaddr_in my_addr;
 	char cfgdata[DATASZ];
@@ -74,7 +77,7 @@ void server(int port) {
 	}
 
 	while((connfd=accept(sockfd, NULL, NULL)) > 0) {
-		getdata(cfgdata);
+		getdata(file, cfgdata);
 		bytes=send(connfd, cfgdata, DATASZ, 0);
 		if(bytes < DATASZ) {
 			fprintf(stderr, 
@@ -84,15 +87,15 @@ void server(int port) {
 	}
 }
 
-void getdata(char *data) {
+void getdata(char *file, char *data) {
 	FILE *stream;
 	long mac;
 	int serno;
 
-	if((stream=fopen(HOSTFILE, "rb")) != NULL) {
+	if((stream=fopen(file, "rb")) != NULL) {
 		fscanf(stream, "%d", &serno);
 		fclose(stream);
-		if((stream=fopen(HOSTFILE, "wb")) != NULL) {
+		if((stream=fopen(file, "wb")) != NULL) {
 			fprintf(stream, "%d", serno+1);
 			fclose(stream);
 		} else {

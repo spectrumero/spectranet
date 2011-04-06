@@ -10,5 +10,5 @@ MAPFILE = $(OUT).map
 	$(AS) $(ASFLAGS) $< -o $@
 
 clean:
-	$(RM) -f *.o *.module *.bin *.map *.xinc *.tzx
+	$(RM) -f *.o *.module *.bin *.map *.xinc *.tzx *.tap
 

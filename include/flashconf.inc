@@ -72,17 +72,23 @@ DEF_FS_PASSWD3	equ 0x0EF0	; Passord (max 16)
 
 ; TCP/IP settings. These are in the same order as the W5100's hardware
 ; registers so they can just be LDIR'd in.
+OFS_IP_GATEWAY	equ 0x0000	; offset for gateway
 IP_GATEWAY	equ 0x0F00	; Gateway address (4 bytes)
+OFS_IP_SUBNET	equ 0x0004	; offset for subnet
 IP_SUBNET	equ 0x0F04	; Subnet mask (4 bytes)
+OFS_HW_ADDRESS	equ 0x0008	; offset for hardware address
 HW_ADDRESS	equ 0x0F08	; Hardware address (MAC address: 6 bytes)
+OFS_IP_ADDRESS	equ 0x000E	; offset to IP address
 IP_ADDRESS	equ 0x0F0E	; IP address
 
 ; A bit field of initialization flags, and the definition.
-INITFLAGS	equ 0x0F12
+OFS_INITFLAGS	equ 0x0012	; offset to flags
+INITFLAGS	equ 0x0F12	; init flags
 INIT_STATICIP	equ 1		; Static IP address configured
 INIT_DISBLTRAP	equ 2		; Disable RST 8 traps on startup
 
 ; Hostname - a null terminated string, maximum 15 characters (16 bytes).
+OFS_HOSTNAME	equ 0x0013	; offset to hostname string
 HOSTNAME	equ 0x0F13
 
 ; DNS servers, primary and secondary.
