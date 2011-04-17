@@ -30,12 +30,12 @@
 F_init:
 	; force USR 0 mode on 128K machines (due to +2a/+3 BASIC
 	; incompatibilities)
-	ld bc, 0x7FFD
-	ld a, 0x10
-	out (c), a
-	ld b, 0x1F
+	ld bc, 0x1FFD		; set port 0x1ffd
 	ld a, 0x04
 	out (c), a
+	ld b, 0x7F		; set port 0x7ffd which must be done
+	ld a, 0x10		; second due to toastrack 128K machines
+	out (c), a		; respoinding also to 0x1ffd
         ld hl, PARSETABLE
         ld b, NUMCMDS
 .loop1:
