@@ -37,7 +37,7 @@ J_tnfs_modcall:
 	ret
 
 .globl F_getversion
-F_getversion:			; return ROM version in HL
-	ld hl, bldver
+F_getversion:			; return ROM version in BC
+	ld bc, bldver
 	ret
 
