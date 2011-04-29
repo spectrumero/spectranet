@@ -30,6 +30,7 @@ JPTABLELDFLAGS = -Ttext 0x0000
 
 DATEFILE = date.xinc
 VERFILE = ver.xinc
+VERWORDFILE = verword.xinc
 P3SYMS = page3.xinc
 P2SYMS = page2.xinc
 P1SYMS = page1.xinc
@@ -70,6 +71,7 @@ $(DATEFILE):
 ver:	$(VERFILE)
 $(VERFILE):
 	echo "bldstr: defb \"`whoami`@`hostname` R`svn info .|grep -m 1 Rev|cut -d " " -f 2`\",0x0a,0" > $(VERFILE)
+	echo "bldver equ `svn info .|grep -m 1 Rev|cut -d " " -f 2`" > $(VERWORDFILE)
 
 p0syms: page0 $(P0SYMS)
 $(P0SYMS):
