@@ -29,6 +29,24 @@
 .globl F_nmihandler
 F_nmihandler:
 	call F_savescreen	; save frame buffer contents
+	ld bc, 0xFFFD		; silence the AY (even for 48K machines
+	ld a, 8			; in case they have an AY add on compatible
+	out (c), a		; with the 128K)
+	ld b, 0xBF		; set register 8
+	xor a			; to 0
+	out (c), a
+	ld b, 0xFF
+	ld a, 9			; register 9 to zero
+	out (c), a
+	ld b, 0xBF
+	xor a
+	out (c), a
+	ld a, 10		; register 10 to zero
+	ld b, 0xFF
+	out (c), a
+	ld b, 0xBF
+	xor a
+	out (c), a
 	call F_detectpages	; Detect 128K mode and value of port 0x7ffd
 	ld a, (v_machinetype)
 	cp 1			; 128K machine?
