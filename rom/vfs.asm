@@ -246,12 +246,7 @@ F_mount:
 	jr c, .mountfailed9	; Tried but failed to mount?
 	jr z, .testnext9		; Protocol is not ours?
 	call F_poppageB		; restore original page B
-	ld a, (v_mountnumber)	; get device number
-	add a, VFSVECBASE%256	; and calculate the address in sysvars
-	ld h, 0x3F		; MSB of the sysvars area
-	ld l, a			; LSB - HL now has the addr of the fs table
 	pop af			; restore ROM page number
-	ld (hl), a		; Put the ROM number in the filesystem table
 	pop hl			; restore the stack
 	ret
 .testnext9:
