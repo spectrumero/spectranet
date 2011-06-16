@@ -45,5 +45,8 @@ F_if_configmain:
 	call F_getmenuopt
 	jr z,  .menuloop2
 
+	; indicate RAM configuration no longer in use
+	call F_abandonConfig
+
 	ret
 
