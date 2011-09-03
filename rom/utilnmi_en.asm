@@ -30,7 +30,7 @@ STR_rom:	defb "Add and remove ROM modules",0
 .globl STR_loader
 STR_loader:	defb "Load arbitrary data to RAM",0
 .globl STR_snapshot
-STR_snapshot:	defb "Take snapshot",0
+STR_snapshot:	defb "Snapshot manager",0
 .globl STR_exit
 STR_exit:	defb "Exit",0
 .globl STR_nmimenu
