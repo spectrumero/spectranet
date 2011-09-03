@@ -40,13 +40,15 @@ F_listdir:
         ld a, 2
         rst CALLBAS                     ; set channel to 2
         defw 0x1601
+	call F_getfileaddr		; get address to put filename
+	ld (FILE_ADDR), hl
 .catloop1:
         ld a, (v_vfs_dirhandle)         ; get the dir handle back
-        ld de, INTERPWKSPC              ; location for result
+        ld de, (FILE_ADDR)              ; location for result
         call READDIR                    ; read dir
-        jr c, .readdone1                 ; read is probably at EOF
+        jr c, .readdone1                ; read is probably at EOF
 	call F_statentry		; show some information about it
-        ld hl, INTERPWKSPC
+        ld hl, (FILE_ADDR)
         call F_tbas_zxprint             ; print a C string to #2
 	ld a, 2				; set SCR_CT > 1
 	ld (ZX_SCR_CT), a		; prevent ZX ROM from doing "Scroll"
@@ -236,6 +238,21 @@ F_decimal:
 .zerocont4:
 	rst CALLBAS
 	defw 0x0010
+	ret
+
+;-------------------------------------------------------------------------
+; F_getfileaddr
+; Makes the address for the file name and returns it in HL.
+; Expects the path at INTERPWKSPC.
+; Returns with Z set if terminator was found.
+F_getfileaddr:
+	xor a			; look for the NULL at the end
+	ld hl, INTERPWKSPC
+	ld bc, 512		; TODO: pathmax
+	cpir
+	dec hl
+	ld (hl), '/'
+	inc hl
 	ret
 
 .data

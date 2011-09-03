@@ -4,7 +4,7 @@
 # host:    servm1
 
 # To read pcb files, the pcb version (or the cvs source date) must be >= the file version
-FileVersion[20070407]
+#FileVersion[20070407]
 
 PCB["Spectranet" 393701 236220]
 

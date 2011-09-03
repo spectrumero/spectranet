@@ -35,5 +35,7 @@ STACK_HL		equ NMISTACK-6
 AUTOBOOT		equ 0x81	; Config ID for autoboot flag
 ROM_ID			equ 0xFD
 
-INTERPWKSPC		equ 0x3001	; workspace
+INTERPWKSPC		equ 0x3003	; workspace
 SN_SCR_CT		equ 0x3000	; scroll count
+FILE_ADDR		equ 0x3001	; storage of file address
+
