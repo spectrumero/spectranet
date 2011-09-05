@@ -494,6 +494,35 @@ F_tbas_rmdir:
 	jp J_tbas_error
 
 ;----------------------------------------------------------------------------
+; F_tbas_copy: Copies a file
+.globl F_tbas_copy
+F_tbas_copy:
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; source filename
+	cp ','				; and a comma	
+	jp nz, PARSE_ERROR
+	rst CALLBAS
+	defw ZX_NEXT_CHAR		; advance past ,
+
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; destination filename
+	call STATEMENT_END		; then the end of statement
+
+	;------- runtime --------
+	rst CALLBAS
+	defw ZX_STK_FETCH
+	ld hl, INTERPWKSPC
+	call F_basstrcpy		; dst in INTERPWKSPC
+	rst CALLBAS
+	defw ZX_STK_FETCH
+	ld hl, INTERPWKSPC+256		; src in INTERPWKSPC+256
+	call F_basstrcpy
+	call F_copy
+	jp nc, EXIT_SUCCESS
+	jp J_tbas_error
+	
+
+;----------------------------------------------------------------------------
 ; F_tbas_zxprint
 ; Prints a C string to the current ZX channel
 ; HL = pointer to string 
