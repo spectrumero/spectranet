@@ -97,6 +97,7 @@ F_tnfs_read:
 	call F_fetchpage
 	ret c
 	ld (v_curfd), a			; store the FD
+	call F_tnfs_setmountpt_fd	; set the current mount point
 	xor a
 	ld (v_bytesread), a		; reset bytesread counter
 	ld (v_bytesread+1), a
@@ -176,6 +177,7 @@ F_tnfs_write:
 	call F_fetchpage
 	ret c
 	ld (v_curfd), a
+	call F_tnfs_setmountpt_fd	; set the current mount point
 .writeloop4:
 	push hl
 	push bc
@@ -247,17 +249,17 @@ F_tnfs_close:
 	call F_fetchpage
 	ret c
 
+	push af			; save file handle
+	call F_tnfs_setmountpt_fd	; set the mount point
+
 	ld c, FREEFD
 	call RESALLOC		; always free the FD even if there's an error
 
-	ld b, a
 	ld a, TNFS_OP_CLOSE
 	call F_tnfs_header_w
-	ld e, b			; make address of TNFS handle
-	ld d, HMETASPACE / 256
-	ld a, (de)		; get the filesystem mount point
-	ld (v_curmountpt), a	
-	dec d			; point at the handle storage
+	pop af			; get the file handle
+	ld e, a			; make address of TNFS handle
+	ld d, HANDLESPACE / 256
 	ld a, (de)		; get the TNFS handle
 	ld (hl), a		; insert it into the message
 	inc hl
@@ -399,3 +401,16 @@ F_tnfs_chmod:
 	call F_tnfs_abspath	; copy filename as absolute path
 	call F_tnfs_message_w	; send message and get reply
 	jp F_tnfs_simpleexit	; and handle exit
+
+;--------------------------------------------------------------------------
+; F_tnfs_setmountpt_fd
+; Sets the current mount point to what the fd in A is using
+F_tnfs_setmountpt_fd:
+	push hl
+	ld h, HMETASPACE / 256		; get fd's metadata pointer
+	ld l, a
+	ld a, (hl)			; get the mountpoint for this fd
+	ld (v_curmountpt), a		; set the current mountpoint
+	pop hl
+	ret
+
