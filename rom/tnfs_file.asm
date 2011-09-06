@@ -246,30 +246,30 @@ F_tnfs_write_blk:
 ; Returns with carry set on error and A = return code.
 .globl F_tnfs_close
 F_tnfs_close:
-	call F_fetchpage
-	ret c
+        call F_fetchpage
+        ret c
+	push af
+	call F_tnfs_setmountpt_fd	; set the mount point for the fd
+	pop af
 
-	push af			; save file handle
-	call F_tnfs_setmountpt_fd	; set the mount point
+        ld c, FREEFD
+        call RESALLOC           ; always free the FD even if there's an error
 
-	ld c, FREEFD
-	call RESALLOC		; always free the FD even if there's an error
-
-	ld a, TNFS_OP_CLOSE
-	call F_tnfs_header_w
-	pop af			; get the file handle
-	ld e, a			; make address of TNFS handle
-	ld d, HANDLESPACE / 256
-	ld a, (de)		; get the TNFS handle
-	ld (hl), a		; insert it into the message
-	inc hl
-	call F_tnfs_message_w_hl
-	jp c, F_leave		; protocol error
-	ld a, (tnfs_recv_buffer+tnfs_err_offset)
-	and a
-	jp z, F_leave		; no error
-	scf		
-	jp F_leave		; error, return with c set
+        ld b, a
+        ld a, TNFS_OP_CLOSE
+        call F_tnfs_header_w
+        ld e, b                 ; make address of TNFS handle
+        ld d, HANDLESPACE / 256
+        ld a, (de)              ; get the TNFS handle
+        ld (hl), a              ; insert it into the message
+        inc hl
+        call F_tnfs_message_w_hl
+        jp c, F_leave           ; protocol error
+        ld a, (tnfs_recv_buffer+tnfs_err_offset)
+        and a
+        jp z, F_leave           ; no error
+        scf             
+        jp F_leave              ; error, return with c set
 
 ;------------------------------------------------------------------------
 ; F_tnfs_stat
