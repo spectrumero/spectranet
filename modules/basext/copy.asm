@@ -25,12 +25,31 @@
 .include	"defs.inc"
 .include	"fcntl.inc"
 .include	"spectranet.inc"
+.include	"stat.inc"
 
 ;------------------------------------------------------------------------
 ; F_copy expects the destination filename in WORKSPACE and the
 ; source in WORKSPACE+256.
 .globl F_copy
 F_copy:
+	; First stat the destination to find if it's a directory.
+	ld hl, INTERPWKSPC
+	ld de, INTERPWKSPC+512
+	call STAT
+	jr c, .trytocopy	; non-existent destination, that's OK, it
+				; might be specifying a file that's
+				; not yet been created.
+	ld a, (INTERPWKSPC+512+STAT_MODE+1)
+	and S_IFDIR / 256	; check directory flag
+	jr z, .trytocopy	; not a dir, try to overwrite the file
+
+	ld hl, INTERPWKSPC+256	; source filename
+	call F_basename		; HL now points at the file name
+	ex de, hl		; move into DE for the catpath call
+	ld hl, INTERPWKSPC	; destination directory
+	call F_catpath
+	
+.trytocopy:
 	; Open the source file for read.
 	ld hl, INTERPWKSPC+256
 	ld d, 0			; no flags
