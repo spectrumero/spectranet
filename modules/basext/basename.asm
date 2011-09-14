@@ -37,7 +37,8 @@ F_basename:
 	cpir			; HL now points at null terminator
 	ld a, c
 	cpl
-	ld b, a	
+	ld b, a			; set b to length of string
+	inc b	
 .findslash:
 	dec hl
 	ld a, (hl)
@@ -63,6 +64,7 @@ F_catpath:
 	cp 0xFF
 	jr z, .catpath
 	dec hl			; point at final char of string
+	ld a, (hl)
 	cp '/'			; separator?
 	inc hl			; move past last char
 	jr z, .catpath
