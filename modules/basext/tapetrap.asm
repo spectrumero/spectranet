@@ -23,6 +23,7 @@
 .include	"spectranet.inc"
 .include	"fcntl.inc"
 .include	"sysvars.inc"
+.include	"errno.inc"
 .text
 ; Initialize and handle tape traps.
 

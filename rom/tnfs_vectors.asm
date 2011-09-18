@@ -20,6 +20,7 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 .include	"fcntl.inc"
+.include	"errno.inc"
 
 .section vectors
 sig:	defb 0xAA		; This is a ROM module

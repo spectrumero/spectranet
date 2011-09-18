@@ -26,6 +26,7 @@
 .include	"spectranet.inc"
 .include	"fcntl.inc"
 .include	"sysvars.inc"
+.include	"errno.inc"
 .text
 ;---------------------------------------------------------------------------
 ; F_showfileinfo

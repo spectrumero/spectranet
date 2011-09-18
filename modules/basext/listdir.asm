@@ -27,6 +27,7 @@
 .include	"ctrlchars.inc"
 .include	"sysvars.inc"
 .include	"zxsysvars.inc"
+.include	"errno.inc"
 .text
 
 ; Show the directory listing. HL = directory to open.

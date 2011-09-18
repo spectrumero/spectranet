@@ -25,6 +25,7 @@
 .include	"sysvars.inc"
 .include	"fcntl.inc"
 .include	"sockdefs.inc"
+.include	"errno.inc"
 
 ; General TNFS core utility functions.
 ;------------------------------------------------------------------------

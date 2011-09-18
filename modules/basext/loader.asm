@@ -25,6 +25,7 @@
 .include	"defs.inc"
 .include	"sysvars.inc"
 .include	"zxsysvars.inc"
+.include	"errno.inc"
 .text
 ; TAP load/save functions
 ;------------------------------------------------------------------------

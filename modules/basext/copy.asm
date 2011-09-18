@@ -26,6 +26,7 @@
 .include	"fcntl.inc"
 .include	"spectranet.inc"
 .include	"stat.inc"
+.include	"errno.inc"
 
 ;------------------------------------------------------------------------
 ; F_copy expects the destination filename in WORKSPACE and the
@@ -41,8 +42,17 @@ F_copy:
 				; not yet been created.
 	ld a, (INTERPWKSPC+512+STAT_MODE+1)
 	and S_IFDIR / 256	; check directory flag
-	jr z, .trytocopy	; not a dir, try to overwrite the file
+	jr nz, .catdir
 
+	; If the destination is a file, we'll not overwrite it (this avoids
+	; having to compare paths to test for file being copied onto itself
+	; at the expense of not being able to use the copy command to
+	; overwrite a file).
+	ld a, EEXIST
+	scf
+	ret
+
+.catdir:
 	ld hl, INTERPWKSPC+256	; source filename
 	call F_basename		; HL now points at the file name
 	ex de, hl		; move into DE for the catpath call

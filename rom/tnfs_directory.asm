@@ -25,6 +25,7 @@
 .include	"tnfs_sysvars.inc"
 .include	"stat.inc"
 .include	"fcntl.inc"
+.include	"errno.inc"
 .text
 
 ; TNFS directory functions - opendir, readdir. closedir

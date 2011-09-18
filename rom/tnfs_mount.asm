@@ -24,6 +24,7 @@
 .include	"spectranet.inc"
 .include	"sysvars.inc"
 .include	"fcntl.inc"
+.include	"errno.inc"
 
 ; The TNFS mount and umount functions.
 ;-----------------------------------------------------------------------
