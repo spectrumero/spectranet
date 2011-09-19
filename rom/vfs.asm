@@ -87,7 +87,9 @@ J_notopen:
 F_vfs_dispatch:
 	call F_cleanpath	; remove leading/trailing space
 	call F_resolvemp	; See if a mount point is specified
-	ex (sp), hl
+.globl F_umount			; (note that this is just the entry point
+F_umount:			; for unmounting because the mount point
+	ex (sp), hl		; is already supplied in the accumulator)
 	push de
 	push af
 	ld de, VFSVECBASE
@@ -267,6 +269,7 @@ F_mount:
 	ld a, 0xFE		; TODO: proper return code here
 	scf
 	ret
+
 
 ;--------------------------------------------------------------------------
 ; F_freemountpoint

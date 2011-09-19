@@ -115,8 +115,8 @@ X_JUMPTABLE:
 	; JUMP instructions... because the VFS dispatcher figures out
 	; the entry point in the jump table by using the first value
 	; on the stack. Note they all go to the same address!
-	jp F_mount		; mount
-	call F_vfs_dispatch	; umount
+	jp F_mount		; mount		; well except for mount
+	call F_umount		; umount	; and umount of course.
 	call F_vfs_dispatch	; opendir
 	call F_vfs_dispatch	; open
 	call F_vfs_dispatch	; unlink
