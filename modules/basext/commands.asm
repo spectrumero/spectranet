@@ -439,15 +439,13 @@ F_tbas_mv:
 	;------- runtime ---------
 	rst CALLBAS
 	defw ZX_STK_FETCH		; destination filename
-	ld hl, INTERPWKSPC+256
+	ld hl, INTERPWKSPC
 	call F_basstrcpy		; copy to workspace as C string
 	rst CALLBAS
 	defw ZX_STK_FETCH		; source filename
-	ld hl, INTERPWKSPC
+	ld hl, INTERPWKSPC+256
 	call F_basstrcpy		; copy to workspace
-	ld hl, INTERPWKSPC		; source and dest filename pointers
-	ld de, INTERPWKSPC+256
-	call RENAME
+	call F_move
 	jp nc, EXIT_SUCCESS
 	jp J_tbas_error
 

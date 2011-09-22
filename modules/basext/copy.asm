@@ -33,33 +33,8 @@
 ; source in WORKSPACE+256.
 .globl F_copy
 F_copy:
-	; First stat the destination to find if it's a directory.
-	ld hl, INTERPWKSPC
-	ld de, INTERPWKSPC+512
-	call STAT
-	jr c, .trytocopy	; non-existent destination, that's OK, it
-				; might be specifying a file that's
-				; not yet been created.
-	ld a, (INTERPWKSPC+512+STAT_MODE+1)
-	and S_IFDIR / 256	; check directory flag
-	jr nz, .catdir
+	call F_chkpath
 
-	; If the destination is a file, we'll not overwrite it (this avoids
-	; having to compare paths to test for file being copied onto itself
-	; at the expense of not being able to use the copy command to
-	; overwrite a file).
-	ld a, EEXIST
-	scf
-	ret
-
-.catdir:
-	ld hl, INTERPWKSPC+256	; source filename
-	call F_basename		; HL now points at the file name
-	ex de, hl		; move into DE for the catpath call
-	ld hl, INTERPWKSPC	; destination directory
-	call F_catpath
-	
-.trytocopy:
 	; Open the source file for read.
 	ld hl, INTERPWKSPC+256
 	ld d, 0			; no flags
@@ -107,4 +82,40 @@ F_copy:
 	call VCLOSE
 	pop af
 	ret
+
+;------------------------------------------------------------------------
+; F_chkpath: Test the destination path:
+; - if it's a directory, append the source filename
+; - if it's a file that exists, return an error (C flag set)
+; - if it's a file that doesn't exist, do nothing
+.globl F_chkpath
+F_chkpath:
+	; First stat the destination to find if it's a directory.
+	ld hl, INTERPWKSPC
+	ld de, INTERPWKSPC+512
+	call STAT
+	jr c, .pathdone		; non-existent destination, that's OK, it
+				; might be specifying a file that's
+				; not yet been created.
+	ld a, (INTERPWKSPC+512+STAT_MODE+1)
+	and S_IFDIR / 256	; check directory flag
+	jr nz, .catdir
+
+	; If the destination is a file, we'll not overwrite it (this avoids
+	; having to compare paths to test for file being copied onto itself
+	; at the expense of not being able to use the copy command to
+	; overwrite a file).
+	ld a, EEXIST
+	scf
+	ret
+
+.catdir:
+	ld hl, INTERPWKSPC+256	; source filename
+	call F_basename		; HL now points at the file name
+	ex de, hl		; move into DE for the catpath call
+	ld hl, INTERPWKSPC	; destination directory
+	call F_catpath
+.pathdone:
+	or a			; reset carry
+	ret	
 
