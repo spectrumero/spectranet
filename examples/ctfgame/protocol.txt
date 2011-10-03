@@ -1,0 +1,55 @@
+Capture the Flag - Protocol
+===========================
+
+General protocol
+----------------
+The protocol uses udp port 32767.
+Each datagram is formatted as follows:
+
+Byte 0		- Number of messages
+Byte 1..n	- The messages
+
+Everything that should be sent in one go must fit in a single UDP
+datagram. This format is used in both directions.
+We'll worry about what to do with dropped packets later.
+
+Messages
+--------
+Format of messages is:
+
+(byte)	Message type
+(data)	Data for the message
+
+These are the message types sent by the server:
+
+0x00	Create object:	Creates a sprite on the client's screen
+0x01	Move object:	Moves an existing object to a new place
+0x02	Set screen:	Sets the current screen
+
+0x00	Create object
+---------------------
+	0x00	0x00:	Create object message
+	0x01	Object ID
+	0x02	X position
+	0x03	Y position
+	0x04	Rotation
+	0x05	Sprite ID
+
+0x01	Move object
+	0x00	0x01:	Move object message
+	0x01	Object ID
+	0x02	X position
+	0x03	Y position
+	0x04	Rotation
+
+0x02	Set screen
+	0x00	0x02:	Set the screen
+	0x01	Screen number
+
+These are the messages sent by the client
+-----------------------------------------
+
+0x80	Request movement
+0x81	Request fire weapon
+
+
