@@ -33,7 +33,7 @@
 #include "ctfserv.h"
 
 int sockfd;
-char msgbuf[256];
+unsigned char msgbuf[256];
 
 // Client list
 struct sockaddr_in *cliaddr[MAXCLIENTS];
@@ -111,8 +111,9 @@ int getMessage() {
 	struct sockaddr_in rxaddr;
 	ssize_t bytes;
 	ssize_t bytesleft;
-	char *msgptr;
+	unsigned char *msgptr;
 	socklen_t addrlen=sizeof(rxaddr);
+	int clientid;
 
 	memset(msgbuf, 0, sizeof(msgbuf));
 	bytes=recvfrom(sockfd, msgbuf, sizeof(msgbuf), 0,
@@ -127,9 +128,26 @@ int getMessage() {
 		// New connection
 		addNewClient(msgptr, &rxaddr);
 	} else {
+		clientid=findClient(&rxaddr);
+		if(clientid < 0)
+			// unknown client - not a fatal error, just don't
+			// process the message
+			return 0;
+
 		// Find the client connection
 		while((bytesleft=bytes-(msgptr-msgbuf)) > 0) {
-
+			switch(*msgptr) {
+				case CONTROL:
+					msgptr++;
+					processControlInput(clientid, *msgptr++);
+					break;
+				default:
+					fprintf(stderr, "Unknown message %x from client %d\n",
+							*msgptr, clientid);
+					// stop processing messages in this block as soon
+					// as we get a bad one.
+					return 0;
+			}
 		}	
 	}
 	
@@ -147,6 +165,8 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 		if(cliaddr[i] == NULL) {
 			cliaddr[i]=(struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
 			memcpy(cliaddr[i], client, sizeof(struct sockaddr_in));
+			printf("Adding new client: %s:%d - slot %d\n",
+					inet_ntoa(client->sin_addr), ntohs(client->sin_port), i);
 
 			// send the acknowledgement
 			ackbuf[1]=ACKOK;
@@ -183,7 +203,33 @@ void removeClient(struct sockaddr_in *client) {
 		}
 	}
 
-	fprintf(stderr, "erk, unable to find client %s:%d\n",
+	fprintf(stderr, "removeClient: erk, unable to find client %s:%d\n",
 			inet_ntoa(client->sin_addr), ntohs(client->sin_port));
+}
+
+// Find the client's address in the list and return the index.
+int findClient(struct sockaddr_in *client) {
+	int i;
+	for(i=0; i<MAXCLIENTS; i++) {
+		if(client->sin_addr.s_addr == cliaddr[i]->sin_addr.s_addr &&
+			 client->sin_port == cliaddr[i]->sin_port) {
+			return i;
+		}
+	}
+
+
+	fprintf(stderr, "findClient: erk, unable to find client %s:%d\n",
+			inet_ntoa(client->sin_addr), ntohs(client->sin_port));
+	return -1;
+}
+
+// Send a message to a specified client.
+int sendMessage(int clientno, void *msg, ssize_t msgsize) {
+	if(sendto(sockfd, msg, msgsize, 0,
+				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
+		perror("sendto");
+		return -1;
+	}
+	return 0;
 }
 

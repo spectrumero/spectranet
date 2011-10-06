@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I../common
-OBJS = ctfserv.o ctfsocket.o
+OBJS = ctfserv.o ctfsocket.o object.o clientmsg.o
 LIBS =
 CTFSERVER = ctfserver
 
