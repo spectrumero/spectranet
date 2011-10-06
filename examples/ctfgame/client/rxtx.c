@@ -29,7 +29,7 @@
 #include <string.h>
 
 #include "ctf.h"
-#include "message.h"
+#include "ctfmessage.h"
 
 int sockfd;		// The socket handle.
 char msgbuf[256];	// Messages are received here.
@@ -41,6 +41,7 @@ struct sockaddr_in remoteaddr;	// Server's address
 // -2 Could not create socket
 // -3 sendto() failed
 // -4 recvfrom() failed
+// -5 Server full
 int initConnection(char *host, char *player) {
 	struct hostent *he;
 	struct sockaddr_in rxaddr;
@@ -70,7 +71,8 @@ int initConnection(char *host, char *player) {
 	// TODO check the data received was from the same address
 	if(recvfrom(sockfd, buf, sizeof(buf), 0, &rxaddr, &addrlen) < 0)
 		return -4;
-
+	if(*(buf+1) == ACKTOOMANY)
+		return -5;
 	return 0;
 }
 

@@ -24,6 +24,7 @@
 
 #include <malloc.h>
 #include <spectrum.h>
+#include <stdio.h>
 #include "ctf.h"
 
 // Define the things we need for malloc
@@ -40,11 +41,14 @@ void u_free(void *addr) {
 
 // Program is started here.
 main() {
+	int rc;
 
 	// initialize malloc.lib
 	heap = 0L;
 	sbrk(0xD000, 0x2FFF);
 
-	initSpriteLib();
+//	initSpriteLib();
+	rc=initConnection("127.0.0.1", "Winston");
+	printk("rc = %d\n", rc);
 }
 

@@ -51,4 +51,14 @@ typedef struct _mvsprite {
 	uchar	rotation;
 } MoveSpriteMsg;
 
+// Control messages from the client. The controls being activated
+// are specified in a bitfield. The message is very short, just the
+// message id followed by a byte with the appropriate bits set.
+#define CONTROL	0x80	// Message ID
+#define ROTLEFT 0x01
+#define ROTRIGHT 0x02
+#define ACCEL 0x04
+#define BRAKE 0x08
+#define FIRE 0x10
+
 #endif
