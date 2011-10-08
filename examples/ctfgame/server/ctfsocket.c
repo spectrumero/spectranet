@@ -33,16 +33,23 @@
 #include "ctfserv.h"
 
 int sockfd;
-unsigned char msgbuf[256];
+
+// Input buffer
+unsigned char msgbuf[MSGBUFSZ];
 
 // Client list
 struct sockaddr_in *cliaddr[MAXCLIENTS];
+
+// Client output buffers
+unsigned char *playerBuf[MAXCLIENTS];
+unsigned char *playerBufPtr[MAXCLIENTS];
 
 // Make the socket.
 // Returns -1 if the socket could not be created
 // Returns -2 if bind() fails
 int makeSocket() {
 	struct sockaddr_in locaddr;
+	int i;
 	sockfd=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if(sockfd < 0) return -1;
 
@@ -54,6 +61,7 @@ int makeSocket() {
 
 	// zero out client pointers
 	memset(cliaddr, 0, sizeof(cliaddr));
+	memset(playerBuf, 0, sizeof(playerBuf));
 
 	return 0;
 }
@@ -97,9 +105,6 @@ int messageLoop() {
 			}
 		}
 	
-		printf(".");
-		fflush(stdout);	
-		
 		// wait for GAMETICK microseconds.
 		usleep(GAMETICK);
 	}
@@ -114,6 +119,7 @@ int getMessage() {
 	unsigned char *msgptr;
 	socklen_t addrlen=sizeof(rxaddr);
 	int clientid;
+	Player *player;
 
 	memset(msgbuf, 0, sizeof(msgbuf));
 	bytes=recvfrom(sockfd, msgbuf, sizeof(msgbuf), 0,
@@ -129,18 +135,41 @@ int getMessage() {
 		addNewClient(msgptr, &rxaddr);
 	} else {
 		clientid=findClient(&rxaddr);
-		if(clientid < 0)
+		if(clientid < 0) 
 			// unknown client - not a fatal error, just don't
 			// process the message
 			return 0;
+		player=getPlayer(clientid);
 
 		// Find the client connection
 		while((bytesleft=bytes-(msgptr-msgbuf)) > 0) {
+			printf("Client: %d message %x\n", clientid, *msgptr);
 			switch(*msgptr) {
+				case START:
+					msgptr++;
+					startPlayer(clientid);
+					break;
 				case CONTROL:
 					msgptr++;
 					processControlInput(clientid, *msgptr++);
 					break;
+				case BYE:
+					msgptr++;
+					sendByeAck(clientid);
+					removeClient(clientid);
+					break;
+				case VIEWPORT:
+					msgptr++;
+
+					// Portability TODO: this doesn't work for bigendian
+					memcpy(&player->view, msgptr, sizeof(Viewport));
+
+					player->flags |= NEWVIEWPORT;
+					printf("client: %d viewport %d,%d to %d,%d\n", clientid,
+							player->view.tx, player->view.ty,
+							player->view.bx, player->view.by);
+					msgptr+=sizeof(Viewport);
+					break;					
 				default:
 					fprintf(stderr, "Unknown message %x from client %d\n",
 							*msgptr, clientid);
@@ -168,12 +197,30 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 			printf("Adding new client: %s:%d - slot %d\n",
 					inet_ntoa(client->sin_addr), ntohs(client->sin_port), i);
 
-			// send the acknowledgement
-			ackbuf[1]=ACKOK;
-			if(sendto(sockfd, ackbuf, sizeof(ackbuf), 0,
-						(struct sockaddr *)client, sizeof(struct sockaddr_in)) < 0) {
-				perror("sendto");
-				return -1;
+			// create the main message buffer for the player
+			playerBuf[i] = (unsigned char *)malloc(MSGBUFSZ);
+			playerBufPtr[i]=playerBuf[i]+1;
+
+			// initialize the player object
+			if(makeNewPlayer(i, hello)) {
+
+				// send the acknowledgement
+				ackbuf[1]=ACKOK;
+				if(sendto(sockfd, ackbuf, sizeof(ackbuf), 0,
+							(struct sockaddr *)client, sizeof(struct sockaddr_in)) < 0) {
+					perror("sendto");
+					return -1;
+				}
+			} else {
+				fprintf(stderr, "Could not create player.\n");
+
+				// Give the client the bad news
+				ackbuf[1]=UNABLE;
+				if(sendto(sockfd, ackbuf, sizeof(ackbuf), 0,
+							(struct sockaddr *)client, sizeof(struct sockaddr_in)) < 0) {
+					perror("sendto");
+					return -1;
+				}
 			}
 
 			return 0;
@@ -192,19 +239,13 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 }
 
 // Find the client's address in the list and remove it.
-void removeClient(struct sockaddr_in *client) {
-	int i;
-	for(i=0; i<MAXCLIENTS; i++) {
-		if(client->sin_addr.s_addr == cliaddr[i]->sin_addr.s_addr &&
-			 client->sin_port == cliaddr[i]->sin_port) {
-			free(cliaddr[i]);
-			cliaddr[i]=NULL;
-			return;
-		}
-	}
-
-	fprintf(stderr, "removeClient: erk, unable to find client %s:%d\n",
-			inet_ntoa(client->sin_addr), ntohs(client->sin_port));
+void removeClient(int clientid) {
+	printf("Removing client id %d\n", clientid);
+	free(cliaddr[clientid]);
+	cliaddr[clientid]=NULL;
+	free(playerBuf[clientid]);
+	playerBuf[clientid]=NULL;
+	playerBufPtr[clientid]=NULL;
 }
 
 // Find the client's address in the list and return the index.
@@ -223,11 +264,84 @@ int findClient(struct sockaddr_in *client) {
 	return -1;
 }
 
-// Send a message to a specified client.
-int sendMessage(int clientno, void *msg, ssize_t msgsize) {
-	if(sendto(sockfd, msg, msgsize, 0,
+// Send all client message buffers, and flush the buffers.
+void sendClientMessages() {
+	int i;
+	int rc;
+
+	for(i=0; i<MAXCLIENTS; i++) {
+		if(cliaddr[i]) {
+			rc=sendMessage(i);
+			if(rc < 0) {
+				// Error when calling sendto; eliminate the client.
+				fprintf(stderr, "Transmit error: removing client %d\n", i);
+				removeClient(i);
+			}
+		}
+	}
+}
+
+// Send the message buffer to a client.
+int sendMessage(int clientno) {
+	ssize_t bytes=playerBufPtr[clientno] - playerBuf[clientno];
+
+	// if the buffer pointer is only 1 beyond the start, there
+	// are no messages to send
+	if(bytes < 2) 
+		return 0;
+
+	if(sendto(sockfd, playerBuf[clientno], bytes, 0,
 				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
 		perror("sendto");
+		return -1;
+	}
+
+	// set buffer pointer to the first byte of the first msg
+	playerBufPtr[clientno]=playerBuf[clientno]+1;
+	*playerBuf[clientno]=0;
+	return 0;
+}
+
+// Add a message to the message buffer
+int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz) {
+
+	ssize_t bytesused = playerBufPtr[clientno]-playerBuf[clientno]+msgsz+2;
+	if(bytesused > MSGBUFSZ) {
+		fprintf(stderr, "too many messages for client %d\n", clientno);
+		return -1;
+	}
+
+	// Increment the message count
+	(*playerBuf[clientno])++;
+	*playerBufPtr[clientno]++ = msgid;
+	memcpy(playerBufPtr[clientno], msg, msgsz);
+	playerBufPtr[clientno] += msgsz;
+	return 0;
+}
+
+// The following functions basically exist so that architecture-specific
+// stuff can be done. The client is always little endian, but the
+// server may not be.
+//
+// Initialize the client.
+int addInitGameMsg(int clientno, MapXY *xy) {
+	return addMessage(clientno, STARTACK, xy, sizeof(MapXY));
+}
+
+// Tell the client to create a new sprite.
+int addMakeSpriteMsg(int clientno, MakeSpriteMsg *msm) {
+	return addMessage(clientno, MAKESPRITE, msm, sizeof(MakeSpriteMsg));
+}
+
+// Acknowledge a disconnect by sending just a BYEACK. Don't send
+// any queued messages.
+int sendByeAck(int clientno) {
+	char bye[2];
+	bye[0]=1;
+	bye[1]=BYEACK;
+	if(sendto(sockfd, bye, 2, 0,
+				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
+		perror("sendByeAck: sendto");
 		return -1;
 	}
 	return 0;

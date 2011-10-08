@@ -22,34 +22,78 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#define CTFPORT		32767
-#define MAKESPRITE	0x00
-#define	MOVESPRITE	0x01
+#include <sys/types.h>
+#ifndef NOSTDINT
+#include <stdint.h>
+#endif
 
-#define HELLO		0x40
-#define ACK			0x41
+// u16_t is a z88dk type
+#ifdef NOSTDINT
+#define uint16_t	u16_t
+#endif
+
+#define CTFPORT		32767
+
+// Messages from server to client
+#define	SPRITEMSG			0x01
+#define RMSPRITEMSG		0x02
+
+// Client initiated messages
+#define HELLO		0x40				// Initial contact with server
+#define VIEWPORT	0x42			// Set viewport
+#define JOIN		0x43				// Join game
+#define JOINACK 0x44				// Acknowledge join
+#define START		0x45				// Start game
+#define STARTACK 0x46				// Acknowledge start
+#define BYE			0x47				// Close connection
+
+// Server replies to synchronous messages
+#define ACK			0x41				// Acknowledgment
+#define BYEACK	0x48				// Acknowledge close
+
+// Some message contents
 #define	ACKOK		0x00
 #define	ACKTOOMANY	0x01
+#define UNABLE	0x02
 
+// Various sizes
+#define	MAXNAME	16
+#define MAXOBJS	256
 
 #ifndef uchar
 #define uchar		unsigned char
 #endif
 
-typedef struct _mksprite {
+typedef struct _spritemsg {
 	uchar	objid;
 	uchar	x;
 	uchar	y;
 	uchar	rotation;
 	uchar	id;
-} MakeSpriteMsg;
+} SpriteMsg;
 
-typedef struct _mvsprite {
-	uchar	objid;
-	uchar	x;
-	uchar	y;
-	uchar	rotation;
-} MoveSpriteMsg;
+typedef struct _rmspritemsg {
+	uchar objid;
+	uchar reason;
+} RemoveSpriteMsg;
+
+#define OFFSCREEN	0
+#define KILLED	1
+
+// The viewport defines the portion of a map a player can
+// see. The X and Y values are absolute map pixels.
+typedef struct _viewport {
+  uint16_t tx;   // top left X pixel
+  uint16_t ty;   // top left Y pixel
+  uint16_t bx;   // bottom right X pixel
+  uint16_t by;   // bottom right Y pixel
+} Viewport;
+
+// MapXY defines a message with an absolute map XY
+typedef struct _mapxy {
+	uint16_t	mapx;
+	uint16_t	mapy;
+} MapXY;
 
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the

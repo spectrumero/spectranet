@@ -26,6 +26,7 @@
 #include <spectrum.h>
 #include <stdio.h>
 #include "ctf.h"
+#include "ctfmessage.h"
 
 // Define the things we need for malloc
 long heap;
@@ -42,6 +43,7 @@ void u_free(void *addr) {
 // Program is started here.
 main() {
 	int rc;
+	MapXY xy;
 
 	// initialize malloc.lib
 	heap = 0L;
@@ -49,6 +51,11 @@ main() {
 
 //	initSpriteLib();
 	rc=initConnection("127.0.0.1", "Winston");
+	printk("rc = %d\n", rc);
+	rc=startGame(&xy);
+	printk("rc = %d x=%d y=%d\n", rc, xy.mapx, xy.mapy);
+	rc=findViewport(&xy);
+	rc=disconnect();
 	printk("rc = %d\n", rc);
 }
 

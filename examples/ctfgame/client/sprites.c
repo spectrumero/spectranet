@@ -23,7 +23,7 @@
 #include <sprites/sp1.h>
 #include <spectrum.h>
 #include "ctf.h"
-#include "message.h"
+#include "ctfmessage.h"
 
 uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00}; 
 
@@ -44,12 +44,6 @@ struct sprentry {
 struct sprentry sprtbl[10];
 
 void initSpriteLib() {
-	// test
-	MakeSpriteMsg msg;
-	MoveSpriteMsg move;
-	int i, j, k;
-	k=2;
-
 	zx_border(BLACK);
 	sp1_Initialize
 		(SP1_IFLAG_MAKE_ROTTBL | 
@@ -57,29 +51,7 @@ void initSpriteLib() {
 		SP1_IFLAG_OVERWRITE_DFILE, INK_BLUE | PAPER_CYAN, ' '); 
 	sp1_TileEntry(' ',fondo);
 	sp1_Invalidate(&cr);
-   	sp1_UpdateNow();   
-
-	// test
-	msg.objid=1;
-	msg.x=30;
-	msg.y=30;;
-	msg.rotation=0;
-	msg.id=0;
-	putSprite(&msg);
-
-	move.objid=1;
-	move.x=100;
-	move.y=30;
-	move.rotation=0;
-
-	for(j=0; j<10; j++) {
-		k=-k;
-		for(i=0; i<50; i++) {
-			move.x+=k;
-			move.y++;	
-			moveSprite(&move);
-		}	
-	}
+ 	sp1_UpdateNow();   
 }
 
 // Put a sprite on the screen.

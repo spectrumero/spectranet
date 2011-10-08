@@ -27,12 +27,14 @@
 #include <netdb.h>
 #include <sockpoll.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "ctf.h"
 #include "ctfmessage.h"
 
 int sockfd;		// The socket handle.
-char msgbuf[256];	// Messages are received here.
+uchar sendbuf[256];	// Send buffer
+uchar rxbuf[256];	// Messages are received here.
 struct sockaddr_in remoteaddr;	// Server's address
 
 // Connect to the server
@@ -44,13 +46,11 @@ struct sockaddr_in remoteaddr;	// Server's address
 // -5 Server full
 int initConnection(char *host, char *player) {
 	struct hostent *he;
-	struct sockaddr_in rxaddr;
-	char buf[32];
-	int addrlen;
+	int rc;
 
 	// Hello message when connecting to the server.
-	buf[0]=HELLO;
-	strlcpy(&buf[1], player, sizeof(buf)-1);
+	sendbuf[0]=HELLO;
+	strlcpy(&sendbuf[1], player, MAXNAME);
 
 	he=gethostbyname(host);
 	if(!he) return -1;
@@ -64,15 +64,52 @@ int initConnection(char *host, char *player) {
 	if(sockfd < 0) return -2;
 
 	// Send the hello message.
-	if(sendto(sockfd, buf, sizeof(buf), 0, &remoteaddr, sizeof(remoteaddr)) < 0)
-		return -3;
+	rc=sendSyncMsg(MAXNAME+1);
+	if(rc < 0) return rc;
 
-	// Get the acknowledgement. (TODO, implement a timeout)
-	// TODO check the data received was from the same address
-	if(recvfrom(sockfd, buf, sizeof(buf), 0, &rxaddr, &addrlen) < 0)
-		return -4;
-	if(*(buf+1) == ACKTOOMANY)
+	if(*(rxbuf+1) == ACKTOOMANY)
 		return -5;
+	return 0;
+}
+
+int startGame(MapXY *xy) {
+	int rc;
+	uchar *bufptr;
+
+	// The game start message is just a single byte.
+	sendbuf[0]=START;
+	rc=sendSyncMsg(1);
+	if(rc < 0)
+		return rc;
+
+	printk("DEBUG: Bytes: %d, %d %d %d %d %d %d\n", rc,
+			rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6]);
+
+	// Only one message should ever come back, advance the
+	// buffer pointer to its start.
+	bufptr=rxbuf+1;
+	if(*bufptr++ != STARTACK)
+		return NACK;
+
+	memcpy(xy, bufptr, sizeof(MapXY));
+	return rc;
+}
+
+int sendSyncMsg(int txbytes) {
+	struct sockaddr_in rxaddr;
+	int addrlen;
+	int bytes=0;
+	if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
+		return TXERROR;
+	
+	if((bytes=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrlen)) < 0)
+		return RXERROR;
+	return bytes;
+}
+
+int sendMsg(int txbytes) {
+	if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
+		return TXERROR;
 	return 0;
 }
 
@@ -99,8 +136,8 @@ int messageloop() {
 		}
 
 		// Messages are ready. Read them.
-		rc=recvfrom(sockfd, msgbuf, sizeof(msgbuf), 0, &rxaddr, &addrsz);
-		msgptr=msgbuf;
+		rc=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrsz);
+		msgptr=rxbuf;
 		numMsgs=*msgptr++;
 
 		while(numMsgs) {
@@ -122,5 +159,22 @@ int messageloop() {
 			numMsgs--;
 		}
 	}
+}
+
+// disconnect from the game, and inform the server that we've gone
+int disconnect() {
+	int rc, i;
+	sendbuf[0]=BYE;
+  rc=sendSyncMsg(1);
+
+	sockclose(sockfd);
+	return rc;
+}
+
+// Send a viewport message.
+int sendViewportMsg(Viewport *vp) {
+	sendbuf[0]=VIEWPORT;
+	memcpy(&sendbuf[1], vp, sizeof(Viewport));
+	return sendMsg(sizeof(Viewport) + 1);
 }
 

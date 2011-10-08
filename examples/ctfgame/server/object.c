@@ -23,6 +23,7 @@
 // Store information on and manipulate, collide, create and destroy
 // objects in the game.
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "ctfserv.h"
@@ -37,14 +38,20 @@ struct mvlookup vectbl[] = {
 	{-16, 0}, {-15, -6}, {-11, -11}, {-6, -15}
 };
 
-Object *objlist;
-Object *objtail;
+// Master object list
+// While a linked list would be more memory efficient (and
+// not have a hard limit), the array position makes for
+// a simple 8 bit object id which the client can very
+// rapidly look up (in other words, it makes the code much
+// simpler)
+Object *objlist[MAXOBJS];
+
+// Player list
 Player *players[MAXCLIENTS];
 
 // Set all object entries to null, clear viewports etc.
 void initObjList() {
-	objlist=NULL;
-	objtail=NULL;
+	memset(objlist, 0, sizeof(objlist));
 	memset(players, 0, sizeof(players));
 }
 
@@ -60,44 +67,27 @@ bool viewPortEquals(Viewport *lhs, Viewport *rhs) {
 
 // Add an object to the list of objects currently in the game.
 void addObject(Object *obj) {
-	obj->next=NULL;
-	if(objlist == NULL) {
-		objlist=obj;
-		objtail=obj;
-	} else {
-		objtail->next=obj;
-		objtail=obj;
+	int i;
+	for(i=0; i < MAXOBJS; i++) {
+		if(objlist[i] == NULL) {
+			objlist[i]=obj;
+			return;
+		}
 	}
+	fprintf(stderr, "addObject: Object list is full!\n");
 }
 
 // Remove an object from the list (not: does not free the object
 // from memory)
 int deleteObject(Object *obj) {
-	Object *cur, *prev;
-
-	// If the only entry zero out the list.
-	if(objlist == objtail) {
-		objlist = NULL;
-		objtail = NULL;
-	} else if(objlist == obj) {
-		// this is the first entry
-		objlist=obj->next;
-	} else {
-		cur=objlist->next;
-		prev=objlist;
-
-		// this object is somewhere else in the list
-		while(cur) {
-			if(cur == obj) {
-				prev->next=cur->next;
-				if(cur == objtail)
-					objtail=prev;
-				break;
-			}
-			prev=cur;
-			cur=cur->next;
+	int i;
+	for(i=0; i < MAXOBJS; i++) {
+		if(objlist[i] == obj) {
+			objlist[i]=NULL;
+			return;
 		}
 	}
+	fprintf(stderr, "deleteObject: object not found\n");
 }
 
 // This is called before the game starts. We just initialize
@@ -128,5 +118,85 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 	p->playerobj=tank;
 
 	return p;
+}
+
+// startPlayer creates the initial starting spot for a player
+// and the start message.
+void startPlayer(int clientid) {
+	MapXY spawn;
+	Player *player=players[clientid];
+
+	fprintf(stderr, "startPlayer for client %d\n", clientid);
+
+	// TODO: something real
+	spawn.mapx=100;
+	spawn.mapy=100;
+	player->playerobj->x=spawn.mapx*16;
+	player->playerobj->y=spawn.mapy*16;
+
+	// Add the player object to the object list
+	addObject(player->playerobj);
+
+	// Tell the client to initialize. The client will use the MapXY
+	// to figure out where the viewport should be. The client will
+	// then respond by telling the server the viewport.
+	addInitGameMsg(clientid, &spawn);
+	sendMessage(clientid);
+}
+
+// Get a player by id.
+Player *getPlayer(int clientid) {
+	return players[clientid];
+}
+
+// Make the sprite messages to update each player's display.
+void makeSpriteUpdates(int clientid) {
+	int objid;
+	Object *obj;
+	Player *player=players[clientid];
+
+	for(int objid=0; objid < MAXOBJS; i++) {
+		obj=objlist[objid];
+
+		// We'll send a message if the object is within the player's viewport,
+		// but only if the object moved or was destroyed or left the viewport.
+		if(obj != NULL) {
+			if(objIsInView(obj, &player->view)) {
+				if(obj->flags & DESTROYED) {
+					addDestructionMsg(clientid, objid, KILLED);
+				}
+				else if((obj->flags & HASMOVED) || (player->flags & NEWVIEWPORT)) {
+					addSpriteMsg(clientid, obj, objid);
+				}
+			}
+			else if(objWasInView(obj, &player->view)) {
+				addDestructionMsg(clientid, objid, OFFSCREEN);
+			}
+		}
+	}
+}
+
+bool objIsInView(Object *obj, Viewport *view) {
+	// Remove the least significant 4 bits which are fractions of
+	// a map position.
+	int ox=obj->x >> 4;
+	int oy=obj->y >> 4;
+
+	if(ox >= view->tx && ox <= view->bx &&
+			oy >= view->ty && oy <= view->by)
+		return TRUE;
+	return FALSE;
+}
+
+bool objWasInView(Object *obj, Viewport *view) {
+	// Remove the least significant 4 bits which are fractions of
+	// a map position.
+	int ox=obj->prevx >> 4;
+	int oy=obj->prevy >> 4;
+
+	if(ox >= view->tx && ox <= view->bx &&
+			oy >= view->ty && oy <= view->by)
+		return TRUE;
+	return FALSE;
 }
 
