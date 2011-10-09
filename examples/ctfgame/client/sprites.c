@@ -22,6 +22,9 @@
 
 #include <sprites/sp1.h>
 #include <spectrum.h>
+#include <string.h>
+#include <stdio.h>
+
 #include "ctf.h"
 #include "ctfmessage.h"
 
@@ -29,10 +32,9 @@ uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00};
 
 // Development: the gr_window sprite graphic
 extern uchar gr_window[];
- 
-// Definimos el area total en tiles (32x24 tiles) para
-// poder inicializar toda la pantalla
-struct sp1_Rect cr = {0, 0, 32, 24}; 
+
+// Main game viewport
+struct sp1_Rect cr = {0, 0, VPXTILES, VPYTILES}; 
 
 // Sprite table
 struct sprentry {
@@ -41,9 +43,11 @@ struct sprentry {
 	uchar		y;
 };
 
-struct sprentry sprtbl[10];
+struct sprentry sprtbl[MAXOBJS];
 
 void initSpriteLib() {
+	memset(sprtbl, 0, sizeof(sprtbl));
+
 	zx_border(BLACK);
 	sp1_Initialize
 		(SP1_IFLAG_MAKE_ROTTBL | 
@@ -54,8 +58,20 @@ void initSpriteLib() {
  	sp1_UpdateNow();   
 }
 
+// Decide whether to move or create a sprite.
+void manageSprite(SpriteMsg *msg) {
+//	printk("Got spritemsg\n");
+//	printk("objid=%d x=%d y=%d\n",
+//			msg->objid, msg->x, msg->y);
+	if(sprtbl[msg->objid].s) {
+		moveSprite(msg);
+	} else {
+		putSprite(msg);
+	}
+}
+
 // Put a sprite on the screen.
-void putSprite(MakeSpriteMsg *msg) {
+void putSprite(SpriteMsg *msg) {
 	struct sprentry *se;
 	struct sp1_ss *s;
 	uchar snum=msg->objid;
@@ -68,15 +84,21 @@ void putSprite(MakeSpriteMsg *msg) {
 		sp1_CreateSpr(SP1_DRAW_MASK2LB, SP1_TYPE_2BYTE, 3, 0, snum);
  	sp1_AddColSpr(s, SP1_DRAW_MASK2, 0, 48, snum);
  	sp1_AddColSpr(s, SP1_DRAW_MASK2RB, 0, 0, snum);
- 	sp1_MoveSprAbs(s, &cr, gr_window, 0, 0, msg->y, msg->x);
-	sp1_UpdateNow();
+
+	// TODO: x,y should be set to the message's xy, but MoveSprAbs
+	// doesn't seem to actually put the sprite on the screen.
+ 	sp1_MoveSprAbs(s, &cr, gr_window, 0, 0, 0, 0);
+
+	// TODO: Find out why MoveSprAbs doesn't work.
+	sp1_MoveSprRel(s, &cr, 0, 0, 0, msg->y, msg->x);
+	//printk("x=%d y=%d\n", msg->x, msg->y);
 }
 
 // Move a sprite. The message itself contains absolute values
 // because if a message gets dropped, the client would be forever
 // out of sync with the server. So the relative movement needs
 // to be calculated.
-void moveSprite(MoveSpriteMsg *msg) {
+void moveSprite(SpriteMsg *msg) {
 	struct sprentry *se;
 	uchar snum=msg->objid;
 	char dx;
@@ -90,7 +112,6 @@ void moveSprite(MoveSpriteMsg *msg) {
 	se->y=msg->y;
 
 	sp1_MoveSprRel(se->s, &cr, 0, 0, 0, dy, dx);
-	sp1_UpdateNow();
 }
 #asm
 

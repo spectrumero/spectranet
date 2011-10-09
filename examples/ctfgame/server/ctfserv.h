@@ -54,7 +54,7 @@ typedef struct _object {
 	int x;				// Map X position in 1/16ths pixel
 	int y;				// Map Y position in 1/16ths pixel
 	int dir;			// direction in 16 points around the compass
-	int velocity;	// velocity in 16ths of a pixel per frame
+	int velocity;	// velocity in pixels per frame
 	int damage;		// how much damage dealt on collision
 	int armour;		// how much armour against collision damage
 								// (0 means always destroyed on collision)
@@ -76,6 +76,7 @@ typedef struct _object {
 // Object flags
 #define HASMOVED	0x01	// Object has moved since the last frame
 #define NEWOBJ		0x02	// Object was created this frame
+#define DESTROYED	0x04	// Object was destroyed this frame
 
 typedef struct _player {
 	Object *playerobj;		// Player's tank
@@ -89,6 +90,7 @@ typedef struct _player {
 
 #define HASFLAG		0x01	// Player is carrying the flag
 #define NEWVIEWPORT 0x02	// Player's viewport changed
+#define RESETFLAGS	0x01	// Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table
 // for working out new X and Y values from a direction and velocity
@@ -108,10 +110,25 @@ int sendMessage(int clientno);
 
 // Game message functions
 int addInitGameMsg(int clientno, MapXY *xy);
-int addMakeSpriteMsg(int clientno, MakeSpriteMsg *msm);
+int addSpriteMsg(int clientno, SpriteMsg *msm);
+int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 
 // Object functions
 void initObjList();
 Player *getPlayer(int clientid);
+int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid);
+int makeDestructionMsg(int clientid, uchar objid, uchar reason);
+
+// Game loop functions
+void doObjectUpdates();
+void moveObject(Object *obj);
+void makeUpdates();
+void makeSpriteUpdates(int clientid);
+bool objIsInView(Object *obj, Viewport *view);
+bool objWasInView(Object *obj, Viewport *view);
+void clearObjectFlags();
+
+// For testing
+unsigned long getframes();
 
 #endif

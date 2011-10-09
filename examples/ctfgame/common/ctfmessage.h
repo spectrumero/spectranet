@@ -98,11 +98,14 @@ typedef struct _mapxy {
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the
 // message id followed by a byte with the appropriate bits set.
+//
+// Control flags are the same as for the z88dk to save cycles on
+// the client.
 #define CONTROL	0x80	// Message ID
-#define ROTLEFT 0x01
-#define ROTRIGHT 0x02
-#define ACCEL 0x04
-#define BRAKE 0x08
-#define FIRE 0x10
+#define ROTLEFT 0x04
+#define ROTRIGHT 0x08
+#define ACCEL 0x01
+#define BRAKE 0x02
+#define FIRE 0x80
 
 #endif

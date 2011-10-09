@@ -29,7 +29,27 @@
 #include "ctfmessage.h"
 #include "ctfserv.h"
 
-void processControlInput(int clientid, uchar *msgptr) {
+void processControlInput(int clientid, uchar msg) {
+	Object *po=getPlayer(clientid)->playerobj;
 
+	// The message pointer is at the actual control byte.
+	if(msg & ROTLEFT)
+		po->dir--;
+	if(msg & ROTRIGHT)
+		po->dir++;
+	if(msg & ACCEL)
+		po->velocity++;
+	if(msg & BRAKE)
+		po->velocity--;
+
+	if(po->velocity < 0)
+		po->velocity=0;
+
+	// TEST CODE
+	if(po->velocity > 2)
+		po->velocity=2;
+
+	// direction can only be 0-15
+	po->dir &= 0x0F;
 }
 

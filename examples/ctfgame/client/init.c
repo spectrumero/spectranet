@@ -44,18 +44,22 @@ void u_free(void *addr) {
 main() {
 	int rc;
 	MapXY xy;
+	SpriteMsg msg;
 
 	// initialize malloc.lib
 	heap = 0L;
 	sbrk(0xD000, 0x2FFF);
 
-//	initSpriteLib();
+	initInput();
+	initSpriteLib();
+
 	rc=initConnection("127.0.0.1", "Winston");
-	printk("rc = %d\n", rc);
+//	printk("rc = %d\n", rc);
 	rc=startGame(&xy);
-	printk("rc = %d x=%d y=%d\n", rc, xy.mapx, xy.mapy);
+//	printk("rc = %d x=%d y=%d\n", rc, xy.mapx, xy.mapy);
 	rc=findViewport(&xy);
+	rc=messageloop();
 	rc=disconnect();
-	printk("rc = %d\n", rc);
+//	printk("rc = %d\n", rc);
 }
 

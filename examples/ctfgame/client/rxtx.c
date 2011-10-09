@@ -24,6 +24,7 @@
 //
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sprites/sp1.h>
 #include <netdb.h>
 #include <sockpoll.h>
 #include <string.h>
@@ -82,9 +83,6 @@ int startGame(MapXY *xy) {
 	if(rc < 0)
 		return rc;
 
-	printk("DEBUG: Bytes: %d, %d %d %d %d %d %d\n", rc,
-			rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6]);
-
 	// Only one message should ever come back, advance the
 	// buffer pointer to its start.
 	bufptr=rxbuf+1;
@@ -113,6 +111,12 @@ int sendMsg(int txbytes) {
 	return 0;
 }
 
+int sendControlMsg(uchar dirs) {
+	sendbuf[0]=CONTROL;
+	sendbuf[1]=dirs;
+	return sendMsg(2);
+}
+
 // The game loop is based on sending and receiving messages to the
 // server, so once the game is in progress we loop around here until
 // the game is over.
@@ -121,17 +125,22 @@ int sendMsg(int txbytes) {
 int messageloop() {
 	struct sockaddr_in rxaddr;
 	char p;
+	char spriteMsgs;
 	int rc;
 	int addrsz;
 	uchar numMsgs;
 	uchar msgType;
 	char *msgptr;
+	spriteMsgs=FALSE;
 
 	while(1) {
+
 		p=poll_fd(sockfd);
 		if(p == 128) return -1;
 		if(p != POLLIN) {
-	//		doUserInput();
+			// If we're doing nothing else get user input and run around
+			// the loop again.
+			getInput();
 		 	continue;
 		}
 
@@ -144,19 +153,24 @@ int messageloop() {
 			msgType=*msgptr++;
 
 			switch(msgType) {
-				case MAKESPRITE:
-					putSprite((MakeSpriteMsg *)msgptr);
-					msgptr+=sizeof(MakeSpriteMsg);
+				case SPRITEMSG:
+					manageSprite((SpriteMsg *)msgptr);
+					msgptr+=sizeof(SpriteMsg);
+					spriteMsgs=TRUE;
 					break;
-				case MOVESPRITE:
-					moveSprite((MoveSpriteMsg *)msgptr);
-					msgptr+=sizeof(MoveSpriteMsg);
+				case RMSPRITEMSG:
+					spriteMsgs=TRUE;
 					break;
 				default:
 					return -2;
 			}
 
 			numMsgs--;
+		}
+
+		if(spriteMsgs) {
+			sp1_UpdateNow();
+			spriteMsgs=FALSE;
 		}
 	}
 }

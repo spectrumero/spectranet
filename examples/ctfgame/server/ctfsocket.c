@@ -104,7 +104,10 @@ int messageLoop() {
 				return rc;
 			}
 		}
-	
+
+		// Make any pending updates
+		makeUpdates();	
+
 		// wait for GAMETICK microseconds.
 		usleep(GAMETICK);
 	}
@@ -143,7 +146,7 @@ int getMessage() {
 
 		// Find the client connection
 		while((bytesleft=bytes-(msgptr-msgbuf)) > 0) {
-			printf("Client: %d message %x\n", clientid, *msgptr);
+			printf("%ld: Client: %d message %x remain: %d\n", getframes(), clientid, *msgptr, bytesleft);
 			switch(*msgptr) {
 				case START:
 					msgptr++;
@@ -151,7 +154,8 @@ int getMessage() {
 					break;
 				case CONTROL:
 					msgptr++;
-					processControlInput(clientid, *msgptr++);
+					processControlInput(clientid, *msgptr);
+					msgptr++;
 					break;
 				case BYE:
 					msgptr++;
@@ -329,8 +333,13 @@ int addInitGameMsg(int clientno, MapXY *xy) {
 }
 
 // Tell the client to create a new sprite.
-int addMakeSpriteMsg(int clientno, MakeSpriteMsg *msm) {
-	return addMessage(clientno, MAKESPRITE, msm, sizeof(MakeSpriteMsg));
+int addSpriteMsg(int clientno, SpriteMsg *msm) {
+	return addMessage(clientno, SPRITEMSG, msm, sizeof(SpriteMsg));
+}
+
+// Tell the client to remove a sprite
+int addDestructionMsg(int clientno, RemoveSpriteMsg *rm) {
+	return addMessage(clientno, RMSPRITEMSG, rm, sizeof(RemoveSpriteMsg));
 }
 
 // Acknowledge a disconnect by sending just a BYEACK. Don't send

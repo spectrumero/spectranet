@@ -1,5 +1,3 @@
-#ifndef CTF_H
-#define CTF_H
 // The MIT License
 // 
 // Copyright (c) 2011 Dylan Smith
@@ -21,49 +19,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+
+// Input routines
+
+#include <input.h>
+#include <spectrum.h>
+
+#include "ctf.h"
 #include "ctfmessage.h"
 
-// Error numbers
-#define	TXERROR -3
-#define RXERROR -4
-#define NACK -5
-#define VPRANGE -6
+struct in_UDK k;
 
-# Viewport
-#define VPXTILES	28
-#define VPYTILES	23
-#define VPXPIXELS	224
-#define VPYPIXELS	184
-#define MAXVPX	32767
-#define MAXVPY	32767
+void initInput() {
+	k.fire = in_LookupKey('m');
+	k.up = in_LookupKey('q');
+	k.down = in_LookupKey('a');
+	k.left = in_LookupKey('o');
+	k.right = in_LookupKey('p');
+}
 
-#define TRUE	1
-#define	FALSE 0
-
-// Function prototypes
-// General stuff
-void *u_malloc(uint size);
-void u_free(void *addr);
-
-// Sprite display
-extern void initSpriteLib();
-extern void putSprite(SpriteMsg *msg);
-extern void moveSprite(SpriteMsg *msg);
-extern void manageSprite(SpriteMsg *msg);
-
-// Controls
-extern void initInput();
-extern void getInput();
-
-// Communications
-extern int initConnection(char *host, char *player);
-extern int startGame(MapXY *xy);
-extern int disconnect();
-extern int sendSyncMsg(int txbytes);
-extern int sendMsg(int txbytes);
-extern int sendControlMsg(uchar dirs);
-extern int messageloop();
-
-#endif
+void getInput() {
+	uchar dirs;
+	uchar msg[2];
+	uchar moveflags;
+	dirs=in_JoyKeyboard(&k);
+	if(dirs) {
+		zx_border(BLUE);
+		sendControlMsg(dirs);
+		zx_border(YELLOW);
+	}
+}
 

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I../common
+CFLAGS = -I../common -g
 OBJS = ctfserv.o ctfsocket.o object.o clientmsg.o
 LIBS =
 CTFSERVER = ctfserver

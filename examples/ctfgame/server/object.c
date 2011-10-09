@@ -49,10 +49,16 @@ Object *objlist[MAXOBJS];
 // Player list
 Player *players[MAXCLIENTS];
 
+// Frame counter. This is mainly used for testing and
+// debugging.
+unsigned long frames;
+unsigned long testend;
+
 // Set all object entries to null, clear viewports etc.
 void initObjList() {
 	memset(objlist, 0, sizeof(objlist));
 	memset(players, 0, sizeof(players));
+	frames=0;
 }
 
 // Compare two viewports to see if they are the same.
@@ -123,6 +129,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 // startPlayer creates the initial starting spot for a player
 // and the start message.
 void startPlayer(int clientid) {
+	Object *other;	// TEST CODE
 	MapXY spawn;
 	Player *player=players[clientid];
 
@@ -142,11 +149,83 @@ void startPlayer(int clientid) {
 	// then respond by telling the server the viewport.
 	addInitGameMsg(clientid, &spawn);
 	sendMessage(clientid);
+
+	// TEST CODE
+	testend=frames+100;
+//	player->playerobj->velocity=1;
+//	player->playerobj->dir=2;
+//	other=(Object *)malloc(sizeof(Object));
+//	other->dir=5;
+//	other->velocity=2;
+//	other->x=50;
+//	other->y=50;
+//	addObject(other);
+
 }
 
 // Get a player by id.
 Player *getPlayer(int clientid) {
 	return players[clientid];
+}
+
+// Send all the updates that should be sent to each client.
+void makeUpdates() {
+	int clientid;
+	Player *p;
+
+	doObjectUpdates();
+
+	for(clientid=0; clientid < MAXCLIENTS; clientid++) {
+		p=players[clientid];
+		if(p) {
+			makeSpriteUpdates(clientid);
+
+			// Player updates finished, reset flags that should be
+			// reset at the end of the frame.
+			p->flags &= RESETFLAGS;
+		}
+	}
+
+	sendClientMessages();
+	clearObjectFlags();
+	frames++;
+}
+
+// Perform updates on objects, move them, collide them, blow them up
+// etc.
+void doObjectUpdates() {
+	int i;
+	Object *obj;
+
+	for(i=0; i<MAXOBJS; i++) {
+		obj=objlist[i];
+		if(obj) {
+			if(obj->velocity != 0)
+				moveObject(obj);
+		}
+	}
+}
+
+// This function updates the XY position of the object, and its former
+// XY position.
+void moveObject(Object *obj) {
+	int dx=vectbl[obj->dir].dx;
+	int dy=vectbl[obj->dir].dy;
+
+	printf("Moving object\n");
+
+	dx *= obj->velocity;
+	dy *= obj->velocity;
+
+	obj->prevx=obj->x;
+	obj->prevy=obj->y;
+	obj->x += dx;
+	obj->y += dy;
+	obj->flags |= HASMOVED;
+
+	// TEST CODE
+//	if(frames >= testend)
+//		obj->velocity=0;
 }
 
 // Make the sprite messages to update each player's display.
@@ -155,7 +234,7 @@ void makeSpriteUpdates(int clientid) {
 	Object *obj;
 	Player *player=players[clientid];
 
-	for(int objid=0; objid < MAXOBJS; i++) {
+	for(objid=0; objid < MAXOBJS; objid++) {
 		obj=objlist[objid];
 
 		// We'll send a message if the object is within the player's viewport,
@@ -163,17 +242,38 @@ void makeSpriteUpdates(int clientid) {
 		if(obj != NULL) {
 			if(objIsInView(obj, &player->view)) {
 				if(obj->flags & DESTROYED) {
-					addDestructionMsg(clientid, objid, KILLED);
+					makeDestructionMsg(clientid, objid, KILLED);
 				}
 				else if((obj->flags & HASMOVED) || (player->flags & NEWVIEWPORT)) {
-					addSpriteMsg(clientid, obj, objid);
+					makeSpriteMsg(clientid, &player->view, obj, objid);
 				}
 			}
 			else if(objWasInView(obj, &player->view)) {
-				addDestructionMsg(clientid, objid, OFFSCREEN);
+				makeDestructionMsg(clientid, objid, OFFSCREEN);
 			}
 		}
 	}
+}
+
+int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid) {
+	SpriteMsg sm;
+
+	printf("Adding spritemessage\n");
+
+	sm.x=(obj->x >> 4) - view->tx;
+	sm.y=(obj->y >> 4) - view->ty;
+	sm.objid=objid;
+	sm.rotation=obj->dir;
+	sm.id=obj->type;
+	return addSpriteMsg(clientid, &sm);
+}
+
+int makeDestructionMsg(int clientid, uchar objid, uchar reason) {
+	RemoveSpriteMsg rm;
+
+	rm.objid=objid;
+	rm.reason=reason;
+	return addDestructionMsg(clientid, &rm);
 }
 
 bool objIsInView(Object *obj, Viewport *view) {
@@ -198,5 +298,20 @@ bool objWasInView(Object *obj, Viewport *view) {
 			oy >= view->ty && oy <= view->by)
 		return TRUE;
 	return FALSE;
+}
+
+// This is called at the end of the game update after
+// all the clients have had their update messages sent.
+void clearObjectFlags() {
+	int i;
+	for(i=0; i<MAXOBJS; i++) {
+		if(objlist[i]) {
+			objlist[i]->flags=0;
+		}
+	}
+}
+
+unsigned long getframes() {
+	return frames;
 }
 
