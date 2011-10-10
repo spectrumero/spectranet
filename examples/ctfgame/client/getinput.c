@@ -24,11 +24,13 @@
 
 #include <input.h>
 #include <spectrum.h>
+#include <stdio.h>
 
 #include "ctf.h"
 #include "ctfmessage.h"
 
 struct in_UDK k;
+uchar sentdirs;
 
 void initInput() {
 	k.fire = in_LookupKey('m');
@@ -36,17 +38,19 @@ void initInput() {
 	k.down = in_LookupKey('a');
 	k.left = in_LookupKey('o');
 	k.right = in_LookupKey('p');
+	sentdirs=0;
 }
 
+// This function only sends the input message if inputs have
+// changed.
 void getInput() {
 	uchar dirs;
 	uchar msg[2];
 	uchar moveflags;
 	dirs=in_JoyKeyboard(&k);
-	if(dirs) {
-		zx_border(BLUE);
+	if(dirs != sentdirs) {
 		sendControlMsg(dirs);
-		zx_border(YELLOW);
+		sentdirs=dirs;
 	}
 }
 

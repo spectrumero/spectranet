@@ -48,14 +48,13 @@ struct sprentry sprtbl[MAXOBJS];
 void initSpriteLib() {
 	memset(sprtbl, 0, sizeof(sprtbl));
 
-	zx_border(BLACK);
-	sp1_Initialize
-		(SP1_IFLAG_MAKE_ROTTBL | 
-		SP1_IFLAG_OVERWRITE_TILES | 
-		SP1_IFLAG_OVERWRITE_DFILE, INK_BLUE | PAPER_CYAN, ' '); 
-	sp1_TileEntry(' ',fondo);
-	sp1_Invalidate(&cr);
- 	sp1_UpdateNow();   
+   zx_border(BLACK);
+   sp1_Initialize(SP1_IFLAG_MAKE_ROTTBL | SP1_IFLAG_OVERWRITE_TILES | SP1_IFLAG_OVERWRITE_DFILE, INK_BLACK | PAPER_WHITE, ' ');
+   sp1_TileEntry(' ', fondo);   // redefine graphic associated with space character
+
+   sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
+   sp1_UpdateNow();            // draw screen area managed by sp1 now
+
 }
 
 // Decide whether to move or create a sprite.
@@ -80,18 +79,11 @@ void putSprite(SpriteMsg *msg) {
 	se->x=msg->x;
 	se->y=msg->y;
 
-	s=sprtbl[snum].s=
-		sp1_CreateSpr(SP1_DRAW_MASK2LB, SP1_TYPE_2BYTE, 3, 0, snum);
- 	sp1_AddColSpr(s, SP1_DRAW_MASK2, 0, 48, snum);
- 	sp1_AddColSpr(s, SP1_DRAW_MASK2RB, 0, 0, snum);
-
-	// TODO: x,y should be set to the message's xy, but MoveSprAbs
-	// doesn't seem to actually put the sprite on the screen.
- 	sp1_MoveSprAbs(s, &cr, gr_window, 0, 0, 0, 0);
-
-	// TODO: Find out why MoveSprAbs doesn't work.
-	sp1_MoveSprRel(s, &cr, 0, 0, 0, msg->y, msg->x);
-	//printk("x=%d y=%d\n", msg->x, msg->y);
+	s = sprtbl[snum].s = sp1_CreateSpr(SP1_DRAW_MASK2LB, SP1_TYPE_2BYTE, 3, 0, snum);
+  sp1_AddColSpr(s, SP1_DRAW_MASK2, 0, 48, snum);
+  sp1_AddColSpr(s, SP1_DRAW_MASK2RB, 0, 0, snum);
+  sp1_MoveSprAbs(s, &cr, gr_window, msg->y >> 3, msg->x >> 3, 
+		msg->y & 0x07, msg->x & 0x07);
 }
 
 // Move a sprite. The message itself contains absolute values
@@ -104,7 +96,7 @@ void moveSprite(SpriteMsg *msg) {
 	char dx;
 	char dy;
 	
-	se=&sprtbl[snum];
+	se=&sprtbl[0];
 	dx=msg->x-se->x;
 	dy=msg->y-se->y;
 
@@ -113,6 +105,48 @@ void moveSprite(SpriteMsg *msg) {
 
 	sp1_MoveSprRel(se->s, &cr, 0, 0, 0, dy, dx);
 }
+
+#asm
+
+   defb @11111111, @00000000
+   defb @11111111, @00000000
+   defb @11111111, @00000000
+   defb @11111111, @00000000
+   defb @11111111, @00000000
+   defb @11111111, @00000000
+   defb @11111111, @00000000
+
+; ASM source file created by SevenuP v1.20
+; SevenuP (C) Copyright 2002-2006 by Jaime Tejedor Gomez, aka Metalbrain
+
+;GRAPHIC DATA:
+;Pixel Size:      ( 16,  24)
+;Char Size:       (  2,   3)
+;Sort Priorities: Mask, Char line, Y char, X char
+;Data Outputted:  Gfx
+;Interleave:      Sprite
+;Mask:            Yes, before graphic
+
+._gr_window
+
+  DEFB  128,127,  0,192,  0,191, 30,161
+  DEFB   30,161, 30,161, 30,161,  0,191
+  DEFB    0,191, 30,161, 30,161, 30,161
+  DEFB   30,161,  0,191,  0,192,128,127
+  DEFB  255,  0,255,  0,255,  0,255,  0
+  DEFB  255,  0,255,  0,255,  0,255,  0
+
+  DEFB    1,254,  0,  3,  0,253,120,133
+  DEFB  120,133,120,133,120,133,  0,253
+  DEFB    0,253,120,133,120,133,120,133
+  DEFB  120,133,  0,253,  0,  3,  1,254
+  DEFB  255,  0,255,  0,255,  0,255,  0
+  DEFB  255,  0,255,  0,255,  0,255,  0
+
+#endasm
+
+
+/*
 #asm
 
    defb @11111111, @00000000
@@ -166,4 +200,5 @@ void moveSprite(SpriteMsg *msg) {
 
 
 #endasm
+*/
 

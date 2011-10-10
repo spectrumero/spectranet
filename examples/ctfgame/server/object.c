@@ -38,6 +38,12 @@ struct mvlookup vectbl[] = {
 	{-16, 0}, {-15, -6}, {-11, -11}, {-6, -15}
 };
 
+// Object property table. This could be loaded from a file instead.
+ObjectProperties objprops[] = {
+	{0, 160, 4, 4, 3},		// Player's tank
+	{160, 320, 0, 0, 0}		// Player's missile
+};
+
 // Master object list
 // While a linked list would be more memory efficient (and
 // not have a hard limit), the array position makes for
@@ -200,6 +206,7 @@ void doObjectUpdates() {
 	for(i=0; i<MAXOBJS; i++) {
 		obj=objlist[i];
 		if(obj) {
+			processObjectControl(obj, &objprops[obj->type]);
 			if(obj->velocity != 0)
 				moveObject(obj);
 		}
@@ -211,17 +218,39 @@ void doObjectUpdates() {
 void moveObject(Object *obj) {
 	int dx=vectbl[obj->dir].dx;
 	int dy=vectbl[obj->dir].dy;
+	
+	int abspx, abspy, absx, absy;
 
-	printf("Moving object\n");
-
-	dx *= obj->velocity;
-	dy *= obj->velocity;
+	dx *= (obj->velocity >> 4);
+	dy *= (obj->velocity >> 4);
 
 	obj->prevx=obj->x;
 	obj->prevy=obj->y;
 	obj->x += dx;
 	obj->y += dy;
-	obj->flags |= HASMOVED;
+
+	absx=obj->x >> 4;
+	absy=obj->y >> 4;
+	abspx=obj->prevx >> 4;
+	abspy=obj->prevy >> 4;
+
+	// TODO: Collide the object with the map edge in this case
+	if(obj->x < 0) {
+		obj->x = 0;
+		obj->velocity = 0;
+	}
+	if(obj->y < 0) {
+		obj->y = 0;
+		obj->velocity = 0;
+	}
+
+	// Only set the move flag if the object has moved across a map
+	// pixel boundary.
+	if(absx != abspx || absy != abspy) {	
+		printf("Moving object: x = %d y = %d prevx = %d prevy = %d\n",
+			obj->x >> 4, obj->y >> 4, obj->prevx >> 4, obj->prevy >> 4);
+		obj->flags |= HASMOVED;
+	}
 
 	// TEST CODE
 //	if(frames >= testend)

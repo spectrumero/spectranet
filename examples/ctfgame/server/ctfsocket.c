@@ -104,12 +104,14 @@ int messageLoop() {
 				return rc;
 			}
 		}
+		else {
 
-		// Make any pending updates
-		makeUpdates();	
+			// Make any pending updates
+			makeUpdates();	
 
-		// wait for GAMETICK microseconds.
-		usleep(GAMETICK);
+			// wait for GAMETICK microseconds.
+			usleep(GAMETICK);
+		}
 	}
 	return 0;
 }
@@ -154,7 +156,7 @@ int getMessage() {
 					break;
 				case CONTROL:
 					msgptr++;
-					processControlInput(clientid, *msgptr);
+					player->playerobj->ctrls=*msgptr;
 					msgptr++;
 					break;
 				case BYE:

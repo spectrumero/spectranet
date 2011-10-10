@@ -29,27 +29,35 @@
 #include "ctfmessage.h"
 #include "ctfserv.h"
 
-void processControlInput(int clientid, uchar msg) {
-	Object *po=getPlayer(clientid)->playerobj;
+// Examine the object's control flags and make changes to velocity
+// and direction according to the object's properties.
+void processObjectControl(Object *obj, ObjectProperties *props) {
+	if(obj->ctrls & ACCEL) {
+		obj->velocity += props->maxAccel;
+		if(obj->velocity > props->maxVelocity)
+			obj->velocity = props->maxVelocity;
+	}
+	else if(obj->ctrls & BRAKE) {
+		obj->velocity -= props->maxBrake;
+		if(obj->velocity < 0)
+			obj->velocity = 0;
+	}
 
-	// The message pointer is at the actual control byte.
-	if(msg & ROTLEFT)
-		po->dir--;
-	if(msg & ROTRIGHT)
-		po->dir++;
-	if(msg & ACCEL)
-		po->velocity++;
-	if(msg & BRAKE)
-		po->velocity--;
-
-	if(po->velocity < 0)
-		po->velocity=0;
-
-	// TEST CODE
-	if(po->velocity > 2)
-		po->velocity=2;
-
-	// direction can only be 0-15
-	po->dir &= 0x0F;
+	if(obj->ctrls & ROTLEFT) {
+		obj->dirChgCount--;
+		if(obj->dirChgCount < 1) {
+			obj->dir--;
+			obj->dir &= 0x0F;
+			obj->dirChgCount = props->turnSpeed;
+		}
+	}
+	else if(obj->ctrls & ROTRIGHT) {
+		obj->dirChgCount--;
+		if(obj->dirChgCount < 1) {
+			obj->dir++;
+			obj->dir &= 0x0F;
+			obj->dirChgCount = props->turnSpeed;
+		}
+	}
 }
 

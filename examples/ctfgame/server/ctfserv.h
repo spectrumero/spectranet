@@ -47,31 +47,40 @@
 // Structures
 typedef struct _object {
 	int owner;		// id of owning player
-	int type;			// object's type id (maps to sprite on the client)
+	int type;			// object's type id (maps to sprite on the client + ObjProperty)
 	int size;			// collision size in pixels
 	int prevx;		// previous X location
 	int prevy;		// previous Y location
 	int x;				// Map X position in 1/16ths pixel
 	int y;				// Map Y position in 1/16ths pixel
 	int dir;			// direction in 16 points around the compass
-	int velocity;	// velocity in pixels per frame
+	int dirChgCount;	// Frames until direction change applied
+	int velocity;	// velocity in 1/16th pixels per frame
 	int damage;		// how much damage dealt on collision
 	int armour;		// how much armour against collision damage
 								// (0 means always destroyed on collision)
 	int hp;				// Number of hitpoints remaining
 	uchar flags;	// various object flags
+	uchar ctrls;	// What controls are being applied
 	// This member is a pointer to a function that should get called
 	// on collision detection. Set to null for no action, otherwise
 	// the function pointer contained here will be called.
-	void (*collisionFunc)(struct _object *optr);
+	void (*collisionFunc)(struct _object *optr, struct _object *with);
 	
 	// This member specifies a function that will be called when
 	// the object is destroyed in addition to the usual actions (removal
 	// from object lists etc). If it's set to null, just the default
 	// actions will be done.
 	void (*destructFunc)(struct _object *optr);
-	struct _object *next;		// next object in the list
 } Object;
+
+typedef struct _objprops {
+	int initVelocity;		// Initial velocity in 1/16ths map pixels per frame
+	int maxVelocity;		// Maximum velocity in 1/16ths map pixels per frame
+	int maxAccel;				// Maximum acceleration, in 1/16ths map pixels per frame
+	int maxBrake;				// Maximum braking in map 1/16th pixels per frame
+	int turnSpeed;			// Turn speed, in frames needed per direction change
+} ObjectProperties;
 
 // Object flags
 #define HASMOVED	0x01	// Object has moved since the last frame
@@ -127,6 +136,9 @@ void makeSpriteUpdates(int clientid);
 bool objIsInView(Object *obj, Viewport *view);
 bool objWasInView(Object *obj, Viewport *view);
 void clearObjectFlags();
+
+// Physics functions
+void processObjectControl(Object *obj, ObjectProperties *props);
 
 // For testing
 unsigned long getframes();

@@ -134,12 +134,9 @@ int messageloop() {
 	spriteMsgs=FALSE;
 
 	while(1) {
-
 		p=poll_fd(sockfd);
 		if(p == 128) return -1;
 		if(p != POLLIN) {
-			// If we're doing nothing else get user input and run around
-			// the loop again.
 			getInput();
 		 	continue;
 		}
@@ -148,7 +145,6 @@ int messageloop() {
 		rc=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrsz);
 		msgptr=rxbuf;
 		numMsgs=*msgptr++;
-
 		while(numMsgs) {
 			msgType=*msgptr++;
 
