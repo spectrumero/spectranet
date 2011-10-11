@@ -157,7 +157,12 @@ int messageloop() {
 				case RMSPRITEMSG:
 					spriteMsgs=TRUE;
 					break;
+				case VIEWPORT:
+					switchViewport((MapXY *)msgptr);
+					break;	
 				default:
+					printk("msgtype: %d\n", msgType);
+					zx_border(RED);
 					return -2;
 			}
 

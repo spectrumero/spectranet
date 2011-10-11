@@ -252,6 +252,7 @@ void removeClient(int clientid) {
 	free(playerBuf[clientid]);
 	playerBuf[clientid]=NULL;
 	playerBufPtr[clientid]=NULL;
+	removePlayer(clientid);
 }
 
 // Find the client's address in the list and return the index.
@@ -295,7 +296,7 @@ int sendMessage(int clientno) {
 	// are no messages to send
 	if(bytes < 2) 
 		return 0;
-
+	debugMsg(playerBuf[clientno], bytes);
 	if(sendto(sockfd, playerBuf[clientno], bytes, 0,
 				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
 		perror("sendto");
@@ -310,8 +311,10 @@ int sendMessage(int clientno) {
 
 // Add a message to the message buffer
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz) {
-
 	ssize_t bytesused = playerBufPtr[clientno]-playerBuf[clientno]+msgsz+2;
+
+	printf("addMessage: clientno %d msgid %d msgsz %d\n",
+			clientno, msgid, msgsz);
 	if(bytesused > MSGBUFSZ) {
 		fprintf(stderr, "too many messages for client %d\n", clientno);
 		return -1;
@@ -332,6 +335,15 @@ int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz) {
 // Initialize the client.
 int addInitGameMsg(int clientno, MapXY *xy) {
 	return addMessage(clientno, STARTACK, xy, sizeof(MapXY));
+}
+
+// Tell the client that the viewport has to change, and where
+// the player's tank currently is so it may select a viewport.
+int addChangeViewportMsg(int clientno, int x, int y) {
+	MapXY xy;
+	xy.mapx=x;
+	xy.mapy=y;
+	return addMessage(clientno, VIEWPORT, &xy, sizeof(MapXY));
 }
 
 // Tell the client to create a new sprite.
@@ -356,5 +368,15 @@ int sendByeAck(int clientno) {
 		return -1;
 	}
 	return 0;
+}
+
+void debugMsg(uchar *msg, int bytes) {
+	int i;
+	printf("Msg: ");
+	for(i=0; i < bytes; i++) {
+		printf("%x ", *msg);
+		msg++;
+	}
+	printf("\n");
 }
 

@@ -51,6 +51,7 @@ extern void initSpriteLib();
 extern void putSprite(SpriteMsg *msg);
 extern void moveSprite(SpriteMsg *msg);
 extern void manageSprite(SpriteMsg *msg);
+extern void removeAllSprites();
 
 // Controls
 extern void initInput();

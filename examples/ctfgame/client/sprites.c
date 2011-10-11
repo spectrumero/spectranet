@@ -106,6 +106,26 @@ void moveSprite(SpriteMsg *msg) {
 	sp1_MoveSprRel(se->s, &cr, 0, 0, 0, dy, dx);
 }
 
+void removeAllSprites() {
+	int i;
+	struct sprentry *se;
+	se=&sprtbl[0];
+	
+	for(i=0; i<MAXOBJS; i++) {
+		if(se->s) {
+  		sp1_MoveSprAbs(se->s, &cr, gr_window, 33, 25, 0, 0);
+			sp1_DeleteSpr(se->s);
+			se->s=NULL;
+			se->x=0;
+			se->y=0;
+		}
+		se++;
+	}
+	sp1_Invalidate(&cr);
+	sp1_UpdateNow();
+}
+		
+
 #asm
 
    defb @11111111, @00000000

@@ -86,6 +86,7 @@ typedef struct _objprops {
 #define HASMOVED	0x01	// Object has moved since the last frame
 #define NEWOBJ		0x02	// Object was created this frame
 #define DESTROYED	0x04	// Object was destroyed this frame
+#define VANISHED	0x08	// Object was destroyed because the owner disappeared
 
 typedef struct _player {
 	Object *playerobj;		// Player's tank
@@ -114,6 +115,7 @@ int makeSocket();
 int messageLoop();
 int getMessage();
 void removeClient(int clientno);
+void removePlayer(int clientno);
 int findClient(struct sockaddr_in *client);
 int sendMessage(int clientno);
 
@@ -137,10 +139,19 @@ bool objIsInView(Object *obj, Viewport *view);
 bool objWasInView(Object *obj, Viewport *view);
 void clearObjectFlags();
 
+// Communication functions
+int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
+int sendMessage(int clientno);
+int addInitGameMsg(int clientno, MapXY *xy);
+int addChangeViewportMsg(int clientno, int x, int y);
+int addSpriteMsg(int clientno, SpriteMsg *msm);
+int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
+
 // Physics functions
 void processObjectControl(Object *obj, ObjectProperties *props);
 
 // For testing
 unsigned long getframes();
+void debugMsg(uchar *msg, int bytes);
 
 #endif

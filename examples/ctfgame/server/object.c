@@ -128,8 +128,25 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 	memset(tank, 0, sizeof(Object));
 	strlcpy(p->name, playerName, MAXNAME);
 	p->playerobj=tank;
+	tank->owner=clientid;
 
 	return p;
+}
+
+void removePlayer(int clientid) {
+	int i;
+	Object *obj;
+
+	for(i = 0; i < MAXOBJS; i++) {
+		obj=objlist[i];
+		if(obj && obj->owner == clientid) {
+			obj->flags = VANISHED;
+			obj->owner = -1;
+		}
+	}
+	
+	free(players[clientid]);
+	players[clientid]=NULL;
 }
 
 // startPlayer creates the initial starting spot for a player
@@ -262,6 +279,18 @@ void makeSpriteUpdates(int clientid) {
 	int objid;
 	Object *obj;
 	Player *player=players[clientid];
+
+	// First check for viewport changes. If the player's object
+	// was moved out of view when we moved stuff around, then just
+	// send a change viewport message.
+	if(!objIsInView(player->playerobj, &player->view)) {
+		printf("%ld: Changing viewport for player %d\n",
+				frames, clientid);
+		addChangeViewportMsg(clientid, 
+				player->playerobj->x >> 4,
+				player->playerobj->y >> 4);
+		return;
+	}
 
 	for(objid=0; objid < MAXOBJS; objid++) {
 		obj=objlist[objid];

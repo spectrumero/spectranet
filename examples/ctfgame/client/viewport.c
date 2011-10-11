@@ -26,49 +26,29 @@
 
 // The player's viewport
 Viewport vp;
+int screenx;
+int screeny;
 
-// Sets the viewport from the supplied map XY coords.
+// Sets the viewport map coordinates from the supplied map XY coords
+// and sends these to the server.
 void findViewport(MapXY *xy) {
-	vp.tx=xy->mapx / VPXPIXELS;
-	vp.ty=xy->mapy / VPYPIXELS;
+	screenx=xy->mapx / VPXPIXELS;
+	screeny=xy->mapy / VPXPIXELS;
+	vp.tx=screenx * VPXPIXELS;
+	vp.ty=screeny * VPXPIXELS;
 	vp.bx=vp.tx+VPXPIXELS;
 	vp.by=vp.ty+VPYPIXELS;
 	sendViewportMsg(&vp);
 }
 
-// Moves the viewport right
-int viewportRight() {
-	if(vp.tx+VPXPIXELS > MAXVPX)
-		return VPRANGE;
-	vp.tx += VPXPIXELS;
-	vp.bx += VPXPIXELS;
-	return sendViewportMsg(&vp);
+// This is called during an in-game viewport change, so it must
+// get all the sprites cleared down, get the background redrawn and
+// tell the server the new viewport coordinates.
+//
+// New sprites will be drawn when the server sends the next frame.
+void switchViewport(MapXY *xy) {
+	removeAllSprites();
+	findViewport(xy);
 }
 
-// Moves the viewport left
-int viewportLeft() {
-	if(vp.tx < VPXPIXELS)
-		return VPRANGE;
-	vp.tx -= VPXPIXELS;
-	vp.bx -= VPYPIXELS;
-	return sendViewportMsg(&vp);
-}
-
-// Moves the viewport down
-int viewportDown() {
-	if(vp.ty+VPYPIXELS > MAXVPY)
-		return VPRANGE;
-	vp.ty += VPYPIXELS;
-	vp.by += VPYPIXELS;
-	return sendViewportMsg(&vp);
-}
-
-// Moves the viewport up
-int viewportUp() {
-	if(vp.ty < VPYPIXELS)
-		return VPRANGE;
-	vp.ty -= VPYPIXELS;
-	vp.by -= VPYPIXELS;
-	return sendViewportMsg(&vp);
-}
 
