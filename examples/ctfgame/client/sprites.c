@@ -43,7 +43,7 @@ struct sprentry {
 	uchar		y;
 };
 
-struct sprentry sprtbl[MAXOBJS];
+struct sp1_ss *sprtbl[MAXOBJS];
 
 void initSpriteLib() {
 	memset(sprtbl, 0, sizeof(sprtbl));
@@ -62,7 +62,7 @@ void manageSprite(SpriteMsg *msg) {
 //	printk("Got spritemsg\n");
 //	printk("objid=%d x=%d y=%d\n",
 //			msg->objid, msg->x, msg->y);
-	if(sprtbl[msg->objid].s) {
+	if(sprtbl[msg->objid]) {
 		moveSprite(msg);
 	} else {
 		putSprite(msg);
@@ -71,19 +71,14 @@ void manageSprite(SpriteMsg *msg) {
 
 // Put a sprite on the screen.
 void putSprite(SpriteMsg *msg) {
-	struct sprentry *se;
 	struct sp1_ss *s;
 	uchar snum=msg->objid;
 
-	se=&sprtbl[snum];
-	se->x=msg->x;
-	se->y=msg->y;
-
-	s = sprtbl[snum].s = sp1_CreateSpr(SP1_DRAW_MASK2LB, SP1_TYPE_2BYTE, 3, 0, snum);
+	s = sp1_CreateSpr(SP1_DRAW_MASK2LB, SP1_TYPE_2BYTE, 3, 0, snum);
   sp1_AddColSpr(s, SP1_DRAW_MASK2, 0, 48, snum);
   sp1_AddColSpr(s, SP1_DRAW_MASK2RB, 0, 0, snum);
-  sp1_MoveSprAbs(s, &cr, gr_window, msg->y >> 3, msg->x >> 3, 
-		msg->y & 0x07, msg->x & 0x07);
+  sp1_MoveSprPix(s, &cr, gr_window, msg->x, msg->y);
+	sprtbl[snum]=s;
 }
 
 // Move a sprite. The message itself contains absolute values
@@ -91,40 +86,34 @@ void putSprite(SpriteMsg *msg) {
 // out of sync with the server. So the relative movement needs
 // to be calculated.
 void moveSprite(SpriteMsg *msg) {
-	struct sprentry *se;
-	uchar snum=msg->objid;
-	char dx;
-	char dy;
-	
-	se=&sprtbl[0];
-	dx=msg->x-se->x;
-	dy=msg->y-se->y;
+	struct sp1_ss *s=sprtbl[msg->objid];	
 
-	se->x=msg->x;
-	se->y=msg->y;
-
-	sp1_MoveSprRel(se->s, &cr, 0, 0, 0, dy, dx);
+	sp1_MoveSprPix(s, &cr, gr_window, msg->x, msg->y);
 }
 
 void removeAllSprites() {
 	int i;
-	struct sprentry *se;
-	se=&sprtbl[0];
+	struct sp1_ss *s;
 	
 	for(i=0; i<MAXOBJS; i++) {
-		if(se->s) {
-  		sp1_MoveSprAbs(se->s, &cr, gr_window, 33, 25, 0, 0);
-			sp1_DeleteSpr(se->s);
-			se->s=NULL;
-			se->x=0;
-			se->y=0;
+		s=sprtbl[i];
+		if(s) {
+  		sp1_MoveSprAbs(s, &cr, gr_window, 33, 25, 0, 0);
+			sp1_DeleteSpr(s);
+			sprtbl[i]=NULL;
 		}
-		se++;
 	}
 	sp1_Invalidate(&cr);
 	sp1_UpdateNow();
 }
-		
+
+void removeSprite(RemoveSpriteMsg *msg) {
+	struct sp1_ss *s;
+	s=sprtbl[msg->objid];
+	sp1_MoveSprAbs(s, &cr, gr_window, 33, 25, 0, 0);
+	sp1_DeleteSpr(s);
+	sprtbl[msg->objid]=NULL;
+}
 
 #asm
 

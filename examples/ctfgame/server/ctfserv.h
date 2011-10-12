@@ -137,7 +137,10 @@ void makeUpdates();
 void makeSpriteUpdates(int clientid);
 bool objIsInView(Object *obj, Viewport *view);
 bool objWasInView(Object *obj, Viewport *view);
-void clearObjectFlags();
+void cleanObjects();
+void collisionDetect();
+bool collidesWith(Object *lhs, Object *rhs);
+void spawnPlayer(Player *p);
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);

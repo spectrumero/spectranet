@@ -58,7 +58,7 @@ main() {
 
 	initSpriteLib();
 
-	rc=initConnection("127.0.0.1", "Winston");
+	rc=initConnection("172.16.0.3", "Winston");
 //	printk("rc = %d\n", rc);
 	rc=startGame(&xy);
 //	printk("rc = %d x=%d y=%d\n", rc, xy.mapx, xy.mapy);

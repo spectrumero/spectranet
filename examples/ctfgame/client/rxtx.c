@@ -155,6 +155,8 @@ int messageloop() {
 					spriteMsgs=TRUE;
 					break;
 				case RMSPRITEMSG:
+					removeSprite((RemoveSpriteMsg *)msgptr);
+					msgptr+=sizeof(RemoveSpriteMsg);
 					spriteMsgs=TRUE;
 					break;
 				case VIEWPORT:
@@ -162,8 +164,9 @@ int messageloop() {
 					break;	
 				default:
 					printk("msgtype: %d\n", msgType);
+					sendbuf[0]=SERVERKILL;
 					zx_border(RED);
-					return -2;
+					return sendMsg(1);
 			}
 
 			numMsgs--;

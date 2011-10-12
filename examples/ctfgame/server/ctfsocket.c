@@ -175,7 +175,16 @@ int getMessage() {
 							player->view.tx, player->view.ty,
 							player->view.bx, player->view.by);
 					msgptr+=sizeof(Viewport);
-					break;					
+					break;
+				case SERVERKILL:
+					// DEBUG STUFF: Remove this when no longer required for
+					// development. It allows us to stop the server as soon
+					// as the client barfs on a server message so we can check
+					// stdout on the server.
+					fprintf(stderr, "Got serverkill from client %d, exiting\n",
+							clientid);
+					exit(-1);
+					break;
 				default:
 					fprintf(stderr, "Unknown message %x from client %d\n",
 							*msgptr, clientid);

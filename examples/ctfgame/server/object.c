@@ -186,6 +186,11 @@ void startPlayer(int clientid) {
 
 }
 
+// Spawn a player
+void spawnPlayer(Player *p) {
+
+}
+
 // Get a player by id.
 Player *getPlayer(int clientid) {
 	return players[clientid];
@@ -210,7 +215,7 @@ void makeUpdates() {
 	}
 
 	sendClientMessages();
-	clearObjectFlags();
+	cleanObjects();
 	frames++;
 }
 
@@ -228,6 +233,7 @@ void doObjectUpdates() {
 				moveObject(obj);
 		}
 	}
+	collisionDetect();
 }
 
 // This function updates the XY position of the object, and its former
@@ -360,16 +366,61 @@ bool objWasInView(Object *obj, Viewport *view) {
 
 // This is called at the end of the game update after
 // all the clients have had their update messages sent.
-void clearObjectFlags() {
+void cleanObjects() {
 	int i;
+	Object *obj;
 	for(i=0; i<MAXOBJS; i++) {
-		if(objlist[i]) {
-			objlist[i]->flags=0;
+		obj=objlist[i];
+		if(obj) {
+			if(obj->flags & (VANISHED | DESTROYED)) {
+
+				// if it's the player's tank that was destroyed
+				// respawn the player, but only for DESTROYED (the
+				// VANISHED flag meant the player went away)
+				if(players[obj->owner]->playerobj == obj && obj->flags & DESTROYED) {
+					spawnPlayer(players[obj->owner]);
+				}
+				objlist[i]=NULL;
+				free(obj);
+			}
+			else {
+				obj->flags=0;
+			}
 		}
 	}
 }
 
 unsigned long getframes() {
 	return frames;
+}
+
+// Optimization note. Keep a list of valid indexes to reduce the amount
+// of iterations.
+void collisionDetect() {
+	int i, j;
+
+	for(i=0; i<MAXOBJS-1; i++) {
+		for(j=i+1; j<MAXOBJS; j++) {
+			if(!objlist[i])
+				break;
+			if(objlist[j] && collidesWith(objlist[i], objlist[j])) {
+				printf("%ld: Collision! Object %d with object %d\n", frames, i, j);
+			}
+		}
+	}
+}
+
+// Very very simple collision detection.
+// This will ultimately be replaced with doing the separating axis
+// theorem on bounding boxes but for now we'll just see if a square
+// 16 pixels on each side interesects.
+bool collidesWith(Object *lhs, Object *rhs) {
+
+	// note: X and Y in 16ths of map pixels so the basic sprite is
+	// 256 units by 256 units.
+	if(abs(lhs->x - rhs->x) < 256 &&
+		 abs(lhs->y - rhs->y) < 256)
+		return TRUE;
+	return FALSE;
 }
 

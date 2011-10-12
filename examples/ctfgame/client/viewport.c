@@ -33,9 +33,9 @@ int screeny;
 // and sends these to the server.
 void findViewport(MapXY *xy) {
 	screenx=xy->mapx / VPXPIXELS;
-	screeny=xy->mapy / VPXPIXELS;
+	screeny=xy->mapy / VPYPIXELS;
 	vp.tx=screenx * VPXPIXELS;
-	vp.ty=screeny * VPXPIXELS;
+	vp.ty=screeny * VPYPIXELS;
 	vp.bx=vp.tx+VPXPIXELS;
 	vp.by=vp.ty+VPYPIXELS;
 	sendViewportMsg(&vp);
