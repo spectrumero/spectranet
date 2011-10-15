@@ -137,3 +137,46 @@ int sendMapMsg(int clientid, Viewport *vp) {
   return 0;
 }
 
+// Detect collisions with the map.
+bool detectMapCollision(Object *obj) {
+	Maptile *t;
+	int objy=obj->y >> 7;
+	unsigned long tx;
+	unsigned long txmax;
+	unsigned long obxmax;
+
+	do {
+		if(objy > lastrow)
+			return FALSE;
+
+		t=maprow[objy];
+		while(t) {
+			// Find object X pixel
+			tx = t->x << 7;
+			txmax = tx + 128;
+
+			obxmax = obj->x + 256;
+
+			// No need to consider any more tiles in the row list
+			// when the maximum extent of the object is smaller than
+			// the minimum extent of the tile
+			if(obxmax < tx)
+				break;
+
+			// Only consider collidable tiles.
+			if(t->tile >= 'A' && t->tile <= 'Z') {
+
+				// check for horizontal overlap
+				if(tx >= obj->x && tx <= obxmax)
+					return TRUE;
+				if(txmax >= obj->x && txmax <= obxmax)
+					return TRUE;
+			}
+			t=t->next;
+		} 
+
+		objy++;
+	} while(objy << 7 < obj->y+256);
+
+	return FALSE;
+}

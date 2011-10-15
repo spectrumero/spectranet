@@ -148,7 +148,7 @@ int getMessage() {
 
 		// Find the client connection
 		while((bytesleft=bytes-(msgptr-msgbuf)) > 0) {
-			printf("%ld: Client: %d message %x remain: %d\n", getframes(), clientid, *msgptr, bytesleft);
+			//printf("%ld: Client: %d message %x remain: %d\n", getframes(), clientid, *msgptr, bytesleft);
 			switch(*msgptr) {
 				case START:
 					msgptr++;
@@ -308,7 +308,7 @@ int sendMessage(int clientno) {
 	// are no messages to send
 	if(bytes < 2) 
 		return 0;
-	debugMsg(playerBuf[clientno], bytes);
+	//debugMsg(playerBuf[clientno], bytes);
 	if(sendto(sockfd, playerBuf[clientno], bytes, 0,
 				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
 		perror("sendto");
@@ -333,8 +333,8 @@ int sendMessageBuf(int clientno, char *buf, ssize_t bufsz) {
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz) {
 	ssize_t bytesused = playerBufPtr[clientno]-playerBuf[clientno]+msgsz+2;
 
-	printf("addMessage: clientno %d msgid %d msgsz %d\n",
-			clientno, msgid, msgsz);
+	//printf("addMessage: clientno %d msgid %d msgsz %d\n",
+	//		clientno, msgid, msgsz);
 	if(bytesused > MSGBUFSZ) {
 		fprintf(stderr, "too many messages for client %d\n", clientno);
 		return -1;

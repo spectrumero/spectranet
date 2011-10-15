@@ -176,6 +176,7 @@ void processObjectControl(Object *obj, ObjectProperties *props);
 int loadMap(const char *filename);
 Maptile *buildMapRow(char *txtrow);
 int sendMapMsg(int clientid, Viewport *vp);
+bool detectMapCollision(Object *pbj);
 
 // For testing
 unsigned long getframes();

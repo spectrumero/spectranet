@@ -270,8 +270,8 @@ void moveObject(Object *obj) {
 	// Only set the move flag if the object has moved across a map
 	// pixel boundary.
 	if(absx != abspx || absy != abspy) {	
-		printf("Moving object: x = %d y = %d prevx = %d prevy = %d\n",
-			obj->x >> 4, obj->y >> 4, obj->prevx >> 4, obj->prevy >> 4);
+		//printf("Moving object: x = %d y = %d prevx = %d prevy = %d\n",
+			//obj->x >> 4, obj->y >> 4, obj->prevx >> 4, obj->prevy >> 4);
 		obj->flags |= HASMOVED;
 	}
 
@@ -290,8 +290,8 @@ void makeSpriteUpdates(int clientid) {
 	// was moved out of view when we moved stuff around, then just
 	// send a change viewport message.
 	if(!objIsInView(player->playerobj, &player->view)) {
-		printf("%ld: Changing viewport for player %d\n",
-				frames, clientid);
+		//printf("%ld: Changing viewport for player %d\n",
+				//frames, clientid);
 		addChangeViewportMsg(clientid, 
 				player->playerobj->x >> 4,
 				player->playerobj->y >> 4);
@@ -322,7 +322,7 @@ void makeSpriteUpdates(int clientid) {
 int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid) {
 	SpriteMsg sm;
 
-	printf("Adding spritemessage\n");
+	//printf("Adding spritemessage\n");
 
 	sm.x=(obj->x >> 4) - view->tx;
 	sm.y=(obj->y >> 4) - view->ty;
@@ -398,6 +398,13 @@ unsigned long getframes() {
 // of iterations.
 void collisionDetect() {
 	int i, j;
+
+	// First check the map
+	for(i=0; i<MAXOBJS; i++) {
+		if(objlist[i] &&detectMapCollision(objlist[i])) {
+			printf("%ld: Map collision: Object %d\n", frames, i);
+		}
+	}
 
 	for(i=0; i<MAXOBJS-1; i++) {
 		for(j=i+1; j<MAXOBJS; j++) {
