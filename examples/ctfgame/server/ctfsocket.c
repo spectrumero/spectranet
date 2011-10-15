@@ -175,6 +175,9 @@ int getMessage() {
 							player->view.tx, player->view.ty,
 							player->view.bx, player->view.by);
 					msgptr+=sizeof(Viewport);
+
+					// Send a map update as a response.
+					sendMapMsg(clientid, &player->view);
 					break;
 				case SERVERKILL:
 					// DEBUG STUFF: Remove this when no longer required for
@@ -316,6 +319,14 @@ int sendMessage(int clientno) {
 	playerBufPtr[clientno]=playerBuf[clientno]+1;
 	*playerBuf[clientno]=0;
 	return 0;
+}
+
+int sendMessageBuf(int clientno, char *buf, ssize_t bufsz) {
+	if(sendto(sockfd, buf, bufsz, 0,
+				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
+		perror("sendto");
+		return -1;
+	}
 }
 
 // Add a message to the message buffer

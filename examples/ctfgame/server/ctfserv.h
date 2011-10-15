@@ -43,6 +43,9 @@
 #define GAMETICK	40000		// game tick length in microseconds
 #define MAXCLIENTS	16
 #define MSGBUFSZ	256			// Size of message buffers
+#define MAXROWS		1024		// Maximum map rows
+#define	MAXCOLS		1024
+#define MAXMAPMSG	1024
 
 // Structures
 typedef struct _object {
@@ -109,6 +112,21 @@ struct mvlookup {
 	int dy;
 };
 
+// Map tile structure.
+// Each tile is 8x8 map pixels. Coordinates are stored in map tile
+// units.
+// Note that the Y position is the row in the array.
+typedef struct _maptile {
+	uchar tile;						// Tile identity
+	uchar flags;					// Tile flag
+	uint16_t x;						// X position in tile coordinates
+	struct _maptile *next;
+} Maptile;
+
+#define COLLIDABLE	0x01	// Tile can be crashed into
+#define SPAWNPOINT	0x02	// Tile is a spawn point
+#define ISFLAG			0x04	// Tile is a capturable flag
+
 // Function prototypes
 // Socket handling functions
 int makeSocket();
@@ -118,6 +136,7 @@ void removeClient(int clientno);
 void removePlayer(int clientno);
 int findClient(struct sockaddr_in *client);
 int sendMessage(int clientno);
+int sendMessageBuf(int clientno, char *buf, ssize_t bufsz);
 
 // Game message functions
 int addInitGameMsg(int clientno, MapXY *xy);
@@ -152,6 +171,11 @@ int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 
 // Physics functions
 void processObjectControl(Object *obj, ObjectProperties *props);
+
+// Map functions
+int loadMap(const char *filename);
+Maptile *buildMapRow(char *txtrow);
+int sendMapMsg(int clientid, Viewport *vp);
 
 // For testing
 unsigned long getframes();

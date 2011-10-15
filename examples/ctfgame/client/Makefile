@@ -1,5 +1,5 @@
 CC = zcc
-CFLAGS = +zx -vn -I../common -DNOSTDINT 
+CFLAGS = +zx -vn -I../common -DNOSTDINT -preserve -m
 OBJS = init.o sprites.o rxtx.o viewport.o getinput.o
 LIBS = -lmalloc -lsp1 -llibsocket -lndos
 CTFCLIENT = ctfclient.bin

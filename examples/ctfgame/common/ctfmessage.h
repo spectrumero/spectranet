@@ -52,6 +52,7 @@
 // Server replies to synchronous messages
 #define ACK			0x41				// Acknowledgment
 #define BYEACK	0x48				// Acknowledge close
+#define MAPMSG	0x49				// Map data message
 
 // Some message contents
 #define	ACKOK		0x00
@@ -81,6 +82,12 @@ typedef struct _rmspritemsg {
 
 #define OFFSCREEN	0
 #define KILLED	1
+
+typedef struct _maptilemsg {
+	uchar tile;
+	uchar x;
+	uchar y;
+} MaptileMsg;
 
 // The viewport defines the portion of a map a player can
 // see. The X and Y values are absolute map pixels.

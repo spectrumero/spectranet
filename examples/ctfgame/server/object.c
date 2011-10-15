@@ -308,7 +308,7 @@ void makeSpriteUpdates(int clientid) {
 				if(obj->flags & DESTROYED) {
 					makeDestructionMsg(clientid, objid, KILLED);
 				}
-				else if((obj->flags & HASMOVED) || (player->flags & NEWVIEWPORT)) {
+				else { // if((obj->flags & HASMOVED) || (player->flags & NEWVIEWPORT)) {
 					makeSpriteMsg(clientid, &player->view, obj, objid);
 				}
 			}

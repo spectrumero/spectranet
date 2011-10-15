@@ -53,6 +53,7 @@ extern void moveSprite(SpriteMsg *msg);
 extern void manageSprite(SpriteMsg *msg);
 extern void removeAllSprites();
 extern void removeSprite(RemoveSpriteMsg *msg);
+extern void drawMap(uchar *msgbuf);
 
 // Controls
 extern void initInput();

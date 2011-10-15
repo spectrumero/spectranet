@@ -21,7 +21,7 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 */
-#pragma output STACKPTR = 53248
+#pragma output STACKPTR = 32767
 #include <malloc.h>
 #include <spectrum.h>
 #include <stdio.h>
@@ -54,17 +54,14 @@ main() {
 	initInput();
 	// initialize malloc.lib
 	heap = 0L;
-	sbrk(40000, 10000);
+	sbrk(42000, 10000);
 
 	initSpriteLib();
 
 	rc=initConnection("172.16.0.3", "Winston");
-//	printk("rc = %d\n", rc);
 	rc=startGame(&xy);
-//	printk("rc = %d x=%d y=%d\n", rc, xy.mapx, xy.mapy);
 	rc=findViewport(&xy);
 	rc=messageloop();
 	rc=disconnect();
-//	printk("rc = %d\n", rc);*/
 }
 

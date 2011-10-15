@@ -27,9 +27,17 @@
 #include "ctfserv.h"
 
 int main(int argc, char **argv) {
+	if(argc != 2) {
+		fprintf(stderr, "Usage: %s <mapfile>\n", argv[0]);
+		exit(-1);
+	}
+	if(loadMap(argv[1]) < 0) {
+		fprintf(stderr, "Can't load map\n");
+		exit(-1);
+	}
 	if(makeSocket() < 0)
-		exit -1;
+		exit(-1);
 	if(messageLoop() < 0)
-		exit -1;
+		exit(-1);
 }
 

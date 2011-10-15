@@ -28,7 +28,9 @@
 #include "ctf.h"
 #include "ctfmessage.h"
 
-uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00}; 
+uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00};
+uchar box[] =   {0xFF,0x81,0x81,0x81,0x81,0x81,0x81,0xFF};
+int clr;
 
 // Development: the gr_window sprite graphic
 extern uchar gr_window[];
@@ -47,21 +49,41 @@ struct sp1_ss *sprtbl[MAXOBJS];
 
 void initSpriteLib() {
 	memset(sprtbl, 0, sizeof(sprtbl));
+	clr=0;
 
    zx_border(BLACK);
-   sp1_Initialize(SP1_IFLAG_MAKE_ROTTBL | SP1_IFLAG_OVERWRITE_TILES | SP1_IFLAG_OVERWRITE_DFILE, INK_BLACK | PAPER_WHITE, ' ');
+   sp1_Initialize(SP1_IFLAG_MAKE_ROTTBL | SP1_IFLAG_OVERWRITE_TILES | SP1_IFLAG_OVERWRITE_DFILE, INK_WHITE | PAPER_BLACK, ' ');
    sp1_TileEntry(' ', fondo);   // redefine graphic associated with space character
+	 sp1_TileEntry('B', box);
 
    sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
    sp1_UpdateNow();            // draw screen area managed by sp1 now
 
 }
 
+// The msgbuf pointer should be at the count parameter of
+// the buffer (the third byte in a complete message)
+void drawMap(uchar *msgbuf) {
+  uint16_t i;
+  MaptileMsg *mtm;
+  uint16_t nummsgs=*msgbuf;
+  msgbuf+=2;
+
+	zx_border(BLUE);
+  sp1_ClearRect(&cr, INK_WHITE|PAPER_BLACK, ' ', SP1_RFLAG_TILE|SP1_RFLAG_COLOUR);
+
+	for(i=0; i != nummsgs; i++) {
+		mtm=(MaptileMsg *)msgbuf;
+		sp1_PrintAt(mtm->y, mtm->x, INK_BLUE|PAPER_BLACK, mtm->tile);
+		msgbuf+=sizeof(MaptileMsg);
+	}
+	sp1_Invalidate(&cr);
+  sp1_UpdateNow();
+	zx_border(BLACK);
+}
+
 // Decide whether to move or create a sprite.
 void manageSprite(SpriteMsg *msg) {
-//	printk("Got spritemsg\n");
-//	printk("objid=%d x=%d y=%d\n",
-//			msg->objid, msg->x, msg->y);
 	if(sprtbl[msg->objid]) {
 		moveSprite(msg);
 	} else {
@@ -114,6 +136,7 @@ void removeSprite(RemoveSpriteMsg *msg) {
 	sp1_DeleteSpr(s);
 	sprtbl[msg->objid]=NULL;
 }
+
 
 #asm
 

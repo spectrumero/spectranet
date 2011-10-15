@@ -35,7 +35,7 @@
 
 int sockfd;		// The socket handle.
 uchar sendbuf[256];	// Send buffer
-uchar rxbuf[256];	// Messages are received here.
+uchar rxbuf[1024];	// Messages are received here.
 struct sockaddr_in remoteaddr;	// Server's address
 
 // Connect to the server
@@ -161,9 +161,15 @@ int messageloop() {
 					break;
 				case VIEWPORT:
 					switchViewport((MapXY *)msgptr);
-					break;	
+					msgptr+=sizeof(MapXY);
+					break;
+				case MAPMSG:
+					// Map messages must be the only (or last) message
+					// Make sure anything else gets dropped.
+					drawMap(msgptr);
+					numMsgs=1;
+					break;					
 				default:
-					printk("msgtype: %d\n", msgType);
 					sendbuf[0]=SERVERKILL;
 					zx_border(RED);
 					return sendMsg(1);
@@ -191,6 +197,8 @@ int disconnect() {
 
 // Send a viewport message.
 int sendViewportMsg(Viewport *vp) {
+	int bytes;
+
 	sendbuf[0]=VIEWPORT;
 	memcpy(&sendbuf[1], vp, sizeof(Viewport));
 	return sendMsg(sizeof(Viewport) + 1);
