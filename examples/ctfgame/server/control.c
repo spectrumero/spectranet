@@ -59,5 +59,7 @@ void processObjectControl(Object *obj, ObjectProperties *props) {
 			obj->dirChgCount = props->turnSpeed;
 		}
 	}
+	if(obj->ctrls & FIRE)
+		fireWeapon(obj);
 }
 

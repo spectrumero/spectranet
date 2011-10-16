@@ -47,6 +47,9 @@
 #define	MAXCOLS		1024
 #define MAXMAPMSG	1024
 
+#define STARTAMMO	10
+#define WEAPONID	1
+
 // Structures
 typedef struct _object {
 	int owner;		// id of owning player
@@ -63,6 +66,9 @@ typedef struct _object {
 	int armour;		// how much armour against collision damage
 								// (0 means always destroyed on collision)
 	int hp;				// Number of hitpoints remaining
+	int ammo;			// Ammo remaining
+	int cooldown;	// Gun cooldown time remaining in frames
+	int ttl;			// Time to live in frames (-1 = forever)
 	uchar flags;	// various object flags
 	uchar ctrls;	// What controls are being applied
 	// This member is a pointer to a function that should get called
@@ -83,6 +89,12 @@ typedef struct _objprops {
 	int maxAccel;				// Maximum acceleration, in 1/16ths map pixels per frame
 	int maxBrake;				// Maximum braking in map 1/16th pixels per frame
 	int turnSpeed;			// Turn speed, in frames needed per direction change
+	int gunCooldown;		// Gun cooldown time in frames
+	int mass;						// Object's initial mass
+	int hitpoints;			// Object's initial hitpoints
+	int armour;					// Object's initial armour
+	int damage;					// Base damage to deal on collision
+	int ttl;						// Initial TTL (-1 = forever)
 } ObjectProperties;
 
 // Object flags
@@ -148,6 +160,7 @@ void initObjList();
 Player *getPlayer(int clientid);
 int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid);
 int makeDestructionMsg(int clientid, uchar objid, uchar reason);
+void fireWeapon(Object *firer);
 
 // Game loop functions
 void doObjectUpdates();

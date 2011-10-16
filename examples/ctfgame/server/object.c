@@ -40,8 +40,8 @@ struct mvlookup vectbl[] = {
 
 // Object property table. This could be loaded from a file instead.
 ObjectProperties objprops[] = {
-	{0, 160, 4, 4, 3},		// Player's tank
-	{160, 320, 0, 0, 0}		// Player's missile
+	{0, 80, 4, 4, 3, 10, 100, 100, 1, 20, -1},		// Player's tank
+	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20}		// Player's missile
 };
 
 // Master object list
@@ -152,17 +152,19 @@ void removePlayer(int clientid) {
 // startPlayer creates the initial starting spot for a player
 // and the start message.
 void startPlayer(int clientid) {
-	Object *other;	// TEST CODE
 	MapXY spawn;
 	Player *player=players[clientid];
+	Object *po=player->playerobj;
 
 	fprintf(stderr, "startPlayer for client %d\n", clientid);
 
 	// TODO: something real
 	spawn.mapx=100;
 	spawn.mapy=100;
-	player->playerobj->x=spawn.mapx*16;
-	player->playerobj->y=spawn.mapy*16;
+	po->x=spawn.mapx*16;
+	po->y=spawn.mapy*16;
+	po->ttl=-1;
+	po->ammo=STARTAMMO;
 
 	// Add the player object to the object list
 	addObject(player->playerobj);
@@ -228,9 +230,18 @@ void doObjectUpdates() {
 	for(i=0; i<MAXOBJS; i++) {
 		obj=objlist[i];
 		if(obj) {
+			if(obj->ttl == 0) {
+				obj->flags |= DESTROYED;
+				continue;
+			}
+
 			processObjectControl(obj, &objprops[obj->type]);
 			if(obj->velocity != 0)
 				moveObject(obj);
+			if(obj->cooldown > 0)
+				obj->cooldown--;
+			if(obj->ttl > 0)
+				obj->ttl--;
 		}
 	}
 	collisionDetect();
@@ -429,5 +440,36 @@ bool collidesWith(Object *lhs, Object *rhs) {
 		 abs(lhs->y - rhs->y) < 256)
 		return TRUE;
 	return FALSE;
+}
+
+// Have an object shoot something.
+void fireWeapon(Object *firer) {
+	ObjectProperties op;
+	Object *missile;
+	if(firer->cooldown != 0 || firer->ammo == 0)
+		return;
+
+	op=objprops[WEAPONID];
+	missile=(Object *)malloc(sizeof(Object));	
+	memset(missile, 0, sizeof(Object));
+	addObject(missile);
+
+	missile->owner=firer->owner;
+	missile->type=WEAPONID;
+	missile->dir=firer->dir;
+	missile->velocity=firer->velocity+op.initVelocity;
+	missile->x=firer->x;
+	missile->y=firer->y;
+	missile->flags |= NEWOBJ;
+	missile->hp = op.hitpoints;
+	missile->armour = op.armour;
+	missile->damage = op.damage;
+	missile->ttl = op.ttl;
+
+	printf("Missile dir: %d Velocity %d\n", missile->dir, missile->velocity);
+	printf("Object dir: %d Velocity %d\n", firer->dir, firer->velocity);
+
+	firer->ammo--;
+	firer->cooldown=objprops[firer->type].gunCooldown;
 }
 
