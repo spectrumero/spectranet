@@ -21,7 +21,7 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 */
-#pragma output STACKPTR = 32767
+#pragma output STACKPTR = 53248
 #include <malloc.h>
 #include <spectrum.h>
 #include <stdio.h>
@@ -54,7 +54,8 @@ main() {
 	initInput();
 	// initialize malloc.lib
 	heap = 0L;
-	sbrk(42000, 10000);
+//	sbrk(48736,3999);
+	sbrk(24000,8767);
 
 	initSpriteLib();
 

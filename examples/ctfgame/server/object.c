@@ -40,7 +40,7 @@ struct mvlookup vectbl[] = {
 
 // Object property table. This could be loaded from a file instead.
 ObjectProperties objprops[] = {
-	{0, 80, 4, 4, 3, 10, 100, 100, 1, 20, -1},		// Player's tank
+	{0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1},		// Player's tank
 	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20}		// Player's missile
 };
 
