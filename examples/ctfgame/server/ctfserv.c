@@ -35,9 +35,13 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Can't load map\n");
 		exit(-1);
 	}
-	if(makeSocket() < 0)
+	if(makeSocket() < 0) {
+		fprintf(stderr, "Can't make socket\n");
 		exit(-1);
-	if(messageLoop() < 0)
+	}
+	if(messageLoop() < 0) {
+		fprintf(stderr, "Message loop exited\n");
 		exit(-1);
+	}
 }
 

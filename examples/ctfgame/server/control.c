@@ -32,6 +32,11 @@
 // Examine the object's control flags and make changes to velocity
 // and direction according to the object's properties.
 void processObjectControl(Object *obj, ObjectProperties *props) {
+
+	// Can't control things that are blowing up
+	if(obj->flags & EXPLODING)
+		return;
+
 	if(obj->ctrls & ACCEL) {
 		obj->velocity += props->maxAccel;
 		if(obj->velocity > props->maxVelocity)

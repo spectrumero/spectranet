@@ -102,6 +102,10 @@ typedef struct _objprops {
 #define NEWOBJ		0x02	// Object was created this frame
 #define DESTROYED	0x04	// Object was destroyed this frame
 #define VANISHED	0x08	// Object was destroyed because the owner disappeared
+#define NOCOLLIDE	0x10	// Can't collide with anything
+#define EXPLODING	0x20	// Is exploding
+
+#define OBJRESET	0x30	// Flags that won't get reset each frame
 
 typedef struct _player {
 	Object *playerobj;		// Player's tank
@@ -111,11 +115,13 @@ typedef struct _player {
 	int lives;						// Player lives - start at 0 for infinite
 	uchar flags;					// Player flags
 	Viewport view;				// What bit of the map the player sees
+	int spawntime;				// If dead, time until respawn in frames
 } Player;
 
 #define HASFLAG		0x01	// Player is carrying the flag
 #define NEWVIEWPORT 0x02	// Player's viewport changed
-#define RESETFLAGS	0x01	// Bits set to 0 get reset on each frame
+#define DEAD			0x04	// Player is dead
+#define RESETFLAGS	0x05	// Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table
 // for working out new X and Y values from a direction and velocity
@@ -172,7 +178,7 @@ bool objWasInView(Object *obj, Viewport *view);
 void cleanObjects();
 void collisionDetect();
 bool collidesWith(Object *lhs, Object *rhs);
-void spawnPlayer(Player *p);
+void spawnPlayer(int clientid, Player *p);
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
@@ -194,5 +200,8 @@ bool detectMapCollision(Object *pbj);
 // For testing
 unsigned long getframes();
 void debugMsg(uchar *msg, int bytes);
+
+// Object destruction functions
+void destroyPlayerObj(Object *obj);
 
 #endif

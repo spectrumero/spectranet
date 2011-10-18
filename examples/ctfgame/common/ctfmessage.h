@@ -75,6 +75,13 @@ typedef struct _spritemsg {
 	uchar	id;
 } SpriteMsg;
 
+// Sprite ID defines
+#define PLAYER	0	// Player's tank
+#define FOTON		1	// Photon cnnonA
+#define XPLODE	2	// Explosion
+#define FUEL		3	// Fuel tank
+#define AMMO		4	// Ammo recharge
+
 typedef struct _rmspritemsg {
 	uchar objid;
 	uchar reason;

@@ -35,13 +35,18 @@ int clr;
 // Development: the gr_window sprite graphic
 extern uchar tank[];
 extern uchar foton[];
+extern uchar xplode[];
+extern uchar fuel[];
+extern uchar ammo[];
 
 uchar fotonFrame=0;
 uchar *fotonPtr;
 uchar fotonAnimDir=0;
 uchar fcount=0;
+uchar xplodeFrame=0;
 
-uchar *spritelist[] = {tank, foton};
+// Sprite lookup table
+uchar *spritelist[] = {tank, foton, xplode, fuel, ammo};
 int tankdir[]={0, 96, 192, 288,
              384, 480, 576, 672,
              768, 864, 960, 1056,
@@ -123,6 +128,13 @@ void moveSprite(SpriteMsg *msg) {
 	struct sp1_ss *s=sprtbl[msg->objid];
 	uchar *frameptr;
 	switch(msg->id) {
+		case XPLODE:
+			frameptr=xplode;
+			if(xplodeFrame) {
+				frameptr+=96;
+			}
+			xplodeFrame = !xplodeFrame;
+			break;
 		case FOTON:
 			if(fotonAnimDir) {
 				fotonFrame--;
@@ -475,63 +487,63 @@ void removeSprite(RemoveSpriteMsg *msg) {
   DEFB    255,  0,255,  0,255,  0,255,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
 
+._xplode
+  DEFB    0,  0,  0,  4,  0,  6,  0,  5
+  DEFB    0,124,  0, 32,  0, 17,  0, 10
+  DEFB    0, 10,  0, 16,  0, 32,  0, 71
+  DEFB    0,240,  0, 12,  0,  3,  0,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+  DEFB    0,  0,  0,  3,  0, 14,  0, 52
+  DEFB    0,200,  0, 28,  0,130,  0, 31
+  DEFB    0, 24,  0,132,  0,180,  0, 10
+  DEFB    0, 98,  0, 89,  0, 71,  0,193
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+  DEFB    0, 64,  0, 98,  0, 51,  0, 42
+  DEFB    0, 22,  0, 17,  0, 10,  0, 10
+  DEFB    0,  4,  0,252,  0, 67,  0, 32
+  DEFB    0, 30,  0,  2,  0,  5,  0,  6
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+  DEFB    0,  0,  0,  0,  0,  1,  0,131
+  DEFB    0, 69,  0,170,  0, 18,  0,  4
+  DEFB    0,136,  0,159,  0,  1,  0, 98
+  DEFB    0,140,  0, 48,  0,192,  0,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+._ammo
+  DEFB    0,  0,  0,  0,  0,248,  0,255
+  DEFB    0,192,  0,195,  0,252,  0, 64
+  DEFB    0,221,  0, 80,  0, 92,  0, 80
+  DEFB    0, 80,  0,127,  0,  0,  0,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+  DEFB    0,  0,  0,  0,  0,  0,  0,255
+  DEFB    0, 61,  0,193,  0,  1,  0,  1
+  DEFB    0,211,  0,155,  0,151,  0,147
+  DEFB    0,147,  0,255,  0,  0,  0,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+._fuel
+  DEFB    0, 31,  0, 16,  0, 51,  0, 82
+  DEFB    0, 83,  0,114,  0, 50,  0, 63
+  DEFB    0, 36,  0, 39,  0, 28,  0,  7
+  DEFB    0,  4,  0,  7,  0,  4,  0,127
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+  DEFB    0,248,  0,  8,  0,200,  0,  8
+  DEFB    0,200,  0,  8,  0,  8,  0,248
+  DEFB    0, 32,  0,160,  0, 32,  0,160
+  DEFB    0, 32,  0,160,  0, 32,  0,254
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
 
 #endasm
-
-
-/*
-#asm
-
-   defb @11111111, @00000000
-   defb @11111111, @00000000
-   defb @11111111, @00000000
-   defb @11111111, @00000000
-   defb @11111111, @00000000
-   defb @11111111, @00000000
-   defb @11111111, @00000000
-
-; ASM source file created by SevenuP v1.20
-; SevenuP (C) Copyright 2002-2006 by Jaime Tejedor Gomez, aka Metalbrain
-
-;GRAPHIC DATA:
-;Pixel Size:      ( 16,  24)
-;Char Size:       (  2,   3)
-;Sort Priorities: Mask, Char line, Y char, X char
-;Data Outputted:  Gfx
-;Interleave:      Sprite
-;Mask:            Yes, before graphic
-
-._gr_window
-
-;        DEFB    128,127,  0,192,  0,191, 30,161
-;        DEFB     30,161, 30,161, 30,161,  0,191
-;        DEFB      0,191, 30,161, 30,161, 30,161
-;        DEFB     30,161,  0,191,  0,192,128,127
-;        DEFB    255,  0,255,  0,255,  0,255,  0
-;        DEFB    255,  0,255,  0,255,  0,255,  0
-
-;        DEFB      1,254,  0,  3,  0,253,120,133
-;        DEFB    120,133,120,133,120,133,  0,253
-;        DEFB      0,253,120,133,120,133,120,133
-;        DEFB    120,133,  0,253,  0,  3,  1,254
-;        DEFB    255,  0,255,  0,255,  0,255,  0
-;        DEFB    255,  0,255,  0,255,  0,255,  0
-
-  DEFB    0,  0,  0,  0,  0, 31,  0, 53
-  DEFB    0, 95,  0, 78,  0, 82,  0,226
-  DEFB    0,226,  0, 82,  0, 78,  0, 95
-  DEFB    0, 53,  0, 31,  0,  0,  0,  0
-  DEFB    255,  0,255,  0,255,  0,255,  0
-  DEFB    255,  0,255,  0,255,  0,255,  0
-
-  DEFB    0,  0,  0,  0,  0,255,  0, 85
-  DEFB    0,255,  0,  2,  0,  5,  0,125
-  DEFB    0,125,  0,  5,  0,  2,  0,255
-  DEFB    0, 85,  0,255,  0,  0,  0,  0
-  DEFB    255,  0,255,  0,255,  0,255,  0
-  DEFB    255,  0,255,  0,255,  0,255,  0
-
-
-#endasm
-*/
-

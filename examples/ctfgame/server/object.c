@@ -114,21 +114,16 @@ int deleteObject(Object *obj) {
 Player *makeNewPlayer(int clientid, char *playerName) {
 	int playeridx;
 	Player *p;
-	Object *tank;
 
 	p=(Player *)malloc(sizeof(Player));
-	tank=(Object *)malloc(sizeof(Object));
 	players[clientid]=p;
-	if(!p || !tank) {
+	if(!p) {
 		perror("makeNewPlayer: malloc");
 		return NULL;
 	}
 
 	memset(p, 0, sizeof(Player));
-	memset(tank, 0, sizeof(Object));
 	strlcpy(p->name, playerName, MAXNAME);
-	p->playerobj=tank;
-	tank->owner=clientid;
 
 	return p;
 }
@@ -154,9 +149,21 @@ void removePlayer(int clientid) {
 void startPlayer(int clientid) {
 	MapXY spawn;
 	Player *player=players[clientid];
-	Object *po=player->playerobj;
-
 	fprintf(stderr, "startPlayer for client %d\n", clientid);
+	spawnPlayer(clientid, player);
+
+	// Tell the client to initialize. The client will use the MapXY
+	// to figure out where the viewport should be. The client will
+	// then respond by telling the server the viewport.
+	addInitGameMsg(clientid, &spawn);
+	sendMessage(clientid);
+}
+
+// Spawn a player
+void spawnPlayer(int clientid, Player *p) {
+	MapXY spawn;
+	Object *po=(Object *)malloc(sizeof(Object));
+	memset(po, 0, sizeof(Object));
 
 	// TODO: something real
 	spawn.mapx=100;
@@ -165,32 +172,12 @@ void startPlayer(int clientid) {
 	po->y=spawn.mapy*16;
 	po->ttl=-1;
 	po->ammo=STARTAMMO;
+	po->owner=clientid;
+	po->destructFunc=destroyPlayerObj;
+	po->type=PLAYER;
 
-	// Add the player object to the object list
-	addObject(player->playerobj);
-
-	// Tell the client to initialize. The client will use the MapXY
-	// to figure out where the viewport should be. The client will
-	// then respond by telling the server the viewport.
-	addInitGameMsg(clientid, &spawn);
-	sendMessage(clientid);
-
-	// TEST CODE
-	testend=frames+100;
-//	player->playerobj->velocity=1;
-//	player->playerobj->dir=2;
-//	other=(Object *)malloc(sizeof(Object));
-//	other->dir=5;
-//	other->velocity=2;
-//	other->x=50;
-//	other->y=50;
-//	addObject(other);
-
-}
-
-// Spawn a player
-void spawnPlayer(Player *p) {
-
+	addObject(po);
+	p->playerobj=po;
 }
 
 // Get a player by id.
@@ -245,6 +232,13 @@ void doObjectUpdates() {
 		}
 	}
 	collisionDetect();
+
+	// Check destruction flags, and run any destruction functions
+	for(i=0; i<MAXOBJS; i++) {
+		obj=objlist[i];
+		if(obj && (obj->flags & DESTROYED) && obj->destructFunc)
+			obj->destructFunc(obj);
+	}
 }
 
 // This function updates the XY position of the object, and its former
@@ -300,7 +294,7 @@ void makeSpriteUpdates(int clientid) {
 	// First check for viewport changes. If the player's object
 	// was moved out of view when we moved stuff around, then just
 	// send a change viewport message.
-	if(!objIsInView(player->playerobj, &player->view)) {
+	if(player->playerobj && !objIsInView(player->playerobj, &player->view)) {
 		//printf("%ld: Changing viewport for player %d\n",
 				//frames, clientid);
 		addChangeViewportMsg(clientid, 
@@ -389,13 +383,13 @@ void cleanObjects() {
 				// respawn the player, but only for DESTROYED (the
 				// VANISHED flag meant the player went away)
 				if(players[obj->owner]->playerobj == obj && obj->flags & DESTROYED) {
-					spawnPlayer(players[obj->owner]);
+					spawnPlayer(obj->owner, players[obj->owner]);
 				}
 				objlist[i]=NULL;
 				free(obj);
 			}
 			else {
-				obj->flags=0;
+				obj->flags &= OBJRESET;
 			}
 		}
 	}
@@ -409,11 +403,18 @@ unsigned long getframes() {
 // of iterations.
 void collisionDetect() {
 	int i, j;
+	Object *obj;
 
 	// First check the map
 	for(i=0; i<MAXOBJS; i++) {
-		if(objlist[i] &&detectMapCollision(objlist[i])) {
+		if(objlist[i] && !(objlist[i]->flags & NOCOLLIDE) &&
+				detectMapCollision(objlist[i])) {
+			obj=objlist[i];
 			printf("%ld: Map collision: Object %d\n", frames, i);
+
+			// Destroy it immediately and stop it from moving.
+			obj->flags |= DESTROYED;
+			obj->velocity = 0;
 		}
 	}
 
@@ -471,5 +472,16 @@ void fireWeapon(Object *firer) {
 
 	firer->ammo--;
 	firer->cooldown=objprops[firer->type].gunCooldown;
+}
+
+// OBJECT DESTROYED FUNCTIONS
+// Destruction of player object.
+void destroyPlayerObj(Object *obj) {
+
+	// Turn the player into an explosion with a TTL of 15 frames
+	obj->flags=NOCOLLIDE|EXPLODING;
+	obj->type=XPLODE;
+	obj->ttl=15;
+	obj->destructFunc=NULL;
 }
 

@@ -41,10 +41,6 @@
 #define TRUE	1
 #define	FALSE 0
 
-// Sprite identities
-#define	PLAYER	0		// The player's sprite
-#define	FOTON		1		// Cañón de fotones (player ammo)
-
 // Function prototypes
 // General stuff
 void *u_malloc(uint size);
