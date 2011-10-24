@@ -36,8 +36,8 @@ int clr;
 extern uchar tank[];
 extern uchar foton[];
 extern uchar xplode[];
-extern uchar fuel[];
-extern uchar ammo[];
+//extern uchar fuel[];
+//extern uchar ammo[];
 
 uchar fotonFrame=0;
 uchar *fotonPtr;
@@ -46,7 +46,7 @@ uchar fcount=0;
 uchar xplodeFrame=0;
 
 // Sprite lookup table
-uchar *spritelist[] = {tank, foton, xplode, fuel, ammo};
+uchar *spritelist[] = {tank, foton, xplode}; //, fuel, ammo};
 int tankdir[]={0, 96, 192, 288,
              384, 480, 576, 672,
              768, 864, 960, 1056,
@@ -515,7 +515,9 @@ void removeSprite(RemoveSpriteMsg *msg) {
   DEFB    0,140,  0, 48,  0,192,  0,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
+#endasm
 
+/*
 ._ammo
   DEFB    0,  0,  0,  0,  0,248,  0,255
   DEFB    0,192,  0,195,  0,252,  0, 64
@@ -546,4 +548,4 @@ void removeSprite(RemoveSpriteMsg *msg) {
   DEFB    255,  0,255,  0,255,  0,255,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
 
-#endasm
+#endasm */
