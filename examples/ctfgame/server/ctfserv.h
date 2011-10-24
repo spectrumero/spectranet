@@ -51,6 +51,11 @@
 #define WEAPONID	1
 
 // Structures
+typedef struct _vector {
+	int dir;				// 0-15, 0 = north
+	int velocity;		// in 1/16ths of a map pixel
+} Vector;
+
 typedef struct _object {
 	int owner;		// id of owning player
 	int type;			// object's type id (maps to sprite on the client + ObjProperty)
@@ -59,9 +64,11 @@ typedef struct _object {
 	int prevy;		// previous Y location
 	int x;				// Map X position in 1/16ths pixel
 	int y;				// Map Y position in 1/16ths pixel
-	int dir;			// direction in 16 points around the compass
+	Vector commanded;	// Commanded vector (via wheels/tracks/etc)
+	Vector actual;	// Actual vector of the object
+	int velcount;	// Frames until velocity corrections are made
+	int dircount;	// Frames until direction corrections are made
 	int dirChgCount;	// Frames until direction change applied
-	int velocity;	// velocity in 1/16th pixels per frame
 	int damage;		// how much damage dealt on collision
 	int armour;		// how much armour against collision damage
 								// (0 means always destroyed on collision)
@@ -95,6 +102,9 @@ typedef struct _objprops {
 	int armour;					// Object's initial armour
 	int damage;					// Base damage to deal on collision
 	int ttl;						// Initial TTL (-1 = forever)
+	int velcount;				// Frames until velocity is corrected
+	int velqty;					// How many units to correct per correction
+	int dircount;				// Frames until direction is corrected
 } ObjectProperties;
 
 // Object flags
@@ -179,6 +189,7 @@ void cleanObjects();
 void collisionDetect();
 bool collidesWith(Object *lhs, Object *rhs);
 void spawnPlayer(int clientid, Player *p);
+Vector addVector(Vector *v1, Vector *v2);
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
@@ -190,6 +201,8 @@ int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 
 // Physics functions
 void processObjectControl(Object *obj, ObjectProperties *props);
+void processSkid(Object *obj, ObjectProperties *props);
+void shoveObject(Object *obj, Object *with);
 
 // Map functions
 int loadMap(const char *filename);
