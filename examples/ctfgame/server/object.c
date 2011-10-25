@@ -41,11 +41,12 @@ struct mvlookup vectbl[] = {
 
 // Object property table. This could be loaded from a file instead.
 ObjectProperties objprops[] = {
-	{0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1, 4},		// Player's tank
-	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20, 3, 1, 2}		// Player's missile
+	{0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1},		// Player's tank
+	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20, 3, 1}		// Player's missile
 };
 
 int acostbl[]={4, 4, 3, 3, 2, 2, 1, 0};
+int acostbl2[]={0, 1, 2, 2, 3, 3, 4, 4};
 
 // Master object list
 // While a linked list would be more memory efficient (and
@@ -178,9 +179,13 @@ void spawnPlayer(int clientid, Player *p) {
 	po->owner=clientid;
 	po->destructFunc=destroyPlayerObj;
 	po->type=PLAYER;
+	po->armour=objprops[PLAYER].armour;
+	po->hp=objprops[PLAYER].hitpoints;
+	po->damage=objprops[PLAYER].damage;
 
 	addObject(po);
 	p->playerobj=po;
+	p->vpcframes=0;
 }
 
 // Get a player by id.
@@ -225,8 +230,11 @@ void doObjectUpdates() {
 				continue;
 			}
 
+			if(obj->flying)
+				obj->flying--;
+
 			processObjectControl(obj, &objprops[obj->type]);
-			processSkid(obj, &objprops[obj->type]);
+			processPush(obj);
 			if(obj->actual.velocity != 0)
 				moveObject(obj);
 			if(obj->cooldown > 0)
@@ -245,40 +253,11 @@ void doObjectUpdates() {
 	}
 }
 
-// Corrects the actual vector towards the commanded vector.
-// Not so much as making the object skid, but diminishing a skid
-// that has been started.
-void processSkid(Object *obj, ObjectProperties *prop) {
-	
-	if(obj->actual.velocity != obj->commanded.velocity) {
-		printf("velocities differ\n");
-		obj->velcount--;
-		if(obj->velcount < 1) {
-			obj->velcount=prop->velcount;
-			if(obj->actual.velocity > obj->commanded.velocity) {
-				obj->actual.velocity-=prop->velqty;
-				if(obj->actual.velocity < obj->commanded.velocity)
-					obj->actual.velocity=obj->commanded.velocity;
-			}
-			else {
-				obj->actual.velocity += obj->commanded.velocity;
-				if(obj->actual.velocity > obj->commanded.velocity)
-					obj->actual.velocity = obj->commanded.velocity;
-			}
-		}
-	}
-
-	if(obj->actual.dir != obj->commanded.dir) {
-		printf("directions differ\n");
-		obj->dircount--;
-		if(obj->dircount < 1) {
-			obj->dircount = prop->dircount;
-			if(obj->actual.dir > obj->commanded.dir)
-				obj->actual.dir--;
-			else
-				obj->actual.dir++;
-		}
-	}
+// processPush adds the push vector to create the actual.
+void processPush(Object *obj) {
+	obj->actual=addVector(&obj->commanded, &obj->push);
+	if(obj->push.velocity != 0)
+		obj->push.velocity -= objprops[obj->type].pushdecay;
 }
 
 // This function updates the XY position of the object, and its former
@@ -330,15 +309,21 @@ void makeSpriteUpdates(int clientid) {
 	Object *obj;
 	Player *player=players[clientid];
 
+	if(player->vpcframes)
+		player->vpcframes--;
+
 	// First check for viewport changes. If the player's object
 	// was moved out of view when we moved stuff around, then just
 	// send a change viewport message.
 	if(player->playerobj && !objIsInView(player->playerobj, &player->view)) {
-		//printf("%ld: Changing viewport for player %d\n",
-				//frames, clientid);
-		addChangeViewportMsg(clientid, 
-				player->playerobj->x >> 4,
-				player->playerobj->y >> 4);
+		// vpcframes is just to stop us sending multiple viewport changes
+		// since the client is quite slow at processing them.
+		if(player->vpcframes == 0) {
+			addChangeViewportMsg(clientid, 
+					player->playerobj->x >> 4,
+					player->playerobj->y >> 4);
+			player->vpcframes = 5;
+		}
 		return;
 	}
 
@@ -463,7 +448,8 @@ void collisionDetect() {
 				break;
 			if(objlist[j] && collidesWith(objlist[i], objlist[j])) {
 				printf("%ld: Collision! Object %d with object %d\n", frames, i, j);
-				//shoveObject(objlist[i], objlist[j]);
+				shoveObject(objlist[i], objlist[j]);
+				dealDamage(objlist[i], objlist[j]);
 			}
 		}
 	}
@@ -474,6 +460,14 @@ void collisionDetect() {
 // theorem on bounding boxes but for now we'll just see if a square
 // 16 pixels on each side interesects.
 bool collidesWith(Object *lhs, Object *rhs) {
+
+	// If an object is "flying" it will miss its owner.
+	if(lhs->owner == rhs->owner) {
+		if(lhs->flying)
+			return FALSE;
+		if(rhs->flying)
+			return FALSE;
+	}
 
 	// note: X and Y in 16ths of map pixels so the basic sprite is
 	// 256 units by 256 units.
@@ -508,6 +502,7 @@ void fireWeapon(Object *firer) {
 	missile->armour = op.armour;
 	missile->damage = op.damage;
 	missile->ttl = op.ttl;
+	missile->flying = 5;
 
 	printf("Missile dir: %d Velocity %d\n", missile->actual.dir, missile->actual.velocity);
 	printf("Object dir: %d Velocity %d\n", firer->actual.dir, firer->actual.velocity);
@@ -516,38 +511,110 @@ void fireWeapon(Object *firer) {
 	firer->cooldown=objprops[firer->type].gunCooldown;
 }
 
-// Shove an object when collided with.
+// Shove an object when collided with. We're not trying to be super
+// accurate here, just to add an interesting game mechanic.
 void shoveObject(Object *obj, Object *with) {
+	Vector rel=with->actual;
+	Vector cvec;
+	Vector withvec;
+	Vector objvec;
+
+	// reverse the direction, to make the with object as if it
+	// were stationary compared to the obj
+	rel.dir += 8;
+	rel.dir &= 0x0f;
+	cvec=addVector(&obj->actual, &rel);
+	cvec.velocity += REBOUND;
+
+	// Fudge factor to prevent ridiculous velocities if a fast collision
+	// causes objects to overlap
+	if(cvec.velocity > MAX_PUSH)
+		cvec.velocity = MAX_PUSH;
+
+	with->push=cvec;
+
+	cvec.dir+=8;
+	cvec.dir&=0x0f;
+	obj->push=cvec;
+}
+
+// Deal damage when objects have collided.
+void dealDamage(Object *obj1, Object *obj2) {
+	obj1->hp -= objprops[obj2->type].damage;
+	obj2->hp -= objprops[obj1->type].damage;
+
+	// If the armour value is 0, the object is instagibbed.
+	// However, it will still do damage to what it hits. (Ammo has a
+	// zero value here so missiles die as soon as they hit, but still
+	// deal damage to what they hit)
+	if(obj1->armour == 0 || obj1->hp < 1)
+		obj1->flags |= (DESTROYED|EXPLODING);
+	if(obj2->armour == 0 || obj2->hp < 1)
+		obj2->flags |= (DESTROYED|EXPLODING);
+
 }
 
 // Add two vectors
+// Needs some work...
 Vector addVector(Vector *v1, Vector *v2) {
-	Vector result;
-	int dx, dy;
-	double hyp;
-	int tblentry;
-	int dir;
+  Vector result;
+  int dx, dy;
+  double hyp;
+  int tblentry;
+  int dir;
 
-	int dx1=vectbl[v1->dir].dx;
-	int dy1=vectbl[v1->dir].dy;
-	int dx2=vectbl[v2->dir].dx;
-	int dy2=vectbl[v2->dir].dy;
-	
-	dx1 *= (v1->velocity >> 4);
-	dy1 *= (v1->velocity >> 4);
-	dx2 *= (v2->velocity >> 4);
-	dy2 *= (v2->velocity >> 4);
+  // remove the cases where one vector has a zero velocity component
+  if(v1->velocity == 0) {
+    result.dir=v2->dir;
+    result.velocity=v2->velocity;
+    return result;
+  }
 
-	// Find out the total displacement given by the two vectors
-	dx=dx1 + dx2;
-	dy=dy1 + dy2;
+  if(v2->velocity == 0) {
+    result.dir=v1->dir;
+    result.velocity=v1->velocity;
+    return result;
+  }
 
-	// Find out the hypoteneuse
-	hyp=sqrt((dx * dx) + (dy * dy));
-	tblentry = rint((dy / hyp) * 7);
-	dir = acostbl[tblentry];
+  int dx1=vectbl[v1->dir].dx;
+  int dy1=vectbl[v1->dir].dy;
+  int dx2=vectbl[v2->dir].dx;
+  int dy2=vectbl[v2->dir].dy;
 
-	return result;
+  dx1 *= (v1->velocity >> 4);
+  dy1 *= (v1->velocity >> 4);
+  dx2 *= (v2->velocity >> 4);
+  dy2 *= (v2->velocity >> 4);
+
+  // Find out the total displacement given by the two vectors
+  dx=dx1 + dx2;
+  dy=dy1 + dy2;
+  printf("dx = %d dy = %d\n", dx, dy);
+  if(dx == 0 && dy == 0) {
+    result.dir=0;
+    result.velocity=0;
+    return result;
+  }
+
+  // Find out the hypoteneuse
+  hyp=sqrt(abs(dx * dx) + abs(dy * dy));
+  tblentry = abs(rint((dy / hyp) * 7));
+
+  if(dx >= 0 && dy <= 0)
+    dir = acostbl[tblentry];
+  else if(dx >= 0 && dy >= 0)
+    dir = acostbl2[tblentry]+3;
+  else if(dx <= 0 && dy >= 0)
+    dir = acostbl[tblentry]+7;
+  else
+    dir = acostbl2[tblentry]+11;
+
+  printf("hyp = %f tblentry = %d dir = %d\n", hyp, tblentry, dir);
+
+  result.dir=dir;
+  result.velocity=hyp;
+
+  return result;
 }
 
 // OBJECT DESTROYED FUNCTIONS

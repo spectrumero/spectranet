@@ -51,8 +51,6 @@ void processObjectControl(Object *obj, ObjectProperties *props) {
 		if(obj->dirChgCount < 1) {
 			obj->commanded.dir--;
 			obj->commanded.dir &= 0x0F;
-			obj->actual.dir--;
-			obj->actual.dir &= 0x0F;
 			obj->dirChgCount = props->turnSpeed;
 		}
 	}
@@ -61,8 +59,6 @@ void processObjectControl(Object *obj, ObjectProperties *props) {
 		if(obj->dirChgCount < 1) {
 			obj->commanded.dir++;
 			obj->commanded.dir &= 0x0F;
-			obj->actual.dir++;
-			obj->actual.dir &= 0x0F;
 			obj->dirChgCount = props->turnSpeed;
 		}
 	}

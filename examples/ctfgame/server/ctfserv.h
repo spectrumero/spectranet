@@ -47,6 +47,9 @@
 #define	MAXCOLS		1024
 #define MAXMAPMSG	1024
 
+#define REBOUND		8				// Push rebound factor in 1/16ths map pixel
+#define MAX_PUSH	40			// Maximum push velocity fudge factor
+
 #define STARTAMMO	10
 #define WEAPONID	1
 
@@ -66,8 +69,7 @@ typedef struct _object {
 	int y;				// Map Y position in 1/16ths pixel
 	Vector commanded;	// Commanded vector (via wheels/tracks/etc)
 	Vector actual;	// Actual vector of the object
-	int velcount;	// Frames until velocity corrections are made
-	int dircount;	// Frames until direction corrections are made
+	Vector push;	// How we are getting pushed
 	int dirChgCount;	// Frames until direction change applied
 	int damage;		// how much damage dealt on collision
 	int armour;		// how much armour against collision damage
@@ -76,6 +78,7 @@ typedef struct _object {
 	int ammo;			// Ammo remaining
 	int cooldown;	// Gun cooldown time remaining in frames
 	int ttl;			// Time to live in frames (-1 = forever)
+	int flying;		// Object flies (can't collide with owner) for this many frames
 	uchar flags;	// various object flags
 	uchar ctrls;	// What controls are being applied
 	// This member is a pointer to a function that should get called
@@ -102,9 +105,8 @@ typedef struct _objprops {
 	int armour;					// Object's initial armour
 	int damage;					// Base damage to deal on collision
 	int ttl;						// Initial TTL (-1 = forever)
-	int velcount;				// Frames until velocity is corrected
+	int pushdecay;			// How much the push vector decays per frame
 	int velqty;					// How many units to correct per correction
-	int dircount;				// Frames until direction is corrected
 } ObjectProperties;
 
 // Object flags
@@ -125,6 +127,7 @@ typedef struct _player {
 	int lives;						// Player lives - start at 0 for infinite
 	uchar flags;					// Player flags
 	Viewport view;				// What bit of the map the player sees
+	int vpcframes;				// Frames since last viewport change msg
 	int spawntime;				// If dead, time until respawn in frames
 } Player;
 
@@ -201,8 +204,9 @@ int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 
 // Physics functions
 void processObjectControl(Object *obj, ObjectProperties *props);
-void processSkid(Object *obj, ObjectProperties *props);
+void processPush(Object *obj);
 void shoveObject(Object *obj, Object *with);
+void dealDamage(Object *obj1, Object *obj2);
 
 // Map functions
 int loadMap(const char *filename);
