@@ -30,6 +30,7 @@
 
 uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00};
 uchar box[] =   {0xFF,0x81,0x81,0x81,0x81,0x81,0x81,0xFF};
+uchar spawn[] = {0x00,0x42,0x24,0x00,0x00,0x24,0x42,0x00};
 int clr;
 
 // Development: the gr_window sprite graphic
@@ -72,6 +73,7 @@ void initSpriteLib() {
    sp1_Initialize(SP1_IFLAG_MAKE_ROTTBL | SP1_IFLAG_OVERWRITE_TILES | SP1_IFLAG_OVERWRITE_DFILE, INK_WHITE | PAPER_BLACK, ' ');
    sp1_TileEntry(' ', fondo);   // redefine graphic associated with space character
 	 sp1_TileEntry('B', box);
+	 sp1_TileEntry('s', spawn);
 
    sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
    sp1_UpdateNow();            // draw screen area managed by sp1 now
@@ -82,21 +84,27 @@ void initSpriteLib() {
 // the buffer (the third byte in a complete message)
 void drawMap(uchar *msgbuf) {
   uint16_t i;
+	uchar colour;
   MaptileMsg *mtm;
   uint16_t nummsgs=*msgbuf;
   msgbuf+=2;
 
-	zx_border(BLUE);
   sp1_ClearRect(&cr, INK_WHITE|PAPER_BLACK, ' ', SP1_RFLAG_TILE|SP1_RFLAG_COLOUR);
 
 	for(i=0; i != nummsgs; i++) {
 		mtm=(MaptileMsg *)msgbuf;
-		sp1_PrintAt(mtm->y, mtm->x, INK_BLUE|PAPER_BLACK, mtm->tile);
+		switch(mtm->tile) {
+			case 's':
+				colour=INK_YELLOW|PAPER_BLACK;
+				break;
+			default:
+				colour=INK_BLUE|PAPER_BLACK;
+		}				
+		sp1_PrintAt(mtm->y, mtm->x, colour, mtm->tile);
 		msgbuf+=sizeof(MaptileMsg);
 	}
 	sp1_Invalidate(&cr);
   sp1_UpdateNow();
-	zx_border(BLACK);
 }
 
 // Decide whether to move or create a sprite.

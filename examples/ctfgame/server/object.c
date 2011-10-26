@@ -157,7 +157,7 @@ void startPlayer(int clientid) {
 	MapXY spawn;
 	Player *player=players[clientid];
 	fprintf(stderr, "startPlayer for client %d\n", clientid);
-	spawnPlayer(clientid, player);
+	spawn=spawnPlayer(clientid, player);
 
 	// Tell the client to initialize. The client will use the MapXY
 	// to figure out where the viewport should be. The client will
@@ -167,7 +167,7 @@ void startPlayer(int clientid) {
 }
 
 // Spawn a player
-void spawnPlayer(int clientid, Player *p) {
+MapXY spawnPlayer(int clientid, Player *p) {
 	MapXY spawn;
 	Object *po=(Object *)malloc(sizeof(Object));
 	memset(po, 0, sizeof(Object));
@@ -176,6 +176,8 @@ void spawnPlayer(int clientid, Player *p) {
 
 	po->x=spawn.mapx*16;
 	po->y=spawn.mapy*16;
+	po->prevx=po->x;
+	po->prevy=po->y;
 	po->ttl=-1;
 	po->ammo=STARTAMMO;
 	po->owner=clientid;
@@ -188,6 +190,7 @@ void spawnPlayer(int clientid, Player *p) {
 	addObject(po);
 	p->playerobj=po;
 	p->vpcframes=0;
+	return spawn;
 }
 
 // Get a player by id.
@@ -499,6 +502,8 @@ void fireWeapon(Object *firer) {
 	missile->commanded.velocity=missile->actual.velocity;
 	missile->x=firer->x;
 	missile->y=firer->y;
+	missile->prevx=missile->x;
+	missile->prevy=missile->y;
 	missile->flags |= NEWOBJ;
 	missile->hp = op.hitpoints;
 	missile->armour = op.armour;

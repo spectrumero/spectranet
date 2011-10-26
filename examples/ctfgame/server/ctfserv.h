@@ -192,7 +192,7 @@ bool objWasInView(Object *obj, Viewport *view);
 void cleanObjects();
 void collisionDetect();
 bool collidesWith(Object *lhs, Object *rhs);
-void spawnPlayer(int clientid, Player *p);
+MapXY spawnPlayer(int clientid, Player *p);
 Vector addVector(Vector *v1, Vector *v2);
 
 // Communication functions

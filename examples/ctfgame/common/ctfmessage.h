@@ -61,7 +61,7 @@
 
 // Various sizes
 #define	MAXNAME	16
-#define MAXOBJS	256
+#define MAXOBJS	48
 
 #ifndef uchar
 #define uchar		unsigned char

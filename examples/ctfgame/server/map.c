@@ -71,8 +71,11 @@ Maptile *buildMapRow(char *txtrow, int y) {
 			spawn = *txtrow-'0';
 			spawnpoints[spawn].mapx = i << 3;
 			spawnpoints[spawn].mapy = y << 3;
+
+			// Change to spawn point tile
+			*txtrow='s';
 		}
-		else if(*txtrow > 32) {
+		if(*txtrow > 32) {
 			tile=(Maptile *)malloc(sizeof(Maptile));
 			tile->x=i;
 			tile->flags=0;			// TODO: set flags
