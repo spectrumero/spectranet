@@ -33,6 +33,8 @@ Maptile *map;
 Maptile *maprow[MAXROWS];
 int lastrow;
 
+MapXY spawnpoints[10];
+
 // Load the map.
 int loadMap(const char *filename) {
 	FILE *stream;
@@ -42,7 +44,7 @@ int loadMap(const char *filename) {
 
 	if((stream = fopen(filename, "r"))) {
 		while(fgets(txtrow, MAXCOLS, stream)) {
-			maprow[row]=buildMapRow(txtrow);
+			maprow[row]=buildMapRow(txtrow, row);
 			row++;
 		}
 		fclose(stream);
@@ -59,13 +61,18 @@ int loadMap(const char *filename) {
 
 // Interpret each map row line and store it in memory.
 // Returns a pointer to first Maptile in the map's row.
-Maptile *buildMapRow(char *txtrow) {
-	int i;
+Maptile *buildMapRow(char *txtrow, int y) {
+	int i, spawn;
 	Maptile *tile;
 	Maptile *row=NULL;
 	Maptile *prev=NULL;
 	for(i=0; i<MAXCOLS; i++) {
-		if(*txtrow > 32) {
+		if(*txtrow >= '0' && *txtrow <= '9') {
+			spawn = *txtrow-'0';
+			spawnpoints[spawn].mapx = i << 3;
+			spawnpoints[spawn].mapy = y << 3;
+		}
+		else if(*txtrow > 32) {
 			tile=(Maptile *)malloc(sizeof(Maptile));
 			tile->x=i;
 			tile->flags=0;			// TODO: set flags
@@ -180,3 +187,11 @@ bool detectMapCollision(Object *obj) {
 
 	return FALSE;
 }
+
+// Get a spawn point. This just picks the struct from the
+// array for now but it's in a function to allow us to easily 
+// modify things later.
+MapXY getSpawnpoint(int player) {
+	return spawnpoints[player];
+}
+

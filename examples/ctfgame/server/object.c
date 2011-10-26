@@ -129,6 +129,9 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 	memset(p, 0, sizeof(Player));
 	strlcpy(p->name, playerName, MAXNAME);
 
+	// TODO: Get the player number from elsewhere
+	p->playernumber=clientid;
+
 	return p;
 }
 
@@ -169,9 +172,8 @@ void spawnPlayer(int clientid, Player *p) {
 	Object *po=(Object *)malloc(sizeof(Object));
 	memset(po, 0, sizeof(Object));
 
-	// TODO: something real
-	spawn.mapx=100;
-	spawn.mapy=100;
+	spawn=getSpawnpoint(p->playernumber);
+
 	po->x=spawn.mapx*16;
 	po->y=spawn.mapy*16;
 	po->ttl=-1;

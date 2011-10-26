@@ -129,6 +129,7 @@ typedef struct _player {
 	Viewport view;				// What bit of the map the player sees
 	int vpcframes;				// Frames since last viewport change msg
 	int spawntime;				// If dead, time until respawn in frames
+	uchar playernumber;		// The player number decided at the matchup screen
 } Player;
 
 #define HASFLAG		0x01	// Player is carrying the flag
@@ -210,9 +211,10 @@ void dealDamage(Object *obj1, Object *obj2);
 
 // Map functions
 int loadMap(const char *filename);
-Maptile *buildMapRow(char *txtrow);
+Maptile *buildMapRow(char *txtrow, int y);
 int sendMapMsg(int clientid, Viewport *vp);
 bool detectMapCollision(Object *pbj);
+MapXY getSpawnpoint(int player);
 
 // For testing
 unsigned long getframes();
