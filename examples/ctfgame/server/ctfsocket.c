@@ -20,15 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifdef UNIX
+#include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/select.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <sys/types.h>
 #include "ctfmessage.h"
 #include "ctfserv.h"
 
@@ -48,8 +49,15 @@ unsigned char *playerBufPtr[MAXCLIENTS];
 // Returns -1 if the socket could not be created
 // Returns -2 if bind() fails
 int makeSocket() {
+
 	struct sockaddr_in locaddr;
 	int i;
+	#ifdef WIN32
+	WSADATA wsaData;
+    	if (WSAStartup(MAKEWORD(2, 0), &wsaData) != 0) 
+        	return;
+	#endif
+	
 	sockfd=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if(sockfd < 0) return -1;
 

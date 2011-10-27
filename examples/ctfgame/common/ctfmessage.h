@@ -120,7 +120,7 @@ typedef struct _mapxy {
 #define CONTROL	0x80	// Message ID
 #define ROTLEFT 0x04
 #define ROTRIGHT 0x08
-#define ACCEL 0x01
+#define ACCELERATE 0x01
 #define BRAKE 0x02
 #define FIRE 0x80
 

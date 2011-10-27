@@ -35,7 +35,7 @@ void processObjectControl(Object *obj, ObjectProperties *props) {
 	if(obj->flags & EXPLODING)
 		return;
 
-	if(obj->ctrls & ACCEL) {
+	if(obj->ctrls & ACCELERATE) {
 		obj->commanded.velocity += props->maxAccel;
 		if(obj->commanded.velocity > props->maxVelocity)
 			obj->commanded.velocity = props->maxVelocity;

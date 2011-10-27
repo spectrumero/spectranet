@@ -23,9 +23,18 @@
 // THE SOFTWARE.
 //
 
-#include <netinet/in.h>
 #include <sys/types.h>
 #include "ctfmessage.h"
+
+#ifdef UNIX
+#include <netinet/in.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#include <winsock2.h>
+typedef int socklen_t;
+#endif
 
 #ifndef uchar
 #define uchar	unsigned char

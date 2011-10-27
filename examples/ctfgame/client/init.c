@@ -59,7 +59,7 @@ main() {
 
 	initSpriteLib();
 
-	rc=initConnection("127.0.0.1", "Winston");
+	rc=initConnection("172.16.0.3", "Winston");
 	rc=startGame(&xy);
 	rc=findViewport(&xy);
 	rc=messageloop();
