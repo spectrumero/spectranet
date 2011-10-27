@@ -186,9 +186,11 @@ void removeAllSprites() {
 void removeSprite(RemoveSpriteMsg *msg) {
 	struct sp1_ss *s;
 	s=sprtbl[msg->objid];
-	sp1_MoveSprAbs(s, &cr, tank, 33, 25, 0, 0);
-	sp1_DeleteSpr(s);
-	sprtbl[msg->objid]=NULL;
+	if(s) {
+		sp1_MoveSprAbs(s, &cr, tank, 33, 25, 0, 0);
+		sp1_DeleteSpr(s);
+		sprtbl[msg->objid]=NULL;
+	}
 }
 
 
