@@ -190,7 +190,7 @@ void moveSprite(SpriteMsg *msg) {
 			frameptr=fotonPtr;
 			fotonColour++;
 			fotonColour &= 7;
-			attr=fotonColour;
+			attr=fotonColour|BRIGHT;
 			sp1_IterateSprChar(s, colourSpr);
 			break;
 		case PLAYER:
