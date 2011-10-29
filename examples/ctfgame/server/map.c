@@ -209,6 +209,19 @@ bool detectMapCollision(Object *obj) {
 	return FALSE;
 }
 
+// Determine if an object is touching a given team's flag point
+bool detectTouchingFlagpoint(Object *obj) {
+	int fpx, fpy;
+
+	fpx=flags[obj->team].mapx << 4;
+	fpy=flags[obj->team].mapy << 4;
+
+	if(abs(obj->x - fpx) < 256 &&
+			abs(obj->y - fpy) < 256)
+		return TRUE;
+	return FALSE;
+}
+
 // Get a spawn point. This just picks the struct from the
 // array for now but it's in a function to allow us to easily 
 // modify things later.

@@ -459,14 +459,22 @@ void collisionDetect() {
 
 	// First check the map
 	for(i=0; i<MAXOBJS; i++) {
-		if(objlist[i] && !(objlist[i]->flags & NOCOLLIDE) &&
-				detectMapCollision(objlist[i])) {
+		if(objlist[i]) {
 			obj=objlist[i];
-			printf("%ld: Map collision: Object %d\n", frames, i);
+			if(!(obj->flags & NOCOLLIDE) &&
+					detectMapCollision(obj)) {
+				printf("%ld: Map collision: Object %d\n", frames, i);
 
-			// Destroy it immediately and stop it from moving.
-			obj->flags |= DESTROYED;
-			obj->actual.velocity = 0;
+				// Destroy it immediately and stop it from moving.
+				obj->flags |= DESTROYED;
+				obj->actual.velocity = 0;
+			}
+
+			// Has the flag been captured?
+			if(obj->flags & HASFLAG &&
+					detectTouchingFlagpoint(obj)) {
+				flagCaptured(obj);
+			}
 		}
 	}
 
@@ -742,6 +750,15 @@ void flagCollision(Object *lhs, Object *rhs) {
 			printf("Team %d flag captured\n", flag->team);
 		}
 	}
+}
+
+// Do flag capture stuff
+void flagCaptured(Object *capturer) {
+	MapXY mxy;
+	int otherteam=(capturer->team + 1) & 1;
+	mxy=getFlagpoint(otherteam);
+	placeFlag(otherteam, mxy.mapx << 4, mxy.mapy << 4);
+	capturer->flags &= (0xFF ^ HASFLAG);
 }
 
 // OBJECT DESTROYED FUNCTIONS

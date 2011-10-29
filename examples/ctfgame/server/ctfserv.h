@@ -245,6 +245,7 @@ Object *newObject(int objtype, int owner, int x, int y);
 void flagCollision(Object *lhs, Object *rhs);
 void createFlags();
 void placeFlag(int team, int x, int y);
+void flagCaptured(Object *capturer);
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
@@ -267,6 +268,7 @@ int sendMapMsg(int clientid, Viewport *vp);
 bool detectMapCollision(Object *pbj);
 MapXY getSpawnpoint(int player);
 MapXY getFlagpoint(int team);
+bool detectTouchingFlagpoint(Object *obj);
 
 // Powerup functions
 void initPowerupList();
