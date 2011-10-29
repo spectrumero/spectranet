@@ -81,6 +81,7 @@ typedef struct _object {
 	int owner;		// id of owning player
 	int team;			// id of owning team
 	int type;			// object's type id (maps to sprite on the client + ObjProperty)
+	uchar colour;	// Object colour
 	int size;			// collision size in pixels
 	int prevx;		// previous X location
 	int prevy;		// previous Y location
@@ -192,6 +193,18 @@ typedef struct _pwrspawn {
 #define MINPWRCOOLDOWN		50
 #define FUELINC				50
 #define AMMOINC				10
+
+// Spectrum compatible colour definitions
+#define BLACK          0x00
+#define BLUE           0x01
+#define RED            0x02
+#define MAGENTA        0x03
+#define GREEN          0x04
+#define CYAN           0x05
+#define YELLOW         0x06
+#define WHITE          0x07
+#define BRIGHT         0x40
+#define FLASH          0x80
 
 // Function prototypes
 // Socket handling functions

@@ -200,6 +200,12 @@ MapXY spawnPlayer(int clientid, Player *p) {
 	po->damage=objprops[PLAYER].damage;
 	po->team=p->team;
 
+	if(po->team == 0) {
+		po->colour = CYAN;
+	} else {
+		po->colour = RED|BRIGHT;
+	}
+
 	addObject(po);
 	p->playerobj=po;
 	p->vpcframes=0;
@@ -378,6 +384,7 @@ int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid) {
 	sm.objid=objid;
 	sm.rotation=obj->commanded.dir;
 	sm.id=obj->type;
+	sm.colour=obj->colour;
 	return addSpriteMsg(clientid, &sm);
 }
 
@@ -671,6 +678,12 @@ void createFlags() {
 void placeFlag(int team, int x, int y) {
 	Object *flag=newObject(FLAGID, 0, x, y);
 	flag->team=team;
+	if(team == 0) {
+		flag->colour = BLUE|BRIGHT;
+	} else {
+		flag->colour = RED|BRIGHT;
+	}
+
 	addObject(flag);
 }
 

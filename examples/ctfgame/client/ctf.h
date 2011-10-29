@@ -54,6 +54,7 @@ extern void manageSprite(SpriteMsg *msg);
 extern void removeAllSprites();
 extern void removeSprite(RemoveSpriteMsg *msg);
 extern void drawMap(uchar *msgbuf);
+extern void colourSpr(struct sp1_cs *c);
 
 // Controls
 extern void initInput();

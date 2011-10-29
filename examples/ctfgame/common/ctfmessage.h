@@ -73,6 +73,7 @@ typedef struct _spritemsg {
 	uchar	y;
 	uchar	rotation;
 	uchar	id;
+	uchar colour;
 } SpriteMsg;
 
 // Sprite ID defines

@@ -28,7 +28,7 @@
 #include "ctf.h"
 #include "ctfmessage.h"
 
-uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00};
+uchar fondo[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 uchar box[] =   {0xFF,0x81,0x81,0x81,0x81,0x81,0x81,0xFF};
 uchar spawn[] = {0x00,0x42,0x24,0x00,0x00,0x24,0x42,0x00};
 uchar flagblu[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
@@ -36,6 +36,10 @@ uchar flagred[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
 uchar fueltile[] = {0x00, 0x00, 0x38, 0x20, 0x38, 0x20, 0x20, 0x00};
 uchar ammotile[] = {0x00, 0x00, 0x18, 0x24, 0x3c, 0x24, 0x24, 0x00};
 int clr;
+
+uchar attr;
+uchar amask;
+uchar fotonColour;
 
 // Development: the gr_window sprite graphic
 extern uchar tank[];
@@ -144,7 +148,12 @@ void putSprite(SpriteMsg *msg) {
   sp1_AddColSpr(s, SP1_DRAW_MASK2, 0, 48, snum);
   sp1_AddColSpr(s, SP1_DRAW_MASK2RB, 0, 0, snum);
   sp1_MoveSprPix(s, &cr, spritelist[msg->id], msg->x, msg->y);
+
 	sprtbl[snum]=s;
+
+	attr=msg->colour;
+	amask=0xb8;
+	sp1_IterateSprChar(s, colourSpr);
 }
 
 // Move a sprite. The message itself contains absolute values
@@ -159,8 +168,12 @@ void moveSprite(SpriteMsg *msg) {
 			frameptr=xplode;
 			if(xplodeFrame) {
 				frameptr+=96;
+				attr=YELLOW|BRIGHT;
+			} else {
+				attr=RED|BRIGHT;
 			}
 			xplodeFrame = !xplodeFrame;
+			sp1_IterateSprChar(s, colourSpr);
 			break;
 		case FOTON:
 			if(fotonAnimDir) {
@@ -175,6 +188,10 @@ void moveSprite(SpriteMsg *msg) {
 					fotonAnimDir=1;	
 			}
 			frameptr=fotonPtr;
+			fotonColour++;
+			fotonColour &= 7;
+			attr=fotonColour;
+			sp1_IterateSprChar(s, colourSpr);
 			break;
 		case PLAYER:
 			frameptr=tank + tankdir[msg->rotation];
@@ -212,6 +229,10 @@ void removeSprite(RemoveSpriteMsg *msg) {
 	}
 }
 
+void colourSpr(struct sp1_cs *c) {
+	c->attr_mask=amask;
+	c->attr=attr;
+}
 
 #asm
 
