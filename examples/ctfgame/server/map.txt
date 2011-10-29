@@ -12,7 +12,7 @@ BBB                                                                             
 BB                                                                                                                                           BB                                                BBBBB
 B         0                                                                                                                                  BB                                                 BBBB
 B                                                                                                                                                                                       2        BBB
-B                                                                                                                                                                                                 BB
+B           a    b                                                                                                                                                                                BB
 BB                                                                                                                                                                                                 B
 BBB       1                                                                                                                                                                                       BB
 BBBB                                                                                                                                         BB                                         3         BB

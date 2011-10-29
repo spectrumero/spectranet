@@ -60,7 +60,10 @@ typedef int socklen_t;
 #define MAX_PUSH	40			// Maximum push velocity fudge factor
 
 #define STARTAMMO	10
+
 #define WEAPONID	1
+#define XPLODEID	2
+#define FLAGID		3
 
 // Structures
 typedef struct _vector {
@@ -70,6 +73,7 @@ typedef struct _vector {
 
 typedef struct _object {
 	int owner;		// id of owning player
+	int team;			// id of owning team
 	int type;			// object's type id (maps to sprite on the client + ObjProperty)
 	int size;			// collision size in pixels
 	int prevx;		// previous X location
@@ -125,8 +129,9 @@ typedef struct _objprops {
 #define VANISHED	0x08	// Object was destroyed because the owner disappeared
 #define NOCOLLIDE	0x10	// Can't collide with anything
 #define EXPLODING	0x20	// Is exploding
+#define HASFLAG		0x40	// Has the flag
 
-#define OBJRESET	0x30	// Flags that won't get reset each frame
+#define OBJRESET	0x70	// Flags that won't get reset each frame
 
 typedef struct _player {
 	Object *playerobj;		// Player's tank
@@ -141,7 +146,6 @@ typedef struct _player {
 	uchar playernumber;		// The player number decided at the matchup screen
 } Player;
 
-#define HASFLAG		0x01	// Player is carrying the flag
 #define NEWVIEWPORT 0x02	// Player's viewport changed
 #define DEAD			0x04	// Player is dead
 #define RESETFLAGS	0x05	// Bits set to 0 get reset on each frame
@@ -203,6 +207,10 @@ void collisionDetect();
 bool collidesWith(Object *lhs, Object *rhs);
 MapXY spawnPlayer(int clientid, Player *p);
 Vector addVector(Vector *v1, Vector *v2);
+Object *newObject(int objtype, int owner, int x, int y);
+void flagCollision(Object *lhs, Object *rhs);
+void createFlags();
+void placeFlag(int team, int x, int y);
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
@@ -224,6 +232,7 @@ Maptile *buildMapRow(char *txtrow, int y);
 int sendMapMsg(int clientid, Viewport *vp);
 bool detectMapCollision(Object *pbj);
 MapXY getSpawnpoint(int player);
+MapXY getFlagpoint(int team);
 
 // For testing
 unsigned long getframes();

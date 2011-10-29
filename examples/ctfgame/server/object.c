@@ -40,9 +40,18 @@ struct mvlookup vectbl[] = {
 };
 
 // Object property table. This could be loaded from a file instead.
+// Object ids are as follows:
+// 0 = Player tank
+// 1 = Photon missile
+// 2 = Explosion
+// 3 = Flag
+// 4 = Fuel recharge
+// 5 = Ammo recharge
 ObjectProperties objprops[] = {
 	{0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1},		// Player's tank
-	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20, 3, 1}		// Player's missile
+	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20, 3, 1},		// Player's missile
+	{0, 0,  0, 0, 0, 0,  0,   0,   0, 0,   0, 0, 0},		// Explosion
+	{0, 0, 0, 0, 0, 0, 10, -1, 0, 0, -1, 0, 0}
 };
 
 int acostbl[]={4, 4, 3, 3, 2, 2, 1, 0};
@@ -452,9 +461,14 @@ void collisionDetect() {
 			if(!objlist[i])
 				break;
 			if(objlist[j] && collidesWith(objlist[i], objlist[j])) {
-				printf("%ld: Collision! Object %d with object %d\n", frames, i, j);
-				shoveObject(objlist[i], objlist[j]);
-				dealDamage(objlist[i], objlist[j]);
+				if(objlist[i]->type == FLAGID || objlist[j]->type == FLAGID) {
+					flagCollision(objlist[i], objlist[j]);
+				}
+				else {
+					printf("%ld: Collision! Object %d with object %d\n", frames, i, j);
+					shoveObject(objlist[i], objlist[j]);
+					dealDamage(objlist[i], objlist[j]);
+				}
 			}
 		}
 	}
@@ -624,9 +638,90 @@ Vector addVector(Vector *v1, Vector *v2) {
   return result;
 }
 
+// Create the flags at the start of a round.
+void createFlags() {
+	Object *blue, *red;
+	MapXY blueloc;
+	MapXY redloc;
+
+	blueloc=getFlagpoint(0);
+	redloc=getFlagpoint(1);
+
+	placeFlag(0, blueloc.mapx << 4, blueloc.mapy << 4);
+	placeFlag(1, redloc.mapx << 4, redloc.mapy << 4);
+}
+
+// Place an individual flag.
+void placeFlag(int team, int x, int y) {
+	Object *flag=newObject(FLAGID, 0, x, y);
+	flag->team=team;
+	addObject(flag);
+}
+
+Object *newObject(int objtype, int owner, int x, int y) {
+	Object *obj=(Object *)malloc(sizeof(Object));
+	ObjectProperties *op=&objprops[objtype];
+	memset(obj, 0, sizeof(Object));
+
+	printf("New obj: loc=%d, %d\n", x, y);
+
+	obj->commanded.velocity=op->initVelocity;
+	obj->owner=owner;
+	obj->type=objtype;
+	obj->x=x;
+	obj->y=y;
+	obj->damage=op->damage;
+	obj->armour=op->armour;
+	obj->ttl=op->ttl;
+
+	return obj;
+}
+
+void flagCollision(Object *lhs, Object *rhs) {
+	Object *flag;
+	Object *thing;
+	MapXY flagloc;
+
+	// Do nothing for two flags touching.
+	if(lhs->type == FLAGID && rhs->type == FLAGID)
+		return;
+
+	if(lhs->type == FLAGID) {
+		flag=lhs;
+		thing=rhs;
+	}
+	else {
+		flag=rhs;
+		thing=lhs;
+	}
+
+	// Is the thing a player?
+	if(!(thing->flags & (NOCOLLIDE|EXPLODING)) &&
+			thing == players[thing->owner]->playerobj) {
+		if(thing->team == flag->team) {
+			flagloc=getFlagpoint(flag->team);
+			flag->x = flagloc.mapx << 4;
+			flag->y = flagloc.mapy << 4;
+			flag->flags |= HASMOVED;
+		}
+		else {
+			flag->flags |= DESTROYED;
+			thing->flags |= HASFLAG;
+			printf("Team %d flag captured\n", flag->team);
+		}
+	}
+}
+
 // OBJECT DESTROYED FUNCTIONS
 // Destruction of player object.
 void destroyPlayerObj(Object *obj) {
+	int flagteam;
+
+	if(obj->flags & HASFLAG) {
+		printf("Has flag\n");
+		flagteam = (obj->team + 1) & 1;
+		placeFlag(flagteam, obj->x, obj->y);
+	}
 
 	// Turn the player into an explosion with a TTL of 15 frames
 	obj->flags=NOCOLLIDE|EXPLODING;

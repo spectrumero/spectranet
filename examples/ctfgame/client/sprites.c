@@ -31,12 +31,15 @@
 uchar fondo[] = {0x80,0x00,0x04,0x00,0x40,0x00,0x02,0x00};
 uchar box[] =   {0xFF,0x81,0x81,0x81,0x81,0x81,0x81,0xFF};
 uchar spawn[] = {0x00,0x42,0x24,0x00,0x00,0x24,0x42,0x00};
+uchar flagblu[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
+uchar flagred[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
 int clr;
 
 // Development: the gr_window sprite graphic
 extern uchar tank[];
 extern uchar foton[];
 extern uchar xplode[];
+extern uchar flag[];
 //extern uchar fuel[];
 //extern uchar ammo[];
 
@@ -47,7 +50,7 @@ uchar fcount=0;
 uchar xplodeFrame=0;
 
 // Sprite lookup table
-uchar *spritelist[] = {tank, foton, xplode}; //, fuel, ammo};
+uchar *spritelist[] = {tank, foton, xplode, flag}; //, fuel, ammo};
 int tankdir[]={0, 96, 192, 288,
              384, 480, 576, 672,
              768, 864, 960, 1056,
@@ -74,6 +77,8 @@ void initSpriteLib() {
    sp1_TileEntry(' ', fondo);   // redefine graphic associated with space character
 	 sp1_TileEntry('B', box);
 	 sp1_TileEntry('s', spawn);
+	 sp1_TileEntry('a', flagblu);
+	 sp1_TileEntry('b', flagred);
 
    sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
    sp1_UpdateNow();            // draw screen area managed by sp1 now
@@ -96,6 +101,12 @@ void drawMap(uchar *msgbuf) {
 		switch(mtm->tile) {
 			case 's':
 				colour=INK_YELLOW|PAPER_BLACK;
+				break;
+			case 'a':
+				colour=INK_CYAN|PAPER_BLUE;
+				break;
+			case 'b':
+				colour=INK_RED|PAPER_YELLOW;
 				break;
 			default:
 				colour=INK_BLUE|PAPER_BLACK;
@@ -525,6 +536,22 @@ void removeSprite(RemoveSpriteMsg *msg) {
   DEFB    0,140,  0, 48,  0,192,  0,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
+
+._flag
+  DEFB    0, 56,  0, 46,  0, 45,  0, 42
+  DEFB    0, 45,  0, 42,  0, 45,  0, 42
+  DEFB    0, 45,  0, 46,  0, 40,  0, 40
+  DEFB    0, 40,  0, 40,  0, 40,  0,254
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+
+  DEFB    0,  0,  0,  0,  0,128,  0,224
+  DEFB    0, 88,  0,174,  0, 88,  0,224
+  DEFB    0,128,  0,  0,  0,  0,  0,  0
+  DEFB    0,  0,  0,  0,  0,  0,  0,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+  DEFB    255,  0,255,  0,255,  0,255,  0
+	
 #endasm
 
 /*

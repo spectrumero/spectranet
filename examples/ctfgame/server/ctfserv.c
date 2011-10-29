@@ -39,6 +39,8 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Can't make socket\n");
 		exit(-1);
 	}
+	initObjList();
+	createFlags();
 	if(messageLoop() < 0) {
 		fprintf(stderr, "Message loop exited\n");
 		exit(-1);

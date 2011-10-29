@@ -34,6 +34,7 @@ Maptile *maprow[MAXROWS];
 int lastrow;
 
 MapXY spawnpoints[10];
+MapXY flags[2];
 
 // Load the map.
 int loadMap(const char *filename) {
@@ -62,7 +63,7 @@ int loadMap(const char *filename) {
 // Interpret each map row line and store it in memory.
 // Returns a pointer to first Maptile in the map's row.
 Maptile *buildMapRow(char *txtrow, int y) {
-	int i, spawn;
+	int i, spawn, team;
 	Maptile *tile;
 	Maptile *row=NULL;
 	Maptile *prev=NULL;
@@ -75,6 +76,12 @@ Maptile *buildMapRow(char *txtrow, int y) {
 			// Change to spawn point tile
 			*txtrow='s';
 		}
+		else if(*txtrow == 'a' || *txtrow == 'b') {
+			team = *txtrow - 'a';
+			flags[team].mapx = i << 3;
+			flags[team].mapy = (y-2) << 3;
+		}
+
 		if(*txtrow > 32) {
 			tile=(Maptile *)malloc(sizeof(Maptile));
 			tile->x=i;
@@ -121,8 +128,8 @@ int sendMapMsg(int clientid, Viewport *vp) {
 
 		while(tile->x < maxx) {
 			if(msgptr - msg > MAXMAPMSG) {
-				fprintf(stderr, "Map message is too big: client %d topx=%d topy=%d\n",
-						clientid, minx, miny);
+				fprintf(stderr, "Map message is too big: client %d topx=%d topy=%d ntiles=%d\n",
+						clientid, minx, miny, ntiles);
 
 				// Send whatever it is we have managed to build.
 				memcpy(&msg[2], &ntiles, sizeof(uint16_t));
@@ -154,6 +161,11 @@ bool detectMapCollision(Object *obj) {
 	unsigned long tx;
 	unsigned long txmax;
 	unsigned long obxmax;
+
+	// Ignore the flag (hopefully enough of it will stick out of the
+	// map that someone can still get it)
+	if(obj->type == FLAGID)
+		return FALSE;
 
 	do {
 		if(objy > lastrow)
@@ -196,5 +208,10 @@ bool detectMapCollision(Object *obj) {
 // modify things later.
 MapXY getSpawnpoint(int player) {
 	return spawnpoints[player];
+}
+
+// Get a flag point. See comment above...
+MapXY getFlagpoint(int team) {
+	return flags[team];
 }
 
