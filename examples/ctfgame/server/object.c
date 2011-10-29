@@ -51,7 +51,9 @@ ObjectProperties objprops[] = {
 	{0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1},		// Player's tank
 	{100, 320, 0, 0, 0, 0, 10, 1, 0, 100, 20, 3, 1},		// Player's missile
 	{0, 0,  0, 0, 0, 0,  0,   0,   0, 0,   0, 0, 0},		// Explosion
-	{0, 0, 0, 0, 0, 0, 10, -1, 0, 0, -1, 0, 0}
+	{0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0},					// Flag
+	{0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0},					// Fuel powerup
+	{0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0}					// Ammo powerup
 };
 
 int acostbl[]={4, 4, 3, 3, 2, 2, 1, 0};
@@ -140,6 +142,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 
 	// TODO: Get the player number from elsewhere
 	p->playernumber=clientid;
+	if(clientid > 1) p->team=1;
 
 	return p;
 }
@@ -195,6 +198,7 @@ MapXY spawnPlayer(int clientid, Player *p) {
 	po->armour=objprops[PLAYER].armour;
 	po->hp=objprops[PLAYER].hitpoints;
 	po->damage=objprops[PLAYER].damage;
+	po->team=p->team;
 
 	addObject(po);
 	p->playerobj=po;
@@ -257,13 +261,15 @@ void doObjectUpdates() {
 				obj->ttl--;
 		}
 	}
+	updatePowerSpawns();
 	collisionDetect();
 
 	// Check destruction flags, and run any destruction functions
 	for(i=0; i<MAXOBJS; i++) {
 		obj=objlist[i];
-		if(obj && (obj->flags & DESTROYED) && obj->destructFunc)
+		if(obj && (obj->flags & DESTROYED) && obj->destructFunc) {
 			obj->destructFunc(obj);
+		}
 	}
 }
 
@@ -420,7 +426,8 @@ void cleanObjects() {
 				// if it's the player's tank that was destroyed
 				// respawn the player, but only for DESTROYED (the
 				// VANISHED flag meant the player went away)
-				if(players[obj->owner]->playerobj == obj && obj->flags & DESTROYED) {
+				if(obj->owner >= 0 &&
+					players[obj->owner]->playerobj == obj && obj->flags & DESTROYED) {
 					spawnPlayer(obj->owner, players[obj->owner]);
 				}
 				objlist[i]=NULL;
@@ -466,7 +473,16 @@ void collisionDetect() {
 				}
 				else {
 					printf("%ld: Collision! Object %d with object %d\n", frames, i, j);
-					shoveObject(objlist[i], objlist[j]);
+					if(objlist[i]->collisionFunc)
+						objlist[i]->collisionFunc(objlist[i], objlist[j]);
+					if(objlist[j]->collisionFunc)
+						objlist[j]->collisionFunc(objlist[j], objlist[i]);
+
+					// Only do collision pushes if both objects have mass.
+					if(objprops[objlist[i]->type].mass > 0 && 
+							objprops[objlist[j]->type].mass > 0) 
+						shoveObject(objlist[i], objlist[j]);
+
 					dealDamage(objlist[i], objlist[j]);
 				}
 			}
@@ -673,6 +689,7 @@ Object *newObject(int objtype, int owner, int x, int y) {
 	obj->damage=op->damage;
 	obj->armour=op->armour;
 	obj->ttl=op->ttl;
+	obj->flags = NEWOBJ;
 
 	return obj;
 }
@@ -700,6 +717,8 @@ void flagCollision(Object *lhs, Object *rhs) {
 			thing == players[thing->owner]->playerobj) {
 		if(thing->team == flag->team) {
 			flagloc=getFlagpoint(flag->team);
+			flag->prevx = flag->x;
+			flag->prevy = flag->y;
 			flag->x = flagloc.mapx << 4;
 			flag->y = flagloc.mapy << 4;
 			flag->flags |= HASMOVED;
@@ -718,7 +737,6 @@ void destroyPlayerObj(Object *obj) {
 	int flagteam;
 
 	if(obj->flags & HASFLAG) {
-		printf("Has flag\n");
 		flagteam = (obj->team + 1) & 1;
 		placeFlag(flagteam, obj->x, obj->y);
 	}

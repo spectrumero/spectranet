@@ -64,6 +64,7 @@ int loadMap(const char *filename) {
 // Returns a pointer to first Maptile in the map's row.
 Maptile *buildMapRow(char *txtrow, int y) {
 	int i, spawn, team;
+	MapXY mxy;
 	Maptile *tile;
 	Maptile *row=NULL;
 	Maptile *prev=NULL;
@@ -80,6 +81,11 @@ Maptile *buildMapRow(char *txtrow, int y) {
 			team = *txtrow - 'a';
 			flags[team].mapx = i << 3;
 			flags[team].mapy = (y-2) << 3;
+		}
+		else if(*txtrow == 'f' || *txtrow == 'g') {
+			mxy.mapx = i << 3;
+			mxy.mapy = (y-2) << 3;
+			addPowerup(mxy, *txtrow);
 		}
 
 		if(*txtrow > 32) {

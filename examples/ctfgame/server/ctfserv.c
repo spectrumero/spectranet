@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Usage: %s <mapfile>\n", argv[0]);
 		exit(-1);
 	}
+	initPowerupList();
 	if(loadMap(argv[1]) < 0) {
 		fprintf(stderr, "Can't load map\n");
 		exit(-1);

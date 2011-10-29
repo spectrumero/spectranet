@@ -16,7 +16,7 @@ B           a    b                                                              
 BB                                                                                                                                                                                                 B
 BBB       1                                                                                                                                                                                       BB
 BBBB                                                                                                                                         BB                                         3         BB
-BBB                                                                                                                                          BB                                                  BBB
+BBB          f    f    g                                                                                                                     BB                                                  BBB
 BB                                                                                                                                           BB                                                   BB
 B                                                                                                                                            BB                                                 BBBB
 BB                                                                                                                                           BB                                                  BBB

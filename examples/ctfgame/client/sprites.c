@@ -33,6 +33,8 @@ uchar box[] =   {0xFF,0x81,0x81,0x81,0x81,0x81,0x81,0xFF};
 uchar spawn[] = {0x00,0x42,0x24,0x00,0x00,0x24,0x42,0x00};
 uchar flagblu[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
 uchar flagred[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
+uchar fueltile[] = {0x00, 0x00, 0x38, 0x20, 0x38, 0x20, 0x20, 0x00};
+uchar ammotile[] = {0x00, 0x00, 0x18, 0x24, 0x3c, 0x24, 0x24, 0x00};
 int clr;
 
 // Development: the gr_window sprite graphic
@@ -40,8 +42,8 @@ extern uchar tank[];
 extern uchar foton[];
 extern uchar xplode[];
 extern uchar flag[];
-//extern uchar fuel[];
-//extern uchar ammo[];
+extern uchar fuel[];
+extern uchar ammo[];
 
 uchar fotonFrame=0;
 uchar *fotonPtr;
@@ -50,7 +52,7 @@ uchar fcount=0;
 uchar xplodeFrame=0;
 
 // Sprite lookup table
-uchar *spritelist[] = {tank, foton, xplode, flag}; //, fuel, ammo};
+uchar *spritelist[] = {tank, foton, xplode, flag, fuel, ammo};
 int tankdir[]={0, 96, 192, 288,
              384, 480, 576, 672,
              768, 864, 960, 1056,
@@ -79,6 +81,8 @@ void initSpriteLib() {
 	 sp1_TileEntry('s', spawn);
 	 sp1_TileEntry('a', flagblu);
 	 sp1_TileEntry('b', flagred);
+	 sp1_TileEntry('f', fueltile);
+	 sp1_TileEntry('g', ammotile);
 
    sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
    sp1_UpdateNow();            // draw screen area managed by sp1 now
@@ -107,6 +111,10 @@ void drawMap(uchar *msgbuf) {
 				break;
 			case 'b':
 				colour=INK_RED|PAPER_YELLOW;
+				break;
+			case 'f':
+			case 'g':
+				colour=INK_RED|PAPER_BLACK;
 				break;
 			default:
 				colour=INK_BLUE|PAPER_BLACK;
@@ -552,9 +560,6 @@ void removeSprite(RemoveSpriteMsg *msg) {
   DEFB    255,  0,255,  0,255,  0,255,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
 	
-#endasm
-
-/*
 ._ammo
   DEFB    0,  0,  0,  0,  0,248,  0,255
   DEFB    0,192,  0,195,  0,252,  0, 64
@@ -585,4 +590,4 @@ void removeSprite(RemoveSpriteMsg *msg) {
   DEFB    255,  0,255,  0,255,  0,255,  0
   DEFB    255,  0,255,  0,255,  0,255,  0
 
-#endasm */
+#endasm 

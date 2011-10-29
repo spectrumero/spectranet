@@ -56,14 +56,20 @@ typedef int socklen_t;
 #define	MAXCOLS		1024
 #define MAXMAPMSG	1024
 
+#define MAXHP		100		// Max player hitpoints
+#define MAXAMMO	20		// Max player ammo
+
 #define REBOUND		8				// Push rebound factor in 1/16ths map pixel
 #define MAX_PUSH	40			// Maximum push velocity fudge factor
 
 #define STARTAMMO	10
 
+#define PLYRTANKID	0
 #define WEAPONID	1
 #define XPLODEID	2
 #define FLAGID		3
+#define FUELID		4
+#define AMMOID		5
 
 // Structures
 typedef struct _vector {
@@ -94,6 +100,7 @@ typedef struct _object {
 	int flying;		// Object flies (can't collide with owner) for this many frames
 	uchar flags;	// various object flags
 	uchar ctrls;	// What controls are being applied
+	void *extras;	// Extra attributes
 	// This member is a pointer to a function that should get called
 	// on collision detection. Set to null for no action, otherwise
 	// the function pointer contained here will be called.
@@ -172,6 +179,20 @@ typedef struct _maptile {
 #define SPAWNPOINT	0x02	// Tile is a spawn point
 #define ISFLAG			0x04	// Tile is a capturable flag
 
+// Power-up spawn points
+typedef struct _pwrspawn {
+	int x;								// X position (1/16ths map px)
+	int y;								// Y position
+	int cooldown;					// How long until the object is respawn
+	int type;							// object type to spawn here
+} PowerSpawn;
+
+#define MAXPWRSPAWNS	20
+#define MAXPWRCOOLDOWN		100
+#define MINPWRCOOLDOWN		50
+#define FUELINC				50
+#define AMMOINC				10
+
 // Function prototypes
 // Socket handling functions
 int makeSocket();
@@ -233,6 +254,15 @@ int sendMapMsg(int clientid, Viewport *vp);
 bool detectMapCollision(Object *pbj);
 MapXY getSpawnpoint(int player);
 MapXY getFlagpoint(int team);
+
+// Powerup functions
+void initPowerupList();
+void addPowerup(MapXY location, int tiletype);
+int getCooldown();
+void updatePowerSpawns();
+void spawnPowerup();
+void resetPowerupSpawn(Object *pwrup);
+void powerupTouched(Object *powerup, Object *with);
 
 // For testing
 unsigned long getframes();
