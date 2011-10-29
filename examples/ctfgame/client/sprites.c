@@ -86,12 +86,12 @@ void drawMap(uchar *msgbuf) {
   uint16_t i;
 	uchar colour;
   MaptileMsg *mtm;
-  uint16_t nummsgs=*msgbuf;
+  uint16_t *nummsgs=(uint16_t)msgbuf;
   msgbuf+=2;
 
   sp1_ClearRect(&cr, INK_WHITE|PAPER_BLACK, ' ', SP1_RFLAG_TILE|SP1_RFLAG_COLOUR);
 
-	for(i=0; i != nummsgs; i++) {
+	for(i=0; i != *nummsgs; i++) {
 		mtm=(MaptileMsg *)msgbuf;
 		switch(mtm->tile) {
 			case 's':
