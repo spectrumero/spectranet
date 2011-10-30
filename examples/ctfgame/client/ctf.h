@@ -69,5 +69,13 @@ extern int sendMsg(int txbytes);
 extern int sendControlMsg(uchar dirs);
 extern int messageloop();
 
+// Status displays.
+extern void setupStatusAreas();
+extern void __FASTCALL__ displayEnergy(char *msg);
+extern void __FASTCALL__ displayAmmo(char *msg);
+extern void __FASTCALL__ setMsgArea(MessageMsg *msg);
+extern void __FASTCALL__ putmsgchar(char ch);
+extern void updateMsgArea();
+
 #endif
 

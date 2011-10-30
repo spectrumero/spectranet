@@ -64,6 +64,7 @@ int tankdir[]={0, 96, 192, 288,
 
 // Main game viewport
 struct sp1_Rect cr = {0, 0, VPXTILES, VPYTILES}; 
+struct sp1_Rect sidebar = {0, 28, 4, 23};
 
 // Sprite table
 struct sprentry {
@@ -89,6 +90,7 @@ void initSpriteLib() {
 	 sp1_TileEntry('g', ammotile);
 
    sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
+	 sp1_Invalidate(&sidebar);
    sp1_UpdateNow();            // draw screen area managed by sp1 now
 	fotonPtr=foton;
 }

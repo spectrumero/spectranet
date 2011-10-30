@@ -329,6 +329,20 @@ int sendMessage(int clientno) {
 	return 0;
 }
 
+// Broadcast message line messages
+void broadcastStatusMsg(char *str) {
+	int i;
+	MessageMsg msg;
+	strlcpy(msg.message, str, sizeof(msg.message));
+	msg.msgsz=strlen(msg.message);
+
+	for(i=0; i<MAXCLIENTS; i++) {
+		if(cliaddr[i]) {
+			addMessage(i, MESSAGEMSG, &msg, sizeof(MessageMsg));
+		}
+	}
+}
+
 int sendMessageBuf(int clientno, char *buf, ssize_t bufsz) {
 	if(sendto(sockfd, buf, bufsz, 0,
 				(struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {

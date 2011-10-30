@@ -37,6 +37,7 @@
 // Messages from server to client
 #define	SPRITEMSG			0x01
 #define RMSPRITEMSG		0x02
+#define MESSAGEMSG		0x03
 
 // Client initiated messages
 #define HELLO		0x40				// Initial contact with server
@@ -78,7 +79,7 @@ typedef struct _spritemsg {
 
 // Sprite ID defines
 #define PLAYER	0	// Player's tank
-#define FOTON		1	// Photon cnnonA
+#define FOTON		1	// Photon cnnon
 #define XPLODE	2	// Explosion
 #define FUEL		3	// Fuel tank
 #define AMMO		4	// Ammo recharge
@@ -111,6 +112,13 @@ typedef struct _mapxy {
 	uint16_t	mapx;
 	uint16_t	mapy;
 } MapXY;
+
+// A message to put messages on the client's screen.
+#define MAXSTATUSMSG 42
+typedef struct _messageMsg {
+	uchar	msgsz;	// Maximum 42 chars
+	uchar message[MAXSTATUSMSG];
+} MessageMsg;
 
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the

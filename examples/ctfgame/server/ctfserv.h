@@ -189,8 +189,8 @@ typedef struct _pwrspawn {
 } PowerSpawn;
 
 #define MAXPWRSPAWNS	20
-#define MAXPWRCOOLDOWN		100
-#define MINPWRCOOLDOWN		50
+#define MAXPWRCOOLDOWN		720		// 60 seconds
+#define MINPWRCOOLDOWN		240		// 20 seconds
 #define FUELINC				50
 #define AMMOINC				10
 
@@ -216,6 +216,7 @@ void removePlayer(int clientno);
 int findClient(struct sockaddr_in *client);
 int sendMessage(int clientno);
 int sendMessageBuf(int clientno, char *buf, ssize_t bufsz);
+void broadcastStatusMsg(char *str);
 
 // Game message functions
 int addInitGameMsg(int clientno, MapXY *xy);
@@ -228,6 +229,7 @@ Player *getPlayer(int clientid);
 int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid);
 int makeDestructionMsg(int clientid, uchar objid, uchar reason);
 void fireWeapon(Object *firer);
+bool isPlayerObject(Object *obj);
 
 // Game loop functions
 void doObjectUpdates();
@@ -278,6 +280,11 @@ void updatePowerSpawns();
 void spawnPowerup();
 void resetPowerupSpawn(Object *pwrup);
 void powerupTouched(Object *powerup, Object *with);
+
+// Status messages
+void broadcastCrash(Object *crasher);
+void broadcastFlagDrop(Player *dropper);
+void broadcastDeath(Object *killed, Object *killedBy);
 
 // For testing
 unsigned long getframes();

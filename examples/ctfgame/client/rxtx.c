@@ -138,6 +138,7 @@ int messageloop() {
 		if(p == 128) return -1;
 		if(p != POLLIN) {
 			getInput();
+			updateMsgArea();
 		 	continue;
 		}
 
@@ -169,6 +170,10 @@ int messageloop() {
 					drawMap(msgptr);
 					numMsgs=1;
 					break;					
+				case MESSAGEMSG:
+					setMsgArea((MessageMsg *)msgptr);
+					msgptr+=sizeof(MessageMsg);
+					break;
 				default:
 					sendbuf[0]=SERVERKILL;
 					zx_border(RED);

@@ -57,9 +57,15 @@ main() {
 //	sbrk(48736,3999);
 	sbrk(24000,8767);
 
+	// Page in the Spectranet permanently
+#asm
+	call 0x3FF9
+#endasm
+
 	initSpriteLib();
 
 	rc=initConnection("172.16.0.3", "Winston");
+	setupStatusAreas();
 	rc=startGame(&xy);
 	rc=findViewport(&xy);
 	rc=messageloop();

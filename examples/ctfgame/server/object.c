@@ -451,6 +451,13 @@ unsigned long getframes() {
 	return frames;
 }
 
+// Find out if this is a player object or some other thing.
+bool isPlayerObject(Object *obj) {
+	if(obj->owner >= 0 && players[obj->owner]->playerobj == obj)
+		return TRUE;
+	return FALSE;
+}
+
 // Optimization note. Keep a list of valid indexes to reduce the amount
 // of iterations.
 void collisionDetect() {
@@ -468,6 +475,8 @@ void collisionDetect() {
 				// Destroy it immediately and stop it from moving.
 				obj->flags |= DESTROYED;
 				obj->actual.velocity = 0;
+				if(isPlayerObject(obj))
+					broadcastCrash(obj);
 			}
 
 			// Has the flag been captured?
@@ -599,10 +608,16 @@ void dealDamage(Object *obj1, Object *obj2) {
 	// However, it will still do damage to what it hits. (Ammo has a
 	// zero value here so missiles die as soon as they hit, but still
 	// deal damage to what they hit)
-	if(obj1->armour == 0 || obj1->hp < 1)
+	if(obj1->armour == 0 || obj1->hp < 1) {
 		obj1->flags |= (DESTROYED|EXPLODING);
-	if(obj2->armour == 0 || obj2->hp < 1)
+		if(isPlayerObject(obj1))
+			broadcastDeath(obj1, obj2);
+	}
+	if(obj2->armour == 0 || obj2->hp < 1) {
 		obj2->flags |= (DESTROYED|EXPLODING);
+		if(isPlayerObject(obj2))
+			broadcastDeath(obj2, obj1);
+	}
 
 }
 
@@ -734,7 +749,8 @@ void flagCollision(Object *lhs, Object *rhs) {
 	}
 
 	// Is the thing a player?
-	if(!(thing->flags & (NOCOLLIDE|EXPLODING)) &&
+	if(thing->owner >= 0 &&
+			!(thing->flags & (NOCOLLIDE|EXPLODING)) &&
 			thing == players[thing->owner]->playerobj) {
 		if(thing->team == flag->team) {
 			flagloc=getFlagpoint(flag->team);

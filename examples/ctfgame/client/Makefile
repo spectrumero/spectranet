@@ -1,7 +1,7 @@
 CC = zcc
-CFLAGS = +zx -vn -I../common -DNOSTDINT -m -create-app
-OBJS = init.o sprites.o rxtx.o viewport.o getinput.o
-LIBS = -lmalloc -lsp1 -llibsocket 
+CFLAGS = +zx -vn -I../common -DNOSTDINT -m 
+OBJS = init.o sprites.o rxtx.o viewport.o getinput.o print.o
+LIBS = -lmalloc -lsp1 -llibsocket_np 
 CTFCLIENT = ctfclient.bin
 
 all:	ctfclient
