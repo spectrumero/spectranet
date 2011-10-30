@@ -209,6 +209,7 @@ MapXY spawnPlayer(int clientid, Player *p) {
 	addObject(po);
 	p->playerobj=po;
 	p->vpcframes=0;
+
 	return spawn;
 }
 
@@ -570,6 +571,7 @@ void fireWeapon(Object *firer) {
 
 	firer->ammo--;
 	firer->cooldown=objprops[firer->type].gunCooldown;
+	addAmmoMsg(firer);
 }
 
 // Shove an object when collided with. We're not trying to be super
@@ -775,6 +777,15 @@ void flagCaptured(Object *capturer) {
 	mxy=getFlagpoint(otherteam);
 	placeFlag(otherteam, mxy.mapx << 4, mxy.mapy << 4);
 	capturer->flags &= (0xFF ^ HASFLAG);
+}
+
+// Update the client with the ammunition quantity
+void addAmmoMsg(Object *obj) {
+	NumberMsg msg;
+	msg.numtype = AMMOQTY;
+	snprintf(msg.message, sizeof(msg.message),
+			"%d", obj->ammo);
+	addMessage(obj->owner, SCOREBOARD, &msg, sizeof(msg));
 }
 
 // OBJECT DESTROYED FUNCTIONS

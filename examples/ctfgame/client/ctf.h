@@ -76,6 +76,7 @@ extern void __FASTCALL__ displayAmmo(char *msg);
 extern void __FASTCALL__ setMsgArea(MessageMsg *msg);
 extern void __FASTCALL__ putmsgchar(char ch);
 extern void updateMsgArea();
+extern void updateScoreboard(NumberMsg *msg);
 
 #endif
 

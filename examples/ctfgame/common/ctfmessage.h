@@ -38,6 +38,7 @@
 #define	SPRITEMSG			0x01
 #define RMSPRITEMSG		0x02
 #define MESSAGEMSG		0x03
+#define SCOREBOARD		0x04
 
 // Client initiated messages
 #define HELLO		0x40				// Initial contact with server
@@ -119,6 +120,20 @@ typedef struct _messageMsg {
 	uchar	msgsz;	// Maximum 42 chars
 	uchar message[MAXSTATUSMSG];
 } MessageMsg;
+
+// Message containing a number to put on the
+// status bar of the client. The message id indicates
+// which one it actually is.
+typedef struct _numbermsg {
+	uchar numtype;
+	uchar message[5];
+} NumberMsg;
+
+#define AMMOQTY	0
+#define HITPOINTQTY	1
+#define REDSCORE	2
+#define BLUESCORE	3
+#define PLYRSCORE	4
 
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the

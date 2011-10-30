@@ -78,6 +78,17 @@ void setupStatusAreas() {
 #endasm
 }
 
+void updateScoreboard(NumberMsg *msg) {
+	switch(msg->numtype) {
+		case AMMOQTY:
+			displayAmmo(msg->message);
+			break;
+		case HITPOINTQTY:
+			displayEnergy(msg->message);
+			break;
+	}
+}
+
 void __FASTCALL__ displayEnergy(char *msg) {
 #asm
 	ld de, 16416
@@ -90,6 +101,23 @@ void __FASTCALL__ displayEnergy(char *msg) {
 
 void __FASTCALL__ displayAmmo(char *msg) {
 #asm
+	push hl
+	
+	ld hl, 0x409c
+	ld b, 8
+._clr_ammo
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc h
+	ld l, 0x9c
+	djnz _clr_ammo	
+
+	pop hl
 	ld de, 16512
 	ld (PRROW), de
 	ld a, 38

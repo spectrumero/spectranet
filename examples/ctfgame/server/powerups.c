@@ -127,6 +127,7 @@ void powerupTouched(Object *powerup, Object *with) {
 				with->ammo += AMMOINC;
 				if(with->ammo > MAXAMMO)
 					with->ammo = MAXAMMO;
+				addAmmoMsg(with);
 		}
 	}
 }

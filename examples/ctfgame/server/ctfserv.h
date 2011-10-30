@@ -256,6 +256,7 @@ int addInitGameMsg(int clientno, MapXY *xy);
 int addChangeViewportMsg(int clientno, int x, int y);
 int addSpriteMsg(int clientno, SpriteMsg *msm);
 int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
+void addAmmoMsg(Object *obj);
 
 // Physics functions
 void processObjectControl(Object *obj, ObjectProperties *props);

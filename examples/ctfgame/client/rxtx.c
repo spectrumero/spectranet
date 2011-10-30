@@ -174,6 +174,10 @@ int messageloop() {
 					setMsgArea((MessageMsg *)msgptr);
 					msgptr+=sizeof(MessageMsg);
 					break;
+				case SCOREBOARD:
+					updateScoreboard((NumberMsg *)msgptr);
+					msgptr+=sizeof(NumberMsg);
+					break;
 				default:
 					sendbuf[0]=SERVERKILL;
 					zx_border(RED);

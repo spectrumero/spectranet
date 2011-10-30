@@ -145,7 +145,7 @@ int getMessage() {
 	msgptr=msgbuf;
 	if(*msgptr == HELLO) {
 		// New connection
-		addNewClient(msgptr, &rxaddr);
+		addNewClient(msgptr+1, &rxaddr);
 	} else {
 		clientid=findClient(&rxaddr);
 		if(clientid < 0) 
