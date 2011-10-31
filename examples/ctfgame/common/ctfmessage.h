@@ -48,6 +48,7 @@
 #define START		0x45				// Start game
 #define STARTACK 0x46				// Acknowledge start
 #define BYE			0x47				// Close connection
+#define CLIENTRDY	0x48			// Client message loop is started
 #define SERVERKILL	0xFF		// Testing message to halt the server when
 														// the client gets an invalid msg
 

@@ -199,6 +199,7 @@ MapXY spawnPlayer(int clientid, Player *p) {
 	po->hp=objprops[PLAYER].hitpoints;
 	po->damage=objprops[PLAYER].damage;
 	po->team=p->team;
+	po->flags |= UPDATESB;
 
 	if(po->team == 0) {
 		po->colour = CYAN;
@@ -227,8 +228,18 @@ void makeUpdates() {
 
 	for(clientid=0; clientid < MAXCLIENTS; clientid++) {
 		p=players[clientid];
-		if(p) {
+		if(p && p->flags & RUNNING) {
+			if(p->flags & NEWVIEWPORT) {
+				sendMapMsg(clientid, &p->view);
+				p->flags ^= NEWVIEWPORT;
+				continue;
+			}
+
 			makeSpriteUpdates(clientid);
+			if(p->playerobj && p->playerobj->flags & UPDATESB) {
+				updateScoreboard(p->playerobj);
+				p->playerobj->flags ^= UPDATESB;
+			}
 
 			// Player updates finished, reset flags that should be
 			// reset at the end of the frame.
@@ -777,6 +788,12 @@ void flagCaptured(Object *capturer) {
 	mxy=getFlagpoint(otherteam);
 	placeFlag(otherteam, mxy.mapx << 4, mxy.mapy << 4);
 	capturer->flags &= (0xFF ^ HASFLAG);
+}
+
+// updateScoreboard updates all the status displays for the
+// object's owner.
+void updateScoreboard(Object *obj) {
+	addAmmoMsg(obj);
 }
 
 // Update the client with the ammunition quantity

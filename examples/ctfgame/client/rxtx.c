@@ -133,6 +133,10 @@ int messageloop() {
 	char *msgptr;
 	spriteMsgs=FALSE;
 
+	// tell the server that the message loop is running
+	sendbuf[0] = CLIENTRDY;
+	sendMsg(1);
+
 	while(1) {
 		p=poll_fd(sockfd);
 		if(p == 128) return -1;

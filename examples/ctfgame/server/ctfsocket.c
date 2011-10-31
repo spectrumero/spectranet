@@ -172,6 +172,10 @@ int getMessage() {
 					sendByeAck(clientid);
 					removeClient(clientid);
 					break;
+				case CLIENTRDY:
+					msgptr++;
+					player->flags |= RUNNING;
+					break;
 				case VIEWPORT:
 					msgptr++;
 
@@ -185,7 +189,7 @@ int getMessage() {
 					msgptr+=sizeof(Viewport);
 
 					// Send a map update as a response.
-					sendMapMsg(clientid, &player->view);
+//					sendMapMsg(clientid, &player->view);
 					break;
 				case SERVERKILL:
 					// DEBUG STUFF: Remove this when no longer required for

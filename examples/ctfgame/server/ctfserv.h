@@ -138,8 +138,9 @@ typedef struct _objprops {
 #define NOCOLLIDE	0x10	// Can't collide with anything
 #define EXPLODING	0x20	// Is exploding
 #define HASFLAG		0x40	// Has the flag
+#define UPDATESB	0x80	// Update scorebord for object's owner
 
-#define OBJRESET	0x70	// Flags that won't get reset each frame
+#define OBJRESET	0xF0	// Flags that won't get reset each frame
 
 typedef struct _player {
 	Object *playerobj;		// Player's tank
@@ -154,6 +155,7 @@ typedef struct _player {
 	uchar playernumber;		// The player number decided at the matchup screen
 } Player;
 
+#define RUNNING		0x01		// Player's client is ready for messages
 #define NEWVIEWPORT 0x02	// Player's viewport changed
 #define DEAD			0x04	// Player is dead
 #define RESETFLAGS	0x05	// Bits set to 0 get reset on each frame
@@ -257,6 +259,7 @@ int addChangeViewportMsg(int clientno, int x, int y);
 int addSpriteMsg(int clientno, SpriteMsg *msm);
 int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 void addAmmoMsg(Object *obj);
+void updateScoreboard(Object *obj);
 
 // Physics functions
 void processObjectControl(Object *obj, ObjectProperties *props);
