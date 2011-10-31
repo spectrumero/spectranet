@@ -70,6 +70,9 @@ Object *objlist[MAXOBJS];
 // Player list
 Player *players[MAXCLIENTS];
 
+// Team data
+int teamscore[2];
+
 // Frame counter. This is mainly used for testing and
 // debugging.
 unsigned long frames;
@@ -79,6 +82,7 @@ unsigned long testend;
 void initObjList() {
 	memset(objlist, 0, sizeof(objlist));
 	memset(players, 0, sizeof(players));
+	memset(teamscore, 0, sizeof(teamscore));
 	frames=0;
 }
 
@@ -614,8 +618,17 @@ void shoveObject(Object *obj, Object *with) {
 
 // Deal damage when objects have collided.
 void dealDamage(Object *obj1, Object *obj2) {
+	bool o1isplyr, o2isplyr;
 	obj1->hp -= objprops[obj2->type].damage;
 	obj2->hp -= objprops[obj1->type].damage;
+
+	o1isplyr=isPlayerObject(obj1);
+	o2isplyr=isPlayerObject(obj2);
+
+	if(o1isplyr)
+		addHitpointMsg(obj1);
+	if(o2isplyr)
+		addHitpointMsg(obj2);
 
 	// If the armour value is 0, the object is instagibbed.
 	// However, it will still do damage to what it hits. (Ammo has a
@@ -623,12 +636,12 @@ void dealDamage(Object *obj1, Object *obj2) {
 	// deal damage to what they hit)
 	if(obj1->armour == 0 || obj1->hp < 1) {
 		obj1->flags |= (DESTROYED|EXPLODING);
-		if(isPlayerObject(obj1))
+		if(o1isplyr)
 			broadcastDeath(obj1, obj2);
 	}
 	if(obj2->armour == 0 || obj2->hp < 1) {
 		obj2->flags |= (DESTROYED|EXPLODING);
-		if(isPlayerObject(obj2))
+		if(o2isplyr)
 			broadcastDeath(obj2, obj1);
 	}
 
@@ -767,16 +780,20 @@ void flagCollision(Object *lhs, Object *rhs) {
 			thing == players[thing->owner]->playerobj) {
 		if(thing->team == flag->team) {
 			flagloc=getFlagpoint(flag->team);
-			flag->prevx = flag->x;
-			flag->prevy = flag->y;
-			flag->x = flagloc.mapx << 4;
-			flag->y = flagloc.mapy << 4;
-			flag->flags |= HASMOVED;
+			if(flagloc.mapx << 4 != flag->x || flagloc.mapy << 4 != flag->y) {
+				flag->prevx = flag->x;
+				flag->prevy = flag->y;
+				flag->x = flagloc.mapx << 4;
+				flag->y = flagloc.mapy << 4;
+				flag->flags |= HASMOVED;
+				broadcastFlagReturn(thing);
+			}
 		}
 		else {
 			flag->flags |= DESTROYED;
 			thing->flags |= HASFLAG;
 			printf("Team %d flag captured\n", flag->team);
+			broadcastFlagSteal(thing);
 		}
 	}
 }
@@ -788,12 +805,19 @@ void flagCaptured(Object *capturer) {
 	mxy=getFlagpoint(otherteam);
 	placeFlag(otherteam, mxy.mapx << 4, mxy.mapy << 4);
 	capturer->flags &= (0xFF ^ HASFLAG);
+	broadcastFlagCapture(capturer);
+
+	teamscore[capturer->team]++;
+	broadcastTeamScoreMsg(capturer->team);
 }
 
 // updateScoreboard updates all the status displays for the
 // object's owner.
 void updateScoreboard(Object *obj) {
 	addAmmoMsg(obj);
+	addHitpointMsg(obj);
+	addTeamScoreMsg(obj->owner, 0);
+	addTeamScoreMsg(obj->owner, 1);
 }
 
 // Update the client with the ammunition quantity
@@ -803,6 +827,42 @@ void addAmmoMsg(Object *obj) {
 	snprintf(msg.message, sizeof(msg.message),
 			"%d", obj->ammo);
 	addMessage(obj->owner, SCOREBOARD, &msg, sizeof(msg));
+}
+
+// Update the client with the hitpoint quantity
+void addHitpointMsg(Object *obj) {
+	NumberMsg msg;
+	msg.numtype = HITPOINTQTY;
+	snprintf(msg.message, sizeof(msg.message),
+			"%d", obj->hp);
+	addMessage(obj->owner, SCOREBOARD, &msg, sizeof(msg));
+}
+
+// Update all clients with a team score
+void broadcastTeamScoreMsg(int team) {
+	NumberMsg msg;
+	Player *p;
+	int i;
+
+	msg.numtype = BLUESCORE + team;
+	snprintf(msg.message, sizeof(msg.message),
+			"%d", teamscore[team]);
+
+	for(i=0; i < MAXCLIENTS; i++) {
+		p=players[i];
+		if(p) {
+			addMessage(i, SCOREBOARD, &msg, sizeof(msg));
+		}
+	}
+}
+
+// Update a single client with a team score
+void addTeamScoreMsg(int clientid, int team) {
+	NumberMsg msg;
+	msg.numtype = BLUESCORE + team;
+	snprintf(msg.message, sizeof(msg.message),
+			"%d", teamscore[team]);
+	addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
 }
 
 // OBJECT DESTROYED FUNCTIONS

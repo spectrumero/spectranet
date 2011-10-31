@@ -75,6 +75,8 @@ extern void __FASTCALL__ displayEnergy(char *msg);
 extern void __FASTCALL__ displayAmmo(char *msg);
 extern void __FASTCALL__ setMsgArea(MessageMsg *msg);
 extern void __FASTCALL__ putmsgchar(char ch);
+extern void __FASTCALL__ displayBlueScore(char *msg);
+extern void __FASTCALL__ displayRedScore(char *msg);
 extern void updateMsgArea();
 extern void updateScoreboard(NumberMsg *msg);
 

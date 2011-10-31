@@ -259,6 +259,9 @@ int addChangeViewportMsg(int clientno, int x, int y);
 int addSpriteMsg(int clientno, SpriteMsg *msm);
 int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 void addAmmoMsg(Object *obj);
+void addHitpointMsg(Object *obj);
+void broadcastTeamScoreMsg(int team);
+void addTeamScoreMsg(int clientid, int team);
 void updateScoreboard(Object *obj);
 
 // Physics functions
@@ -289,6 +292,9 @@ void powerupTouched(Object *powerup, Object *with);
 void broadcastCrash(Object *crasher);
 void broadcastFlagDrop(Player *dropper);
 void broadcastDeath(Object *killed, Object *killedBy);
+void broadcastFlagSteal(Object *stealer);
+void broadcastFlagCapture(Object *capturer);
+void broadcastFlagReturn(Object *returner);
 
 // For testing
 unsigned long getframes();

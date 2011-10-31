@@ -132,8 +132,8 @@ typedef struct _numbermsg {
 
 #define AMMOQTY	0
 #define HITPOINTQTY	1
-#define REDSCORE	2
-#define BLUESCORE	3
+#define BLUESCORE	2
+#define REDSCORE	3
 #define PLYRSCORE	4
 
 // Control messages from the client. The controls being activated

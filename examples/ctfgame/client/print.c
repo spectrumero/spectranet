@@ -75,6 +75,19 @@ void setupStatusAreas() {
 	ld hl, _flag_str
 	call PRINT42
 
+	ld hl, 0x4800
+	ld (PRROW), hl
+	ld a, 38
+	ld (PRCOL), a
+	ld hl, _blue_score
+	call PRINT42
+	ld hl, 0x4860
+	ld (PRROW), hl
+	ld a, 38
+	ld (PRCOL), a
+	ld hl, _red_score
+	call PRINT42
+
 #endasm
 }
 
@@ -86,11 +99,32 @@ void updateScoreboard(NumberMsg *msg) {
 		case HITPOINTQTY:
 			displayEnergy(msg->message);
 			break;
+		case REDSCORE:
+			displayRedScore(msg->message);
+			break;
+		case BLUESCORE:
+			displayBlueScore(msg->message);
 	}
 }
 
 void __FASTCALL__ displayEnergy(char *msg) {
 #asm
+	push hl
+	ld hl, 0x403c
+	ld b, 8
+._clr_nrg
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc h
+	ld l, 0x3c
+	djnz _clr_nrg
+	pop hl
+
 	ld de, 16416
 	ld (PRROW), de
 	ld a, 38
@@ -119,6 +153,60 @@ void __FASTCALL__ displayAmmo(char *msg) {
 
 	pop hl
 	ld de, 16512
+	ld (PRROW), de
+	ld a, 38
+	ld (PRCOL), a
+	call PRINT42
+#endasm
+}
+
+void __FASTCALL__ displayBlueScore(char *msg) {
+#asm
+	push hl
+	
+	ld hl, 0x483c
+	ld b, 8
+._clr_blue
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc h
+	ld l, 0x3c
+	djnz _clr_blue
+
+	pop hl
+	ld de, 0x4820
+	ld (PRROW), de
+	ld a, 38
+	ld (PRCOL), a
+	call PRINT42
+#endasm
+}
+
+void __FASTCALL__ displayRedScore(char *msg) {
+#asm
+	push hl
+	
+	ld hl, 0x489c
+	ld b, 8
+._clr_red
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc h
+	ld l, 0x9c
+	djnz _clr_red
+
+	pop hl
+	ld de, 0x4880
 	ld (PRROW), de
 	ld a, 38
 	ld (PRCOL), a
@@ -201,4 +289,8 @@ void __FASTCALL__ putmsgchar(char ch) {
 	defb 'A','m','m','o',0
 	._flag_str
 	defb 'F','l','a','g',0
+	._red_score
+	defb 'R','e','d',0
+	._blue_score
+	defb 'B','l','u','e',0
 #endasm

@@ -77,3 +77,44 @@ void broadcastDeath(Object *killed, Object *killedBy) {
 	}
 }
 
+// Broadcast the flag steal
+void broadcastFlagSteal(Object *stealer) {
+	Player *p=getPlayer(stealer->owner);
+	char colour[5];
+	if(stealer->team == 0) 
+		strcpy(colour, "red");
+	else
+		strcpy(colour, "blue");
+
+	snprintf(bcast, MAXSTATUSMSG, "%s has taken the %s flag!",
+			p->name, colour);
+	broadcastStatusMsg(bcast);
+}
+
+// Broadcast the flag capture
+void broadcastFlagCapture(Object *capturer) {
+	Player *p=getPlayer(capturer->owner);
+	char colour[5];
+	if(capturer->team == 0) 
+		strcpy(colour, "red");
+	else
+		strcpy(colour, "blue");
+
+	snprintf(bcast, MAXSTATUSMSG, "%s has captured the %s flag!",
+			p->name, colour);
+	broadcastStatusMsg(bcast);
+}
+
+// Broadcast the flag return
+void broadcastFlagReturn(Object *returner) {
+	Player *p=getPlayer(returner->owner);
+	char colour[5];
+	if(returner->team == 0) 
+		strcpy(colour, "blue");
+	else
+		strcpy(colour, "red");
+
+	snprintf(bcast, MAXSTATUSMSG, "%s has returned the %s flag.",
+			p->name, colour);
+	broadcastStatusMsg(bcast);
+}
