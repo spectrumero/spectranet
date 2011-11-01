@@ -275,6 +275,9 @@ void doObjectUpdates() {
 				continue;
 			}
 
+			if(obj->mapColFudge)
+				obj->mapColFudge--;
+
 			if(obj->flying)
 				obj->flying--;
 
@@ -480,20 +483,44 @@ bool isPlayerObject(Object *obj) {
 void collisionDetect() {
 	int i, j;
 	Object *obj;
+	int bouncedir;
 
 	// First check the map
 	for(i=0; i<MAXOBJS; i++) {
 		if(objlist[i]) {
 			obj=objlist[i];
 			if(!(obj->flags & NOCOLLIDE) &&
+					obj->mapColFudge == 0 &&
 					detectMapCollision(obj)) {
 				printf("%ld: Map collision: Object %d\n", frames, i);
 
-				// Destroy it immediately and stop it from moving.
-				obj->flags |= DESTROYED;
-				obj->actual.velocity = 0;
-				if(isPlayerObject(obj))
-					broadcastCrash(obj);
+				if(obj->armour == 0) {
+					// Destroy it immediately and stop it from moving.
+					obj->flags |= DESTROYED;
+					obj->actual.velocity = 0;
+				} else {
+					obj->hp -= obj->actual.velocity+10;
+					if(obj->hp <= 0) {
+						obj->flags |= DESTROYED;
+						obj->actual.velocity = 0;
+					}
+					else {
+						// Give the object a slight shove in the opposite
+						// direction.
+						bouncedir=obj->actual.dir + 8;
+						bouncedir &= 0x0F;
+						obj->commanded.velocity = 0;
+						obj->push.velocity = 16;
+						obj->push.dir = bouncedir;
+						obj->mapColFudge = 3;
+					}
+				}
+				if(isPlayerObject(obj)) {
+					if(obj->flags & DESTROYED)
+						broadcastCrash(obj);
+					else
+						addHitpointMsg(obj);
+				}
 			}
 
 			// Has the flag been captured?

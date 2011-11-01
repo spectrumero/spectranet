@@ -101,6 +101,7 @@ typedef struct _object {
 	int flying;		// Object flies (can't collide with owner) for this many frames
 	uchar flags;	// various object flags
 	uchar ctrls;	// What controls are being applied
+	int mapColFudge;	// Map collision fudge frames
 	void *extras;	// Extra attributes
 	// This member is a pointer to a function that should get called
 	// on collision detection. Set to null for no action, otherwise
