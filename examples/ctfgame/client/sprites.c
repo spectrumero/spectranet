@@ -35,11 +35,23 @@ uchar flagblu[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
 uchar flagred[] = {0x18,0x16,0x11,0x16,0x18,0x10,0x10,0x7e};
 uchar fueltile[] = {0x00, 0x00, 0x38, 0x20, 0x38, 0x20, 0x20, 0x00};
 uchar ammotile[] = {0x00, 0x00, 0x18, 0x24, 0x3c, 0x24, 0x24, 0x00};
+
+uchar diamond[] = {0x08, 0x14, 0x22, 0x49, 0x22, 0x14, 0x08, 0x00};
+uchar topleft[] = {0xFF, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80};
+uchar topright[] = {0xFF, 0x01, 0x01, 0x01, 0x01,0x01, 0x01, 0x01};
+uchar botleft[] = {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xFF};
+uchar botright[] = {0x01,0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0xFF};
+uchar left[] =    {0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80};
+uchar right[] =   {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
+uchar top[] =	    {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uchar bot[] =     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
+
 int clr;
 
 uchar attr;
 uchar amask;
 uchar fotonColour;
+uchar flagDirColour;
 
 // Development: the gr_window sprite graphic
 extern uchar tank[];
@@ -89,6 +101,16 @@ void initSpriteLib() {
 	 sp1_TileEntry('f', fueltile);
 	 sp1_TileEntry('g', ammotile);
 
+	 sp1_TileEntry('1', topleft);
+	 sp1_TileEntry('2', top);
+	 sp1_TileEntry('3', topright);
+	 sp1_TileEntry('4', left);
+	 sp1_TileEntry('5', diamond);
+	 sp1_TileEntry('6', right);
+	 sp1_TileEntry('7', botleft);
+	 sp1_TileEntry('8', bot);
+	 sp1_TileEntry('9', botright);
+
    sp1_Invalidate(&cr);        // invalidate entire screen so that it is all initially drawn
 	 sp1_Invalidate(&sidebar);
    sp1_UpdateNow();            // draw screen area managed by sp1 now
@@ -130,6 +152,21 @@ void drawMap(uchar *msgbuf) {
 	}
 	sp1_Invalidate(&cr);
   sp1_UpdateNow();
+}
+
+// Draw the flag direction indicator
+void drawFlagIndicator() {
+	sp1_PrintAt(18, 29, INK_CYAN, '1');
+	sp1_PrintAt(18, 30, INK_CYAN, '2');
+	sp1_PrintAt(18, 31, INK_CYAN, '3');
+	sp1_PrintAt(19, 29, INK_CYAN, '4');
+	sp1_PrintAt(19, 30, INK_CYAN, '5');
+	sp1_PrintAt(19, 31, INK_CYAN, '6');
+	sp1_PrintAt(20, 29, INK_CYAN, '7');
+	sp1_PrintAt(20, 30, INK_CYAN, '8');
+	sp1_PrintAt(20, 31, INK_CYAN, '9');
+	sp1_Invalidate(&sidebar);
+	sp1_UpdateNow();
 }
 
 // Decide whether to move or create a sprite.

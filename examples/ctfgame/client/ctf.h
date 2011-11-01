@@ -33,8 +33,6 @@
 # Viewport
 #define VPXTILES	28
 #define VPYTILES	23
-#define VPXPIXELS	224
-#define VPYPIXELS	184
 #define MAXVPX	32767
 #define MAXVPY	32767
 
@@ -70,7 +68,7 @@ extern int sendControlMsg(uchar dirs);
 extern int messageloop();
 
 // Status displays.
-extern void setupStatusAreas();
+extern void setupStatusAreas(uchar teamcolours);
 extern void __FASTCALL__ displayEnergy(char *msg);
 extern void __FASTCALL__ displayAmmo(char *msg);
 extern void __FASTCALL__ setMsgArea(MessageMsg *msg);
@@ -79,6 +77,9 @@ extern void __FASTCALL__ displayBlueScore(char *msg);
 extern void __FASTCALL__ displayRedScore(char *msg);
 extern void updateMsgArea();
 extern void updateScoreboard(NumberMsg *msg);
+extern void drawFlagIndicator();
+extern void quietenFlagIndicator();
+extern void __FASTCALL__ flashFlagIndicator(uchar sector);
 
 #endif
 

@@ -182,6 +182,10 @@ int messageloop() {
 					updateScoreboard((NumberMsg *)msgptr);
 					msgptr+=sizeof(NumberMsg);
 					break;
+				case FLAGALERT:
+					flagAlert(*msgptr);
+					msgptr++;
+					break;
 				default:
 					sendbuf[0]=SERVERKILL;
 					zx_border(RED);

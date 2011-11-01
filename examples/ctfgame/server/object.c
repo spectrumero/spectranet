@@ -72,6 +72,8 @@ Player *players[MAXCLIENTS];
 
 // Team data
 int teamscore[2];
+MapXY flagloc[2];
+bool flagTaken[2];
 
 // Frame counter. This is mainly used for testing and
 // debugging.
@@ -83,6 +85,8 @@ void initObjList() {
 	memset(objlist, 0, sizeof(objlist));
 	memset(players, 0, sizeof(players));
 	memset(teamscore, 0, sizeof(teamscore));
+	memset(flagloc, 0, sizeof(flagloc));
+	memset(flagTaken, 0, sizeof(flagTaken));
 	frames=0;
 }
 
@@ -251,6 +255,7 @@ void makeUpdates() {
 		}
 	}
 
+	updateAllFlagIndicators();
 	sendClientMessages();
 	cleanObjects();
 	frames++;
@@ -305,6 +310,7 @@ void processPush(Object *obj) {
 // This function updates the XY position of the object, and its former
 // XY position.
 void moveObject(Object *obj) {
+	int team;
 	int dx=vectbl[obj->actual.dir].dx;
 	int dy=vectbl[obj->actual.dir].dy;
 	
@@ -338,6 +344,14 @@ void moveObject(Object *obj) {
 		//printf("Moving object: x = %d y = %d prevx = %d prevy = %d\n",
 			//obj->x >> 4, obj->y >> 4, obj->prevx >> 4, obj->prevy >> 4);
 		obj->flags |= HASMOVED;
+	}
+
+	if(obj->flags & HASFLAG) {
+		team=players[obj->owner]->team;
+		team++;
+		team &= 1;
+		flagloc[team].mapx=obj->x >> 4;
+		flagloc[team].mapy=obj->y >> 4;
 	}
 
 	// TEST CODE
@@ -651,7 +665,7 @@ void dealDamage(Object *obj1, Object *obj2) {
 // Needs some work...
 Vector addVector(Vector *v1, Vector *v2) {
   Vector result;
-  int dx, dy;
+  int dx, dy, dx1, dy1, dx2, dy2;
   double hyp;
   int tblentry;
   int dir;
@@ -669,10 +683,10 @@ Vector addVector(Vector *v1, Vector *v2) {
     return result;
   }
 
-  int dx1=vectbl[v1->dir].dx;
-  int dy1=vectbl[v1->dir].dy;
-  int dx2=vectbl[v2->dir].dx;
-  int dy2=vectbl[v2->dir].dy;
+  dx1=vectbl[v1->dir].dx;
+  dy1=vectbl[v1->dir].dy;
+  dx2=vectbl[v2->dir].dx;
+  dy2=vectbl[v2->dir].dy;
 
   dx1 *= (v1->velocity >> 4);
   dy1 *= (v1->velocity >> 4);
@@ -786,6 +800,8 @@ void flagCollision(Object *lhs, Object *rhs) {
 				flag->x = flagloc.mapx << 4;
 				flag->y = flagloc.mapy << 4;
 				flag->flags |= HASMOVED;
+				flagTaken[flag->team] = FALSE;
+				cancelFlagIndicators(flag->team);
 				broadcastFlagReturn(thing);
 			}
 		}
@@ -793,6 +809,7 @@ void flagCollision(Object *lhs, Object *rhs) {
 			flag->flags |= DESTROYED;
 			thing->flags |= HASFLAG;
 			printf("Team %d flag captured\n", flag->team);
+			flagTaken[flag->team] = TRUE;
 			broadcastFlagSteal(thing);
 		}
 	}
@@ -804,7 +821,9 @@ void flagCaptured(Object *capturer) {
 	int otherteam=(capturer->team + 1) & 1;
 	mxy=getFlagpoint(otherteam);
 	placeFlag(otherteam, mxy.mapx << 4, mxy.mapy << 4);
-	capturer->flags &= (0xFF ^ HASFLAG);
+	capturer->flags ^= HASFLAG;
+	cancelFlagIndicators(otherteam);
+	flagTaken[otherteam] = FALSE;
 	broadcastFlagCapture(capturer);
 
 	teamscore[capturer->team]++;
@@ -855,6 +874,71 @@ void broadcastTeamScoreMsg(int team) {
 		}
 	}
 }
+
+// Cancel the flag indicators for a given team.
+void cancelFlagIndicators(int team) {
+	int i;
+	Player *p;
+	uchar msg=0xFF;
+
+	for(i=0; i < MAXCLIENTS; i++) {
+		p=players[i];
+		if(p) {
+			if(p->team == team) {
+				addMessage(i, FLAGALERT, &msg, 1);
+			}
+		}
+	}
+}
+
+// Update everyone's flag indicators when the flag has been
+// taken.
+void updateAllFlagIndicators() {
+	int i;
+	Player *p;
+
+	for(i=0; i < MAXCLIENTS; i++) {
+		p=players[i];
+		if(p) {
+			if(p->playerobj && flagTaken[p->team]) {
+				updateFlagIndicators(i, p);
+			}
+		}
+	}
+}
+
+// Update client flag indicators
+void updateFlagIndicators(int clientid, Player *p) {
+	int screenx;
+	int screeny;
+	int flagscrx;
+	int flagscry;
+	int team;
+	uchar msg;
+
+	team=p->team;
+
+	flagscrx = flagloc[team].mapx / VPXPIXELS;
+	flagscry = flagloc[team].mapy / VPYPIXELS;;
+
+	screenx = (p->playerobj->x >> 4) / VPXPIXELS;
+	screeny = (p->playerobj->y >> 4) / VPYPIXELS;
+
+	if(flagscry < screeny)
+		msg = 0x00;
+	else if(flagscry == screeny)
+		msg = 0x10;
+	else
+		msg = 0x20;
+
+	if(flagscrx == screenx)
+		msg |= 0x01;
+	else if(flagscrx > screenx)
+		msg |= 0x02;
+
+	addMessage(clientid, FLAGALERT, &msg, 1); 
+}
+
 
 // Update a single client with a team score
 void addTeamScoreMsg(int clientid, int team) {

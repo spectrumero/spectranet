@@ -296,6 +296,10 @@ void broadcastFlagSteal(Object *stealer);
 void broadcastFlagCapture(Object *capturer);
 void broadcastFlagReturn(Object *returner);
 
+void updateAllFlagIndicators();
+void updateFlagIndicators(int clientid, Player *p);
+void cancelFlagIndicators(int team);
+
 // For testing
 unsigned long getframes();
 void debugMsg(uchar *msg, int bytes);

@@ -112,7 +112,7 @@ Maptile *buildMapRow(char *txtrow, int y) {
 
 // Create a client message containing the tiles in the viewport.
 int sendMapMsg(int clientid, Viewport *vp) {
-	int x,y;
+	int x,y, miny, maxy, minx, maxx;
 	Maptile *tile;
 	uchar msg[MAXMAPMSG];
 	uchar *msgptr=&msg[4];
@@ -122,10 +122,10 @@ int sendMapMsg(int clientid, Viewport *vp) {
 	msg[1]=MAPMSG;
 
 	// Tile coordinates are pixel/8
-	int miny=vp->ty >> 3;
-	int maxy=vp->by >> 3;
-	int minx=vp->tx >> 3;
-	int maxx=vp->bx >> 3;
+	miny=vp->ty >> 3;
+	maxy=vp->by >> 3;
+	minx=vp->tx >> 3;
+	maxx=vp->bx >> 3;
 	if(maxy > lastrow)
 		maxy=lastrow;
 

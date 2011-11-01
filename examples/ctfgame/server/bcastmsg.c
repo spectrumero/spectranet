@@ -118,3 +118,4 @@ void broadcastFlagReturn(Object *returner) {
 			p->name, colour);
 	broadcastStatusMsg(bcast);
 }
+

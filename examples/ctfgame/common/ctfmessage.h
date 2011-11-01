@@ -39,6 +39,7 @@
 #define RMSPRITEMSG		0x02
 #define MESSAGEMSG		0x03
 #define SCOREBOARD		0x04
+#define FLAGALERT			0x05
 
 // Client initiated messages
 #define HELLO		0x40				// Initial contact with server
@@ -69,6 +70,10 @@
 #ifndef uchar
 #define uchar		unsigned char
 #endif
+
+// Viewport size
+#define VPXPIXELS 224
+#define VPYPIXELS 184
 
 typedef struct _spritemsg {
 	uchar	objid;

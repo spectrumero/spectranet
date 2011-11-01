@@ -39,12 +39,18 @@
 char gamemsg[43];
 uchar msglen;
 uchar msgpos;
+uchar flagindbg;
+
 #define MSGLINE 20704
 
-void setupStatusAreas() {
+void setupStatusAreas(uchar teamcolours) {
 	int i;
 	MessageMsg welcome;
 	uchar *ln32 = (unsigned char *) (LN32ATTRS);
+
+	flagindbg=teamcolours;
+	drawFlagIndicator();
+	quietenFlagIndicator();
 
 	for(i=0; i<32; i++) {
 		*ln32 = PAPER_BLUE|INK_YELLOW;
@@ -279,6 +285,64 @@ void __FASTCALL__ putmsgchar(char ch) {
 	ld (PRROW), de
 	ld a, l
 	call PUTCHAR42		
+#endasm
+}
+
+void __FASTCALL__ flagAlert(uchar msg) {
+	quietenFlagIndicator();
+	if(msg != 0xFF) 
+		flashFlagIndicator(msg);
+}
+
+void __FASTCALL__ flashFlagIndicator(uchar sector) {
+#asm
+	ld d, 0x5a
+	ld a, l
+	and 0x70		; top 4 bits indicate row
+	jr z, _top
+	cp 0x10
+	jr z, _mid
+	ld e, 0x9d
+	jr _place
+
+._mid
+	ld e, 0x7d
+	jr _place
+
+._top
+	ld e, 0x5d
+._place
+	ld a, l
+	and 0x07		; bottom 4 bits indicate column
+	add a, e
+	ld e, a
+	ld a, (_flagindbg)
+	or 0x80			; set flash bit
+	ld (de), a
+#endasm
+}
+
+void quietenFlagIndicator() {
+#asm
+	ld a, (_flagindbg)
+	ld hl, 0x5a5d
+	ld (hl), a
+	inc l
+	ld (hl), a
+	inc l
+	ld (hl), a
+	ld l, 0x7d
+	ld (hl), a
+	inc l
+	ld (hl), a
+	inc l
+	ld (hl), a
+	ld l, 0x9d
+	ld (hl), a
+	inc l
+	ld (hl), a
+	inc l
+	ld (hl), a
 #endasm
 }
 
