@@ -314,20 +314,15 @@ void moveObject(Object *obj) {
 	int dx=vectbl[obj->actual.dir].dx;
 	int dy=vectbl[obj->actual.dir].dy;
 	
-	int abspx, abspy, absx, absy;
-
-	dx *= (obj->actual.velocity >> 4);
-	dy *= (obj->actual.velocity >> 4);
+	dx *= obj->actual.velocity;
+	dy *= obj->actual.velocity;
+	dx >>= 4;
+	dy >>= 4;
 
 	obj->prevx=obj->x;
 	obj->prevy=obj->y;
 	obj->x += dx;
 	obj->y += dy;
-
-	absx=obj->x >> 4;
-	absy=obj->y >> 4;
-	abspx=obj->prevx >> 4;
-	abspy=obj->prevy >> 4;
 
 	if(obj->x < 0) {
 		obj->x = 0;
@@ -336,14 +331,6 @@ void moveObject(Object *obj) {
 	if(obj->y < 0) {
 		obj->y = 0;
 		obj->actual.velocity = 0;
-	}
-
-	// Only set the move flag if the object has moved across a map
-	// pixel boundary.
-	if(absx != abspx || absy != abspy) {	
-		//printf("Moving object: x = %d y = %d prevx = %d prevy = %d\n",
-			//obj->x >> 4, obj->y >> 4, obj->prevx >> 4, obj->prevy >> 4);
-		obj->flags |= HASMOVED;
 	}
 
 	if(obj->flags & HASFLAG) {
@@ -393,7 +380,7 @@ void makeSpriteUpdates(int clientid) {
 				if(obj->flags & DESTROYED) {
 					makeDestructionMsg(clientid, objid, KILLED);
 				}
-				else { // if((obj->flags & HASMOVED) || (player->flags & NEWVIEWPORT)) {
+				else { 
 					makeSpriteMsg(clientid, &player->view, obj, objid);
 				}
 			}
@@ -688,10 +675,15 @@ Vector addVector(Vector *v1, Vector *v2) {
   dx2=vectbl[v2->dir].dx;
   dy2=vectbl[v2->dir].dy;
 
-  dx1 *= (v1->velocity >> 4);
-  dy1 *= (v1->velocity >> 4);
-  dx2 *= (v2->velocity >> 4);
-  dy2 *= (v2->velocity >> 4);
+  dx1 *= v1->velocity;
+  dy1 *= v1->velocity;
+  dx2 *= v2->velocity;
+  dy2 *= v2->velocity;
+
+	dx1 >>= 4;
+	dy1 >>= 4;
+	dx2 >>= 4;
+	dy2 >>= 4;
 
   // Find out the total displacement given by the two vectors
   dx=dx1 + dx2;
@@ -799,7 +791,6 @@ void flagCollision(Object *lhs, Object *rhs) {
 				flag->prevy = flag->y;
 				flag->x = flagloc.mapx << 4;
 				flag->y = flagloc.mapy << 4;
-				flag->flags |= HASMOVED;
 				flagTaken[flag->team] = FALSE;
 				cancelFlagIndicators(flag->team);
 				broadcastFlagReturn(thing);
