@@ -35,15 +35,17 @@
 #define CTFPORT		32767
 
 // Messages from server to client
-#define	SPRITEMSG			0x01
-#define RMSPRITEMSG		0x02
-#define MESSAGEMSG		0x03
-#define SCOREBOARD		0x04
-#define FLAGALERT			0x05
+#define	SPRITEMSG               0x01
+#define RMSPRITEMSG             0x02
+#define MESSAGEMSG              0x03
+#define SCOREBOARD              0x04
+#define FLAGALERT               0x05
+#define MATCHMAKEMSG            0x06
+#define PINGMSG                 0x07
 
 // Client initiated messages
-#define HELLO		0x40				// Initial contact with server
-#define VIEWPORT	0x42			// Set viewport
+#define HELLO	0x40				// Initial contact with server
+#define VIEWPORT    0x42			// Set viewport
 #define JOIN		0x43				// Join game
 #define JOINACK 0x44				// Acknowledge join
 #define START		0x45				// Start game
@@ -134,6 +136,14 @@ typedef struct _numbermsg {
 	uchar numtype;
 	uchar message[5];
 } NumberMsg;
+
+// Matchmaking message
+typedef struct _matchmake {
+  uchar team;
+  uchar playernum;
+  char *playername[MAXNAME];
+} MatchmakeMsg;
+	
 
 #define AMMOQTY	0
 #define HITPOINTQTY	1

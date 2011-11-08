@@ -4,7 +4,7 @@ OBJS = init.o sprites.o rxtx.o viewport.o getinput.o print.o
 MMOBJS = mminit.o mmui.o mminput.o mmsocket.o
 LIBS = -lmalloc -lsp1 -llibsocket_np 
 MMLIBS = -lndos -lmalloc -lim2 -llibsocket
-MMCFLAGS = +zx -vn -O2 -preserve 
+MMCFLAGS = +zx -vn -preserve -O2
 CTFCLIENT = ctfclient.bin
 MATCHMK	= matchmake.bin
 

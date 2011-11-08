@@ -64,7 +64,7 @@ main() {
 
 	initSpriteLib();
 
-	rc=initConnection("172.16.0.3", "Winston");
+	rc=initConnection("127.0.0.1", "Artanis");
 	setupStatusAreas(PAPER_BLUE|INK_CYAN);
 	rc=startGame(&xy);
 	rc=findViewport(&xy);

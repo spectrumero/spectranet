@@ -91,44 +91,44 @@ int sendMsg(int txbytes) {
 
 
 int messageloop() {
-	struct sockaddr_in rxaddr;
-	char *msgptr;
-	int addrsz;
-	int rc;
-	int p;
-	uchar numMsgs;
-	uchar msgType;
+  struct sockaddr_in rxaddr;
+  char *msgptr;
+  int addrsz;
+  int rc;
+  int p;
+  uchar numMsgs;
+  uchar msgType;
 
-	while(1) {
-		p=poll_fd(sockfd);
-		if(p == 128) return -1;
+  while(1) {
+    p=poll_fd(sockfd);
+    if(p == 128) return -1;
 
-		if(p != POLLIN) {
-			getMatchmakeInput();
-			continue;
-		}
+    if(p != POLLIN) {
+      getMatchmakeInput();
+      continue;
+    }
 
-		rc = recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrsz);
-		msgptr=rxbuf;
-		numMsgs=*msgptr++;
-		while(numMsgs) {
-			switch(msgType) {
-				case MATCHMAKEMSG:
-					displayMatchmake((MatchmakeMsg *)msgptr);
-					msgptr+=sizeof(MatchmakeMsg);
-					break;
-				case MESSAGEMSG:
-					displayStatus((MessageMsg *)msgptr);
-					msgptr+=sizeof(MessageMsg);
-					break;
-				default:
-					sendbuf[0]=SERVERKILL;
-					zx_border(RED);
-					return sendMsg(1);
-			}
+    rc = recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrsz);
+    msgptr=rxbuf;
+    numMsgs=*msgptr++;
+    while(numMsgs) {
+      switch(msgType) {
+        case MATCHMAKEMSG:
+          displayMatchmake((MatchmakeMsg *)msgptr);
+          msgptr+=sizeof(MatchmakeMsg);
+          break;
+        case MESSAGEMSG:
+          displayStatus((MessageMsg *)msgptr);
+          msgptr+=sizeof(MessageMsg);
+          break;
+        default:
+          sendbuf[0]=SERVERKILL;
+          zx_border(RED);
+          return sendMsg(1);
+      }
 
-			numMsgs--;
-		}
-	}
+      numMsgs--;
+    }
+  }
 }
 

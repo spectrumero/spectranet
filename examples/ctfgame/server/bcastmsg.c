@@ -30,92 +30,92 @@ char bcast[MAXSTATUSMSG];
 
 // Broadcast messages
 void broadcastCrash(Object *crasher) {
-	Player *p=getPlayer(crasher->owner);
-	if(crasher->flags & HASFLAG) {
-		broadcastFlagDrop(p);
-		return;
-	}
+  Player *p=getPlayer(crasher->owner);
+  if(crasher->flags & HASFLAG) {
+    broadcastFlagDrop(p);
+    return;
+  }
 
-	snprintf(bcast, MAXSTATUSMSG, "%s crashed and died.", p->name);
-	broadcastStatusMsg(bcast);
+  snprintf(bcast, MAXSTATUSMSG, "%s crashed and died.", p->name);
+  broadcastStatusMsg(bcast);
 }
 
 void broadcastFlagDrop(Player *dropper) {
-	char colour[5];
-	if(dropper->team == 0) 
-		strcpy(colour, "red");
-	else
-		strcpy(colour, "blue");
+  char colour[5];
+  if(dropper->team == 0) 
+    strcpy(colour, "red");
+  else
+    strcpy(colour, "blue");
 
-	snprintf(bcast, MAXSTATUSMSG, "%s dropped the %s flag", dropper->name, colour);
-	broadcastStatusMsg(bcast);
+  snprintf(bcast, MAXSTATUSMSG, "%s dropped the %s flag", dropper->name, colour);
+  broadcastStatusMsg(bcast);
 }
 
 // This tries to ascertain the reason for death and send the appropriate
 // message. 'killed' should be a player object.
 void broadcastDeath(Object *killed, Object *killedBy) {
-	Player *killer=NULL;
-	Player *p=getPlayer(killed->owner);
+  Player *killer=NULL;
+  Player *p=getPlayer(killed->owner);
 
-	if(killed->flags & HASFLAG) {
-		broadcastFlagDrop(p);
-		return;
-	}
+  if(killed->flags & HASFLAG) {
+    broadcastFlagDrop(p);
+    return;
+  }
 
-	if(killedBy->owner >= 0)
-		killer=getPlayer(killedBy->owner);
+  if(killedBy->owner >= 0)
+    killer=getPlayer(killedBy->owner);
 
-	if(isPlayerObject(killedBy)) {
-		snprintf(bcast, MAXSTATUSMSG,
-				"%s was run over by %s", p->name, killer->name);
-		broadcastStatusMsg(bcast);
-	} 
-	else if(killer != NULL && killedBy->type == FOTON) {
-		snprintf(bcast, MAXSTATUSMSG,
-				"%s was shot by %s", p->name, killer->name);
-		broadcastStatusMsg(bcast);
-	}
+  if(isPlayerObject(killedBy)) {
+    snprintf(bcast, MAXSTATUSMSG,
+        "%s was run over by %s", p->name, killer->name);
+    broadcastStatusMsg(bcast);
+  } 
+  else if(killer != NULL && killedBy->type == FOTON) {
+    snprintf(bcast, MAXSTATUSMSG,
+        "%s was shot by %s", p->name, killer->name);
+    broadcastStatusMsg(bcast);
+  }
 }
 
 // Broadcast the flag steal
 void broadcastFlagSteal(Object *stealer) {
-	Player *p=getPlayer(stealer->owner);
-	char colour[5];
-	if(stealer->team == 0) 
-		strcpy(colour, "red");
-	else
-		strcpy(colour, "blue");
+  Player *p=getPlayer(stealer->owner);
+  char colour[5];
+  if(stealer->team == 0) 
+    strcpy(colour, "red");
+  else
+    strcpy(colour, "blue");
 
-	snprintf(bcast, MAXSTATUSMSG, "%s has taken the %s flag!",
-			p->name, colour);
-	broadcastStatusMsg(bcast);
+  snprintf(bcast, MAXSTATUSMSG, "%s has taken the %s flag!",
+      p->name, colour);
+  broadcastStatusMsg(bcast);
 }
 
 // Broadcast the flag capture
 void broadcastFlagCapture(Object *capturer) {
-	Player *p=getPlayer(capturer->owner);
-	char colour[5];
-	if(capturer->team == 0) 
-		strcpy(colour, "red");
-	else
-		strcpy(colour, "blue");
+  Player *p=getPlayer(capturer->owner);
+  char colour[5];
+  if(capturer->team == 0) 
+    strcpy(colour, "red");
+  else
+    strcpy(colour, "blue");
 
-	snprintf(bcast, MAXSTATUSMSG, "%s has captured the %s flag!",
-			p->name, colour);
-	broadcastStatusMsg(bcast);
+  snprintf(bcast, MAXSTATUSMSG, "%s has captured the %s flag!",
+      p->name, colour);
+  broadcastStatusMsg(bcast);
 }
 
 // Broadcast the flag return
 void broadcastFlagReturn(Object *returner) {
-	Player *p=getPlayer(returner->owner);
-	char colour[5];
-	if(returner->team == 0) 
-		strcpy(colour, "blue");
-	else
-		strcpy(colour, "red");
+  Player *p=getPlayer(returner->owner);
+  char colour[5];
+  if(returner->team == 0) 
+    strcpy(colour, "blue");
+  else
+    strcpy(colour, "red");
 
-	snprintf(bcast, MAXSTATUSMSG, "%s has returned the %s flag.",
-			p->name, colour);
-	broadcastStatusMsg(bcast);
+  snprintf(bcast, MAXSTATUSMSG, "%s has returned the %s flag.",
+      p->name, colour);
+  broadcastStatusMsg(bcast);
 }
 
