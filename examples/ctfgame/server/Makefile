@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I../common -g -DUNIX
-OBJS = ctfserv.o ctfsocket.o object.o control.o map.o powerups.o bcastmsg.o
+OBJS = ctfserv.o ctfsocket.o object.o control.o map.o powerups.o bcastmsg.o matchmake.o
 LIBS =
 CTFSERVER = ctfserver
 

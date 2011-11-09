@@ -24,6 +24,7 @@
 //
 
 #include <sys/types.h>
+#include <sys/time.h>
 #include "ctfmessage.h"
 
 #ifdef UNIX
@@ -49,7 +50,7 @@ typedef int socklen_t;
 #define FALSE 0
 #endif
 
-#define GAMETICK  40000    // game tick length in microseconds
+#define GAMETICK  43000    // game tick length in microseconds
 #define MAXCLIENTS  16
 #define MSGBUFSZ  256      // Size of message buffers
 #define MAXROWS    1024    // Maximum map rows
@@ -153,13 +154,14 @@ typedef struct _player {
   Viewport view;        // What bit of the map the player sees
   int vpcframes;        // Frames since last viewport change msg
   int spawntime;        // If dead, time until respawn in frames
-  uchar playernumber;    // The player number decided at the matchup screen
+  uchar playernum;    // The player number decided at the matchup screen
 } Player;
 
-#define RUNNING    0x01    // Player's client is ready for messages
+#define RUNNING     0x01  // Player's client is ready for messages
 #define NEWVIEWPORT 0x02  // Player's viewport changed
-#define DEAD      0x04  // Player is dead
-#define RESETFLAGS  0x05  // Bits set to 0 get reset on each frame
+#define DEAD        0x04  // Player is dead
+#define MATCHMAKING 0x08  // Player is in the matchmaking screen
+#define RESETFLAGS  0x0d  // Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table
 // for working out new X and Y values from a direction and velocity
@@ -177,7 +179,7 @@ struct _ping {
   int rspmiss;    // How many responses have been missed
 } Ping;
 
-#define MAXRSPMISS  8   // Maximum responses in a row that may be missed
+#define MAXRSPMISS  4   // Maximum responses in a row that may be missed
 #define PINGFRAMES  60  // How many frames between pings
 
 // Map tile structure.
@@ -263,6 +265,7 @@ void flagCollision(Object *lhs, Object *rhs);
 void createFlags();
 void placeFlag(int team, int x, int y);
 void flagCaptured(Object *capturer);
+int usecdiff(struct timeval *now, struct timeval *then);
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
@@ -292,6 +295,7 @@ bool detectMapCollision(Object *pbj);
 MapXY getSpawnpoint(int player);
 MapXY getFlagpoint(int team);
 bool detectTouchingFlagpoint(Object *obj);
+int maxPlayersPerTeam();
 
 // Powerup functions
 void initPowerupList();
@@ -313,6 +317,13 @@ void broadcastFlagReturn(Object *returner);
 void updateAllFlagIndicators();
 void updateFlagIndicators(int clientid, Player *p);
 void cancelFlagIndicators(int team);
+
+// Matchmaking
+void setPlayerTeam(Player *p, uchar team);
+void updateAllMatchmakers();
+void updateMatchmaker(int clientid);
+uchar *makeMatchMakeMsgs(ssize_t *msgsz);
+void sendToMatchmakers(void *mmbuf, ssize_t msgsz);
 
 // For testing
 unsigned long getframes();

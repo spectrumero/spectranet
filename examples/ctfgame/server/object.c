@@ -149,7 +149,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
   strlcpy(p->name, playerName, MAXNAME);
 
   // TODO: Get the player number from elsewhere
-  p->playernumber=clientid;
+  p->playernum=clientid;
   if(clientid > 1) p->team=1;
 
   return p;
@@ -192,7 +192,7 @@ MapXY spawnPlayer(int clientid, Player *p) {
   Object *po=(Object *)malloc(sizeof(Object));
   memset(po, 0, sizeof(Object));
 
-  spawn=getSpawnpoint(p->playernumber);
+  spawn=getSpawnpoint(p->playernum);
 
   po->x=spawn.mapx*16;
   po->y=spawn.mapy*16;

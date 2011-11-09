@@ -29,13 +29,13 @@
 
 // u16_t is a z88dk type
 #ifdef NOSTDINT
-#define uint16_t	u16_t
+#define uint16_t  u16_t
 #endif
 
-#define CTFPORT		32767
+#define CTFPORT    32767
 
 // Messages from server to client
-#define	SPRITEMSG               0x01
+#define SPRITEMSG               0x01
 #define RMSPRITEMSG             0x02
 #define MESSAGEMSG              0x03
 #define SCOREBOARD              0x04
@@ -44,33 +44,36 @@
 #define PINGMSG                 0x07
 
 // Client initiated messages
-#define HELLO	0x40				// Initial contact with server
-#define VIEWPORT    0x42			// Set viewport
-#define JOIN		0x43				// Join game
-#define JOINACK 0x44				// Acknowledge join
-#define START		0x45				// Start game
-#define STARTACK 0x46				// Acknowledge start
-#define BYE			0x47				// Close connection
-#define CLIENTRDY	0x48			// Client message loop is started
-#define SERVERKILL	0xFF		// Testing message to halt the server when
-														// the client gets an invalid msg
+#define HELLO    0x40        // Initial contact with server
+#define VIEWPORT 0x42      // Set viewport
+#define JOIN     0x43        // Join game
+#define JOINACK  0x44        // Acknowledge join
+#define START    0x45        // Start game
+#define STARTACK 0x46        // Acknowledge start
+#define BYE      0x47        // Close connection
+#define CLIENTRDY  0x48      // Client message loop is started
+#define TEAMREQUEST 0x49    // Request a team for a player
+#define MMSTART   0x4A      // Start matchmaking
+#define MMSTOP    0x4B      // Stop matchmaking
+#define SERVERKILL 0xFF    // Testing message to halt the server when
+                            // the client gets an invalid msg
 
 // Server replies to synchronous messages
-#define ACK			0x41				// Acknowledgment
-#define BYEACK	0x48				// Acknowledge close
-#define MAPMSG	0x49				// Map data message
+#define ACK     0x41        // Acknowledgment
+#define BYEACK  0x48        // Acknowledge close
+#define MAPMSG  0x49        // Map data message
 
 // Some message contents
-#define	ACKOK		0x00
-#define	ACKTOOMANY	0x01
-#define UNABLE	0x02
+#define  ACKOK      0x00
+#define  ACKTOOMANY 0x01
+#define UNABLE      0x02
 
 // Various sizes
-#define	MAXNAME	16
-#define MAXOBJS	48
+#define  MAXNAME  16
+#define MAXOBJS  48
 
 #ifndef uchar
-#define uchar		unsigned char
+#define uchar    unsigned char
 #endif
 
 // Viewport size
@@ -78,33 +81,33 @@
 #define VPYPIXELS 184
 
 typedef struct _spritemsg {
-	uchar	objid;
-	uchar	x;
-	uchar	y;
-	uchar	rotation;
-	uchar	id;
-	uchar colour;
+  uchar  objid;
+  uchar  x;
+  uchar  y;
+  uchar  rotation;
+  uchar  id;
+  uchar colour;
 } SpriteMsg;
 
 // Sprite ID defines
-#define PLAYER	0	// Player's tank
-#define FOTON		1	// Photon cnnon
-#define XPLODE	2	// Explosion
-#define FUEL		3	// Fuel tank
-#define AMMO		4	// Ammo recharge
+#define PLAYER  0  // Player's tank
+#define FOTON    1  // Photon cnnon
+#define XPLODE  2  // Explosion
+#define FUEL    3  // Fuel tank
+#define AMMO    4  // Ammo recharge
 
 typedef struct _rmspritemsg {
-	uchar objid;
-	uchar reason;
+  uchar objid;
+  uchar reason;
 } RemoveSpriteMsg;
 
-#define OFFSCREEN	0
-#define KILLED	1
+#define OFFSCREEN  0
+#define KILLED  1
 
 typedef struct _maptilemsg {
-	uchar tile;
-	uchar x;
-	uchar y;
+  uchar tile;
+  uchar x;
+  uchar y;
 } MaptileMsg;
 
 // The viewport defines the portion of a map a player can
@@ -118,38 +121,40 @@ typedef struct _viewport {
 
 // MapXY defines a message with an absolute map XY
 typedef struct _mapxy {
-	uint16_t	mapx;
-	uint16_t	mapy;
+  uint16_t  mapx;
+  uint16_t  mapy;
 } MapXY;
 
 // A message to put messages on the client's screen.
 #define MAXSTATUSMSG 42
 typedef struct _messageMsg {
-	uchar	msgsz;	// Maximum 42 chars
-	uchar message[MAXSTATUSMSG];
+  uchar  msgsz;  // Maximum 42 chars
+  uchar message[MAXSTATUSMSG];
 } MessageMsg;
 
 // Message containing a number to put on the
 // status bar of the client. The message id indicates
 // which one it actually is.
 typedef struct _numbermsg {
-	uchar numtype;
-	uchar message[5];
+  uchar numtype;
+  uchar message[5];
 } NumberMsg;
+
+#define AMMOQTY  0
+#define HITPOINTQTY  1
+#define BLUESCORE  2
+#define REDSCORE  3
+#define PLYRSCORE  4
 
 // Matchmaking message
 typedef struct _matchmake {
   uchar team;
   uchar playernum;
-  char *playername[MAXNAME];
+  uchar flags;
+  char playername[MAXNAME];
 } MatchmakeMsg;
-	
 
-#define AMMOQTY	0
-#define HITPOINTQTY	1
-#define BLUESCORE	2
-#define REDSCORE	3
-#define PLYRSCORE	4
+#define MM_READY  1   // Player is ready  
 
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the
@@ -157,7 +162,7 @@ typedef struct _matchmake {
 //
 // Control flags are the same as for the z88dk to save cycles on
 // the client.
-#define CONTROL	0x80	// Message ID
+#define CONTROL  0x80  // Message ID
 #define ROTLEFT 0x04
 #define ROTRIGHT 0x08
 #define ACCELERATE 0x01

@@ -91,7 +91,8 @@ int makeSocket() {
 int messageLoop() {
   fd_set fds;
   struct timeval timeout;
-  int rc;
+  struct timeval last, now;
+  int rc, tick;
 
   // select() should return immediately if there's nothing for
   // us to process.
@@ -99,6 +100,9 @@ int messageLoop() {
   timeout.tv_usec=1;
 
   while(1) {
+    // initialize last time value
+    gettimeofday(&last, NULL);
+
     // Set up the set of file descriptors
     FD_ZERO(&fds);
     FD_SET(sockfd, &fds);
@@ -124,7 +128,10 @@ int messageLoop() {
       doPing();
 
       // wait for GAMETICK microseconds.
-      usleep(GAMETICK);
+      gettimeofday(&now, NULL);
+      tick=GAMETICK-usecdiff(&last, &now);
+      if(tick > 0)
+        usleep(tick);
     }
   }
   return 0;
@@ -196,13 +203,25 @@ int getMessage() {
               player->view.bx, player->view.by);
           msgptr+=sizeof(Viewport);
 
-          // Send a map update as a response.
-          //					sendMapMsg(clientid, &player->view);
           break;
         case PINGMSG:
           // The ping structure will have already been reset, we only
           // need advance the pointer.
           msgptr++;
+          break;
+        case TEAMREQUEST:
+          msgptr++;
+          setPlayerTeam(player, *msgptr);
+          msgptr++;
+          break;
+        case MMSTART:
+          msgptr++;
+          player->flags |= MATCHMAKING;
+          updateMatchmaker(clientid);
+          break;
+        case MMSTOP:
+          msgptr++;
+          player->flags &= (0xFF ^ MATCHMAKING); 
           break;
         case SERVERKILL:
           // DEBUG STUFF: Remove this when no longer required for
@@ -480,5 +499,20 @@ void debugMsg(uchar *msg, int bytes) {
     msg++;
   }
   printf("\n");
+}
+
+// Give the difference between the two timevals in microseconds.
+int usecdiff(struct timeval *first, struct timeval *last) {
+  int secdiff;
+
+  secdiff=last->tv_sec - first->tv_sec;
+  if(!secdiff)
+    return last->tv_usec - first->tv_usec;
+
+  if(secdiff == 1) {
+    return(1000000-first->tv_usec) + last->tv_usec;
+  }
+
+  return(1000000-last->tv_usec) + first->tv_usec + ((secdiff-1) * 1000000);
 }
 
