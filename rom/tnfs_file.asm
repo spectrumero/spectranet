@@ -30,8 +30,8 @@
 ; F_tnfs_open
 ; Opens a file on the remote server.
 ; Arguments	A  - mount point	
-;		D  - File flags (POSIX)
-;		E  - File mode (POSIX)
+;		DE  - File flags (POSIX)
+;		BC  - File mode (POSIX)
 ;		HL - Pointer to a string containing the full path to the file
 .globl F_tnfs_open
 F_tnfs_open:
@@ -41,12 +41,18 @@ F_tnfs_open:
 
 	push hl			; save filename pointer
 	push de			; and flags
+	push bc			; and mode
 	ld a, TNFS_OP_OPEN
 	call F_tnfs_header_w	; create the header
+	pop bc
 	pop de
-	ld (hl), e		; insert file mode into message
+	ld (hl), e		; 
 	inc hl
 	ld (hl), d		; insert the flags into the message
+	inc hl
+	ld (hl), c		; 
+	inc hl
+	ld (hl), b		; insert the mode into the message
 	inc hl
 	ex de, hl		; prepare for string copy
 	pop hl			; retrieve filename pointer

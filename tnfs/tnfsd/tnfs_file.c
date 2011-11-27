@@ -56,10 +56,11 @@ unsigned char iobuf[MAX_IOSZ+2];	/* 2 bytes added for the size param */
 void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
 	int i, fd;
+	int flags, mode;
 	unsigned char reply[2];
 
 	if(bufsz < 3 ||
-	  tnfs_valid_filename(s, fnbuf, (char *)buf+2, bufsz-2) < 0)
+	  tnfs_valid_filename(s, fnbuf, (char *)buf+4, bufsz-4) < 0)
 	{
 		/* filename could not be constructed */
 		hdr->status=TNFS_EINVAL;
@@ -71,16 +72,18 @@ void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	{
 		if(s->fd[i] == 0)
 		{
-			/* mode 0666 ensures that for O_CREAT files
-			 * get created with the process's umask (except
-			 * for the executable bit, which remains unset)
-			 * See open(2) and umask(2) */
+			flags = *buf + (*(buf+1)* 256);
+			mode = *(buf+2) + (*(buf+3)* 256);
+
 #ifdef WITH_ZIP
-			fd=zipopen(fnbuf, tnfs_make_mode(*buf, *(buf+1)), 0666);
+			fd=zipopen(fnbuf, tnfs_make_mode(flags), mode);
 #else
-			fd=open(fnbuf, tnfs_make_mode(*buf, *(buf+1)), 0666);
+			fd=open(fnbuf, tnfs_make_mode(flags), mode);
 #endif
 #ifdef DEBUG
+			fprintf(stderr, "filename: %s\n", (char *)buf+4);
+			fprintf(stderr, "flags: %u\n", flags);
+			fprintf(stderr, "mode: %o\n", mode);
 			fprintf(stderr, "open: fd=%d\n", fd);
 #endif
 			if(fd <= 0)
@@ -351,7 +354,7 @@ int tnfs_valid_filename(Session *s,
 	return 0;
 }
 
-int tnfs_make_mode(unsigned char mode, unsigned char flags)
+int tnfs_make_mode(unsigned int flags)
 {
 #ifndef WIN32
 	int mflags=0;
@@ -360,11 +363,11 @@ int tnfs_make_mode(unsigned char mode, unsigned char flags)
 	 * win32... */
 	int mflags=O_BINARY;
 #endif
-	if(mode & TNFS_O_RDONLY)
+	if((flags & TNFS_O_ACCMODE) == TNFS_O_RDONLY)
 		mflags |= O_RDONLY;
-	if(mode & TNFS_O_WRONLY)
+	if((flags & TNFS_O_ACCMODE) == TNFS_O_WRONLY)
 		mflags |= O_WRONLY;
-	if(mode & TNFS_O_RDWR)
+	if((flags & TNFS_O_ACCMODE) == TNFS_O_RDWR)
 		mflags |= O_RDWR;
 
 	if(flags & TNFS_O_APPEND)

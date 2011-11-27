@@ -27,5 +27,10 @@ test:	$(COBJS)
 
 basext:	$(BASOBJS)
 	$(CC) $(CFLAGS) -o $(BASOUT) $(BASOBJS) $(CLIBS)
+	
+	
+install:
+	$(CP) *.lib $(Z80_OZFILES)/clibs
+	$(CP) -r ./include $(Z80_OZFILES)/../
 
 include ../make.inc

@@ -5,6 +5,7 @@ ASSEMBLER = z80asm
 RM = rm -f
 LIBLDFLAGS = -d -ns -nm -Mo
 ASMFLAGS = -d -ns -nm -Mo
+CP = cp
 
 .PHONY:	clean
 

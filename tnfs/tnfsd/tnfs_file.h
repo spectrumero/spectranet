@@ -28,13 +28,15 @@
 
 #include "tnfs.h"
 
-#define TNFS_O_RDONLY	0x01
-#define TNFS_O_WRONLY	0x02
-#define TNFS_O_RDWR	0x04
-#define TNFS_O_APPEND	0x01
-#define TNFS_O_CREAT	0x02
-#define TNFS_O_EXCL	0x04
-#define TNFS_O_TRUNC	0x08
+#define TNFS_O_RDONLY	0x0001
+#define TNFS_O_WRONLY	0x0002
+#define TNFS_O_RDWR		0x0003
+#define TNFS_O_ACCMODE	0x0003
+
+#define TNFS_O_APPEND	0x0008
+#define TNFS_O_CREAT	0x0100
+#define TNFS_O_TRUNC	0x0200
+#define TNFS_O_EXCL		0x0400
 
 #define ST_MODE_OFFSET	0x00
 #define ST_UID_OFFSET	0x02
@@ -62,7 +64,7 @@ void tnfs_rename(Header *hdr, Session *s, unsigned char *buf, int bufsz);
 int tnfs_valid_filename(Session *s,
                         char *fullpath,
                         char *filename, int fnsize);
-int tnfs_make_mode(unsigned char mode, unsigned char flags);
+int tnfs_make_mode(unsigned int flags);
 int validate_fd(Header *hdr, Session *s, unsigned char *buf, int bufsz,
 		int correctsize);
 int getwhence(unsigned char tnfs_whence);

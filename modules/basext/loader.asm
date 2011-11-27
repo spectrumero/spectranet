@@ -20,6 +20,7 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 .include	"fcntl.inc"
+.include	"stat.inc"
 .include	"spectranet.inc"
 .include	"zxrom.inc"
 .include	"defs.inc"
@@ -38,9 +39,11 @@
 .globl F_tbas_readrawfile
 F_tbas_readrawfile:
 	push de			; save pointer
-	ld e, O_RDONLY		; LOADing is read only
-	ld d, 0x00		; No file flags
+	push bc
+	ld de, O_RDONLY		; LOADing is read only
+	ld bc, 0x0000		; No mode
 	call OPEN		; Filename pointer is already in HL
+	pop bc
 	pop de
 	ret c
 	ld (v_vfs_curfd), a	; save the filehandle
@@ -70,11 +73,13 @@ F_tbas_readrawfile:
 ;               A  = type to expect
 .globl F_tbas_loader
 F_tbas_loader:
+	push bc
 	ld (INTERPWKSPC+21), a	; save the type parameter
 	ld (v_desave), de	; save address
-	ld e, O_RDONLY		; Open file read only
-	ld d, 0x00		; with no flags
+	ld de, O_RDONLY		; Open file read only
+	ld bc, 0x0000		; with no mode
 	call OPEN
+	pop bc
 	ret c			; return if the open operation fails
 	ld (v_vfs_curfd), a	; save the returned filehandle
 	ld de, INTERPWKSPC	; set destination pointer to workspace
@@ -280,10 +285,12 @@ F_tbas_writefile:
 	ld hl, INTERPWKSPC+21	; convert filename to a C string
 	call F_basstrcpy
 
+	push bc
 	ld hl, INTERPWKSPC+21	; Open the file for write (the full C string
-	ld e, O_WRONLY		; for the filename is in mem after the header)
-	ld d, O_CREAT		; flags = CREATE
+	ld de, O_WRONLY | O_CREAT 		; for the filename is in mem after the header)
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH	; mode 0666 -rw-rw-rw-
 	call OPEN		; Open the file.
+	pop bc
 	ret c
 	ld (v_vfs_curfd), a	; store the file descriptor
 

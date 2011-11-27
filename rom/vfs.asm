@@ -432,6 +432,7 @@ F_resolvemp:
 .globl F_cleanpath
 F_cleanpath:
 	push hl
+	push bc
 	ld bc, 256
 	xor a
 	cpir			; find the argument's end
@@ -444,6 +445,7 @@ F_cleanpath:
 	ld (hl), 0		; remove trailing white space
 	jr .spaceloop18
 .done18:
+	pop bc
 	pop hl
 	ret
 

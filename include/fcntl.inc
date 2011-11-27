@@ -31,14 +31,18 @@ OFFSET_PARAM2		equ 18		; 2 byte little endian
 OFFSET_CHKSUM		equ 20		; "checksum" byte
 ZX_HEADERLEN		equ 17		; Length of ZX header excl. check byte
 
-; File mode and flag definitions
-O_RDONLY		equ 0x01
-O_WRONLY		equ 0x02
-O_RDWR			equ 0x03
-O_APPEND		equ 0x01
-O_CREAT			equ 0x02
-O_EXCL			equ 0x04
-O_TRUNC			equ 0x08
+; File mode oflag definitions
+O_RDONLY		equ 0x0001
+O_WRONLY		equ 0x0002
+O_RDWR			equ 0x0003
+O_ACCMODE		equ 0x0003
+
+O_EXEC			equ 0x0004
+O_APPEND		equ 0x0008
+
+O_CREAT			equ 0x0100
+O_TRUNC			equ 0x0200
+O_EXCL			equ 0x0400
 
 ; Seek definitions
 SEEK_SET		equ 0x00
