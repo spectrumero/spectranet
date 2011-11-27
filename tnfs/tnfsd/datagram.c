@@ -53,8 +53,9 @@ tnfs_cmdfunc dircmd[NUM_DIRCMDS]=
 	{ &tnfs_opendir, &tnfs_readdir, &tnfs_closedir,
           &tnfs_mkdir, &tnfs_rmdir };
 tnfs_cmdfunc filecmd[NUM_FILECMDS]=
-	{ &tnfs_open, &tnfs_read, &tnfs_write, &tnfs_close,
-	  &tnfs_stat, &tnfs_lseek, &tnfs_unlink, &tnfs_chmod, &tnfs_rename };
+	{ &tnfs_open_deprecated, &tnfs_read, &tnfs_write, &tnfs_close,
+	  &tnfs_stat, &tnfs_lseek, &tnfs_unlink, &tnfs_chmod, &tnfs_rename,
+ 		&tnfs_open	};
 
 void tnfs_sockinit()
 {

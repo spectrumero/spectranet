@@ -51,6 +51,7 @@
 #define TNFS_SEEK_CUR	0x01
 #define TNFS_SEEK_END	0x02
 
+void tnfs_open_deprecated(Header *hdr, Session *s, unsigned char *buf, int bufsz);
 void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz);
 void tnfs_read(Header *hdr, Session *s, unsigned char *buf, int bufsz);
 void tnfs_write(Header *hdr, Session *s, unsigned char *buf, int bufsz);

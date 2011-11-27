@@ -53,6 +53,31 @@
 char fnbuf[MAX_FILEPATH];
 unsigned char iobuf[MAX_IOSZ+2];	/* 2 bytes added for the size param */
 
+void tnfs_open_deprecated(Header *hdr, Session *s, unsigned char *buf,
+	int bufsz) {
+	unsigned char *bufptr;
+
+	// new format datagram is slightly larger than the deprecated one.
+	unsigned char *newbuf=(unsigned char *)malloc(bufsz+2);
+	
+	// translate deprecated file flags and mode
+	*newbuf=*buf;
+	memcpy(newbuf+4, buf+2, bufsz-2);
+	bufptr=buf+1;
+
+	// mode = 0644
+	*(newbuf+2)=0xA4;
+	*(newbuf+3)=0x01;
+
+	if(*bufptr & 0x01)
+		*newbuf &= 0x08;
+
+	*(newbuf+1)=*bufptr >> 1;
+	
+	tnfs_open(hdr, s, newbuf, bufsz+2);
+	free(newbuf);
+}
+
 void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
 	int i, fd;
