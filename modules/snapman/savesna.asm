@@ -22,6 +22,7 @@
 
 ; Save snapshots in SNA format.
 .include	"fcntl.inc"
+.include	"stat.inc"
 .include	"snapheader.inc"
 .include	"snapman.inc"
 .include	"spectranet.inc"
@@ -91,8 +92,8 @@ F_snaptest:
 ; hl, de, bc, af, af'
 .globl F_savesna
 F_savesna: 
-	ld d, O_CREAT | O_TRUNC		; Flags
-	ld e, O_WRONLY			; File mode
+	ld de, O_CREAT | O_TRUNC | O_WRONLY
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWOTH	; mode 0644
 	call OPEN			; Open the snapshot file
 	ret c
 	ld (v_snapfd), a		; save the file descriptor

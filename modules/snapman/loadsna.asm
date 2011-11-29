@@ -48,8 +48,8 @@ F_loadsnap:
         pop hl
         ret c                   ; can't stat the file
 
-        ld d, 0                 ; no flags
-        ld e, O_RDONLY          ; file mode = RO
+        ld de, O_RDONLY
+        ld bc, 0x0							; No mode
         call OPEN               ; open the snapshot
         ret c                   ; and return on error.
         ld (v_snapfd), a        ; save the FD
