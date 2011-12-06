@@ -66,7 +66,7 @@ UPORT1	equ	0x102F
 	; Socket registers (base address - socket 0)
 Sn_BASE	equ	0x04	; amount to subtract from addr. to
 			; derive buffer base
-Sn_MAX	equ	0x48	; high byte of highest socket reg.
+Sn_MAX	equ	0x18	; high byte of highest socket reg.
 Sn_MR	equ	0x1400	; Socket 0 mode
 Sn_CR	equ	0x1401	; Socket 0 command
 Sn_IR	equ	0x1402	; Socket 0 interrupt
