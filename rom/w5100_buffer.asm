@@ -213,12 +213,11 @@ F_copytxbuf:
 	jr c, .getoffset2	; definitely enough free space
 	jr nz, .waitformsb2	; Buffer MSB > FSR MSB
 				; Buffer MSB = FSR MSB, check LSB value
-	inc l			; (hl) = LSB of hw register
 .waitforlsb2:
 	ld l, Sn_IR % 256	; point hl at the IR, test for CONNRESET
 	bit BIT_IR_DISCON, (hl)
 	jp nz, J_resetbypeer
-	ld l, Sn_TX_FSR0 % 256	; point hl at free space register
+	ld l, Sn_TX_FSR0 / 256	; point hl at free space register
 	ld a, (hl)		; get LSB of FSR
 	cp c			; and compare with LSB of passed value
 	jr c, .waitforlsb2	; if C > (hl) wait until it's not.
