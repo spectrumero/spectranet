@@ -17,7 +17,10 @@ PGROUT = libpager.a
 DBGOBJS = debug.o
 DBGOUT = libdebug.a
 
-all:	libui libflashwrite libpager libdebug
+DETOBJS = detect.o
+DETOUT = libdetect.a
+
+all:	libui libflashwrite libpager libdebug libdetect
 
 libui:	$(UIOBJS)
 	$(AR) $(ARFLAGS) $(UIOUT) $(UIOBJS)
@@ -34,6 +37,10 @@ libpager:	$(PGROBJS)
 libdebug:	$(DBGOBJS)
 	$(AR) $(ARFLAGS) $(DBGOUT) $(DBGOBJS)
 	$(RANLIB) $(DBGOUT)
+	
+libdetect:	$(DETOBJS)
+	$(AR) $(ARFLAGS) $(DETOUT) $(DETOBJS)
+	$(RANLIB) $(DETOUT)
 
 %.o : %.asm
 	$(AS) $(ASFLAGS) $< -o $@
