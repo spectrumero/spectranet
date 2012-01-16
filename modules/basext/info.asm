@@ -72,8 +72,8 @@ F_showfileinfo:
 	; Now see if it's a TAP file, in which case more information
 	; can be given. This means opening and reading the file.
 	ld hl, INTERPWKSPC	; filename
-	ld d, 0x00		; flags
-	ld e, O_RDONLY		; read only
+	ld de, O_RDONLY		; LOADing is read only
+	ld bc, 0x0000		; No mode
 	call OPEN
 	ret c			; failed top open the file!
 	ld (v_vfs_curfd), a	; save the FD

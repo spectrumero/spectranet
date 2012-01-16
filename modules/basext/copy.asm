@@ -37,16 +37,16 @@ F_copy:
 
 	; Open the source file for read.
 	ld hl, INTERPWKSPC+256
-	ld d, 0			; no flags
-	ld e, O_RDONLY		; read-only access
+	ld de, O_RDONLY		; LOADing is read only
+	ld bc, 0x0000		; No mode
 	call OPEN
 	ret c			; bale now if we can't open the src file
 	ld (SRC_FD), a		; save the returned FD
 
 	; Open the destination for write.
 	ld hl, INTERPWKSPC
-	ld d, O_CREAT		; create the destination file
-	ld e, O_WRONLY		; write only
+	ld de, O_WRONLY|O_CREAT
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH	; mode 0666 -rw-rw-rw-
 	call OPEN
 	jr c, .cleanup		; clean up opened file on error and return
 	ld (DST_FD), a		; save the returned fd
