@@ -304,7 +304,7 @@ to OPEN with the O_CREAT flag). Not all servers will support all flags
 for OPEN, but at least O_RDONLY. The mode refers to UNIX file permissions,
 see the CHMOD command below.
 
-OPEN - Opens a file - Command 0x20
+OPEN - Opens a file - Command 0x29
 ----------------------------------
 Format: Standard header, flags, mode, then the null terminated filename.
 Flags are a bit field.
@@ -338,6 +338,10 @@ is the file descriptor:
 
 0xBEEF 0x00 0x20 0x00 0x04 - Successful file open, file descriptor = 4
 0xBEEF 0x00 0x20 0x01 - File open failed with "permssion denied"
+
+(HISTORICAL NOTE: OPEN used to have command id 0x20, but with the
+addition of extra flags, the id was changed so that servers could
+support both the old style OPEN and the new OPEN)
 
 READ - Reads from a file - Command 0x21
 ---------------------------------------
