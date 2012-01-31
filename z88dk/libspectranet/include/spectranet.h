@@ -48,6 +48,9 @@ struct basic_cmd
 /* defines */
 #define TRAP_NONSENSE	0x0b	/* trap C Nonsense in BASIC */
 
+/* detect (absense of) spectranet hardware */
+extern int  __LIB__ __FASTCALL__	spectranet_detect(void); /* returns 0 if hardware present */
+
 /* Control of settings - hardware address, IP address, gateway etc. */
 /* Set and get the hardware address */
 extern int  __LIB__ __FASTCALL__	sethwaddr(char *hwaddr);

@@ -28,4 +28,4 @@ string_fetch.asm
 string_fetch_callee.asm
 expectstringexp.asm
 next_char.asm
-
+spectranet_detect.asm
