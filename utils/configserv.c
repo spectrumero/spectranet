@@ -31,12 +31,17 @@
  * address and IP for the purposes of querying this server. */
 
 #include <stdio.h>
-#include <sys/socket.h>
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef WIN32
+#include <winsock.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
 
 #define DATASZ	24
 
@@ -107,7 +112,7 @@ void getdata(char *file, char *data) {
 		exit(-1);
 	}
 
-	mac=random();
+	mac=rand();
 
 	data[0]=0x00;
 	data[1]=0xAA;

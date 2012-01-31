@@ -56,3 +56,6 @@ DEFC EXIT_SUCCESS_ROM = 0x3E99	; Use this to exit successfully after cmd
 
 DEFC POLLNVAL = 0x80
 
+; Port defines
+DEFC CTRLREG = 0x033B
+DEFC CPLDINFO = 0x023B
