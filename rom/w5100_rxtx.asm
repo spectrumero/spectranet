@@ -75,7 +75,7 @@ F_recv:
 	jp J_leavesockfn
 
 .rxdata2:
-	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
+	ld (hl), S_IR_RECV	; clear recv interrupt bit
 	call F_copyrxbuf	; if BC >2k it'll get downsized by W5100
 	jp J_leavesockfn
 
@@ -137,7 +137,7 @@ F_recvfrom:
 	jp J_leavesockfn
 
 .rxdata4:
-	set BIT_IR_RECV, (hl)	; clear recv interrupt bit
+	ld (hl), S_IR_RECV	; clear recv interrupt bit
 	ld l, Sn_MR % 256	; inspect mode register
 	ld a, (hl)
 	cp SOCK_DGRAM		; Is this a SOCK_DGRAM (UDP) socket?
@@ -160,7 +160,7 @@ F_recvfrom:
 	ld de, (v_bufptr)	; retrieve the header buffer pointer
 	call F_copyrxbuf	; fetch the header
 	ld l, Sn_IR % 256	; the IR needs resetting again
-	set BIT_IR_RECV, (hl)	; since the W5100 sees it still has data
+	ld (hl), S_IR_RECV	; since the W5100 sees it still has data
 	pop de			; retrieve the data buffer address
 	pop bc			; retrieve the length argument
 	call F_copyrxbuf	; get the data
