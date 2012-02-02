@@ -114,6 +114,10 @@ F_sockclose:
 
 	ld l, Sn_SR % 256	; check the status register
 	ld a, (hl)
+
+	cp S_SR_SOCK_CLOSED	; after timeout?
+	jr z, .close2
+
 	cp S_SR_SOCK_INIT	; nothing has been done yet
 	jr z, .close2		; so skip disconnect part.
 

@@ -102,6 +102,7 @@ F_dnsAquery:
 .resolveloop2:
 	ld c, SOCK_DGRAM	; Open a UDP socket
 	call F_socket
+
 	ret c			; bale out on error
 	ld (v_dnsfd), a		; save the file descriptor
 

@@ -46,7 +46,7 @@ F_init:
         djnz .loop1
 
 	; Install the default LOAD "" trap.
-	call F_initbootfile
+	;call F_initbootfile
 
         ld hl, STR_basicinit
         call PRINT42
