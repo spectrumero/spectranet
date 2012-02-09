@@ -1,6 +1,6 @@
 # Makefile to build the Spectranet C library.
 
-SRCGEN = ./makesources.pl
+SRCGEN = ../scripts/makesources.pl
 PLIBNAME = libspectranet
 NPLIBNAME = libspectranet_np
 PASMFILES = libspectranet.lst
