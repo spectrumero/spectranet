@@ -91,7 +91,7 @@ void initSpriteLib() {
 	memset(sprtbl, 0, sizeof(sprtbl));
 	clr=0;
 
-   zx_border(BLACK);
+   zx_border(INK_BLACK);
    sp1_Initialize(SP1_IFLAG_MAKE_ROTTBL | SP1_IFLAG_OVERWRITE_TILES | SP1_IFLAG_OVERWRITE_DFILE, INK_WHITE | PAPER_BLACK, ' ');
    sp1_TileEntry(' ', fondo);   // redefine graphic associated with space character
 	 sp1_TileEntry('B', box);
@@ -207,9 +207,9 @@ void moveSprite(SpriteMsg *msg) {
 			frameptr=xplode;
 			if(xplodeFrame) {
 				frameptr+=96;
-				attr=YELLOW|BRIGHT;
+				attr=INK_YELLOW|BRIGHT;
 			} else {
-				attr=RED|BRIGHT;
+				attr=INK_RED|BRIGHT;
 			}
 			xplodeFrame = !xplodeFrame;
 			sp1_IterateSprChar(s, colourSpr);

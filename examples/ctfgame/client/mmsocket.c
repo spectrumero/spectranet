@@ -123,7 +123,7 @@ int messageloop() {
           break;
         default:
           sendbuf[0]=SERVERKILL;
-          zx_border(RED);
+          zx_border(INK_RED);
           return sendMsg(1);
       }
 
