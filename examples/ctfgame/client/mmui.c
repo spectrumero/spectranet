@@ -40,7 +40,39 @@ void displayStatus(MessageMsg *msg) {
   ui_status(0, msg->message);
 }
 
+// Not strictly necessary, but it makes the code more maintainable.
+char *getServer() {
+  return server;
+}
+
+char *getPlayer() {
+  return player;
+}
+
 void displayMatchmake(MatchmakeMsg *mmsg) {
+	int hpos;
+	int vpos;
+	switch(mmsg->team) {
+		case 0:		// blue team
+			hpos=1;
+			vpos=13+mmsg->playernum;
+			break;
+		case 1:		// red team
+			hpos=20;
+			vpos=13+mmsg->playernum;
+			break;
+		default:	// no team
+			hpos=1;
+			vpos=19+mmsg->playernum;
+	}
+	if(mmsg->flags & MM_READY)
+		hpos--;
+
+	setpos(vpos, hpos);
+	if(mmsg->flags & MM_READY)
+		printk("\x121*\x120");
+
+	printk("%s", mmsg->playername);
 }
 
 void getMatchmakeInput() {
@@ -141,3 +173,17 @@ void setpos(char y, char x)
   putchar((x*2)+32);
 }
 
+void drawMatchmakingScreen()
+{
+	ia_cls();
+	setpos(7, 1);
+	printk("Press 0 when ready\n");
+	printk("       1 to join BLUE\n");
+	printk("       2 to join RED\n");
+	setpos(11,1);
+	printk("\x111BLUE TEAM");
+	setpos(11,20);
+	printk("\x112RED TEAM");
+	setpos(17,1);
+	printk("\x110Not on a team yet:");
+}

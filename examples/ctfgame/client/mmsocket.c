@@ -74,13 +74,27 @@ int initConnection(char *host, char *player) {
 int sendSyncMsg(int txbytes) {
   struct sockaddr_in rxaddr;
   int addrlen;
+  int retries;
+  int polls;
+  int p;
   int bytes=0;
-  if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
-    return TXERROR;
 
-  if((bytes=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrlen)) < 0)
-    return RXERROR;
-  return bytes;
+  for(retries=0; retries < 3; retries++) {
+     if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
+       return TXERROR;
+
+     for(polls=0; polls < 512; polls++) {
+        p=poll_fd(sockfd);
+        if(p == 128) return RXERROR;
+	if(p == POLLIN) {
+           if((bytes=recvfrom
+		(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrlen)) < 0)
+              return RXERROR;
+           return bytes;
+	}
+     }
+  }
+  return TIMEOUT;
 }
 
 int sendMsg(int txbytes) {

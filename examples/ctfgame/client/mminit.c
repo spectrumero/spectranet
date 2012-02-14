@@ -24,6 +24,7 @@
 #include <spectrum.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "matchmake.h"
 // Initialize the match making stuff.
@@ -31,12 +32,31 @@
 long heap;
 
 void main() {
+	MatchmakeMsg test;
+	int rc;
+
 	mallinit();
 	sbrk(27000,1024);
 	zx_border(0);
 	ia_cls();
 	inputinit();
-	getPlayerData();
+	drawMatchmakingScreen();
+
+	test.team=0;
+	test.playernum=0;
+	test.flags=0;
+	strcpy(test.playername, "Winston");
+	displayMatchmake(&test);
+	test.team=1;
+	test.flags=1;
+	displayMatchmake(&test);
+/*	getPlayerData();
+
+	rc=initConnection(getServer(), getPlayer());
+	if(rc == 0)
+		ui_status(rc, "Connected");
+	else
+		ui_status(rc, "Connection failed");*/
 	inputexit();
 }
 

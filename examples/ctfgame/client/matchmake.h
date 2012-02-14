@@ -30,6 +30,7 @@
 #define TXERROR -3
 #define RXERROR -4
 #define NACK -5
+#define TIMEOUT -6
 
 // Functions for the match maker
 extern int getPlayerData();
@@ -55,6 +56,9 @@ extern void inputexit();
 extern void displayStatus(MessageMsg *msg);
 extern void displayMatchmake(MatchmakeMsg *mmsg);
 extern void getMatchmakeInput();
+extern char *getServer();
+extern char *getPlayer();
+extern void drawMatchmakingScreen();
 
 // Communications
 extern int initConnection(char *host, char *player);
