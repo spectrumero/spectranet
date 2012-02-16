@@ -187,3 +187,21 @@ void drawMatchmakingScreen()
 	setpos(17,1);
 	printk("\x110Not on a team yet:");
 }
+
+// Simple routine to put spaces over where the names were
+void clearPlayerList() 
+{
+	uchar i;
+	setpos(13,0);
+	for(i=0; i<4; i++)
+	{
+		printk("                                  ");
+	}
+
+	setpos(19,0);
+	for(i=0; i<4; i++)
+	{
+		printk("                                  ");
+	}
+}
+

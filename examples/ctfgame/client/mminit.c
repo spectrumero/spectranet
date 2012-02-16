@@ -32,7 +32,6 @@
 long heap;
 
 void main() {
-	MatchmakeMsg test;
 	int rc;
 
 	mallinit();
@@ -40,23 +39,18 @@ void main() {
 	zx_border(0);
 	ia_cls();
 	inputinit();
-	drawMatchmakingScreen();
-
-	test.team=0;
-	test.playernum=0;
-	test.flags=0;
-	strcpy(test.playername, "Winston");
-	displayMatchmake(&test);
-	test.team=1;
-	test.flags=1;
-	displayMatchmake(&test);
-/*	getPlayerData();
+	getPlayerData();
 
 	rc=initConnection(getServer(), getPlayer());
-	if(rc == 0)
+	if(rc == 0) {
 		ui_status(rc, "Connected");
+		drawMatchmakingScreen();
+		readyToMatchmake();
+		messageloop();
+	}
 	else
-		ui_status(rc, "Connection failed");*/
+		ui_status(rc, "Connection failed");
+
 	inputexit();
 }
 

@@ -382,6 +382,8 @@ void broadcastStatusMsg(char *str) {
   }
 }
 
+// Broadcast matchmaking messages
+
 int sendMessageBuf(int clientno, char *buf, ssize_t bufsz) {
   if(sendto(sockfd, buf, bufsz, 0,
         (struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {

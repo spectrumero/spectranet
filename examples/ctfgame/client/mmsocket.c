@@ -28,6 +28,8 @@
 #include <string.h>
 #include <spectrum.h>
 
+#include <stdio.h>
+
 #include "matchmake.h"
 #include "ctfmessage.h"
 
@@ -103,6 +105,25 @@ int sendMsg(int txbytes) {
   return 0;
 }
 
+// Send a message to the server indicating that we are ready to
+// receive matchmaking messages.
+int readyToMatchmake() {
+	sendbuf[0]=MMSTART;
+	return sendMsg(1);
+}
+
+// Request to join a team
+int sendJoinTeam(uchar team) {
+	sendbuf[0]=TEAMREQUEST;
+	sendbuf[1]=team;
+	return sendMsg(2);
+}
+
+// This player is ready to go.
+int sendClientRdy() {
+	sendbuf[0]=CLIENTRDY;
+	return sendMsg(1);
+}
 
 int messageloop() {
   struct sockaddr_in rxaddr;
@@ -126,7 +147,12 @@ int messageloop() {
     msgptr=rxbuf;
     numMsgs=*msgptr++;
     while(numMsgs) {
+			msgType=*msgptr++;
+
       switch(msgType) {
+				case CLRPLAYERLIST:
+					clearPlayerList();
+					break;
         case MATCHMAKEMSG:
           displayMatchmake((MatchmakeMsg *)msgptr);
           msgptr+=sizeof(MatchmakeMsg);
@@ -135,6 +161,10 @@ int messageloop() {
           displayStatus((MessageMsg *)msgptr);
           msgptr+=sizeof(MessageMsg);
           break;
+				case PINGMSG:
+					sendbuf[0]=PINGMSG;
+					sendMsg(1);
+					break;
         default:
           sendbuf[0]=SERVERKILL;
           zx_border(INK_RED);

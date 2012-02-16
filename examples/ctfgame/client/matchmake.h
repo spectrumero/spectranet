@@ -59,12 +59,17 @@ extern void getMatchmakeInput();
 extern char *getServer();
 extern char *getPlayer();
 extern void drawMatchmakingScreen();
+extern void clearPlayerList();
 
 // Communications
 extern int initConnection(char *host, char *player);
 extern int sendSyncMsg(int txbytes);
 extern int sendMsg(int txbytes);
 extern int messageloop();
+
+extern int readyToMatchmake();
+extern int sendJoinTeam();
+extern int sendClientRdy();
 
 #endif
 

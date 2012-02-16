@@ -30,11 +30,29 @@
 uchar matchflags=0;
 
 void setPlayerTeam(Player *p, uchar team) {
-  // Maximum of 2 teams
-  if(team > 1) return;
+  // Maximum of 2 teams. 0=blue, 1=red, 2=no team
+  if(team > 2) return;
 
   p->team=team;
+	orderTeams();
   updateAllMatchmakers();
+}
+
+// A simple routine to put player numbers in order within the teams.
+void orderTeams() {
+	int teampos[3];
+	int i;
+	Player *p;
+
+	memset(teampos, 0, sizeof(teampos));
+
+	for(i=0; i<MAXCLIENTS; i++) {
+		p=getPlayer(i);
+		if(p) {
+			p->playernum=teampos[p->team];
+			teampos[p->team]++;
+		}
+	}
 }
 
 void updateAllMatchmakers() {
@@ -58,9 +76,15 @@ uchar *makeMatchMakeMsgs(ssize_t *msgsz) {
   Player *p;
   MatchmakeMsg mmsg;
   uchar *mmptr, *mmbuf;
-  mmbuf[0]=0;
-  mmptr=&mmbuf[1];
-  mmbuf=(uchar *)malloc(MAXCLIENTS * sizeof(MatchmakeMsg) + MAXCLIENTS + 2);
+
+  mmbuf=(uchar *)malloc(MAXCLIENTS * sizeof(MatchmakeMsg) + MAXCLIENTS + 3);
+
+	// preload with one message - tell the client to clear the player
+	// list on its screen
+  mmbuf[0]=1;
+	mmbuf[1]=CLRPLAYERLIST;
+
+  mmptr=&mmbuf[2];
 
   for(i=0; i<MAXCLIENTS; i++) {
     p=getPlayer(i);

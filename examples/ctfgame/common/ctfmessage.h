@@ -42,6 +42,7 @@
 #define FLAGALERT               0x05
 #define MATCHMAKEMSG            0x06
 #define PINGMSG                 0x07
+#define CLRPLAYERLIST						0x08	// Clear player list
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -147,15 +148,23 @@ typedef struct _numbermsg {
 #define PLYRSCORE  4
 
 // Matchmaking message
+// Team is 0 or 1, or 0xFF for "not in a team yet"
 typedef struct _matchmake {
   uchar team;
-  uchar playernum;
+  uchar playernum;	// in this context, means player within team
   uchar flags;
   char playername[MAXNAME];
 } MatchmakeMsg;
 
-#define MM_READY  1   // Player is ready  
+// Match making instruction
+typedef struct _matchmakeinst {
+	uchar team;
+	uchar playernum;
+	uchar flags;
+} MatchmakeInst;
 
+#define MM_READY  1   // Player is ready  
+#define MM_JOINTEAM	2	// Player wants to join this team
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the
 // message id followed by a byte with the appropriate bits set.
