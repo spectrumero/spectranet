@@ -148,10 +148,9 @@ Player *makeNewPlayer(int clientid, char *playerName) {
   memset(p, 0, sizeof(Player));
   strlcpy(p->name, playerName, MAXNAME);
 
-  // TODO: Get the player number from elsewhere
-  p->playernum=clientid;
-  if(clientid > 1) p->team=1;
-
+	p->team=NOTEAM;
+	orderTeams();
+	updateAllMatchmakers();
   return p;
 }
 
@@ -169,6 +168,8 @@ void removePlayer(int clientid) {
 
   free(players[clientid]);
   players[clientid]=NULL;
+	orderTeams();
+	updateAllMatchmakers();
 }
 
 // startPlayer creates the initial starting spot for a player
@@ -192,7 +193,7 @@ MapXY spawnPlayer(int clientid, Player *p) {
   Object *po=(Object *)malloc(sizeof(Object));
   memset(po, 0, sizeof(Object));
 
-  spawn=getSpawnpoint(p->playernum);
+  spawn=getSpawnpoint(p);
 
   po->x=spawn.mapx*16;
   po->y=spawn.mapy*16;

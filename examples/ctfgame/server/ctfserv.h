@@ -161,7 +161,8 @@ typedef struct _player {
 #define NEWVIEWPORT 0x02  // Player's viewport changed
 #define DEAD        0x04  // Player is dead
 #define MATCHMAKING 0x08  // Player is in the matchmaking screen
-#define RESETFLAGS  0x0d  // Bits set to 0 get reset on each frame
+#define PLYRREADY		0x10	// Player is ready to start
+#define RESETFLAGS  0x1d  // Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table
 // for working out new X and Y values from a direction and velocity
@@ -292,7 +293,7 @@ int loadMap(const char *filename);
 Maptile *buildMapRow(char *txtrow, int y);
 int sendMapMsg(int clientid, Viewport *vp);
 bool detectMapCollision(Object *pbj);
-MapXY getSpawnpoint(int player);
+MapXY getSpawnpoint(Player *p);
 MapXY getFlagpoint(int team);
 bool detectTouchingFlagpoint(Object *obj);
 int maxPlayersPerTeam();

@@ -356,6 +356,8 @@ int sendMessage(int clientno) {
   if(bytes < 2) 
     return 0;
   //debugMsg(playerBuf[clientno], bytes);
+	printf("DEBUG: sending %d messages to client %d\n",
+			*playerBuf[clientno], clientno);
   if(sendto(sockfd, playerBuf[clientno], bytes, 0,
         (struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
     perror("sendto");

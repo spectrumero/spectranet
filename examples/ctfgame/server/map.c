@@ -229,8 +229,14 @@ bool detectTouchingFlagpoint(Object *obj) {
 // Get a spawn point. This just picks the struct from the
 // array for now but it's in a function to allow us to easily 
 // modify things later.
-MapXY getSpawnpoint(int player) {
-  return spawnpoints[player];
+MapXY getSpawnpoint(Player *p) {
+	// Derive the spawnpoint from the team and player combination
+	// Spawnpoints are ordered by team,playernum
+	int idx;
+
+	// TODO: set players per team from map
+	idx=(p->team * 2) + p->playernum;
+  return spawnpoints[idx];
 }
 
 // Get a flag point. See comment above...

@@ -166,6 +166,7 @@ int messageloop() {
 					sendMsg(1);
 					break;
         default:
+					printk("\nSERVERKILL: msg = %d\n", msgType);
           sendbuf[0]=SERVERKILL;
           zx_border(INK_RED);
           return sendMsg(1);

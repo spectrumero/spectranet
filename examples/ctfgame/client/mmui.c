@@ -175,7 +175,7 @@ void setpos(char y, char x)
 
 void drawMatchmakingScreen()
 {
-	ia_cls();
+	clrlower();
 	setpos(7, 1);
 	printk("Press 0 when ready\n");
 	printk("       1 to join BLUE\n");
@@ -188,6 +188,18 @@ void drawMatchmakingScreen()
 	printk("\x110Not on a team yet:");
 }
 
+// Very simple routine to wipe over the lower part of the screen with
+// spaces to clear it.
+void clrlower() 
+{
+	int i;
+	setpos(7, 0);
+	for(i=0; i<16; i++)
+	{
+		printk("                                 ");
+	}
+}
+
 // Simple routine to put spaces over where the names were
 void clearPlayerList() 
 {
@@ -195,13 +207,13 @@ void clearPlayerList()
 	setpos(13,0);
 	for(i=0; i<4; i++)
 	{
-		printk("                                  ");
+		printk("                                ");
 	}
 
 	setpos(19,0);
 	for(i=0; i<4; i++)
 	{
-		printk("                                  ");
+		printk("                                ");
 	}
 }
 

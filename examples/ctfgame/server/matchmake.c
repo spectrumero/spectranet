@@ -92,6 +92,10 @@ uchar *makeMatchMakeMsgs(ssize_t *msgsz) {
       *mmptr++=MATCHMAKEMSG;
       mmsg.team=p->team;
       mmsg.playernum=p->playernum;
+			mmsg.flags=0;
+			if(p->flags & PLYRREADY)
+				mmsg.flags = MM_READY;
+
       strlcpy(mmsg.playername, p->name, MAXNAME);
       mmbuf[0]++;
       memcpy(mmptr, &mmsg, sizeof(MatchmakeMsg));

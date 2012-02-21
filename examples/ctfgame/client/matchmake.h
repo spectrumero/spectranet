@@ -60,6 +60,7 @@ extern char *getServer();
 extern char *getPlayer();
 extern void drawMatchmakingScreen();
 extern void clearPlayerList();
+extern void clrlower();
 
 // Communications
 extern int initConnection(char *host, char *player);

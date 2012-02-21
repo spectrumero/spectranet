@@ -178,4 +178,9 @@ typedef struct _matchmakeinst {
 #define BRAKE 0x02
 #define FIRE 0x80
 
+// Team numbers
+#define BLUETEAM	0
+#define REDTEAM		1
+#define NOTEAM		2
+
 #endif
