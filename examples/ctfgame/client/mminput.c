@@ -277,6 +277,11 @@ char getSingleKeypress()
 	return k;
 }
 
+char keyReady() {
+	if(readoffset != bufoffset)
+		return 1;
+	return 0;
+}
 
 /* The ISR handles filling the keyboard buffer, which is a circular
  * buffer. The keyboard handler in the 'main thread' should pick characters

@@ -31,6 +31,7 @@
 #define RXERROR -4
 #define NACK -5
 #define TIMEOUT -6
+#define LOCKOUTTIME 512
 
 // Functions for the match maker
 extern int getPlayerData();
@@ -49,6 +50,7 @@ extern void handleKey(uchar key);
 extern char *checkKey();
 extern char *kbinput(char ispw);
 extern char getSingleKeypress();
+extern char keyReady();
 extern void inputinit();
 extern void inputexit();
 
@@ -70,7 +72,7 @@ extern int messageloop();
 
 extern int readyToMatchmake();
 extern int sendJoinTeam();
-extern int sendClientRdy();
+extern int sendPlayerRdy();
 
 #endif
 

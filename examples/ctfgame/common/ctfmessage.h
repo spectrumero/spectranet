@@ -56,6 +56,7 @@
 #define TEAMREQUEST 0x49    // Request a team for a player
 #define MMSTART   0x4A      // Start matchmaking
 #define MMSTOP    0x4B      // Stop matchmaking
+#define MMREADY 	0x4C			// Player is ready to start
 #define SERVERKILL 0xFF    // Testing message to halt the server when
                             // the client gets an invalid msg
 

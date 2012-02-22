@@ -35,6 +35,7 @@
 
 char player[9];
 char server[16];
+unsigned int teamChgLockout=LOCKOUTTIME;
 
 void displayStatus(MessageMsg *msg) {
   ui_status(0, msg->message);
@@ -76,6 +77,40 @@ void displayMatchmake(MatchmakeMsg *mmsg) {
 }
 
 void getMatchmakeInput() {
+	char kb;
+
+	// This is just a simple method to stop a flood of messages if
+	// someone holds a key down.
+	if(teamChgLockout)
+		teamChgLockout--;
+	       
+ 	if(keyReady()) 
+		kb=getSingleKeypress();
+	else
+		return;
+
+	switch(kb) {
+		case '1':
+			// Join the blue team
+			if(!teamChgLockout) {
+				sendJoinTeam(0);
+				teamChgLockout=LOCKOUTTIME;
+			}
+			break;
+		case '2':
+			// Join the red team
+			if(!teamChgLockout) {
+				sendJoinTeam(1);
+				teamChgLockout=LOCKOUTTIME;
+			}
+			break;
+		case '0':
+			// Signal that we are ready
+			if(!teamChgLockout) {
+				teamChgLockout=LOCKOUTTIME;
+			}
+			break;
+	}
 }
 
 int getPlayerData()

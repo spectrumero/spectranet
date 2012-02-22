@@ -30,6 +30,8 @@
 uchar matchflags=0;
 
 void setPlayerTeam(Player *p, uchar team) {
+	printf("DEBUG: setting player team for %s, team=%d\n",
+			p->name, team);
   // Maximum of 2 teams. 0=blue, 1=red, 2=no team
   if(team > 2) return;
 

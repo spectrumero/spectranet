@@ -114,14 +114,16 @@ int readyToMatchmake() {
 
 // Request to join a team
 int sendJoinTeam(uchar team) {
+	zx_border(INK_RED);
 	sendbuf[0]=TEAMREQUEST;
 	sendbuf[1]=team;
+	zx_border(INK_BLACK);
 	return sendMsg(2);
 }
 
 // This player is ready to go.
-int sendClientRdy() {
-	sendbuf[0]=CLIENTRDY;
+int sendPlayerRdy() {
+	sendbuf[0]=MMREADY;
 	return sendMsg(1);
 }
 

@@ -171,7 +171,7 @@ int getMessage() {
 
     // Find the client connection
     while((bytesleft=bytes-(msgptr-msgbuf)) > 0) {
-      //printf("%ld: Client: %d message %x remain: %d\n", getframes(), clientid, *msgptr, bytesleft);
+      printf("DEBUG: %ld: Client: %d message %x remain: %d\n", getframes(), clientid, *msgptr, bytesleft);
       switch(*msgptr) {
         case START:
           msgptr++;
@@ -261,6 +261,7 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 
       // create the main message buffer for the player
       playerBuf[i] = (unsigned char *)malloc(MSGBUFSZ);
+			memset(playerBuf[i], 0, MSGBUFSZ);
       playerBufPtr[i]=playerBuf[i]+1;
 
       // initialize the player object
