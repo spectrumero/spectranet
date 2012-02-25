@@ -43,6 +43,7 @@
 #define MATCHMAKEMSG            0x06
 #define PINGMSG                 0x07
 #define CLRPLAYERLIST						0x08	// Clear player list
+#define MATCHMAKEHOST						0x09	// Tell client that it is a host
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -166,6 +167,7 @@ typedef struct _matchmakeinst {
 
 #define MM_READY  1   // Player is ready  
 #define MM_JOINTEAM	2	// Player wants to join this team
+
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the
 // message id followed by a byte with the appropriate bits set.

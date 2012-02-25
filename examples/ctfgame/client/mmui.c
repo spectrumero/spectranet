@@ -89,27 +89,25 @@ void getMatchmakeInput() {
 	else
 		return;
 
-	switch(kb) {
-		case '1':
-			// Join the blue team
-			if(!teamChgLockout) {
+	if(!teamChgLockout)
+	{
+		switch(kb) {
+			case '1':
+				// Join the blue team
 				sendJoinTeam(0);
 				teamChgLockout=LOCKOUTTIME;
-			}
-			break;
-		case '2':
-			// Join the red team
-			if(!teamChgLockout) {
+				break;
+			case '2':
+				// Join the red team
 				sendJoinTeam(1);
 				teamChgLockout=LOCKOUTTIME;
-			}
-			break;
-		case '0':
-			// Signal that we are ready
-			if(!teamChgLockout) {
+				break;
+			case '0':
+				// Signal that we are ready
+				sendPlayerRdy();
 				teamChgLockout=LOCKOUTTIME;
-			}
-			break;
+				break;
+		}
 	}
 }
 

@@ -223,6 +223,15 @@ int getMessage() {
           msgptr++;
           player->flags &= (0xFF ^ MATCHMAKING); 
           break;
+				case MMREADY:
+					msgptr++;
+
+					// Ignore the message if the player is not on a team yet
+					if(player->team < 2) {
+						player->flags |= PLYRREADY;
+						updateAllMatchmakers();
+					}
+					break;
         case SERVERKILL:
           // DEBUG STUFF: Remove this when no longer required for
           // development. It allows us to stop the server as soon
