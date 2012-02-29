@@ -43,7 +43,7 @@
 #define MATCHMAKEMSG            0x06
 #define PINGMSG                 0x07
 #define CLRPLAYERLIST						0x08	// Clear player list
-#define MATCHMAKEHOST						0x09	// Tell client that it is a host
+#define MMSTARTABLE							0x09	// Match is or is not startable
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server

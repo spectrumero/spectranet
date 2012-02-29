@@ -63,6 +63,7 @@ extern char *getPlayer();
 extern void drawMatchmakingScreen();
 extern void clearPlayerList();
 extern void clrlower();
+extern void setStartable(uchar isStartable);
 
 // Communications
 extern int initConnection(char *host, char *player);

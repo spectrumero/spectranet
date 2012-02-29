@@ -209,7 +209,7 @@ void setpos(char y, char x)
 void drawMatchmakingScreen()
 {
 	clrlower();
-	setpos(7, 1);
+	setpos(6, 1);
 	printk("Press 0 when ready\n");
 	printk("       1 to join BLUE\n");
 	printk("       2 to join RED\n");
@@ -219,6 +219,16 @@ void drawMatchmakingScreen()
 	printk("\x112RED TEAM");
 	setpos(17,1);
 	printk("\x110Not on a team yet:");
+}
+
+void setStartable(uchar isStartable) {
+	setpos(9,7);
+	if(isStartable) {
+		printk("S to start game");
+	}
+	else {
+		printk("               ");
+	}
 }
 
 // Very simple routine to wipe over the lower part of the screen with

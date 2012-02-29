@@ -167,6 +167,9 @@ int messageloop() {
 					sendbuf[0]=PINGMSG;
 					sendMsg(1);
 					break;
+				case MMSTARTABLE:
+					setStartable(*msgptr++);
+					break;
         default:
 					printk("\nSERVERKILL: msg = %d\n", msgType);
           sendbuf[0]=SERVERKILL;

@@ -71,6 +71,28 @@ void updateMatchmaker(int clientid) {
   free(msg);
 }
 
+uchar isGameStartable() {
+	int i;
+	Player *p;
+	int count=0;
+
+	for(i=0; i<MAXCLIENTS; i++) {
+		p=getPlayer(i);
+		if(p) {
+			if(!(p->flags & PLYRREADY))
+				return 0;		// Someone isn't ready
+			if(p->team > 1)
+				return 0;		// Someone's not yet on a team
+			count++;
+		}
+	}
+
+	// Need at least 2 ready players 
+	if(count < 2)
+		return 0;
+	return 1;
+}
+
 // Send a matchmake message with the current players and teams
 // to any player that is matchmaking.
 uchar *makeMatchMakeMsgs(ssize_t *msgsz) {
@@ -79,14 +101,16 @@ uchar *makeMatchMakeMsgs(ssize_t *msgsz) {
   MatchmakeMsg mmsg;
   uchar *mmptr, *mmbuf;
 
-  mmbuf=(uchar *)malloc(MAXCLIENTS * sizeof(MatchmakeMsg) + MAXCLIENTS + 3);
+  mmbuf=(uchar *)malloc(MAXCLIENTS * sizeof(MatchmakeMsg) + MAXCLIENTS + 5);
 
 	// preload with one message - tell the client to clear the player
-	// list on its screen
-  mmbuf[0]=1;
+	// list on its screen, and whether the game is startable
+  mmbuf[0]=2;
 	mmbuf[1]=CLRPLAYERLIST;
+	mmbuf[2]=MMSTARTABLE;
+	mmbuf[3]=isGameStartable();
 
-  mmptr=&mmbuf[2];
+  mmptr=&mmbuf[4];
 
   for(i=0; i<MAXCLIENTS; i++) {
     p=getPlayer(i);
