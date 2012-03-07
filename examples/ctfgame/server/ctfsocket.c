@@ -221,7 +221,8 @@ int getMessage() {
           break;
         case MMSTOP:
           msgptr++;
-          player->flags &= (0xFF ^ MATCHMAKING); 
+					tryToStopMatchmaking();
+//          player->flags &= (0xFF ^ MATCHMAKING); 
           break;
 				case MMREADY:
 					msgptr++;
@@ -474,13 +475,13 @@ void doPing() {
   Player *p;
 
   for(i=0; i<MAXCLIENTS; i++) {
-    if(cliaddr[i])
+    p=getPlayer(i);
+    if(p && p->flags & (MATCHMAKING|RUNNING))
     {
       if(pingdata[i].rspmiss > MAXRSPMISS) {
         printf("Remove client %i\n", i);
         // make a copy of the player name since it will get freed with
         // the player object
-        p=getPlayer(i);
         gonestr=(char *)malloc(MAXSTATUSMSG);
         snprintf(gonestr, MAXSTATUSMSG, "%s pang out", p->name);
         

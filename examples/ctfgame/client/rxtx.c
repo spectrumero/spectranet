@@ -29,6 +29,7 @@
 #include <sockpoll.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ctf.h"
 #include "ctfmessage.h"
@@ -45,7 +46,8 @@ struct sockaddr_in remoteaddr;	// Server's address
 // -3 sendto() failed
 // -4 recvfrom() failed
 // -5 Server full
-int initConnection(char *host, char *player) {
+//int initConnection(char *host, char *player) {
+	/*
   struct hostent *he;
   int rc;
 
@@ -71,6 +73,11 @@ int initConnection(char *host, char *player) {
   if(*(rxbuf+1) == ACKTOOMANY)
     return -5;
   return 0;
+}*/
+
+void initConnection(int s, struct sockaddr_in *addr) {
+	sockfd=s;
+	memcpy(&remoteaddr, addr, sizeof(struct sockaddr_in));
 }
 
 int startGame(MapXY *xy) {

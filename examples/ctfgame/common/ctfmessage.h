@@ -44,6 +44,7 @@
 #define PINGMSG                 0x07
 #define CLRPLAYERLIST						0x08	// Clear player list
 #define MMSTARTABLE							0x09	// Match is or is not startable
+#define MMEXIT									0x0A	// Client should exit matchmaking
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server

@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
+//#include <malloc.h>
 
 #include "matchmake.h"
 #include "ctfmessage.h"
@@ -105,6 +105,11 @@ void getMatchmakeInput() {
 			case '0':
 				// Signal that we are ready
 				sendPlayerRdy();
+				teamChgLockout=LOCKOUTTIME;
+				break;
+			case 's':
+				// Try to start the game.
+				sendMatchmakeStop();
 				teamChgLockout=LOCKOUTTIME;
 				break;
 		}

@@ -27,6 +27,7 @@
 #include <sockpoll.h>
 #include <string.h>
 #include <spectrum.h>
+#include <stdlib.h>
 
 #include <stdio.h>
 
@@ -127,6 +128,12 @@ int sendPlayerRdy() {
 	return sendMsg(1);
 }
 
+// Request that matchmaking be stopped.
+int sendMatchmakeStop() {
+	sendbuf[0]=MMSTOP;
+	return sendMsg(1);
+}
+
 int messageloop() {
   struct sockaddr_in rxaddr;
   char *msgptr;
@@ -170,11 +177,20 @@ int messageloop() {
 				case MMSTARTABLE:
 					setStartable(*msgptr++);
 					break;
+				case MMEXIT:
+					// Exit the message loop to load the next part.
+					// Save the integer 'sockfd' so the next part can get at
+					// it.
+					wpoke(27000, sockfd);
+					memcpy(27002, remoteaddr, sizeof(struct sockaddr_in));
+					printk("DEBUG: sockfd=%d\n",sockfd);
+					return 0;					
         default:
 					printk("\nSERVERKILL: msg = %d\n", msgType);
           sendbuf[0]=SERVERKILL;
           zx_border(INK_RED);
-          return sendMsg(1);
+          sendMsg(1);
+					return -1;
       }
 
       numMsgs--;

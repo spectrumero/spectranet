@@ -327,6 +327,7 @@ uchar *makeMatchMakeMsgs(ssize_t *msgsz);
 void sendToMatchmakers(void *mmbuf, ssize_t msgsz);
 void orderTeams();
 uchar isGameStartable();
+void tryToStopMatchmaking();
 
 // For testing
 unsigned long getframes();

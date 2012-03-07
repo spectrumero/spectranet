@@ -25,6 +25,8 @@
 #include <malloc.h>
 #include <spectrum.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
 #include "ctf.h"
 #include "ctfmessage.h"
 
@@ -46,6 +48,7 @@ main() {
 	MapXY xy;
 	SpriteMsg msg;
 	int i;
+	initConnection(wpeek(27000), (struct sockaddr_in *)27002);
 
 #asm
 	di
@@ -64,11 +67,10 @@ main() {
 
 	initSpriteLib();
 
-	rc=initConnection("127.0.0.1", "Artanis");
+	//rc=initConnection("127.0.0.1", "Artanis");
 	setupStatusAreas(PAPER_BLUE|INK_CYAN);
 	rc=startGame(&xy);
 	rc=findViewport(&xy);
 	rc=messageloop();
 	rc=disconnect();
 }
-

@@ -22,20 +22,20 @@
 ;THE SOFTWARE.
 */
 #include <spectrum.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "matchmake.h"
 // Initialize the match making stuff.
 
-long heap;
+//long heap;
 
 void main() {
 	int rc;
 
-	mallinit();
-	sbrk(27000,1024);
+//	mallinit();
+//	sbrk(27000,1024);
 	zx_border(0);
 	ia_cls();
 	inputinit();
@@ -46,7 +46,7 @@ void main() {
 		ui_status(rc, "Connected");
 		drawMatchmakingScreen();
 		readyToMatchmake();
-		messageloop();
+		rc=messageloop();
 	}
 	else
 		ui_status(rc, "Connection failed");

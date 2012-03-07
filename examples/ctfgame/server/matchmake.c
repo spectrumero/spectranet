@@ -93,6 +93,29 @@ uchar isGameStartable() {
 	return 1;
 }
 
+// If the game is startable, signal to all matchmakers that they
+// should leave matchmaking and join the game.
+void tryToStopMatchmaking() {
+	char buf[2];
+	int i;
+	Player *p;
+	
+	if(isGameStartable()) {
+		buf[0]=1;	// 1 message
+		buf[1]=MMEXIT;
+
+		for(i=0; i<MAXCLIENTS; i++) {
+			p=getPlayer(i);
+			if(p && p->flags & MATCHMAKING) {
+				// Reset all flags so the player can enter the limbo between
+				// leaving matchmaking and starting the game.
+				p->flags=0;
+				sendMessageBuf(i, buf, 2);
+			}
+		}
+	}
+}
+
 // Send a matchmake message with the current players and teams
 // to any player that is matchmaking.
 uchar *makeMatchMakeMsgs(ssize_t *msgsz) {

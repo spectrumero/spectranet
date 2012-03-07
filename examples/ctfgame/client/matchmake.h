@@ -74,6 +74,7 @@ extern int messageloop();
 extern int readyToMatchmake();
 extern int sendJoinTeam();
 extern int sendPlayerRdy();
+extern int sendMatchmakeStop();
 
 #endif
 
