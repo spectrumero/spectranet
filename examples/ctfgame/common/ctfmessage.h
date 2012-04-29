@@ -45,6 +45,7 @@
 #define CLRPLAYERLIST						0x08	// Clear player list
 #define MMSTARTABLE							0x09	// Match is or is not startable
 #define MMEXIT									0x0A	// Client should exit matchmaking
+#define ENDGAMESCORE						0x0B	// End game and show scores
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -149,6 +150,15 @@ typedef struct _numbermsg {
 #define BLUESCORE  2
 #define REDSCORE  3
 #define PLYRSCORE  4
+
+// Score message.
+// Contains values to place on the game over scoreboard.
+typedef struct _scoreboardmsg {
+	uchar team;
+	uchar captures;
+	uint16_t score;
+	uchar playerName[MAXNAME];
+} ScoreboardMsg;
 
 // Matchmaking message
 // Team is 0 or 1, or 0xFF for "not in a team yet"
