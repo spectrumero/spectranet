@@ -81,13 +81,13 @@ void setupStatusAreas(uchar teamcolours) {
 	ld hl, _flag_str
 	call PRINT42
 
-	ld hl, 0x4800
+	ld hl, 0x4820
 	ld (PRROW), hl
 	ld a, 38
 	ld (PRCOL), a
 	ld hl, _blue_score
 	call PRINT42
-	ld hl, 0x4860
+	ld hl, 0x4880
 	ld (PRROW), hl
 	ld a, 38
 	ld (PRCOL), a
@@ -170,7 +170,7 @@ void __FASTCALL__ displayBlueScore(char *msg) {
 #asm
 	push hl
 	
-	ld hl, 0x483c
+	ld hl, 0x485c
 	ld b, 8
 ._clr_blue
 	ld (hl), 0
@@ -181,11 +181,11 @@ void __FASTCALL__ displayBlueScore(char *msg) {
 	inc l
 	ld (hl), 0
 	inc h
-	ld l, 0x3c
+	ld l, 0x5c
 	djnz _clr_blue
 
 	pop hl
-	ld de, 0x4820
+	ld de, 0x4840
 	ld (PRROW), de
 	ld a, 38
 	ld (PRCOL), a
@@ -197,7 +197,7 @@ void __FASTCALL__ displayRedScore(char *msg) {
 #asm
 	push hl
 	
-	ld hl, 0x489c
+	ld hl, 0x48bc
 	ld b, 8
 ._clr_red
 	ld (hl), 0
@@ -208,11 +208,11 @@ void __FASTCALL__ displayRedScore(char *msg) {
 	inc l
 	ld (hl), 0
 	inc h
-	ld l, 0x9c
+	ld l, 0xbc
 	djnz _clr_red
 
 	pop hl
-	ld de, 0x4880
+	ld de, 0x48a0
 	ld (PRROW), de
 	ld a, 38
 	ld (PRCOL), a
