@@ -59,7 +59,7 @@ F_init:
 STR_basicinit:   defb    "BASIC extensions installed",NEWLINE,0
 STR_basinsterr:  defb    "Failed to install BASIC extensions",NEWLINE,0
 
-NUMCMDS:         equ     16
+NUMCMDS:         equ     18
 PARSETABLE:      
 P_mount:         defb    0x0b
                 defw    CMD_MOUNT
@@ -87,6 +87,14 @@ P_load:          defb    0x0b
                 defw    F_tbas_load
 P_save:          defb    0x0b
                 defw    CMD_SAVE	; Standard SAVE command
+                defb    0xFF
+                defw    F_tbas_save
+P_se_load:      defb    0x0b
+                defw    CMD_SELOAD		; SE Basic compatible Standard LOAD command
+                defb    0xFF
+                defw    F_tbas_load
+P_se_save:      defb    0x0b
+                defw    CMD_SESAVE		; SE Basic compatible Standard SAVE command
                 defb    0xFF
                 defw    F_tbas_save
 P_tapein:	defb	0x0b
@@ -133,6 +141,8 @@ CMD_LS:          defb    "%cat",0
 CMD_ALOAD:       defb    "%aload",0
 CMD_LOAD:        defb    "%load",0
 CMD_SAVE:        defb    "%save",0
+CMD_SELOAD:      defb    "%",0xef,0
+CMD_SESAVE:      defb    "%",0xf8,0
 CMD_TAPEIN:	defb	"%tapein",0
 CMD_INFO:	defb	"%info",0
 CMD_FS:		defb	"%fs",0

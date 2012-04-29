@@ -404,12 +404,14 @@ F_pstrcmp:
 .loop4:
 	ld a, (de)
 	; is the character in the string pointed to by HL a
-	; null, return, colon or space - i.e4. separator character?
+	; null, return, colon or space - i.e4. separator character? SEBASIC FIX: also match speechmark
 	cp ' '
 	jr z, .match4
 	cp ':'
 	jr z, .match4
 	cp 0x0D
+	jr z, .match4
+	cp '"'
 	jr z, .match4
 	cp (hl)			; does it match the target string?
 	inc hl			; yes, so match the next char
