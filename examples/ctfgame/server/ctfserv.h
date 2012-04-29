@@ -162,7 +162,8 @@ typedef struct _player {
 #define DEAD        0x04  // Player is dead
 #define MATCHMAKING 0x08  // Player is in the matchmaking screen
 #define PLYRREADY		0x10	// Player is ready to start
-#define RESETFLAGS  0x1d  // Bits set to 0 get reset on each frame
+#define SCORESCRN		0x20	// Player is looking at the score screen
+#define RESETFLAGS  0x3d  // Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table
 // for working out new X and Y values from a direction and velocity
@@ -328,6 +329,11 @@ void sendToMatchmakers(void *mmbuf, ssize_t msgsz);
 void orderTeams();
 uchar isGameStartable();
 void tryToStopMatchmaking();
+
+// Scoreboard at the end of the match
+void endMatch();
+uchar *makeScoreMessages(ssize_t *msgsz);
+void sendScoreboard();
 
 // For testing
 unsigned long getframes();
