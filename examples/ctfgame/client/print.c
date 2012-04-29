@@ -74,6 +74,12 @@ void setupStatusAreas(uchar teamcolours) {
 	ld (PRCOL), a
 	ld hl, _ammo_str
 	call PRINT42
+	ld hl, 16576
+	ld (PRROW), hl
+	ld a, 38
+	ld (PRCOL), a
+	ld hl, _player_score
+	call PRINT42
 	ld hl, 20480
 	ld (PRROW), hl
 	ld a, 38
@@ -110,6 +116,9 @@ void updateScoreboard(NumberMsg *msg) {
 			break;
 		case BLUESCORE:
 			displayBlueScore(msg->message);
+			break;
+		case PLYRSCORE:
+			displayPlayerScore(msg->message);
 	}
 }
 
@@ -159,6 +168,33 @@ void __FASTCALL__ displayAmmo(char *msg) {
 
 	pop hl
 	ld de, 16512
+	ld (PRROW), de
+	ld a, 38
+	ld (PRCOL), a
+	call PRINT42
+#endasm
+}
+
+void __FASTCALL__ displayPlayerScore(char *msg) {
+#asm
+	push hl
+
+	ld hl, 0x40fc
+	ld b, 8
+._clr_pscr
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc l
+	ld (hl), 0
+	inc h
+	ld l, 0xfc
+	djnz _clr_pscr
+
+	pop hl
+	ld de, 0x40e0
 	ld (PRROW), de
 	ld a, 38
 	ld (PRCOL), a
@@ -353,6 +389,8 @@ void quietenFlagIndicator() {
 	defb 'A','m','m','o',0
 	._flag_str
 	defb 'F','l','a','g',0
+	._player_score
+	defb 'P','t','s',0
 	._red_score
 	defb 'R','e','d',0
 	._blue_score
