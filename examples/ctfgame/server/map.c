@@ -249,3 +249,13 @@ int maxPlayersPerTeam() {
   return numSpawns/2;
 }
 
+// Gets the player number within a team, deriving it from spawn number.
+int getTeamPlayernum(int team, int playernum) {
+  int teambase=0;
+  if(team == 1) {
+    teambase = numSpawns/2;
+  }
+
+  return playernum-teambase;
+}
+
