@@ -172,6 +172,31 @@ void __FASTCALL__ setRedScore(char *score) {
 #endasm
 }
 
+void setoutcomepos() {
+#asm
+	ld hl, GOWIN+64
+  ld (PRROW), hl
+	ld a, 17
+	ld (PRCOL), a
+#endasm
+}
+
+void victory() {
+	setoutcomepos();
+#asm
+	ld hl, _victory
+	call PRINT42
+#endasm
+}
+
+void victory() {
+	setoutcomepos();
+#asm
+	ld hl, _defeat
+	call PRINT42
+#endasm
+}
+
 #asm
 ._gostring
 	defb	'*','*','*','*',' ','G','A','M','E',' ','O','V','E','R',' ','*','*','*','*',0
