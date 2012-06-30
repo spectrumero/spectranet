@@ -48,6 +48,8 @@ void main();
 void setupGameOver();
 void __FASTCALL__ setBlueScore();
 void __FASTCALL__ setRedScore();
+void victory();
+void defeat();
 
 void main() {
 #asm
@@ -56,6 +58,7 @@ void main() {
 	setupGameOver();
 	setBlueScore("5");
 	setRedScore("4");
+	defeat();
 #asm
 	call PAGEOUT
 #endasm
@@ -96,13 +99,6 @@ void setupGameOver() {
 	ld a, 11
 	ld (PRCOL), a
 	ld hl, _gostring
-	call PRINT42
-
-	ld hl, GOWIN+64
-  ld (PRROW), hl
-	ld a, 17
-	ld (PRCOL), a
-	ld hl, _victory
 	call PRINT42
 
 	ld hl, GOWIN+128
@@ -184,15 +180,15 @@ void setoutcomepos() {
 void victory() {
 	setoutcomepos();
 #asm
-	ld hl, _victory
+	ld hl, _victorystr
 	call PRINT42
 #endasm
 }
 
-void victory() {
+void defeat() {
 	setoutcomepos();
 #asm
-	ld hl, _defeat
+	ld hl, _defeatstr
 	call PRINT42
 #endasm
 }
@@ -206,9 +202,9 @@ void victory() {
 	defb 'B','L','U','E',':',' ',0
 ._red
 	defb 'R','E','D',' ',':',' ',0
-._defeat
+._defeatstr
 	defb 'D','e','f','e','a','t','!',0
-._victory
+._victorystr
 	defb 'V','i','c','t','o','r','y','!',0
 #endasm
 
