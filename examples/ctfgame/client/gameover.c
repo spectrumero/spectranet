@@ -24,10 +24,10 @@
 // so as to not include the z88dk print routines which take quite a bit of
 // memory
 
-/*#include <spectrum.h>
+#include <spectrum.h>
 #include <string.h>
 
-#include "ctf.h"*/
+#include "ctf.h"
 
 #define PUTCHAR42 0x3e2a
 #define PRINT42 0x3e2d
@@ -40,29 +40,6 @@
 #define LINES	6
 #define ATTRS 0x5900
 #define ATTRVAL 0x29
-
-#define PAGEIN 0x3FF9
-#define PAGEOUT 0x007C
-
-void main();
-void setupGameOver();
-void __FASTCALL__ setBlueScore();
-void __FASTCALL__ setRedScore();
-void victory();
-void defeat();
-
-void main() {
-#asm
-	call PAGEIN
-#endasm
-	setupGameOver();
-	setBlueScore("5");
-	setRedScore("4");
-	defeat();
-#asm
-	call PAGEOUT
-#endasm
-}
 
 void setupGameOver() {
 #asm

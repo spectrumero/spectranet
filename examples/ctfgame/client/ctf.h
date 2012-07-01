@@ -83,5 +83,12 @@ extern void drawFlagIndicator();
 extern void quietenFlagIndicator();
 extern void __FASTCALL__ flashFlagIndicator(uchar sector);
 
+// Game over
+extern void setupGameOver();
+extern void __FASTCALL__ setBlueScore(char *score);
+extern void __FASTCALL__ setRedScore(char *score);
+extern void victory();
+extern void defeat();
+
 #endif
 

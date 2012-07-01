@@ -1,6 +1,6 @@
 CC = zcc
 CFLAGS = +zx -vn -I../common -DNOSTDINT -m 
-OBJS = init.o sprites.o rxtx.o viewport.o getinput.o print.o
+OBJS = init.o sprites.o rxtx.o viewport.o getinput.o print.o gameover.o
 DEPS = ctf.h ../common/ctfmessage.h
 MMOBJS = mminit.o mmui.o mminput.o mmsocket.o
 MMDEPS = matchmake.h ../common/ctfmessage.h

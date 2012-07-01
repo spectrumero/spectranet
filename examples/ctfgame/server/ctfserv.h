@@ -332,10 +332,10 @@ void orderTeams();
 uchar isGameStartable();
 void tryToStopMatchmaking();
 
-// Scoreboard at the end of the match
+// Scoreboard and match end.
+int getTeamscore(int team);
 void endMatch();
-uchar *makeScoreMessages(ssize_t *msgsz);
-void sendScoreboard();
+void broadcastEndMatch();
 
 // For testing
 unsigned long getframes();

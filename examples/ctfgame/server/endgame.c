@@ -39,45 +39,21 @@ void endMatch() {
 	}
 }
 
-uchar *makeScoreMessages(ssize_t *msgsz) {
+void broadcastEndMatch() {
+	GameEnd geMsg;
 	int i;
-	Player *p;
-	ScoreboardMsg smsg;
-	uchar *sbuf, *sptr;
+	int winner;
 
-	sbuf=(uchar *)malloc(MAXCLIENTS * sizeof(ScoreboardMsg) + MAXCLIENTS + 1);
-	*sbuf=0;
-	sptr=sbuf+1;
+	geMsg.bluecapture=getTeamscore(BLUETEAM);
+	geMsg.redcapture=getTeamscore(REDTEAM);
+
+	winner = (geMsg.bluecapture > geMsg.redcapture) ? BLUETEAM : REDTEAM;
 
 	for(i=0; i<MAXCLIENTS; i++) {
-		p=getPlayer(i);
+		Player *p=getPlayer(i);
 		if(p) {
-			(*sbuf)++;
-			*sptr++ = ENDGAMESCORE;
-			smsg.team = p->team;
-			smsg.score = p->score;
-			strlcpy(smsg.playerName, p->name, MAXNAME);
-			memcpy(sptr, &smsg, sizeof(ScoreboardMsg));
-			sptr+=sizeof(ScoreboardMsg);
-		}
-	}
-	*msgsz=sptr-sbuf;
-	return sbuf;
-}
-
-void sendScoreboard() {
-	int i;
-	Player *p;
-
-	uchar *sbuf;
-	ssize_t msgsz;
-
-	sbuf=makeScoreMessages(&msgsz);
-
-	for(i=0; i<MAXCLIENTS; i++) {
-		p=getPlayer(i);
-		if(p && p->flags & SCORESCRN) {
-			sendMessageBuf(i, sbuf, msgsz);
+			geMsg.winner = (p->team == winner) ? 1 : 0;
+			addMessage(i, ENDGAMESCORE, &geMsg, sizeof(geMsg));
 		}
 	}
 }

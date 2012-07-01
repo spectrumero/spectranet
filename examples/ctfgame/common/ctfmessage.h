@@ -151,15 +151,6 @@ typedef struct _numbermsg {
 #define REDSCORE  3
 #define PLYRSCORE  4
 
-// Score message.
-// Contains values to place on the game over scoreboard.
-typedef struct _scoreboardmsg {
-	uchar team;
-	uchar captures;
-	uint16_t score;
-	uchar playerName[MAXNAME];
-} ScoreboardMsg;
-
 // Matchmaking message
 // Team is 0 or 1, or 0xFF for "not in a team yet"
 typedef struct _matchmake {
@@ -178,6 +169,13 @@ typedef struct _matchmakeinst {
 
 #define MM_READY  1   // Player is ready  
 #define MM_JOINTEAM	2	// Player wants to join this team
+
+// Game end data message
+typedef struct _gameend {
+	uchar winner;		// Set if the receiving player is a winner
+	uint16_t bluecapture;
+	uint16_t redcapture;
+} GameEnd;
 
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the

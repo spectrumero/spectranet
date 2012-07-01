@@ -995,6 +995,13 @@ void addTeamScoreMsg(int clientid, int team) {
   addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
 }
 
+// Get team scores
+int getTeamscore(int team) {
+	if(team < 2)
+		return teamscore[team];
+	return 0;
+}
+
 // OBJECT DESTROYED FUNCTIONS
 // Destruction of player object.
 void destroyPlayerObj(Object *obj) {

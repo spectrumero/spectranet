@@ -56,8 +56,11 @@ void setupStatusAreas(uchar teamcolours) {
 		*ln32 = PAPER_BLUE|INK_YELLOW;
 		ln32++;
 	}
-
+#ifdef LANG_ES
+	strcpy(welcome.message, "Bienvenido a Spectank.");
+#else
 	strcpy(welcome.message, "Welcome to Spectank.");
+#endif
 	welcome.msgsz = strlen(welcome.message);
 	setMsgArea(&welcome);
 
@@ -381,7 +384,22 @@ void quietenFlagIndicator() {
 	ld (hl), a
 #endasm
 }
-
+#ifdef LANG_ES
+#asm
+	._nrg_str	
+	defb 'E','n','e','r',0
+	._ammo_str
+	defb 'M','i','s','l',0
+	._flag_str
+	defb 'F','l','a','g',0
+	._player_score
+	defb 'P','t','s',0
+	._red_score
+	defb 'R','o','j','o',0
+	._blue_score
+	defb 'A','z','u','l',0
+#endasm
+#else
 #asm
 	._nrg_str	
 	defb 'E','n','e','r',0
@@ -396,3 +414,4 @@ void quietenFlagIndicator() {
 	._blue_score
 	defb 'B','l','u','e',0
 #endasm
+#endif
