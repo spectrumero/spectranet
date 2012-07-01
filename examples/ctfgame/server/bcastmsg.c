@@ -28,6 +28,14 @@
 
 char bcast[MAXSTATUSMSG];
 
+#ifdef LANG_ES
+#define STR_BLUE "azul"
+#define STR_RED "roja"
+#else
+#define STR_BLUE "blue"
+#define STR_RED "red"
+#endif
+
 // Broadcast messages
 void broadcastCrash(Object *crasher) {
   Player *p=getPlayer(crasher->owner);
@@ -35,19 +43,27 @@ void broadcastCrash(Object *crasher) {
     broadcastFlagDrop(p);
     return;
   }
-
+#ifdef LANG_ES
+  snprintf(bcast, MAXSTATUSMSG, "%s murió.", p->name);
+#else
   snprintf(bcast, MAXSTATUSMSG, "%s crashed and died.", p->name);
+#endif
   broadcastStatusMsg(bcast);
 }
 
 void broadcastFlagDrop(Player *dropper) {
   char colour[5];
   if(dropper->team == 0) 
-    strcpy(colour, "red");
+    strcpy(colour, STR_RED);
   else
-    strcpy(colour, "blue");
+    strcpy(colour, STR_BLUE);
 
+#ifdef LANG_ES
+  snprintf(bcast, MAXSTATUSMSG, "%s ha perdido la bandera %s", dropper->name, colour);
+#else
   snprintf(bcast, MAXSTATUSMSG, "%s dropped the %s flag", dropper->name, colour);
+#endif
+
   broadcastStatusMsg(bcast);
 }
 
@@ -66,13 +82,23 @@ void broadcastDeath(Object *killed, Object *killedBy) {
     killer=getPlayer(killedBy->owner);
 
   if(isPlayerObject(killedBy)) {
+#ifdef LANG_ES
+    snprintf(bcast, MAXSTATUSMSG,
+        "%s atropelló a %s", killer->name, p->name);
+#else
     snprintf(bcast, MAXSTATUSMSG,
         "%s was run over by %s", p->name, killer->name);
+#endif
     broadcastStatusMsg(bcast);
   } 
   else if(killer != NULL && killedBy->type == FOTON) {
+#ifdef LANG_ES
+    snprintf(bcast, MAXSTATUSMSG,
+        "%s ha abatido a %s", killer->name, p->name);
+#else
     snprintf(bcast, MAXSTATUSMSG,
         "%s was shot by %s", p->name, killer->name);
+#endif
     broadcastStatusMsg(bcast);
   }
 }
@@ -82,12 +108,18 @@ void broadcastFlagSteal(Object *stealer) {
   Player *p=getPlayer(stealer->owner);
   char colour[5];
   if(stealer->team == 0) 
-    strcpy(colour, "red");
+    strcpy(colour, STR_RED);
   else
-    strcpy(colour, "blue");
+    strcpy(colour, STR_BLUE);
 
+#ifdef LANG_ES
+  snprintf(bcast, MAXSTATUSMSG, "¡%s tiene la bandera %s!",
+      p->name, colour);
+#else
   snprintf(bcast, MAXSTATUSMSG, "%s has taken the %s flag!",
       p->name, colour);
+#endif
+
   broadcastStatusMsg(bcast);
 }
 
@@ -96,12 +128,17 @@ void broadcastFlagCapture(Object *capturer) {
   Player *p=getPlayer(capturer->owner);
   char colour[5];
   if(capturer->team == 0) 
-    strcpy(colour, "red");
+    strcpy(colour, STR_RED);
   else
-    strcpy(colour, "blue");
+    strcpy(colour, STR_BLUE);
 
+#ifdef LANG_ES
+  snprintf(bcast, MAXSTATUSMSG, "¡%s ha capturado la bandera %s!",
+      p->name, colour);
+#else
   snprintf(bcast, MAXSTATUSMSG, "%s has captured the %s flag!",
       p->name, colour);
+#endif
   broadcastStatusMsg(bcast);
 }
 
@@ -110,12 +147,17 @@ void broadcastFlagReturn(Object *returner) {
   Player *p=getPlayer(returner->owner);
   char colour[5];
   if(returner->team == 0) 
-    strcpy(colour, "blue");
+    strcpy(colour, STR_BLUE);
   else
-    strcpy(colour, "red");
+    strcpy(colour, STR_RED);
 
+#ifdef LANG_ES
+  snprintf(bcast, MAXSTATUSMSG, "%s ha rescatado la bandera %s.",
+      p->name, colour);
+#else
   snprintf(bcast, MAXSTATUSMSG, "%s has returned the %s flag.",
       p->name, colour);
+#endif
   broadcastStatusMsg(bcast);
 }
 

@@ -100,6 +100,7 @@ typedef struct _object {
   int cooldown;  // Gun cooldown time remaining in frames
   int ttl;      // Time to live in frames (-1 = forever)
   int flying;    // Object flies (can't collide with owner) for this many frames
+	int destructValue;	// Value when destroyed
   uchar flags;  // various object flags
   uchar ctrls;  // What controls are being applied
   int mapColFudge;  // Map collision fudge frames
@@ -130,6 +131,7 @@ typedef struct _objprops {
   int ttl;            // Initial TTL (-1 = forever)
   int pushdecay;      // How much the push vector decays per frame
   int velqty;          // How many units to correct per correction
+	int destructValue;	// Points awarded to the destroyer
 } ObjectProperties;
 
 // Object flags
@@ -341,5 +343,6 @@ void debugMsg(uchar *msg, int bytes);
 
 // Object destruction functions
 void destroyPlayerObj(Object *obj);
+void awardDestructionPoints(Object *awardTo, Object *destroyed);
 
 #endif

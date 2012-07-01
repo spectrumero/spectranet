@@ -48,12 +48,12 @@ struct mvlookup vectbl[] = {
 // 4 = Fuel recharge
 // 5 = Ammo recharge
 ObjectProperties objprops[] = {
-  {0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1},		// Player's tank
-  {100, 320, 0, 0, 0, 0, 10, 1, 0,  45, 20, 3, 1},		// Player's missile
-  {0, 0,  0, 0, 0, 0,  0,   0,   0, 0,   0, 0, 0},		// Explosion
-  {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0},					// Flag
-  {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0},					// Fuel powerup
-  {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0}					// Ammo powerup
+  {0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1, 100},		// Player's tank
+  {100, 320, 0, 0, 0, 0, 10, 1, 0,  45, 20, 3, 1, 0},		// Player's missile
+  {0, 0,  0, 0, 0, 0,  0,   0,   0, 0,   0, 0, 0, 0},		// Explosion
+  {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0},					// Flag
+  {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 10},					// Fuel powerup
+  {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 10}					// Ammo powerup
 };
 
 int acostbl[]={4, 4, 3, 3, 2, 2, 1, 0};
@@ -667,13 +667,27 @@ void dealDamage(Object *obj1, Object *obj2) {
     obj1->flags |= (DESTROYED|EXPLODING);
     if(o1isplyr)
       broadcastDeath(obj1, obj2);
+		if(o2isplyr)
+			awardDestructionPoints(obj2, obj1);
   }
   if(obj2->armour == 0 || obj2->hp < 1) {
     obj2->flags |= (DESTROYED|EXPLODING);
     if(o2isplyr)
       broadcastDeath(obj2, obj1);
+		if(o1isplyr)
+			awardDestructionPoints(obj1, obj2);
   }
 
+}
+
+void awardDestructionPoints(Object *awardTo, Object *destroyed) {
+	Player *p=getPlayer(awardTo->owner);
+
+	if(destroyed->destructValue) {
+		p->score += destroyed->destructValue;
+		p->flags |= UPDATESB;
+	}
+		
 }
 
 // Add two vectors
@@ -786,6 +800,7 @@ Object *newObject(int objtype, int owner, int x, int y) {
   obj->armour=op->armour;
   obj->ttl=op->ttl;
   obj->flags = NEWOBJ;
+	obj->destructValue=op->destructValue;
 
   return obj;
 }
@@ -856,6 +871,7 @@ void updateScoreboard(Object *obj) {
   addHitpointMsg(obj);
   addTeamScoreMsg(obj->owner, 0);
   addTeamScoreMsg(obj->owner, 1);
+	addPlayerScoreMsg(obj->owner);
 }
 
 // Update the client with the ammunition quantity
@@ -874,6 +890,17 @@ void addHitpointMsg(Object *obj) {
   snprintf(msg.message, sizeof(msg.message),
       "%d", obj->hp);
   addMessage(obj->owner, SCOREBOARD, &msg, sizeof(msg));
+}
+
+// Update the client with the player's current score
+void addPlayerScoreMsg(int clientid) {
+	NumberMsg msg;
+	Player *p=getPlayer(clientid);
+
+	msg.numtype = PLYRSCORE;
+	snprintf(msg.message, sizeof(msg.message),
+			"%d", p->score);
+	addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
 }
 
 // Update all clients with a team score
