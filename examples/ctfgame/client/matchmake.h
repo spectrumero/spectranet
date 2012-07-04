@@ -64,6 +64,7 @@ extern void drawMatchmakingScreen();
 extern void clearPlayerList();
 extern void clrlower();
 extern void setStartable(uchar isStartable);
+extern void __FASTCALL__ getDefaultServer(char *buf);
 
 // Communications
 extern int initConnection(char *host, char *player);
