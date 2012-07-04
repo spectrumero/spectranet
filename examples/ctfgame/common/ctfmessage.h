@@ -173,8 +173,8 @@ typedef struct _matchmakeinst {
 // Game end data message
 typedef struct _gameend {
 	uchar winner;		// Set if the receiving player is a winner
-	uint16_t bluecapture;
-	uint16_t redcapture;
+	char bluecapture[4];
+	char redcapture[4];
 } GameEnd;
 
 // Control messages from the client. The controls being activated

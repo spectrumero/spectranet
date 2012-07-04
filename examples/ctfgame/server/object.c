@@ -74,6 +74,7 @@ Player *players[MAXCLIENTS];
 int teamscore[2];
 MapXY flagloc[2];
 bool flagTaken[2];
+int winningScore;
 
 // Frame counter. This is mainly used for testing and
 // debugging.
@@ -849,6 +850,11 @@ void flagCollision(Object *lhs, Object *rhs) {
   }
 }
 
+// Set the winning score
+void setWinningScore(int s) {
+	winningScore=s;
+}
+
 // Do flag capture stuff
 void flagCaptured(Object *capturer) {
   MapXY mxy;
@@ -862,6 +868,11 @@ void flagCaptured(Object *capturer) {
 
   teamscore[capturer->team]++;
   broadcastTeamScoreMsg(capturer->team);
+
+	if(teamscore[capturer->team] == winningScore) {
+		broadcastEndMatch();
+		endMatch();
+	}
 }
 
 // updateScoreboard updates all the status displays for the

@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "ctfmessage.h"
@@ -44,8 +45,8 @@ void broadcastEndMatch() {
 	int i;
 	int winner;
 
-	geMsg.bluecapture=getTeamscore(BLUETEAM);
-	geMsg.redcapture=getTeamscore(REDTEAM);
+	snprintf(geMsg.bluecapture, 4, "%d", getTeamscore(BLUETEAM));
+	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
 
 	winner = (geMsg.bluecapture > geMsg.redcapture) ? BLUETEAM : REDTEAM;
 

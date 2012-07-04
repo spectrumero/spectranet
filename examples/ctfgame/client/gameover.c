@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "ctf.h"
+#include "ctfmessage.h"
 
 #define PUTCHAR42 0x3e2a
 #define PRINT42 0x3e2d
@@ -40,6 +41,19 @@
 #define LINES	6
 #define ATTRS 0x5900
 #define ATTRVAL 0x29
+
+void __FASTCALL__ gameOver(GameEnd *msg) {
+	char buf[4];
+	setupGameOver();
+
+	if(msg->winner)
+		victory();
+	else
+		defeat();
+
+	setBlueScore(msg->bluecapture);
+	setRedScore(msg->redcapture);	
+}
 
 void setupGameOver() {
 #asm

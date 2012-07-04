@@ -198,6 +198,10 @@ int messageloop() {
           sendMsg(1);
           msgptr++;
           break;
+				case ENDGAMESCORE:
+					gameOver((GameEnd *)msgptr);
+					msgptr+=sizeof(GameEnd);
+					break;	
         default:
           sendbuf[0]=SERVERKILL;
           //zx_border(RED);
