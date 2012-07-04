@@ -81,6 +81,9 @@ int winningScore;
 unsigned long frames;
 unsigned long testend;
 
+// Game over flag
+bool gameOver;
+
 // Set all object entries to null, clear viewports etc.
 void initObjList() {
   memset(objlist, 0, sizeof(objlist));
@@ -89,6 +92,7 @@ void initObjList() {
   memset(flagloc, 0, sizeof(flagloc));
   memset(flagTaken, 0, sizeof(flagTaken));
   frames=0;
+	gameOver=FALSE;
 }
 
 // Compare two viewports to see if they are the same.
@@ -261,6 +265,11 @@ void makeUpdates() {
   sendClientMessages();
   cleanObjects();
   frames++;
+
+	// Some time in the future we'll do something better than this
+	// (perhaps give access to a ranking table etc)
+	if(gameOver)
+		resetGame();
 }
 
 // Perform updates on objects, move them, collide them, blow them up
@@ -785,6 +794,30 @@ void placeFlag(int team, int x, int y) {
   addObject(flag);
 }
 
+// Reset the game (for example, after game over)
+// Remove all players and objects, then reinitialize the flags and
+// scores.
+void resetGame() {
+	int i;
+	for(i=0; i<MAXCLIENTS; i++) {
+		Player *p=players[i];
+		if(p) {
+			// this also removes the player from memory
+			removeClient(i);
+		}
+	}
+
+	for(i=0; i<MAXOBJS; i++) {
+		Object *obj=objlist[i];
+		if(obj) {
+			free(obj);
+		}
+	}
+
+	initObjList();
+	createFlags();
+}
+
 Object *newObject(int objtype, int owner, int x, int y) {
   Object *obj=(Object *)malloc(sizeof(Object));
   ObjectProperties *op=&objprops[objtype];
@@ -872,6 +905,7 @@ void flagCaptured(Object *capturer) {
 	if(teamscore[capturer->team] == winningScore) {
 		broadcastEndMatch();
 		endMatch();
+		gameOver=TRUE;
 	}
 }
 

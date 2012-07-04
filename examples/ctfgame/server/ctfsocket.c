@@ -171,7 +171,9 @@ int getMessage() {
 
     // Find the client connection
     while((bytesleft=bytes-(msgptr-msgbuf)) > 0) {
+#ifdef COMMS_DEBUG
       printf("DEBUG: %ld: Client: %d message %x remain: %d\n", getframes(), clientid, *msgptr, bytesleft);
+#endif
       switch(*msgptr) {
         case START:
           msgptr++;
@@ -316,11 +318,17 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 // Find the client's address in the list and remove it.
 void removeClient(int clientid) {
   printf("Removing client id %d\n", clientid);
-  free(cliaddr[clientid]);
-  cliaddr[clientid]=NULL;
-  free(playerBuf[clientid]);
-  playerBuf[clientid]=NULL;
-  playerBufPtr[clientid]=NULL;
+	if(cliaddr[clientid]) {
+	  free(cliaddr[clientid]);
+  	cliaddr[clientid]=NULL;
+	}
+
+	if(playerBuf[clientid]) {
+	  free(playerBuf[clientid]);
+  	playerBuf[clientid]=NULL;
+	  playerBufPtr[clientid]=NULL;
+	}
+
   removePlayer(clientid);
 }
 
@@ -367,8 +375,10 @@ int sendMessage(int clientno) {
   if(bytes < 2) 
     return 0;
   //debugMsg(playerBuf[clientno], bytes);
+#ifdef COMMS_DEBUG
 	printf("DEBUG: sending %d messages to client %d\n",
 			*playerBuf[clientno], clientno);
+#endif
   if(sendto(sockfd, playerBuf[clientno], bytes, 0,
         (struct sockaddr *)cliaddr[clientno], sizeof(struct sockaddr_in)) < 0) {
     perror("sendto");
@@ -494,7 +504,9 @@ void doPing() {
       }
       
       if(pingdata[i].frames > PINGFRAMES) {
+#ifdef COMMS_DEBUG
         printf("Ping client %d\n", i);
+#endif
         addMessage(i, PINGMSG, &pingmsg, sizeof(pingmsg));
         pingdata[i].frames=0;
         pingdata[i].rspmiss++;

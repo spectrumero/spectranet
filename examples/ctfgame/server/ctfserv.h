@@ -270,6 +270,7 @@ void createFlags();
 void placeFlag(int team, int x, int y);
 void flagCaptured(Object *capturer);
 int usecdiff(struct timeval *now, struct timeval *then);
+void resetGame();
 
 // Communication functions
 int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz);
