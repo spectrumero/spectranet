@@ -126,14 +126,22 @@ int getPlayerData()
   printk("Leaving a field blank aborts\n\n");
   printk("\x10\x36Playername:\nServer:\n\n");
   putchar(' ');
+	
+	getDefaultServer(server);
+	if(*server) {
+		setpos(13, 11);
+		printk("%s",server);
+	}
 
   str=abortablekbinput(11, 12, sizeof(player)+1, 1, sizeof(player), 0);
   if(!str) return 0;
   strlcpy(player, str, sizeof(player));
-
-  str=abortablekbinput(11, 13, sizeof(server)+1, 1, sizeof(server), 0);
-  if(!str) return 0;
-  strlcpy(server, str, sizeof(server));
+	
+	if(!*server) {
+	  str=abortablekbinput(11, 13, sizeof(server)+1, 1, sizeof(server), 0);
+  	if(!str) return 0;
+  	strlcpy(server, str, sizeof(server));
+	}
 
   ui_status(0, "Connecting....");
 }

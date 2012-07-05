@@ -34,25 +34,37 @@
 #define OPEN	0x3EB1
 #define READ	0x3EC9
 #define	CLOSE	0x3ED2
+#define O_RDONLY	0x0001
 
 void __FASTCALL__ getDefaultServer(char *buf) {
 #asm
 	call PAGEIN
 	push hl
 	ld hl, _serverfile
+	ld de, O_RDONLY
+	ld bc, 0x00
 	call OPEN
 	jr c, none
 	pop de			; buffer to fill
 	push de
-	ld bc, 0x20	; max 32 bytes
+	ld bc, 0x10	; max 16 bytes
 	push af
 	call READ
 	jr c, closenone
 	pop af
-	pop hl
-	add hl, bc
-	ld (hl), 0
 	call CLOSE
+.fixstring
+	pop hl
+	ld b, 0x10
+.fixloop
+	ld a, (hl)
+	cp 0x20
+	jr nc, nochange
+	ld (hl), 0
+.nochange
+	inc hl
+	djnz fixloop
+	
 	jr done
 
 .closenone
