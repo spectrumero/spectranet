@@ -59,7 +59,6 @@ int loadMap(const char *filename) {
     return -1;
   }
   lastrow=row-1;
-  printf("Loaded map: Rows = %d\n", row);
   return 0;
 }
 
@@ -159,7 +158,6 @@ int sendMapMsg(int clientid, Viewport *vp) {
     }
   }
   memcpy(&msg[2], &ntiles, sizeof(uint16_t));
-  printf("Sent %d tiles\n", ntiles);
   return sendMessageBuf(clientid, msg, msgptr-msg);	
   return 0;
 }

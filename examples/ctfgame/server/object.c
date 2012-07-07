@@ -141,6 +141,7 @@ int deleteObject(Object *obj) {
 // Returns a NULL pointer if a player couldn't be added.
 Player *makeNewPlayer(int clientid, char *playerName) {
   int playeridx;
+	char joinmsg[80];
   Player *p;
 
   p=(Player *)malloc(sizeof(Player));
@@ -152,6 +153,9 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 
   memset(p, 0, sizeof(Player));
   strlcpy(p->name, playerName, MAXNAME);
+
+	snprintf(joinmsg, sizeof(joinmsg), "%s connected.", p->name);
+	printMessage(joinmsg);
 
 	p->team=NOTEAM;
 	orderTeams();
@@ -181,8 +185,8 @@ void removePlayer(int clientid) {
 // and the start message.
 void startPlayer(int clientid) {
   MapXY spawn;
+	char buf[80];
   Player *player=players[clientid];
-  fprintf(stderr, "startPlayer for client %d\n", clientid);
   spawn=spawnPlayer(clientid, player);
 
   // Tell the client to initialize. The client will use the MapXY
@@ -190,6 +194,14 @@ void startPlayer(int clientid) {
   // then respond by telling the server the viewport.
   addInitGameMsg(clientid, &spawn);
   sendMessage(clientid);
+
+	if(player->team == BLUETEAM)
+		snprintf(buf, sizeof(buf), "%s has spawned on the map for the blue team",
+				player->name);
+	else
+		snprintf(buf, sizeof(buf), "%s has spawned on the map for the red team",
+				player->name);
+	printMessage(buf);
 }
 
 // Spawn a player
@@ -408,8 +420,6 @@ void makeSpriteUpdates(int clientid) {
 int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid) {
   SpriteMsg sm;
 
-  //printf("Adding spritemessage\n");
-
   sm.x=(obj->x >> 4) - view->tx;
   sm.y=(obj->y >> 4) - view->ty;
   sm.objid=objid;
@@ -503,7 +513,6 @@ void collisionDetect() {
       if(!(obj->flags & NOCOLLIDE) &&
           obj->mapColFudge == 0 &&
           detectMapCollision(obj)) {
-        printf("%ld: Map collision: Object %d\n", frames, i);
 
         if(obj->armour == 0) {
           // Destroy it immediately and stop it from moving.
@@ -551,7 +560,6 @@ void collisionDetect() {
           flagCollision(objlist[i], objlist[j]);
         }
         else {
-          printf("%ld: Collision! Object %d with object %d\n", frames, i, j);
           if(objlist[i]->collisionFunc)
             objlist[i]->collisionFunc(objlist[i], objlist[j]);
           if(objlist[j]->collisionFunc)
@@ -619,9 +627,6 @@ void fireWeapon(Object *firer) {
   missile->damage = op.damage;
   missile->ttl = op.ttl;
   missile->flying = 5;
-
-  printf("Missile dir: %d Velocity %d\n", missile->actual.dir, missile->actual.velocity);
-  printf("Object dir: %d Velocity %d\n", firer->actual.dir, firer->actual.velocity);
 
   firer->ammo--;
   firer->cooldown=objprops[firer->type].gunCooldown;
@@ -740,7 +745,6 @@ Vector addVector(Vector *v1, Vector *v2) {
   // Find out the total displacement given by the two vectors
   dx=dx1 + dx2;
   dy=dy1 + dy2;
-  printf("dx = %d dy = %d\n", dx, dy);
   if(dx == 0 && dy == 0) {
     result.dir=0;
     result.velocity=0;
@@ -759,8 +763,6 @@ Vector addVector(Vector *v1, Vector *v2) {
     dir = acostbl[tblentry]+7;
   else
     dir = acostbl2[tblentry]+11;
-
-  printf("hyp = %f tblentry = %d dir = %d\n", hyp, tblentry, dir);
 
   result.dir=dir;
   result.velocity=hyp;
@@ -814,6 +816,7 @@ void resetGame() {
 		}
 	}
 
+	printMessage("**** Game server reset.");
 	initObjList();
 	createFlags();
 }
@@ -822,8 +825,6 @@ Object *newObject(int objtype, int owner, int x, int y) {
   Object *obj=(Object *)malloc(sizeof(Object));
   ObjectProperties *op=&objprops[objtype];
   memset(obj, 0, sizeof(Object));
-
-  printf("New obj: loc=%d, %d\n", x, y);
 
   obj->commanded.velocity=op->initVelocity;
   obj->owner=owner;
@@ -876,7 +877,6 @@ void flagCollision(Object *lhs, Object *rhs) {
     else {
       flag->flags |= DESTROYED;
       thing->flags |= HASFLAG;
-      printf("Team %d flag captured\n", flag->team);
       flagTaken[flag->team] = TRUE;
       broadcastFlagSteal(thing);
     }

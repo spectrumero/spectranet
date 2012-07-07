@@ -41,12 +41,16 @@ int main(int argc, char **argv) {
 		exit(-1);
 	}
 
+	// Start the scoreboard.
+	setupScreen();
+
 	// For testing. Replace when getopt is integrated.
 	setWinningScore(1);
 
 	initObjList();
 	createFlags();
 	if(messageLoop() < 0) {
+		shutdownScoreboard();
 		fprintf(stderr, "Message loop exited\n");
 		exit(-1);
 	}

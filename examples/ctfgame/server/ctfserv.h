@@ -31,6 +31,10 @@
 #include <netinet/in.h>
 #endif
 
+#ifdef USECURSES
+#include <curses.h>
+#endif
+
 #ifdef WIN32
 #include <windows.h>
 #include <winsock2.h>
@@ -337,6 +341,17 @@ void tryToStopMatchmaking();
 int getTeamscore(int team);
 void endMatch();
 void broadcastEndMatch();
+
+// Server scoreboard.
+#ifdef USECURSES
+WINDOW *mkwin(int height, int width, int starty, int startx);
+#endif
+void addPlayerName(int team, char *name, int winner);
+void printMessage(char *msg);
+void newScore();
+void addTeamScore(int team, int score, int winner);
+void setupScreen();
+void shutdownScoreboard();
 
 // For testing
 unsigned long getframes();

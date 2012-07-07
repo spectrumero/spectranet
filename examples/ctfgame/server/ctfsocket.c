@@ -200,9 +200,6 @@ int getMessage() {
           memcpy(&player->view, msgptr, sizeof(Viewport));
 
           player->flags |= NEWVIEWPORT;
-          printf("client: %d viewport %d,%d to %d,%d\n", clientid,
-              player->view.tx, player->view.ty,
-              player->view.bx, player->view.by);
           msgptr+=sizeof(Viewport);
 
           break;
@@ -268,8 +265,6 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
     if(cliaddr[i] == NULL) {
       cliaddr[i]=(struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
       memcpy(cliaddr[i], client, sizeof(struct sockaddr_in));
-      printf("Adding new client: %s:%d - slot %d\n",
-          inet_ntoa(client->sin_addr), ntohs(client->sin_port), i);
 
       // create the main message buffer for the player
       playerBuf[i] = (unsigned char *)malloc(MSGBUFSZ);
@@ -317,7 +312,6 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 
 // Find the client's address in the list and remove it.
 void removeClient(int clientid) {
-  printf("Removing client id %d\n", clientid);
 	if(cliaddr[clientid]) {
 	  free(cliaddr[clientid]);
   	cliaddr[clientid]=NULL;
@@ -403,6 +397,9 @@ void broadcastStatusMsg(char *str) {
       addMessage(i, MESSAGEMSG, &msg, sizeof(MessageMsg));
     }
   }
+
+	// Also print the message on the server scoreboard.
+	printMessage(str);
 }
 
 // Broadcast matchmaking messages
@@ -489,7 +486,6 @@ void doPing() {
     if(p && p->flags & (MATCHMAKING|RUNNING))
     {
       if(pingdata[i].rspmiss > MAXRSPMISS) {
-        printf("Remove client %i\n", i);
         // make a copy of the player name since it will get freed with
         // the player object
         gonestr=(char *)malloc(MAXSTATUSMSG);

@@ -45,16 +45,29 @@ void broadcastEndMatch() {
 	int i;
 	int winner;
 
+	// setup server scoreboard for a new match score
+	newScore();
+
 	snprintf(geMsg.bluecapture, 4, "%d", getTeamscore(BLUETEAM));
 	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
 
-	winner = (geMsg.bluecapture > geMsg.redcapture) ? BLUETEAM : REDTEAM;
+	winner = (getTeamscore(BLUETEAM) > getTeamscore(REDTEAM)) 
+		? BLUETEAM : REDTEAM;
+	printMessage("**** Game Over ****");
+	if(winner == BLUETEAM) 
+		printMessage("Blue team wins!");
+	else
+		printMessage("Red team wins!");
+
+	addTeamScore(BLUETEAM, getTeamscore(BLUETEAM), winner);
+	addTeamScore(REDTEAM, getTeamscore(REDTEAM), winner);
 
 	for(i=0; i<MAXCLIENTS; i++) {
 		Player *p=getPlayer(i);
 		if(p) {
 			geMsg.winner = (p->team == winner) ? 1 : 0;
 			addMessage(i, ENDGAMESCORE, &geMsg, sizeof(geMsg));
+			addPlayerName(p->team, p->name, winner);
 		}
 	}
 }

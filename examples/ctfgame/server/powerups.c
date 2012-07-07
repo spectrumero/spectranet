@@ -49,7 +49,6 @@ void addPowerup(MapXY location, int tiletype) {
 	s->x = location.mapx << 4;
 	s->y = location.mapy << 4;
 	s->cooldown = getCooldown();
-	printf("New powerup, cooldown = %d\n", s->cooldown);
 
 	switch(tiletype) {
 		case 'f':	// fuel
@@ -59,7 +58,7 @@ void addPowerup(MapXY location, int tiletype) {
 			s->type = AMMOID;
 			break;
 		default:
-			printf("Unknown powerup spawn: %d\n", tiletype);
+			fprintf(stderr, "Unknown powerup spawn: %d\n", tiletype);
 			exit(-1);
 	}
 
@@ -71,7 +70,6 @@ void addPowerup(MapXY location, int tiletype) {
 // matter what RAND_MAX is, it shoudl come up with something sensible
 int getCooldown() {
 	int r = rand() % MAXPWRCOOLDOWN;
-	printf("r = %d\n", r);
 	if(r < MINPWRCOOLDOWN)
 		r=MINPWRCOOLDOWN;
 	return r;
