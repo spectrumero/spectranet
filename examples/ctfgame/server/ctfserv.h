@@ -347,7 +347,8 @@ void broadcastEndMatch();
 WINDOW *mkwin(int height, int width, int starty, int startx);
 #endif
 void addPlayerName(int team, char *name, int winner);
-void printMessage(char *msg);
+void printMessage(const char *msg, ...);
+void printError(const char *fmt, ...);
 void newScore();
 void addTeamScore(int team, int score, int winner);
 void setupScreen();

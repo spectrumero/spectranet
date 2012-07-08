@@ -114,7 +114,7 @@ void addObject(Object *obj) {
       return;
     }
   }
-  fprintf(stderr, "addObject: Object list is full!\n");
+  printError("addObject: Object list is full!");
 }
 
 // Remove an object from the list (not: does not free the object
@@ -127,7 +127,7 @@ int deleteObject(Object *obj) {
       return;
     }
   }
-  fprintf(stderr, "deleteObject: object not found\n");
+  printError("deleteObject: object not found");
 }
 
 // This is called before the game starts. We just initialize
@@ -141,7 +141,6 @@ int deleteObject(Object *obj) {
 // Returns a NULL pointer if a player couldn't be added.
 Player *makeNewPlayer(int clientid, char *playerName) {
   int playeridx;
-	char joinmsg[80];
   Player *p;
 
   p=(Player *)malloc(sizeof(Player));
@@ -154,8 +153,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
   memset(p, 0, sizeof(Player));
   strlcpy(p->name, playerName, MAXNAME);
 
-	snprintf(joinmsg, sizeof(joinmsg), "%s connected.", p->name);
-	printMessage(joinmsg);
+	printMessage("%s connected.", p->name);
 
 	p->team=NOTEAM;
 	orderTeams();
@@ -185,7 +183,6 @@ void removePlayer(int clientid) {
 // and the start message.
 void startPlayer(int clientid) {
   MapXY spawn;
-	char buf[80];
   Player *player=players[clientid];
   spawn=spawnPlayer(clientid, player);
 
@@ -196,12 +193,11 @@ void startPlayer(int clientid) {
   sendMessage(clientid);
 
 	if(player->team == BLUETEAM)
-		snprintf(buf, sizeof(buf), "%s has spawned on the map for the blue team",
+		printMessage("%s has spawned on the map for the blue team",
 				player->name);
 	else
-		snprintf(buf, sizeof(buf), "%s has spawned on the map for the red team",
+		printMessage("%s has spawned on the map for the red team",
 				player->name);
-	printMessage(buf);
 }
 
 // Spawn a player

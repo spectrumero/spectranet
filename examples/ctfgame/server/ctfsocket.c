@@ -237,12 +237,13 @@ int getMessage() {
           // development. It allows us to stop the server as soon
           // as the client barfs on a server message so we can check
           // stdout on the server.
-          fprintf(stderr, "Got serverkill from client %d, exiting\n",
+					shutdownScoreboard();
+         	fprintf(stderr, "Got serverkill from client %d.\n", 
               clientid);
           exit(-1);
           break;
         default:
-          fprintf(stderr, "Unknown message %x from client %d\n",
+          printError("Unknown message %x from client %d",
               *msgptr, clientid);
           // stop processing messages in this block as soon
           // as we get a bad one.
@@ -282,7 +283,7 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
           return -1;
         }
       } else {
-        fprintf(stderr, "Could not create player.\n");
+        printError("Could not create player.");
 
         // Give the client the bad news
         ackbuf[1]=UNABLE;
@@ -338,7 +339,7 @@ int findClient(struct sockaddr_in *client) {
   }
 
 
-  fprintf(stderr, "findClient: erk, unable to find client %s:%d\n",
+  printError("findClient: erk, unable to find client %s:%d",
       inet_ntoa(client->sin_addr), ntohs(client->sin_port));
   return -1;
 }
@@ -353,7 +354,7 @@ void sendClientMessages() {
       rc=sendMessage(i);
       if(rc < 0) {
         // Error when calling sendto; eliminate the client.
-        fprintf(stderr, "Transmit error: removing client %d\n", i);
+        printError("Transmit error: removing client %d", i);
         removeClient(i);
       }
     }
@@ -419,7 +420,7 @@ int addMessage(int clientno, unsigned char msgid, void *msg, ssize_t msgsz) {
   //printf("addMessage: clientno %d msgid %d msgsz %d\n",
   //		clientno, msgid, msgsz);
   if(bytesused > MSGBUFSZ) {
-    fprintf(stderr, "too many messages for client %d\n", clientno);
+    printError("too many messages for client %d", clientno);
     return -1;
   }
 

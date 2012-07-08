@@ -51,7 +51,8 @@ void setupScreen() {
 	nodelay(stdscr, TRUE);
 	init_pair(1, COLOR_CYAN, COLOR_BLUE);
 	init_pair(2, COLOR_WHITE, COLOR_RED);
-	init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_CYAN, COLOR_BLACK);
+	init_pair(4, COLOR_YELLOW, COLOR_BLACK);
 
 	getmaxyx(stdscr, row, col);
 
@@ -96,12 +97,40 @@ WINDOW *mkwin(int height, int width, int starty, int startx) {
 }
 #endif
 
-void printMessage(char *msg) {
+void printMessage(const char *fmt, ...) {
+	va_list argp;
+	va_start(argp, fmt);
+
 #ifdef USECURSES
-	wprintw(msgwin, "%s\n", msg);
+	wattron(msgwin, COLOR_PAIR(3));
+	vwprintw(msgwin, fmt, argp);
+	wprintw(msgwin, "\n");
 	wrefresh(msgwin);
+#else
+	vprintf(fmt, argp);
+	printf("\n");
 #endif
+
+	va_end(argp);
 }
+
+void printError(const char *fmt, ...) {
+	va_list argp;
+	va_start(argp, fmt);
+
+#ifdef USECURSES
+	wattron(msgwin, A_BOLD|COLOR_PAIR(4));
+	vwprintw(msgwin, fmt, argp);
+	wprintw(msgwin, "\n");
+	wrefresh(msgwin);
+	wattroff(msgwin, A_BOLD);
+#else
+	vfprintf(stderr, fmt, argp);
+#endif
+
+	va_end(argp);
+}
+
 
 void newScore() {
 #ifdef USECURSES
