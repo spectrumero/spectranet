@@ -62,7 +62,7 @@ extern void getInput();
 //extern int initConnection(char *host, char *player);
 extern void initConnection(int s, struct sockaddr_in *addr);
 extern int startGame(MapXY *xy);
-extern int disconnect();
+extern int disconnect(char sendbye);
 extern int sendSyncMsg(int txbytes);
 extern int sendMsg(int txbytes);
 extern int sendControlMsg(uchar dirs);

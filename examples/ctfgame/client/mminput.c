@@ -202,6 +202,9 @@ void handleKey(uchar key)
 				debounce_enter=1;
 			break;
 		default:	/* normal key */
+			if(key < 32 || key > 127)
+				break;
+
 			debounce_enter=1;
 			if(inputidx >= sizeof(inputbuf) ||
 			   inputidx >= length)

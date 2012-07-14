@@ -81,8 +81,6 @@ void setupGameOver() {
 	add hl, bc
 	pop bc
 	djnz set_attr_loop
-	ld a, 1
-	out (254), a
 
 .put_text
 	ld hl, GOWIN

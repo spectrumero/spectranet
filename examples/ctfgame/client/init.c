@@ -67,10 +67,14 @@ main() {
 
 	initSpriteLib();
 
-	//rc=initConnection("127.0.0.1", "Artanis");
 	setupStatusAreas(PAPER_BLUE|INK_CYAN);
 	rc=startGame(&xy);
 	rc=findViewport(&xy);
 	rc=messageloop();
-	rc=disconnect();
+	rc=disconnect(FALSE);
+
+#asm
+	call 0x007C
+	ei
+#endasm
 }

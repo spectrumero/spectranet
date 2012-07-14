@@ -201,7 +201,9 @@ int messageloop() {
 				case ENDGAMESCORE:
 					gameOver((GameEnd *)msgptr);
 					msgptr+=sizeof(GameEnd);
-					break;	
+
+					// May Djkastra turn in his grave.
+					goto leave;
         default:
           sendbuf[0]=SERVERKILL;
           //zx_border(RED);
@@ -217,13 +219,17 @@ int messageloop() {
       spriteMsgs=FALSE;
     }
   }
+leave:
 }
 
 // disconnect from the game, and inform the server that we've gone
-int disconnect() {
+int disconnect(char sendbye) {
   int rc, i;
-  sendbuf[0]=BYE;
-  rc=sendSyncMsg(1);
+	if(sendbye) {
+	  sendbuf[0]=BYE;
+  	rc=sendSyncMsg(1);
+	} else
+		rc=0;
 
   sockclose(sockfd);
   return rc;

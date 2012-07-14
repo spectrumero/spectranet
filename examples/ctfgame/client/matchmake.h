@@ -40,6 +40,7 @@ extern char *abortablekbinput(int x, int y, int wid, int ht, int sz, char pw);
 extern void ia_cls();
 extern void setUIAttrs();
 extern void setpos(char y, char x);
+extern void replaceSpaces(char *str);
 
 // IM2 input routines
 extern void resetinput(char sx, char sy, char wid, char hgt, int len);

@@ -183,7 +183,7 @@ int messageloop() {
 					// it.
 					wpoke(27000, sockfd);
 					memcpy(27002, remoteaddr, sizeof(struct sockaddr_in));
-					printk("DEBUG: sockfd=%d\n",sockfd);
+//					printk("DEBUG: sockfd=%d\n",sockfd);
 					return 0;					
         default:
 					printk("\nSERVERKILL: msg = %d\n", msgType);

@@ -133,9 +133,12 @@ int getPlayerData()
 		printk("%s",server);
 	}
 
-  str=abortablekbinput(11, 12, sizeof(player)+1, 1, sizeof(player), 0);
-  if(!str) return 0;
+	do {
+  	str=abortablekbinput(11, 12, sizeof(player)+1, 1, sizeof(player), 0);
+	} while(!str);
+  
   strlcpy(player, str, sizeof(player));
+	replaceSpaces(player);
 	
 	if(!*server) {
 	  str=abortablekbinput(11, 13, sizeof(server)+1, 1, sizeof(server), 0);
@@ -144,6 +147,14 @@ int getPlayerData()
 	}
 
   ui_status(0, "Connecting....");
+}
+
+void replaceSpaces(char *str) {
+	while(*str) {
+		if(*str == 32)
+			*str='_';
+		str++;
+	}
 }
 
 void ui_status(int code, char *msg)
