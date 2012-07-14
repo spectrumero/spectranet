@@ -338,6 +338,7 @@ uchar isGameStartable();
 void tryToStopMatchmaking();
 
 // Scoreboard and match end.
+void addPlayerScoreMsg(int clientid);
 int getTeamscore(int team);
 void endMatch();
 void broadcastEndMatch();
@@ -349,10 +350,12 @@ WINDOW *mkwin(int height, int width, int starty, int startx);
 void addPlayerName(int team, char *name, int winner);
 void printMessage(const char *msg, ...);
 void printError(const char *fmt, ...);
-void newScore();
+void newScore(bool write);
+void endScore();
 void addTeamScore(int team, int score, int winner);
 void setupScreen();
 void shutdownScoreboard();
+void loadScores();
 
 // For testing
 unsigned long getframes();

@@ -46,7 +46,7 @@ void broadcastEndMatch() {
 	int winner;
 
 	// setup server scoreboard for a new match score
-	newScore();
+	newScore(true);
 
 	snprintf(geMsg.bluecapture, 4, "%d", getTeamscore(BLUETEAM));
 	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
@@ -70,5 +70,6 @@ void broadcastEndMatch() {
 			addPlayerName(p->team, p->name, winner);
 		}
 	}
+	endScore();
 }
 

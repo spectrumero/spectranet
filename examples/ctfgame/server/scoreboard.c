@@ -29,6 +29,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "ctfserv.h"
 
 #ifdef USECURSES
@@ -38,6 +39,10 @@ WINDOW *redTeamWin;
 WINDOW *blueFlagWin;
 WINDOW *redFlagWin;
 #endif
+FILE *scstream;
+
+/* TODO: some kind of option */
+#define SCOREFILE "spectankscore"
 
 bool addname[2];
 
@@ -78,6 +83,7 @@ void setupScreen() {
 	wrefresh(redFlagWin);
 	wrefresh(msgwin);
 #endif
+	loadScores();
 }
 
 void shutdownScoreboard() {
@@ -132,7 +138,7 @@ void printError(const char *fmt, ...) {
 }
 
 
-void newScore() {
+void newScore(bool write) {
 #ifdef USECURSES
 	wprintw(blueTeamWin, "\n");
 	wprintw(redTeamWin, "\n");
@@ -141,6 +147,15 @@ void newScore() {
 	addname[0]=FALSE;
 	addname[1]=FALSE;
 #endif
+	if(write) {
+		scstream=fopen(SCOREFILE, "a");
+		if(!scstream) 
+			printError("Unable to write to scorefile: errno=%d", errno);
+		fprintf(scstream,"-\n");
+	}
+	else {
+		scstream=NULL;
+	}
 }
 
 void addPlayerName(int team, char *name, int winner) {
@@ -163,6 +178,8 @@ void addPlayerName(int team, char *name, int winner) {
 	}
 	wrefresh(tw);
 #endif
+	if(scstream)
+		fprintf(scstream, "p %d %s %d\n", team, name, winner);
 }
 
 void addTeamScore(int team, int score, int winner) {
@@ -179,4 +196,43 @@ void addTeamScore(int team, int score, int winner) {
 	wprintw(tw, "%d", score);
 	wrefresh(tw);
 #endif
-}	
+	if(scstream)
+		fprintf(scstream, "t %d %d %d\n", team, score, winner);
+}
+
+void endScore() {
+	if(scstream) {
+		fclose(scstream);
+		scstream=NULL;
+	}
+}
+
+void loadScores() {
+	FILE *sb;
+	char buf[80];
+	int team, score, winner;
+	char name[80];
+
+	if((sb=fopen(SCOREFILE, "r")) != NULL) {
+		while(fgets(buf, sizeof(buf), sb)) {
+			switch(*buf) {
+				case '-':
+					newScore(FALSE);
+					break;
+				case 't':
+					sscanf(buf, "t %d %d %d\n", &team, &score, &winner);
+					addTeamScore(team, score, winner);
+					break;
+				case 'p':
+					sscanf(buf, "p %d %s %d\n", &team, name, &winner);
+					addPlayerName(team, name, winner);
+					break;
+				default:
+					printError("Unknown item in score file: %s", buf);
+			}
+		}
+		fclose(sb);
+	}
+	else 
+		printError("Unable to load scorefile: errno = %d", errno);
+}
