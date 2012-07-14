@@ -54,6 +54,7 @@ void setupScreen() {
 
 	cbreak();
 	nodelay(stdscr, TRUE);
+	curs_set(0);
 	init_pair(1, COLOR_CYAN, COLOR_BLUE);
 	init_pair(2, COLOR_WHITE, COLOR_RED);
 	init_pair(3, COLOR_CYAN, COLOR_BLACK);
