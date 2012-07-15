@@ -26,6 +26,7 @@
 
 #include <spectrum.h>
 #include <string.h>
+#include <input.h>
 
 #include "ctf.h"
 #include "ctfmessage.h"
@@ -44,6 +45,7 @@
 
 void __FASTCALL__ gameOver(GameEnd *msg) {
 	char buf[4];
+	uchar key;
 	setupGameOver();
 
 	if(msg->winner)
@@ -53,6 +55,15 @@ void __FASTCALL__ gameOver(GameEnd *msg) {
 
 	setBlueScore(msg->bluecapture);
 	setRedScore(msg->redcapture);	
+
+	/* we are no longer in the game loop, so dump the entire message
+	 * out at once */
+	putEntireMessage("Press ENTER to finish");
+
+	// wait for ENTER
+	while(in_Inkey() != '\n');
+
+	fadeOut();
 }
 
 void setupGameOver() {

@@ -74,6 +74,8 @@ extern void __FASTCALL__ displayEnergy(char *msg);
 extern void __FASTCALL__ displayAmmo(char *msg);
 extern void __FASTCALL__ setMsgArea(MessageMsg *msg);
 extern void __FASTCALL__ putmsgchar(char ch);
+extern void clearStatusLine();
+extern void __FASTCALL__ putEntireMessage(char *msg);
 extern void __FASTCALL__ displayPlayerScore(char *msg);
 extern void __FASTCALL__ displayBlueScore(char *msg);
 extern void __FASTCALL__ displayRedScore(char *msg);
@@ -90,6 +92,7 @@ extern void __FASTCALL__ setBlueScore(char *score);
 extern void __FASTCALL__ setRedScore(char *score);
 extern void victory();
 extern void defeat();
+extern void fadeOut();
 
 #endif
 

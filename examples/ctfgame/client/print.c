@@ -263,48 +263,52 @@ void __FASTCALL__ setMsgArea(MessageMsg *msg) {
 	strlcpy(gamemsg, msg->message, MAXSTATUSMSG);
 	msgpos=0;
 	msglen=msg->msgsz;
+	clearStatusLine();
+}
+
+void clearStatusLine() {
 #asm
-	ld hl, 0x50e0
-	ld de, 0x50e1
-	ld bc, 31
-	xor a
-	ld (hl), a
-	ldir
-	ld hl, 0x51e0
-	ld de, 0x51e1
-	ld bc, 31
-	ld (hl), a
-	ldir
-	ld hl, 0x52e0
-	ld de, 0x52e1
-	ld bc, 31
-	ld (hl), a
-	ldir
-	ld hl, 0x53e0
-	ld de, 0x53e1
-	ld bc, 31
-	ld (hl), a
-	ldir
-	ld hl, 0x54e0
-	ld de, 0x54e1
-	ld bc, 31
-	ld (hl), a
-	ldir
-	ld hl, 0x55e0
-	ld de, 0x55e1
-	ld bc, 31
-	ld (hl), a
-	ldir
-	ld hl, 0x56e0
-	ld de, 0x56e1
-	ld bc, 31
-	ld (hl), a
-	ldir
-	ld hl, 0x57e0
-	ld de, 0x57e1
-	ld bc, 31
-	ld (hl), a
-	ldir
+  ld hl, 0x50e0
+  ld de, 0x50e1
+  ld bc, 31
+  xor a
+  ld (hl), a
+  ldir
+  ld hl, 0x51e0
+  ld de, 0x51e1
+  ld bc, 31
+  ld (hl), a
+  ldir
+  ld hl, 0x52e0
+  ld de, 0x52e1
+  ld bc, 31
+  ld (hl), a
+  ldir
+  ld hl, 0x53e0
+  ld de, 0x53e1
+  ld bc, 31
+  ld (hl), a
+  ldir
+  ld hl, 0x54e0
+  ld de, 0x54e1
+  ld bc, 31
+  ld (hl), a
+  ldir
+  ld hl, 0x55e0
+  ld de, 0x55e1
+  ld bc, 31
+  ld (hl), a
+  ldir
+  ld hl, 0x56e0
+  ld de, 0x56e1
+  ld bc, 31
+  ld (hl), a
+  ldir
+  ld hl, 0x57e0
+  ld de, 0x57e1
+  ld bc, 31
+  ld (hl), a
+  ldir
 #endasm
 }
 
@@ -324,6 +328,21 @@ void __FASTCALL__ putmsgchar(char ch) {
 	ld (PRROW), de
 	ld a, l
 	call PUTCHAR42		
+#endasm
+}
+
+void __FASTCALL__ putEntireMessage(char *msg) {
+#asm
+	push hl
+#endasm
+	clearStatusLine();
+#asm
+	xor a
+	ld (PRCOL), a
+	ld de, 20704
+	ld (PRROW), de
+	pop hl
+	call PRINT42
 #endasm
 }
 
