@@ -44,6 +44,7 @@ void main() {
 	rc=initConnection(getServer(), getPlayer());
 	if(rc == 0) {
 		ui_status(rc, "Connected");
+		fadeOut();
 		drawMatchmakingScreen();
 		readyToMatchmake();
 		rc=messageloop();
@@ -51,6 +52,7 @@ void main() {
 	else
 		ui_status(rc, "Connection failed");
 
+	fadeOut();
 	inputexit();
 }
 
