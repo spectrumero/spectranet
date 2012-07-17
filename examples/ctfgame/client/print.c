@@ -39,6 +39,7 @@
 char gamemsg[43];
 uchar msglen;
 uchar msgpos;
+uchar printpos;
 uchar flagindbg;
 
 #define MSGLINE 20704
@@ -262,6 +263,7 @@ void __FASTCALL__ displayRedScore(char *msg) {
 void __FASTCALL__ setMsgArea(MessageMsg *msg) {
 	strlcpy(gamemsg, msg->message, MAXSTATUSMSG);
 	msgpos=0;
+	printpos=0;
 	msglen=msg->msgsz;
 	clearStatusLine();
 }
@@ -314,15 +316,24 @@ void clearStatusLine() {
 
 // Writes the next char to the message area
 void updateMsgArea() {
+	uchar ch;
 	if(msgpos == msglen)
 		return;
-	putmsgchar(*(gamemsg+msgpos));
+	ch=*(gamemsg+msgpos);
+	putmsgchar(ch);
+
+	// don't advance the print position in case of characters
+	// that might be part of a UTF8 sequence. We only care about
+	// 0xC3/0xC2 sequences.
+	if(ch != 0xC3 && ch != 0xC2) {
+		printpos++;
+	}
 	msgpos++;
 }
 
 void __FASTCALL__ putmsgchar(char ch) {
 #asm
-	ld a, (_msgpos)
+	ld a, (_printpos)
 	ld (PRCOL), a
 	ld de, 20704
 	ld (PRROW), de
