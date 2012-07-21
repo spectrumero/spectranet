@@ -44,7 +44,7 @@ void broadcastCrash(Object *crasher) {
     return;
   }
 #ifdef LANG_ES
-  snprintf(bcast, MAXSTATUSMSG, "%s murió.", p->name);
+  snprintf(bcast, MAXSTATUSMSG, "%s ha chocado y ha muerto.", p->name);
 #else
   snprintf(bcast, MAXSTATUSMSG, "%s crashed and died.", p->name);
 #endif
@@ -84,7 +84,7 @@ void broadcastDeath(Object *killed, Object *killedBy) {
   if(isPlayerObject(killedBy)) {
 #ifdef LANG_ES
     snprintf(bcast, MAXSTATUSMSG,
-        "%s atropelló a %s", killer->name, p->name);
+        "%s ha atropellado a %s", killer->name, p->name);
 #else
     snprintf(bcast, MAXSTATUSMSG,
         "%s was run over by %s", p->name, killer->name);
