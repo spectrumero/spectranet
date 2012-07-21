@@ -123,8 +123,13 @@ int getPlayerData()
   int rc;
 
   setpos(10,0);
+#ifdef LANG_ES
+	printk("Deja un campo vacio para salir\n\n");
+	printk("\x10\x36Tu apodo:\nServidor:\n\n");
+#else
   printk("Leaving a field blank aborts\n\n");
   printk("\x10\x36Playername:\nServer:\n\n");
+#endif
   putchar(' ');
 	
 	getDefaultServer(server);
@@ -166,14 +171,22 @@ void ui_status(int code, char *msg)
   printk("\x10\x36\x11\x32");
   if(!msg)
   {
+#ifdef LANG_ES
+		printk("Codigo %d - fallo\n", code);
+#else
     printk("Code %d - failed!\n", code);
+#endif
   }
   else
   {
     if(code == 0)
       printk("%s\n", msg);
     else
+#ifdef LANG_ES
+			printk("Codigo %d - %s\n", code, msg);
+#else
       printk("Code %d - %s\n", code, msg);
+#endif
   }
   setUIAttrs();
 }
@@ -191,7 +204,11 @@ char *abortablekbinput(int x, int y, int wid, int ht, int sz, char pw)
     {
       setpos(22,0);
       setUIAttrs();
+#ifdef LANG_ES
+			printk("\x10\x36Seguro que quieres salir?\x10\x34 (S/N)");
+#else
       printk("\x10\x36Sure you want to abort?\x10\x34 (Y/N)");
+#endif
       while(1)
       {
         kb=getSingleKeypress();
@@ -200,7 +217,11 @@ char *abortablekbinput(int x, int y, int wid, int ht, int sz, char pw)
 
       setpos(22, 0);
       printk("                                ");
+#ifdef LANG_ES
+			if(kb == 's')
+#else
       if(kb == 'y')
+#endif
         return NULL;
     }
     else
@@ -234,24 +255,47 @@ void drawMatchmakingScreen()
 {
 	clrlower();
 	setpos(6, 1);
+#ifdef LANG_ES
+	printk("Pulsa 0 cuando estes listo\n");
+	printk("       1 unirse al equipo AZUL\n");
+	printk("       2 unirse al equipo ROJO\n");
+#else
 	printk("Press 0 when ready\n");
 	printk("       1 to join BLUE\n");
 	printk("       2 to join RED\n");
+#endif
 	setpos(11,1);
+#ifdef LANG_ES
+	printk("\x111EQUIPO AZUL");
+#else
 	printk("\x111BLUE TEAM");
+#endif
 	setpos(11,20);
+#ifdef LANG_ES
+	printk("\x112EQUIPO ROJO");
+#else
 	printk("\x112RED TEAM");
+#endif
 	setpos(17,1);
+#ifdef LANG_ES
+	printk("\x110No pertenecen a un equipo:");
+#else
 	printk("\x110Not on a team yet:");
+#endif
 }
 
 void setStartable(uchar isStartable) {
 	setpos(9,7);
 	if(isStartable) {
+#ifdef LANG_ES
+		printk("S para empezar el juego");
+#else
 		printk("S to start game");
+#endif
+
 	}
 	else {
-		printk("               ");
+		printk("                       ");
 	}
 }
 

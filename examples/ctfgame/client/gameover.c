@@ -58,7 +58,11 @@ void __FASTCALL__ gameOver(GameEnd *msg) {
 
 	/* we are no longer in the game loop, so dump the entire message
 	 * out at once */
+#ifdef LANG_ES
+	putEntireMessage("Pulsa ENTER para salir");
+#else
 	putEntireMessage("Press ENTER to finish");
+#endif
 
 	// wait for ENTER
 	while(in_Inkey() != '\n');
@@ -172,7 +176,11 @@ void setoutcomepos() {
 #asm
 	ld hl, GOWIN+64
   ld (PRROW), hl
+#ifdef LANG_ES
+	ld a, 15
+#else
 	ld a, 17
+#endif
 	ld (PRCOL), a
 #endasm
 }
@@ -193,6 +201,22 @@ void defeat() {
 #endasm
 }
 
+#ifdef LANG_ES
+#asm
+._gostring
+	defb	'P','A','R','T','I','D','A',' ',' ','F','I','N','A','L','I','Z','A','D','A',0
+._score
+	defb '-','-','-','P','U','N','T','U','A','C','I','O','N','E','S','-','-','-','-',0
+._blue
+	defb 'A','Z','U','L',':',' ',0
+._red
+	defb 'R','O','J','O',':',' ',0
+._defeatstr
+	defb ' ',0xC2,0xA1,'D','e','r','r','o','t','a','!',0
+._victorystr
+	defb 0xC2,0xA1,'V','i','c','t','o','r','i','a','!',0
+#endasm
+#else
 #asm
 ._gostring
 	defb	'*','*','*','*',' ','G','A','M','E',' ','O','V','E','R',' ','*','*','*','*',0
@@ -207,4 +231,4 @@ void defeat() {
 ._victorystr
 	defb 'V','i','c','t','o','r','y','!',0
 #endasm
-
+#endif
