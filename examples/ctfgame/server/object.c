@@ -84,6 +84,12 @@ unsigned long testend;
 // Game over flag
 bool gameOver;
 
+// How many lives a player may have
+int maxLives;
+
+// Maximum wall collision damage cap
+int maxWallCollisionDmg;
+
 // Set all object entries to null, clear viewports etc.
 void initObjList() {
   memset(objlist, 0, sizeof(objlist));
@@ -151,6 +157,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
   }
 
   memset(p, 0, sizeof(Player));
+  p->clientid=clientid;
   strlcpy(p->name, playerName, MAXNAME);
 
 	printMessage("%s connected.", p->name);
@@ -501,6 +508,7 @@ void collisionDetect() {
   int i, j;
   Object *obj;
   int bouncedir;
+  int dmg;
 
   // First check the map
   for(i=0; i<MAXOBJS; i++) {
@@ -515,7 +523,8 @@ void collisionDetect() {
           obj->flags |= DESTROYED;
           obj->actual.velocity = 0;
         } else {
-          obj->hp -= obj->actual.velocity+10;
+          dmg=obj->actual.velocity+10;
+          obj->hp -= (dmg > maxWallCollisionDmg) ? maxWallCollisionDmg : dmg;
           if(obj->hp <= 0) {
             obj->flags |= DESTROYED;
             obj->actual.velocity = 0;
@@ -884,6 +893,11 @@ void setWinningScore(int s) {
 	winningScore=s;
 }
 
+// Set the maximum wall damage cap
+void setMaxWallCollisionDmg(int d) {
+  maxWallCollisionDmg=d;
+}
+
 // Do flag capture stuff
 void flagCaptured(Object *capturer) {
   MapXY mxy;
@@ -898,7 +912,7 @@ void flagCaptured(Object *capturer) {
   teamscore[capturer->team]++;
   broadcastTeamScoreMsg(capturer->team);
 
-	if(teamscore[capturer->team] == winningScore) {
+	if(winningScore > 0 && teamscore[capturer->team] == winningScore) {
 		broadcastEndMatch();
 		endMatch();
 		gameOver=TRUE;
@@ -1047,10 +1061,22 @@ int getTeamscore(int team) {
 // Destruction of player object.
 void destroyPlayerObj(Object *obj) {
   int flagteam;
+  Player *p;
 
   if(obj->flags & HASFLAG) {
     flagteam = (obj->team + 1) & 1;
     placeFlag(flagteam, obj->x, obj->y);
+  }
+
+  p=players[obj->owner];
+
+  // -1 = infinite lives
+  if(p->lives > -1) {
+    p->lives--;
+    if(p->lives == 0)
+    {
+      outOfLives(p);
+    }
   }
 
   // Turn the player into an explosion with a TTL of 15 frames

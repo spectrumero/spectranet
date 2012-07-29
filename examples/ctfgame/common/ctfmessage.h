@@ -46,6 +46,7 @@
 #define MMSTARTABLE							0x09	// Match is or is not startable
 #define MMEXIT									0x0A	// Client should exit matchmaking
 #define ENDGAMESCORE						0x0B	// End game and show scores
+#define OUTOFLIVES              0x0C
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -176,6 +177,12 @@ typedef struct _gameend {
 	char bluecapture[4];
 	char redcapture[4];
 } GameEnd;
+
+// Dead player message
+typedef struct _playersummary {
+  uint16_t score;
+  uchar captures;
+} PlayerSummary;
 
 // Control messages from the client. The controls being activated
 // are specified in a bitfield. The message is very short, just the

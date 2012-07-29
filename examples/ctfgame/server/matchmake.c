@@ -28,6 +28,7 @@
 #include "ctfserv.h"
 
 uchar matchflags=0;
+int minPlayers;
 
 void setPlayerTeam(Player *p, uchar team) {
 #ifdef MM_DEBUG
@@ -73,6 +74,10 @@ void updateMatchmaker(int clientid) {
   free(msg);
 }
 
+void setMinPlayers(int p) {
+  minPlayers=p;
+}
+
 uchar isGameStartable() {
 	int i;
 	Player *p;
@@ -90,7 +95,7 @@ uchar isGameStartable() {
 	}
 
 	// Need at least 2 ready players 
-	if(count < 2)
+	if(count < minPlayers)
 		return 0;
 	return 1;
 }

@@ -24,35 +24,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef NOGETOPT
+#include <unistd.h>
+#endif
+
 #include "ctfserv.h"
 
 int main(int argc, char **argv) {
-	if(argc != 2) {
-		fprintf(stderr, "Usage: %s <mapfile>\n", argv[0]);
-		exit(-1);
-	}
-	initPowerupList();
-	if(loadMap(argv[1]) < 0) {
-		fprintf(stderr, "Can't load map\n");
-		exit(-1);
-	}
-	if(makeSocket() < 0) {
-		fprintf(stderr, "Can't make socket\n");
-		exit(-1);
-	}
+  char *mapfile=NULL;
+  int winScore=3;
+  int wallDmg=50;
+  int minPlayers=2;
+  int lives=0;
+  int ch;
 
-	// Start the scoreboard.
-	setupScreen();
+#ifdef NOGETOPT
+  if(argc != 2) {
+          fprintf(stderr, "Usage: %s <mapfile>\n", argv[0]);
+          exit(-1);
+  }
+  mapfile=argv[1];
+#else
+  while((ch=getopt(argc, argv, "m:fd:p:l:")) != -1) {
+    switch(ch) {
+      case 'm':   // Mapfile
+        mapfile=optarg;
+        break;
+      case 'f':   // Freeplay mode
+        winScore=0;
+        break;
+      case 'd':
+        wallDmg=strtol(optarg, NULL, 10);
+        break;
+      case 'p':
+        minPlayers=strtol(optarg, NULL, 10);
+        break;
+      case 'l':
+        lives=strtol(optarg, NULL, 10);
+        break;
+      default:
+        usage(argv[0]);
+    }
+  }
+  if(!mapfile)
+    usage(argv[0]);
+  
+#endif
 
-	// For testing. Replace when getopt is integrated.
-	setWinningScore(1);
+  initPowerupList();
+  if(loadMap(mapfile) < 0) {
+    fprintf(stderr, "Can't load map\n");
+    exit(-1);
+  }
 
-	initObjList();
-	createFlags();
-	if(messageLoop() < 0) {
-		shutdownScoreboard();
-		fprintf(stderr, "Message loop exited\n");
-		exit(-1);
-	}
+  if(makeSocket() < 0) {
+          fprintf(stderr, "Can't make socket\n");
+          exit(-1);
+  }
+
+  // Start the scoreboard.
+  setupScreen();
+
+  setWinningScore(winScore);
+  setMaxWallCollisionDmg(wallDmg);
+  setMinPlayers(minPlayers);
+
+  initObjList();
+  createFlags();
+  if(messageLoop() < 0) {
+          shutdownScoreboard();
+          fprintf(stderr, "Message loop exited\n");
+          exit(-1);
+  }
+}
+
+void usage(char *cmd) {
+  fprintf(stderr, "Usage: %s -m <mapfile> [opts]\n",cmd);
+  fprintf(stderr, "Options:\n");
+  fprintf(stderr, " -f          Freeplay mode (no winning score)\n");
+  fprintf(stderr, " -d <value>  Max damage that a wall deals in a collision\n");
+  fprintf(stderr, " -p <value>  Minimum number of players to start a game\n");
+  fprintf(stderr, " -l <value>  How many lives a player has\n");
+  fprintf(stderr, "\n");
+  exit(1);
 }
 

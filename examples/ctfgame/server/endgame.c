@@ -73,3 +73,14 @@ void broadcastEndMatch() {
 	endScore();
 }
 
+// Add the out of lives message. When the client acknowledges
+// then the player gets taken out of the game.
+void outOfLives(Player *p) {
+  PlayerSummary ps;
+
+  ps.score=p->score;
+  ps.captures=0;  // todo
+
+  addMessage(p->clientid, OUTOFLIVES, &ps, sizeof(PlayerSummary));
+}
+

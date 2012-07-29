@@ -161,6 +161,7 @@ typedef struct _player {
   int vpcframes;        // Frames since last viewport change msg
   int spawntime;        // If dead, time until respawn in frames
   uchar playernum;    // The player number decided at the matchup screen
+  int clientid;       // So we can look up the client id from a player object.
 } Player;
 
 #define RUNNING     0x01  // Player's client is ready for messages
@@ -295,6 +296,7 @@ void processObjectControl(Object *obj, ObjectProperties *props);
 void processPush(Object *obj);
 void shoveObject(Object *obj, Object *with);
 void dealDamage(Object *obj1, Object *obj2);
+void setMaxWallCollisionDmg(int d);
 
 // Map functions
 int loadMap(const char *filename);
@@ -336,12 +338,14 @@ void sendToMatchmakers(void *mmbuf, ssize_t msgsz);
 void orderTeams();
 uchar isGameStartable();
 void tryToStopMatchmaking();
+void setMinPlayers(int p);
 
 // Scoreboard and match end.
 void addPlayerScoreMsg(int clientid);
 int getTeamscore(int team);
 void endMatch();
 void broadcastEndMatch();
+void outOfLives(Player *p);
 
 // Server scoreboard.
 #ifdef USECURSES
@@ -364,5 +368,8 @@ void debugMsg(uchar *msg, int bytes);
 // Object destruction functions
 void destroyPlayerObj(Object *obj);
 void awardDestructionPoints(Object *awardTo, Object *destroyed);
+
+// Game options
+void usage(char *cmd);
 
 #endif
