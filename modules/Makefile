@@ -1,4 +1,4 @@
-SUBDIRS = snapman messages config basext streams
+SUBDIRS = snapman messages config basext streams allram
 
 .PHONY: subdirs $(SUBDIRS)
 
