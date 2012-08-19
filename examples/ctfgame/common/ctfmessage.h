@@ -151,6 +151,7 @@ typedef struct _numbermsg {
 #define BLUESCORE  2
 #define REDSCORE  3
 #define PLYRSCORE  4
+#define LIVES	5
 
 // Matchmaking message
 // Team is 0 or 1, or 0xFF for "not in a team yet"

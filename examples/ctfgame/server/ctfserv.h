@@ -288,6 +288,7 @@ void addAmmoMsg(Object *obj);
 void addHitpointMsg(Object *obj);
 void broadcastTeamScoreMsg(int team);
 void addTeamScoreMsg(int clientid, int team);
+void addLivesMsg(int clientid);
 void updateScoreboard(Object *obj);
 void doPing();
 

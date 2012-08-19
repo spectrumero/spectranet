@@ -469,6 +469,7 @@ bool objWasInView(Object *obj, Viewport *view) {
 void cleanObjects() {
   int i;
   Object *obj;
+	Player *p;
   for(i=0; i<MAXOBJS; i++) {
     obj=objlist[i];
     if(obj) {
@@ -477,9 +478,22 @@ void cleanObjects() {
         // if it's the player's tank that was destroyed
         // respawn the player, but only for DESTROYED (the
         // VANISHED flag meant the player went away)
+				p=players[obj->owner];
         if(obj->owner >= 0 &&
-            players[obj->owner]->playerobj == obj && obj->flags & DESTROYED) {
-          spawnPlayer(obj->owner, players[obj->owner]);
+            p->playerobj == obj && obj->flags & DESTROYED) {
+
+					// update the client with lives remaining
+					if(p->lives > 0) {
+						p->lives--;
+						addLivesMsg(obj->owner);
+					}
+
+					if(p->lives != 0) {
+          	spawnPlayer(obj->owner, p);
+					}
+					else {
+						outOfLives(p);
+					}
         }
         objlist[i]=NULL;
         free(obj);
@@ -926,6 +940,7 @@ void updateScoreboard(Object *obj) {
   addHitpointMsg(obj);
   addTeamScoreMsg(obj->owner, 0);
   addTeamScoreMsg(obj->owner, 1);
+	addLivesMsg(obj->owner);
 	addPlayerScoreMsg(obj->owner);
 }
 
@@ -955,6 +970,16 @@ void addPlayerScoreMsg(int clientid) {
 	msg.numtype = PLYRSCORE;
 	snprintf(msg.message, sizeof(msg.message),
 			"%d", p->score);
+	addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
+}
+
+void addLivesMsg(int clientid) {
+	NumberMsg msg;
+	Player *p=getPlayer(clientid);
+
+	msg.numtype = LIVES;
+	snprintf(msg.message, sizeof(msg.message), 
+			"%d", p->lives);
 	addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
 }
 
@@ -1066,17 +1091,6 @@ void destroyPlayerObj(Object *obj) {
   if(obj->flags & HASFLAG) {
     flagteam = (obj->team + 1) & 1;
     placeFlag(flagteam, obj->x, obj->y);
-  }
-
-  p=players[obj->owner];
-
-  // -1 = infinite lives
-  if(p->lives > -1) {
-    p->lives--;
-    if(p->lives == 0)
-    {
-      outOfLives(p);
-    }
   }
 
   // Turn the player into an explosion with a TTL of 15 frames

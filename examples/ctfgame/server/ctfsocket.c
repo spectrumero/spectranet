@@ -233,6 +233,7 @@ int getMessage() {
 					}
 					break;
         case SERVERKILL:
+#ifdef SERVERKILL
           // DEBUG STUFF: Remove this when no longer required for
           // development. It allows us to stop the server as soon
           // as the client barfs on a server message so we can check
@@ -241,6 +242,9 @@ int getMessage() {
          	fprintf(stderr, "Got serverkill from client %d.\n", 
               clientid);
           exit(-1);
+#else
+					printError("Warning: Got serverkill from client %d\n", clientid);
+#endif
           break;
         default:
           printError("Unknown message %x from client %d",

@@ -32,10 +32,15 @@
 
 int main(int argc, char **argv) {
   char *mapfile=NULL;
+
+	// defaults: winning score, 3 flags
+	// wall damage maximum = 50 energy
+	// minimum number of players = 2
+	// default lives is infinite
   int winScore=3;
   int wallDmg=50;
   int minPlayers=2;
-  int lives=0;
+  int lives=-1;
   int ch;
 
 #ifdef NOGETOPT
