@@ -54,6 +54,7 @@ F_settrap:
 	; (hl) now points at the actual trap address. Note that OUTI
 	; affects B so we have to reset it each time! B is pre-decremented.
 	ld bc, TRAPSET		; Set trap address I/O port
+	in a, (c)		; this resets the address toggle in the CPLD
 	inc b
 	outi			; set LSB of trap address
 	inc b
