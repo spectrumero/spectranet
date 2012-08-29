@@ -1156,7 +1156,7 @@
             <blockpin signalname="D(7)" name="O" />
         </block>
         <block symbolname="and2b1" name="XLXI_358">
-            <blockpin signalname="WR_L" name="I0" />
+            <blockpin signalname="IOWRITE" name="I0" />
             <blockpin signalname="TRAP_PORT" name="I1" />
             <blockpin signalname="XLXN_761" name="O" />
         </block>
@@ -2636,10 +2636,6 @@
             <wire x2="1040" y1="1504" y2="1504" x1="992" />
             <wire x2="1024" y1="2160" y2="2160" x1="864" />
         </branch>
-        <branch name="WR_L">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="336" y="2192" type="branch" />
-            <wire x2="608" y1="2192" y2="2192" x1="336" />
-        </branch>
         <instance x="2128" y="2512" name="XLXI_359" orien="R0" />
         <instance x="1568" y="2304" name="XLXI_360" orien="R0" />
         <branch name="XLXN_763">
@@ -2674,10 +2670,14 @@
         </branch>
         <branch name="IOWRITE">
             <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1424" y="720" type="branch" />
+            <wire x2="1424" y1="1872" y2="1872" x1="432" />
+            <wire x2="432" y1="1872" y2="2192" x1="432" />
+            <wire x2="608" y1="2192" y2="2192" x1="432" />
             <wire x2="1584" y1="720" y2="720" x1="1424" />
             <wire x2="1424" y1="720" y2="1472" x1="1424" />
             <wire x2="1424" y1="1472" y2="1536" x1="1424" />
             <wire x2="1584" y1="1536" y2="1536" x1="1424" />
+            <wire x2="1424" y1="1536" y2="1872" x1="1424" />
         </branch>
         <instance x="1040" y="816" name="XLXI_368" orien="R0" />
         <branch name="XLXN_784">
