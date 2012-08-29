@@ -86,18 +86,15 @@
         <signal name="XLXN_394" />
         <signal name="D(4)" />
         <signal name="D(7:0)" />
-        <signal name="WRITE_ENABLE" />
+        <signal name="IOWRITE" />
         <signal name="IO_PAGEIN" />
         <signal name="XLXN_481" />
         <signal name="XLXN_482" />
         <signal name="IORQ_L" />
-        <signal name="XLXN_23" />
         <signal name="WR_L" />
-        <signal name="XLXN_514" />
         <signal name="XLXN_515" />
         <signal name="TRAP_PORT" />
         <signal name="XLXN_518" />
-        <signal name="XLXN_519" />
         <signal name="SREG_REQ" />
         <signal name="RD_SREG" />
         <signal name="XLXN_537" />
@@ -114,8 +111,6 @@
         <signal name="A(15:8)" />
         <signal name="XLXN_637" />
         <signal name="XLXN_650" />
-        <signal name="XLXN_651" />
-        <signal name="XLXN_652" />
         <signal name="MATCH_LO" />
         <signal name="XLXN_659" />
         <signal name="TRAPMATCH" />
@@ -138,7 +133,6 @@
         <signal name="XLXN_706" />
         <signal name="XLXN_714" />
         <signal name="XLXN_716" />
-        <signal name="XLXN_718" />
         <signal name="XLXN_720" />
         <signal name="XLXN_722" />
         <signal name="RD_L" />
@@ -170,10 +164,17 @@
         <signal name="XLXN_761" />
         <signal name="XLXN_763" />
         <signal name="XLXN_765" />
-        <signal name="XLXN_766" />
-        <signal name="XLXN_768" />
-        <signal name="XLXN_770" />
         <signal name="XLXN_771" />
+        <signal name="XLXN_772" />
+        <signal name="XLXN_773" />
+        <signal name="XLXN_779" />
+        <signal name="XLXN_781" />
+        <signal name="XLXN_782" />
+        <signal name="XLXN_783" />
+        <signal name="XLXN_784" />
+        <signal name="XLXN_785" />
+        <signal name="XLXN_788" />
+        <signal name="XLXN_790" />
         <port polarity="Input" name="M1_L" />
         <port polarity="Input" name="CLK" />
         <port polarity="Output" name="PA12" />
@@ -461,29 +462,6 @@
             <line x2="80" y1="-112" y2="-128" x1="64" />
             <rect width="256" x="64" y="-384" height="320" />
         </blockdef>
-        <blockdef name="nand2">
-            <timestamp>2000-1-1T10:10:10</timestamp>
-            <line x2="64" y1="-64" y2="-64" x1="0" />
-            <line x2="64" y1="-128" y2="-128" x1="0" />
-            <line x2="216" y1="-96" y2="-96" x1="256" />
-            <circle r="12" cx="204" cy="-96" />
-            <line x2="64" y1="-48" y2="-144" x1="64" />
-            <line x2="144" y1="-144" y2="-144" x1="64" />
-            <line x2="64" y1="-48" y2="-48" x1="144" />
-            <arc ex="144" ey="-144" sx="144" sy="-48" r="48" cx="144" cy="-96" />
-        </blockdef>
-        <blockdef name="nand2b1">
-            <timestamp>2000-1-1T10:10:10</timestamp>
-            <line x2="40" y1="-64" y2="-64" x1="0" />
-            <circle r="12" cx="52" cy="-64" />
-            <line x2="64" y1="-128" y2="-128" x1="0" />
-            <line x2="216" y1="-96" y2="-96" x1="256" />
-            <circle r="12" cx="204" cy="-96" />
-            <line x2="64" y1="-48" y2="-144" x1="64" />
-            <line x2="144" y1="-144" y2="-144" x1="64" />
-            <line x2="64" y1="-48" y2="-48" x1="144" />
-            <arc ex="144" ey="-144" sx="144" sy="-48" r="48" cx="144" cy="-96" />
-        </blockdef>
         <blockdef name="or2b1">
             <timestamp>2000-1-1T10:10:10</timestamp>
             <line x2="32" y1="-64" y2="-64" x1="0" />
@@ -617,6 +595,32 @@
             <line x2="48" y1="-208" y2="-208" x1="112" />
             <line x2="48" y1="-256" y2="-256" x1="0" />
             <arc ex="48" ey="-208" sx="48" sy="-112" r="54" cx="22" cy="-162" />
+        </blockdef>
+        <blockdef name="and3">
+            <timestamp>2000-1-1T10:10:10</timestamp>
+            <line x2="64" y1="-64" y2="-64" x1="0" />
+            <line x2="64" y1="-128" y2="-128" x1="0" />
+            <line x2="64" y1="-192" y2="-192" x1="0" />
+            <line x2="192" y1="-128" y2="-128" x1="256" />
+            <line x2="144" y1="-176" y2="-176" x1="64" />
+            <line x2="64" y1="-80" y2="-80" x1="144" />
+            <arc ex="144" ey="-176" sx="144" sy="-80" r="48" cx="144" cy="-128" />
+            <line x2="64" y1="-64" y2="-192" x1="64" />
+        </blockdef>
+        <blockdef name="or3b1">
+            <timestamp>2000-1-1T10:10:10</timestamp>
+            <line x2="28" y1="-64" y2="-64" x1="0" />
+            <circle r="10" cx="38" cy="-62" />
+            <line x2="72" y1="-128" y2="-128" x1="0" />
+            <line x2="48" y1="-192" y2="-192" x1="0" />
+            <line x2="192" y1="-128" y2="-128" x1="256" />
+            <line x2="48" y1="-176" y2="-176" x1="112" />
+            <arc ex="112" ey="-176" sx="192" sy="-128" r="88" cx="116" cy="-88" />
+            <arc ex="192" ey="-128" sx="112" sy="-80" r="88" cx="116" cy="-168" />
+            <line x2="48" y1="-80" y2="-80" x1="112" />
+            <line x2="48" y1="-64" y2="-80" x1="48" />
+            <line x2="48" y1="-192" y2="-176" x1="48" />
+            <arc ex="48" ey="-176" sx="48" sy="-80" r="56" cx="16" cy="-128" />
         </blockdef>
         <block symbolname="m2_1e" name="XLXI_30">
             <blockpin signalname="FFA(0)" name="D0" />
@@ -785,22 +789,22 @@
             <blockpin signalname="XLXN_562" name="O" />
         </block>
         <block symbolname="fd8ce" name="XLXI_7">
-            <blockpin signalname="XLXN_518" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="XLXN_779" name="CE" />
             <blockpin signalname="XLXN_705" name="CLR" />
             <blockpin signalname="D(7:0)" name="D(7:0)" />
             <blockpin signalname="FFA(7:0)" name="Q(7:0)" />
         </block>
         <block symbolname="fd8ce" name="XLXI_8">
-            <blockpin signalname="XLXN_519" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="XLXN_515" name="CE" />
             <blockpin signalname="XLXN_706" name="CLR" />
             <blockpin signalname="D(7:0)" name="D(7:0)" />
             <blockpin signalname="FFB(7:0)" name="Q(7:0)" />
         </block>
         <block symbolname="fdce" name="XLXI_173">
-            <blockpin signalname="SREG_REQ" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="SREG_REQ" name="CE" />
             <blockpin signalname="XLXN_481" name="CLR" />
             <blockpin signalname="D(0)" name="D" />
             <blockpin signalname="IO_PAGEIN" name="Q" />
@@ -820,37 +824,11 @@
         <block symbolname="d2_4e" name="XLXI_1">
             <blockpin signalname="A(8)" name="A0" />
             <blockpin signalname="A(9)" name="A1" />
-            <blockpin signalname="XLXN_718" name="E" />
-            <blockpin signalname="XLXN_514" name="D0" />
+            <blockpin signalname="XLXN_773" name="E" />
+            <blockpin signalname="XLXN_779" name="D0" />
             <blockpin signalname="XLXN_515" name="D1" />
             <blockpin signalname="TRAP_PORT" name="D2" />
-            <blockpin signalname="XLXN_537" name="D3" />
-        </block>
-        <block symbolname="fd" name="XLXI_9">
-            <blockpin signalname="CLK" name="C" />
-            <blockpin signalname="XLXN_23" name="D" />
-            <blockpin signalname="WRITE_ENABLE" name="Q" />
-        </block>
-        <block symbolname="inv" name="XLXI_10">
-            <blockpin signalname="WR_L" name="I" />
-            <blockpin signalname="XLXN_23" name="O" />
-        </block>
-        <block symbolname="inv" name="XLXI_184">
-            <blockpin signalname="XLXN_514" name="I" />
-            <blockpin signalname="XLXN_518" name="O" />
-        </block>
-        <block symbolname="inv" name="XLXI_185">
-            <blockpin signalname="XLXN_515" name="I" />
-            <blockpin signalname="XLXN_519" name="O" />
-        </block>
-        <block symbolname="inv" name="XLXI_187">
-            <blockpin signalname="XLXN_537" name="I" />
-            <blockpin signalname="SREG_REQ" name="O" />
-        </block>
-        <block symbolname="or2" name="XLXI_199">
-            <blockpin signalname="RD_L" name="I0" />
-            <blockpin signalname="SREG_REQ" name="I1" />
-            <blockpin signalname="RD_SREG" name="O" />
+            <blockpin signalname="SREG_REQ" name="D3" />
         </block>
         <block symbolname="obufe" name="XLXI_221">
             <blockpin signalname="NMIEVT" name="E" />
@@ -861,8 +839,8 @@
             <blockpin signalname="XLXN_553" name="G" />
         </block>
         <block symbolname="fdce" name="XLXI_244">
-            <blockpin signalname="SREG_REQ" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="SREG_REQ" name="CE" />
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(3)" name="D" />
             <blockpin signalname="INT_ENABLE" name="Q" />
@@ -893,23 +871,18 @@
             <blockpin signalname="XLXN_686" name="EQ" />
         </block>
         <block symbolname="fd8ce" name="XLXI_280">
-            <blockpin signalname="XLXN_651" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="XLXN_784" name="CE" />
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(7:0)" name="D(7:0)" />
             <blockpin signalname="XLXN_630(7:0)" name="Q(7:0)" />
         </block>
         <block symbolname="fd8ce" name="XLXI_281">
-            <blockpin signalname="XLXN_652" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="XLXN_785" name="CE" />
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(7:0)" name="D(7:0)" />
             <blockpin signalname="XLXN_631(7:0)" name="Q(7:0)" />
-        </block>
-        <block symbolname="nand2" name="XLXI_285">
-            <blockpin signalname="XLXN_650" name="I0" />
-            <blockpin signalname="XLXN_761" name="I1" />
-            <blockpin signalname="XLXN_651" name="O" />
         </block>
         <block symbolname="vcc" name="XLXI_279">
             <blockpin signalname="XLXN_637" name="P" />
@@ -920,11 +893,6 @@
             <blockpin signalname="XLXN_637" name="J" />
             <blockpin signalname="XLXN_637" name="K" />
             <blockpin signalname="XLXN_650" name="Q" />
-        </block>
-        <block symbolname="nand2b1" name="XLXI_292">
-            <blockpin signalname="XLXN_650" name="I0" />
-            <blockpin signalname="XLXN_761" name="I1" />
-            <blockpin signalname="XLXN_652" name="O" />
         </block>
         <block symbolname="and5b2" name="XLXI_298">
             <blockpin signalname="MREQ_L" name="I0" />
@@ -1052,13 +1020,6 @@
             <blockpin signalname="A(2)" name="I" />
             <blockpin signalname="XLXN_714" name="O" />
         </block>
-        <block symbolname="and4b1" name="XLXI_330">
-            <blockpin signalname="IORQ_L" name="I0" />
-            <blockpin signalname="M1_L" name="I1" />
-            <blockpin signalname="XLXN_716" name="I2" />
-            <blockpin signalname="XLXN_684" name="I3" />
-            <blockpin signalname="XLXN_718" name="O" />
-        </block>
         <block symbolname="inv" name="XLXI_331">
             <blockpin signalname="A(7)" name="I" />
             <blockpin signalname="XLXN_720" name="O" />
@@ -1114,8 +1075,8 @@
             <blockpin signalname="XLXN_595" name="O" />
         </block>
         <block symbolname="fdce" name="XLXI_340">
-            <blockpin signalname="SREG_REQ" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="SREG_REQ" name="CE" />
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(5)" name="D" />
             <blockpin signalname="PGM_A15_HOLD" name="Q" />
@@ -1173,13 +1134,9 @@
             <blockpin signalname="XLXN_270" name="O" />
         </block>
         <block symbolname="fd" name="XLXI_92">
-            <blockpin signalname="XLXN_279" name="C" />
+            <blockpin signalname="CLK" name="C" />
             <blockpin signalname="XLXN_270" name="D" />
             <blockpin signalname="XLXN_275" name="Q" />
-        </block>
-        <block symbolname="inv" name="XLXI_97">
-            <blockpin signalname="CLK" name="I" />
-            <blockpin signalname="XLXN_279" name="O" />
         </block>
         <block symbolname="and2" name="XLXI_129">
             <blockpin signalname="MREQ_L" name="I0" />
@@ -1187,8 +1144,8 @@
             <blockpin signalname="UNPAGE" name="O" />
         </block>
         <block symbolname="fdce" name="XLXI_356">
-            <blockpin signalname="SREG_REQ" name="C" />
-            <blockpin signalname="WRITE_ENABLE" name="CE" />
+            <blockpin signalname="IOWRITE" name="C" />
+            <blockpin signalname="SREG_REQ" name="CE" />
             <blockpin signalname="RESET_H" name="CLR" />
             <blockpin signalname="D(7)" name="D" />
             <blockpin signalname="W5100_RESET_L" name="Q" />
@@ -1207,7 +1164,7 @@
             <blockpin signalname="XLXN_765" name="I0" />
             <blockpin signalname="XLXN_765" name="I1" />
             <blockpin signalname="XLXN_765" name="I2" />
-            <blockpin signalname="XLXN_765" name="I3" />
+            <blockpin signalname="XLXN_790" name="I3" />
             <blockpin signalname="XLXN_763" name="T" />
             <blockpin signalname="D(3)" name="O0" />
             <blockpin signalname="D(2)" name="O1" />
@@ -1240,6 +1197,36 @@
             <blockpin signalname="XLXN_771" name="I1" />
             <blockpin signalname="XLXN_482" name="O" />
         </block>
+        <block symbolname="and2" name="XLXI_368">
+            <blockpin signalname="XLXN_650" name="I0" />
+            <blockpin signalname="XLXN_761" name="I1" />
+            <blockpin signalname="XLXN_784" name="O" />
+        </block>
+        <block symbolname="and2b1" name="XLXI_369">
+            <blockpin signalname="XLXN_650" name="I0" />
+            <blockpin signalname="XLXN_761" name="I1" />
+            <blockpin signalname="XLXN_785" name="O" />
+        </block>
+        <block symbolname="or2" name="XLXI_371">
+            <blockpin signalname="WR_L" name="I0" />
+            <blockpin signalname="IORQ_L" name="I1" />
+            <blockpin signalname="IOWRITE" name="O" />
+        </block>
+        <block symbolname="and3" name="XLXI_372">
+            <blockpin signalname="M1_L" name="I0" />
+            <blockpin signalname="XLXN_716" name="I1" />
+            <blockpin signalname="XLXN_684" name="I2" />
+            <blockpin signalname="XLXN_773" name="O" />
+        </block>
+        <block symbolname="or3b1" name="XLXI_373">
+            <blockpin signalname="SREG_REQ" name="I0" />
+            <blockpin signalname="RD_L" name="I1" />
+            <blockpin signalname="IORQ_L" name="I2" />
+            <blockpin signalname="RD_SREG" name="O" />
+        </block>
+        <block symbolname="vcc" name="XLXI_374">
+            <blockpin signalname="XLXN_790" name="P" />
+        </block>
     </netlist>
     <sheet sheetnum="1" width="3520" height="2720">
         <instance x="2448" y="624" name="XLXI_7" orien="R0" />
@@ -1256,22 +1243,6 @@
             <wire x2="2432" y1="1024" y2="1024" x1="2352" />
             <wire x2="2352" y1="1024" y2="1408" x1="2352" />
             <wire x2="2448" y1="368" y2="368" x1="2352" />
-        </branch>
-        <branch name="WRITE_ENABLE">
-            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="848" y="1856" type="branch" />
-            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2160" y="336" type="branch" />
-            <wire x2="2288" y1="1856" y2="1856" x1="848" />
-            <wire x2="2288" y1="1856" y2="2288" x1="2288" />
-            <wire x2="2432" y1="2288" y2="2288" x1="2288" />
-            <wire x2="848" y1="1856" y2="2288" x1="848" />
-            <wire x2="1136" y1="2288" y2="2288" x1="848" />
-            <wire x2="2160" y1="336" y2="336" x1="2064" />
-            <wire x2="2288" y1="336" y2="336" x1="2160" />
-            <wire x2="2288" y1="336" y2="432" x1="2288" />
-            <wire x2="2448" y1="432" y2="432" x1="2288" />
-            <wire x2="2288" y1="432" y2="1088" x1="2288" />
-            <wire x2="2432" y1="1088" y2="1088" x1="2288" />
-            <wire x2="2288" y1="1088" y2="1856" x1="2288" />
         </branch>
         <bustap x2="2240" y1="1632" y2="1632" x1="2144" />
         <bustap x2="2240" y1="1696" y2="1696" x1="2144" />
@@ -1325,79 +1296,26 @@
         <branch name="A(3)">
             <wire x2="752" y1="1184" y2="1184" x1="304" />
         </branch>
-        <branch name="IORQ_L">
-            <wire x2="448" y1="1568" y2="1568" x1="288" />
-            <wire x2="768" y1="1568" y2="1568" x1="448" />
-            <wire x2="768" y1="1472" y2="1568" x1="768" />
-            <wire x2="1040" y1="1472" y2="1472" x1="768" />
-            <wire x2="1040" y1="1280" y2="1280" x1="1024" />
-            <wire x2="1024" y1="1280" y2="1360" x1="1024" />
-            <wire x2="1040" y1="1360" y2="1360" x1="1024" />
-            <wire x2="1040" y1="1360" y2="1472" x1="1040" />
-        </branch>
         <instance x="1360" y="1088" name="XLXI_1" orien="R0" />
-        <branch name="XLXN_23">
-            <wire x2="1680" y1="336" y2="336" x1="1664" />
-        </branch>
-        <branch name="WR_L">
-            <wire x2="1440" y1="336" y2="336" x1="1392" />
-        </branch>
         <branch name="CLK">
             <wire x2="1680" y1="464" y2="464" x1="1472" />
         </branch>
-        <iomarker fontsize="28" x="288" y="1504" name="M1_L" orien="R180" />
-        <iomarker fontsize="28" x="288" y="1568" name="IORQ_L" orien="R180" />
-        <branch name="XLXN_514">
-            <wire x2="1776" y1="768" y2="768" x1="1744" />
-        </branch>
-        <instance x="1776" y="800" name="XLXI_184" orien="R0" />
         <branch name="XLXN_515">
-            <wire x2="1776" y1="832" y2="832" x1="1744" />
+            <wire x2="2320" y1="832" y2="832" x1="1744" />
+            <wire x2="2320" y1="832" y2="1088" x1="2320" />
+            <wire x2="2432" y1="1088" y2="1088" x1="2320" />
         </branch>
-        <instance x="1776" y="864" name="XLXI_185" orien="R0" />
         <branch name="TRAP_PORT">
             <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1996" y="896" type="branch" />
             <wire x2="1996" y1="896" y2="896" x1="1744" />
             <wire x2="2048" y1="896" y2="896" x1="1996" />
         </branch>
-        <branch name="XLXN_518">
-            <wire x2="2208" y1="768" y2="768" x1="2000" />
-            <wire x2="2208" y1="496" y2="768" x1="2208" />
-            <wire x2="2448" y1="496" y2="496" x1="2208" />
-        </branch>
-        <branch name="XLXN_519">
-            <wire x2="2208" y1="832" y2="832" x1="2000" />
-            <wire x2="2208" y1="832" y2="1152" x1="2208" />
-            <wire x2="2432" y1="1152" y2="1152" x1="2208" />
-        </branch>
-        <branch name="SREG_REQ">
-            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1168" y="1488" type="branch" />
-            <wire x2="816" y1="1488" y2="2352" x1="816" />
-            <wire x2="1136" y1="2352" y2="2352" x1="816" />
-            <wire x2="1168" y1="1488" y2="1488" x1="816" />
-            <wire x2="1360" y1="1488" y2="1488" x1="1168" />
-            <wire x2="1456" y1="1488" y2="1488" x1="1360" />
-            <wire x2="2064" y1="1104" y2="1104" x1="1360" />
-            <wire x2="1360" y1="1104" y2="1488" x1="1360" />
-            <wire x2="2064" y1="960" y2="960" x1="2000" />
-            <wire x2="2272" y1="960" y2="960" x1="2064" />
-            <wire x2="2272" y1="960" y2="2352" x1="2272" />
-            <wire x2="2432" y1="2352" y2="2352" x1="2272" />
-            <wire x2="2064" y1="960" y2="1104" x1="2064" />
-        </branch>
         <branch name="RD_SREG">
             <attrtext style="alignment:SOFT-LEFT" attrname="Name" x="1828" y="1520" type="branch" />
-            <wire x2="1824" y1="1520" y2="1520" x1="1712" />
-            <wire x2="1824" y1="1520" y2="1792" x1="1824" />
-            <wire x2="2896" y1="1792" y2="1792" x1="1824" />
-            <wire x2="3136" y1="1760" y2="1760" x1="2896" />
-            <wire x2="2896" y1="1760" y2="1792" x1="2896" />
+            <wire x2="3120" y1="1424" y2="1424" x1="1920" />
+            <wire x2="3120" y1="1424" y2="1760" x1="3120" />
+            <wire x2="3136" y1="1760" y2="1760" x1="3120" />
         </branch>
-        <branch name="XLXN_537">
-            <wire x2="1776" y1="960" y2="960" x1="1744" />
-        </branch>
-        <instance x="1776" y="992" name="XLXI_187" orien="R0" />
-        <instance x="1456" y="1616" name="XLXI_199" orien="R0" />
         <instance x="1136" y="2480" name="XLXI_244" orien="R0" />
         <bustap x2="2240" y1="1568" y2="1568" x1="2144" />
         <branch name="INT_ENABLE">
@@ -1496,10 +1414,7 @@
             <wire x2="1360" y1="768" y2="768" x1="624" />
         </branch>
         <iomarker fontsize="28" x="96" y="112" name="A(15:0)" orien="R180" />
-        <instance x="1680" y="592" name="XLXI_9" orien="R0" />
         <iomarker fontsize="28" x="1472" y="464" name="CLK" orien="R180" />
-        <instance x="1440" y="368" name="XLXI_10" orien="R0" />
-        <iomarker fontsize="28" x="1392" y="336" name="WR_L" orien="R180" />
         <branch name="XLXN_684">
             <wire x2="1008" y1="320" y2="320" x1="880" />
             <wire x2="1008" y1="320" y2="1088" x1="1008" />
@@ -1528,13 +1443,6 @@
         </branch>
         <instance x="2368" y="1408" name="XLXI_325" orien="R0" />
         <instance x="624" y="544" name="XLXI_326" orien="R0" />
-        <branch name="M1_L">
-            <wire x2="736" y1="1504" y2="1504" x1="288" />
-            <wire x2="736" y1="1440" y2="1504" x1="736" />
-            <wire x2="1008" y1="1440" y2="1440" x1="736" />
-            <wire x2="1008" y1="1216" y2="1440" x1="1008" />
-            <wire x2="1040" y1="1216" y2="1216" x1="1008" />
-        </branch>
         <branch name="A(0)">
             <wire x2="752" y1="1376" y2="1376" x1="304" />
         </branch>
@@ -1552,16 +1460,6 @@
         <branch name="XLXN_716">
             <wire x2="1040" y1="1152" y2="1152" x1="1008" />
         </branch>
-        <instance x="1040" y="1344" name="XLXI_330" orien="R0" />
-        <branch name="XLXN_718">
-            <wire x2="1216" y1="960" y2="1056" x1="1216" />
-            <wire x2="1296" y1="1056" y2="1056" x1="1216" />
-            <wire x2="1312" y1="1056" y2="1056" x1="1296" />
-            <wire x2="1312" y1="1056" y2="1184" x1="1312" />
-            <wire x2="1248" y1="960" y2="960" x1="1216" />
-            <wire x2="1360" y1="960" y2="960" x1="1248" />
-            <wire x2="1312" y1="1184" y2="1184" x1="1296" />
-        </branch>
         <instance x="416" y="960" name="XLXI_331" orien="R0" />
         <instance x="416" y="1024" name="XLXI_332" orien="R0" />
         <branch name="A(7)">
@@ -1576,10 +1474,73 @@
         <branch name="XLXN_722">
             <wire x2="752" y1="992" y2="992" x1="640" />
         </branch>
-        <branch name="RD_L">
-            <wire x2="1456" y1="1552" y2="1552" x1="1360" />
+        <iomarker fontsize="28" x="1296" y="336" name="WR_L" orien="R180" />
+        <branch name="XLXN_773">
+            <wire x2="1328" y1="1152" y2="1152" x1="1296" />
+            <wire x2="1360" y1="960" y2="960" x1="1328" />
+            <wire x2="1328" y1="960" y2="1152" x1="1328" />
         </branch>
-        <iomarker fontsize="28" x="1360" y="1552" name="RD_L" orien="R180" />
+        <branch name="WR_L">
+            <wire x2="1440" y1="336" y2="336" x1="1296" />
+        </branch>
+        <iomarker fontsize="28" x="1296" y="272" name="IORQ_L" orien="R180" />
+        <branch name="IORQ_L">
+            <wire x2="1344" y1="272" y2="272" x1="1296" />
+            <wire x2="1440" y1="272" y2="272" x1="1344" />
+            <wire x2="1344" y1="272" y2="1360" x1="1344" />
+            <wire x2="1664" y1="1360" y2="1360" x1="1344" />
+        </branch>
+        <branch name="XLXN_779">
+            <wire x2="2096" y1="768" y2="768" x1="1744" />
+            <wire x2="2096" y1="432" y2="768" x1="2096" />
+            <wire x2="2448" y1="432" y2="432" x1="2096" />
+        </branch>
+        <iomarker fontsize="28" x="1552" y="1424" name="RD_L" orien="R180" />
+        <branch name="RD_L">
+            <wire x2="1664" y1="1424" y2="1424" x1="1552" />
+        </branch>
+        <branch name="SREG_REQ">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1168" y="1488" type="branch" />
+            <wire x2="1168" y1="1488" y2="1488" x1="816" />
+            <wire x2="1360" y1="1488" y2="1488" x1="1168" />
+            <wire x2="1664" y1="1488" y2="1488" x1="1360" />
+            <wire x2="816" y1="1488" y2="2288" x1="816" />
+            <wire x2="1136" y1="2288" y2="2288" x1="816" />
+            <wire x2="2064" y1="1104" y2="1104" x1="1360" />
+            <wire x2="1360" y1="1104" y2="1488" x1="1360" />
+            <wire x2="2064" y1="960" y2="960" x1="1744" />
+            <wire x2="2272" y1="960" y2="960" x1="2064" />
+            <wire x2="2272" y1="960" y2="2288" x1="2272" />
+            <wire x2="2432" y1="2288" y2="2288" x1="2272" />
+            <wire x2="2064" y1="960" y2="1104" x1="2064" />
+        </branch>
+        <branch name="IOWRITE">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="928" y="1856" type="branch" />
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2160" y="304" type="branch" />
+            <wire x2="848" y1="1856" y2="2352" x1="848" />
+            <wire x2="1136" y1="2352" y2="2352" x1="848" />
+            <wire x2="928" y1="1856" y2="1856" x1="848" />
+            <wire x2="2288" y1="1856" y2="1856" x1="928" />
+            <wire x2="2288" y1="1856" y2="2352" x1="2288" />
+            <wire x2="2432" y1="2352" y2="2352" x1="2288" />
+            <wire x2="2160" y1="304" y2="304" x1="1696" />
+            <wire x2="2288" y1="304" y2="304" x1="2160" />
+            <wire x2="2288" y1="304" y2="496" x1="2288" />
+            <wire x2="2448" y1="496" y2="496" x1="2288" />
+            <wire x2="2288" y1="496" y2="1152" x1="2288" />
+            <wire x2="2432" y1="1152" y2="1152" x1="2288" />
+            <wire x2="2288" y1="1152" y2="1856" x1="2288" />
+        </branch>
+        <instance x="1440" y="400" name="XLXI_371" orien="R0" />
+        <instance x="1040" y="1280" name="XLXI_372" orien="R0" />
+        <branch name="M1_L">
+            <wire x2="1136" y1="1360" y2="1360" x1="1024" />
+            <wire x2="1040" y1="1216" y2="1280" x1="1040" />
+            <wire x2="1136" y1="1280" y2="1280" x1="1040" />
+            <wire x2="1136" y1="1280" y2="1360" x1="1136" />
+        </branch>
+        <iomarker fontsize="28" x="1024" y="1360" name="M1_L" orien="R180" />
+        <instance x="1664" y="1552" name="XLXI_373" orien="R0" />
     </sheet>
     <sheet sheetnum="2" width="3520" height="2720">
         <instance x="1168" y="352" name="XLXI_30" orien="R0" />
@@ -2222,20 +2183,6 @@
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="912" y="624" type="branch" />
             <wire x2="1088" y1="624" y2="624" x1="912" />
         </branch>
-        <branch name="WRITE_ENABLE">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="912" y="688" type="branch" />
-            <wire x2="1056" y1="688" y2="688" x1="912" />
-            <wire x2="1088" y1="688" y2="688" x1="1056" />
-            <wire x2="1056" y1="688" y2="1568" x1="1056" />
-            <wire x2="1088" y1="1568" y2="1568" x1="1056" />
-        </branch>
-        <branch name="SREG_REQ">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="896" y="752" type="branch" />
-            <wire x2="1040" y1="752" y2="752" x1="896" />
-            <wire x2="1088" y1="752" y2="752" x1="1040" />
-            <wire x2="1040" y1="752" y2="1632" x1="1040" />
-            <wire x2="1088" y1="1632" y2="1632" x1="1040" />
-        </branch>
         <branch name="RESET_H">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="960" y="848" type="branch" />
             <wire x2="1024" y1="848" y2="848" x1="960" />
@@ -2347,14 +2294,6 @@
             <wire x2="2768" y1="2464" y2="2464" x1="2656" />
         </branch>
         <instance x="1936" y="2688" name="XLXI_92" orien="R0" />
-        <branch name="XLXN_279">
-            <wire x2="1936" y1="2560" y2="2560" x1="1904" />
-        </branch>
-        <instance x="1680" y="2592" name="XLXI_97" orien="R0" />
-        <branch name="CLK">
-            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1616" y="2560" type="branch" />
-            <wire x2="1680" y1="2560" y2="2560" x1="1616" />
-        </branch>
         <instance x="2400" y="2560" name="XLXI_129" orien="R0" />
         <instance x="1088" y="1760" name="XLXI_356" orien="R0" />
         <instance x="1648" y="1536" name="XLXI_357" orien="R0" />
@@ -2375,6 +2314,24 @@
         </branch>
         <iomarker fontsize="28" x="2080" y="1664" name="W5100_RESET_L" orien="R0" />
         <text style="fontsize:40;fontname:Arial" x="496" y="200">Bit 6 indicates the state of the LINK light (inverted). Bit 7 is high for normal ops, low to reset the W5100</text>
+        <branch name="IOWRITE">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="912" y="752" type="branch" />
+            <wire x2="1040" y1="752" y2="752" x1="912" />
+            <wire x2="1040" y1="752" y2="1632" x1="1040" />
+            <wire x2="1088" y1="1632" y2="1632" x1="1040" />
+            <wire x2="1088" y1="752" y2="752" x1="1040" />
+        </branch>
+        <branch name="SREG_REQ">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="896" y="688" type="branch" />
+            <wire x2="1056" y1="688" y2="688" x1="896" />
+            <wire x2="1056" y1="688" y2="1568" x1="1056" />
+            <wire x2="1088" y1="1568" y2="1568" x1="1056" />
+            <wire x2="1088" y1="688" y2="688" x1="1056" />
+        </branch>
+        <branch name="CLK">
+            <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1616" y="2560" type="branch" />
+            <wire x2="1936" y1="2560" y2="2560" x1="1616" />
+        </branch>
     </sheet>
     <sheet sheetnum="5" width="3520" height="2720">
         <instance x="784" y="672" name="XLXI_334" orien="R0" />
@@ -2575,8 +2532,7 @@
             <wire x2="2176" y1="592" y2="592" x1="1968" />
         </branch>
         <branch name="XLXN_631(7:0)">
-            <wire x2="1984" y1="1408" y2="1408" x1="1968" />
-            <wire x2="2176" y1="1408" y2="1408" x1="1984" />
+            <wire x2="2176" y1="1408" y2="1408" x1="1968" />
         </branch>
         <branch name="D(7:0)">
             <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1392" y="592" type="branch" />
@@ -2590,8 +2546,7 @@
         </branch>
         <branch name="A(15:8)">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="1968" y="1216" type="branch" />
-            <wire x2="1984" y1="1216" y2="1216" x1="1968" />
-            <wire x2="2176" y1="1216" y2="1216" x1="1984" />
+            <wire x2="2176" y1="1216" y2="1216" x1="1968" />
         </branch>
         <branch name="RESET_H">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="384" y="1248" type="branch" />
@@ -2605,12 +2560,6 @@
         </branch>
         <instance x="1584" y="848" name="XLXI_280" orien="R0" />
         <instance x="1584" y="1664" name="XLXI_281" orien="R0" />
-        <branch name="WRITE_ENABLE">
-            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1424" y="656" type="branch" />
-            <wire x2="1584" y1="656" y2="656" x1="1424" />
-            <wire x2="1424" y1="656" y2="1472" x1="1424" />
-            <wire x2="1584" y1="1472" y2="1472" x1="1424" />
-        </branch>
         <instance x="336" y="880" name="XLXI_279" orien="R0" />
         <instance x="512" y="1280" name="XLXI_278" orien="R0" />
         <branch name="XLXN_637">
@@ -2619,8 +2568,6 @@
             <wire x2="400" y1="960" y2="1024" x1="400" />
             <wire x2="512" y1="1024" y2="1024" x1="400" />
         </branch>
-        <instance x="1040" y="816" name="XLXI_285" orien="R0" />
-        <instance x="1040" y="1632" name="XLXI_292" orien="R0" />
         <branch name="XLXN_650">
             <wire x2="960" y1="1024" y2="1024" x1="896" />
             <wire x2="960" y1="1024" y2="1568" x1="960" />
@@ -2628,15 +2575,8 @@
             <wire x2="960" y1="752" y2="1024" x1="960" />
             <wire x2="1040" y1="752" y2="752" x1="960" />
         </branch>
-        <branch name="XLXN_651">
-            <wire x2="1584" y1="720" y2="720" x1="1296" />
-        </branch>
-        <branch name="XLXN_652">
-            <wire x2="1584" y1="1536" y2="1536" x1="1296" />
-        </branch>
         <branch name="MATCH_LO">
-            <wire x2="2592" y1="496" y2="496" x1="2560" />
-            <wire x2="2896" y1="496" y2="496" x1="2592" />
+            <wire x2="2896" y1="496" y2="496" x1="2560" />
         </branch>
         <branch name="M1_L">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="2768" y="624" type="branch" />
@@ -2653,15 +2593,13 @@
         </branch>
         <branch name="INT_ENABLE">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="2688" y="432" type="branch" />
-            <wire x2="2752" y1="432" y2="432" x1="2688" />
-            <wire x2="2896" y1="432" y2="432" x1="2752" />
+            <wire x2="2896" y1="432" y2="432" x1="2688" />
         </branch>
         <instance x="2896" y="752" name="XLXI_298" orien="R0" />
         <text style="fontsize:40;fontname:Arial" x="136" y="140">Programmable Traps</text>
         <instance x="2656" y="1440" name="XLXI_311" orien="R0" />
         <branch name="XLXN_686">
-            <wire x2="2640" y1="1312" y2="1312" x1="2560" />
-            <wire x2="2656" y1="1312" y2="1312" x1="2640" />
+            <wire x2="2656" y1="1312" y2="1312" x1="2560" />
         </branch>
         <branch name="XLXN_689">
             <wire x2="2896" y1="560" y2="560" x1="2608" />
@@ -2679,8 +2617,7 @@
         <instance x="608" y="2256" name="XLXI_358" orien="R0" />
         <branch name="TRAP_PORT">
             <attrtext style="alignment:SOFT-RIGHT" attrname="Name" x="336" y="2128" type="branch" />
-            <wire x2="388" y1="2128" y2="2128" x1="336" />
-            <wire x2="496" y1="2128" y2="2128" x1="388" />
+            <wire x2="496" y1="2128" y2="2128" x1="336" />
             <wire x2="608" y1="2128" y2="2128" x1="496" />
             <wire x2="496" y1="2128" y2="2288" x1="496" />
             <wire x2="1024" y1="2288" y2="2288" x1="496" />
@@ -2715,16 +2652,6 @@
         </branch>
         <text style="fontsize:48;fontname:Arial" x="2044" y="2060">CPLD Version number</text>
         <instance x="1920" y="2688" name="XLXI_361" orien="R0" />
-        <branch name="XLXN_765">
-            <wire x2="2128" y1="2288" y2="2288" x1="1984" />
-            <wire x2="1984" y1="2288" y2="2352" x1="1984" />
-            <wire x2="2128" y1="2352" y2="2352" x1="1984" />
-            <wire x2="1984" y1="2352" y2="2416" x1="1984" />
-            <wire x2="2128" y1="2416" y2="2416" x1="1984" />
-            <wire x2="1984" y1="2416" y2="2480" x1="1984" />
-            <wire x2="1984" y1="2480" y2="2560" x1="1984" />
-            <wire x2="2128" y1="2480" y2="2480" x1="1984" />
-        </branch>
         <branch name="D(0)">
             <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2448" y="2480" type="branch" />
             <wire x2="2448" y1="2480" y2="2480" x1="2352" />
@@ -2744,6 +2671,43 @@
             <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="2402" y="2288" type="branch" />
             <wire x2="2402" y1="2288" y2="2288" x1="2352" />
             <wire x2="2496" y1="2288" y2="2288" x1="2402" />
+        </branch>
+        <branch name="IOWRITE">
+            <attrtext style="alignment:SOFT-BCENTER" attrname="Name" x="1424" y="720" type="branch" />
+            <wire x2="1584" y1="720" y2="720" x1="1424" />
+            <wire x2="1424" y1="720" y2="1472" x1="1424" />
+            <wire x2="1424" y1="1472" y2="1536" x1="1424" />
+            <wire x2="1584" y1="1536" y2="1536" x1="1424" />
+        </branch>
+        <instance x="1040" y="816" name="XLXI_368" orien="R0" />
+        <branch name="XLXN_784">
+            <wire x2="1312" y1="720" y2="720" x1="1296" />
+            <wire x2="1584" y1="656" y2="656" x1="1312" />
+            <wire x2="1312" y1="656" y2="720" x1="1312" />
+        </branch>
+        <instance x="1040" y="1632" name="XLXI_369" orien="R0" />
+        <branch name="XLXN_785">
+            <wire x2="1360" y1="1536" y2="1536" x1="1296" />
+            <wire x2="1360" y1="1536" y2="1600" x1="1360" />
+            <wire x2="1504" y1="1600" y2="1600" x1="1360" />
+            <wire x2="1504" y1="1472" y2="1600" x1="1504" />
+            <wire x2="1584" y1="1472" y2="1472" x1="1504" />
+        </branch>
+        <branch name="XLXN_765">
+            <wire x2="2128" y1="2288" y2="2288" x1="1984" />
+            <wire x2="1984" y1="2288" y2="2352" x1="1984" />
+            <wire x2="2128" y1="2352" y2="2352" x1="1984" />
+            <wire x2="1984" y1="2352" y2="2416" x1="1984" />
+            <wire x2="2128" y1="2416" y2="2416" x1="1984" />
+            <wire x2="1984" y1="2416" y2="2480" x1="1984" />
+            <wire x2="1984" y1="2480" y2="2560" x1="1984" />
+        </branch>
+        <instance x="1808" y="2480" name="XLXI_374" orien="R0" />
+        <branch name="XLXN_790">
+            <wire x2="1872" y1="2480" y2="2544" x1="1872" />
+            <wire x2="2048" y1="2544" y2="2544" x1="1872" />
+            <wire x2="2048" y1="2480" y2="2544" x1="2048" />
+            <wire x2="2128" y1="2480" y2="2480" x1="2048" />
         </branch>
     </sheet>
 </drawing>
