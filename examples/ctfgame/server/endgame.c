@@ -84,11 +84,16 @@ void broadcastEndMatch() {
 }
 
 void runOutOfPlayers() {
+	Player *dead;
+	int i;
+
 	// Update the scoreboard with the data that existed when
 	// the last player carked it.
 	int bscore=getTeamscore(BLUETEAM);
 	int rscore=getTeamscore(REDTEAM);
 	int winner;
+
+	newScore(true);
 
 	printMessage("**** Game Over ****");
 	if(bscore == rscore) {
@@ -105,6 +110,12 @@ void runOutOfPlayers() {
 
   addTeamScore(BLUETEAM, getTeamscore(BLUETEAM), winner);
   addTeamScore(REDTEAM, getTeamscore(REDTEAM), winner);
+
+	for(i=0; i<MAXCLIENTS; i++) {
+		dead=getDeadPlayer(i);
+		if(dead)
+			addPlayerName(dead->team, dead->name, winner);
+	}
 	endScore();
 }
 

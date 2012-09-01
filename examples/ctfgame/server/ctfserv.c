@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
   }
   mapfile=argv[1];
 #else
-  while((ch=getopt(argc, argv, "m:fd:p:l:")) != -1) {
+  while((ch=getopt(argc, argv, "m:fd:p:l:c:")) != -1) {
     switch(ch) {
       case 'm':   // Mapfile
         mapfile=optarg;
@@ -67,6 +67,9 @@ int main(int argc, char **argv) {
       case 'l':
         lives=strtol(optarg, NULL, 10);
         break;
+			case 'c':
+				winScore=strtol(optarg, NULL, 10);
+				break;
       default:
         usage(argv[0]);
     }
@@ -111,6 +114,7 @@ void usage(char *cmd) {
   fprintf(stderr, " -d <value>  Max damage that a wall deals in a collision\n");
   fprintf(stderr, " -p <value>  Minimum number of players to start a game\n");
   fprintf(stderr, " -l <value>  How many lives a player has\n");
+	fprintf(stderr, " -c <value>  Capture this many flags to win\n");
   fprintf(stderr, "\n");
   exit(1);
 }
