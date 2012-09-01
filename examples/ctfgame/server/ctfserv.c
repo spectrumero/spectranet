@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
   setWinningScore(winScore);
   setMaxWallCollisionDmg(wallDmg);
   setMinPlayers(minPlayers);
+	setMaxLives(lives);
 
   initObjList();
   createFlags();

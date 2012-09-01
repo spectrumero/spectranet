@@ -69,6 +69,8 @@ Object *objlist[MAXOBJS];
 
 // Player list
 Player *players[MAXCLIENTS];
+Player *deadPlayers[MAXCLIENTS];
+int deadPlayerIdx;
 
 // Team data
 int teamscore[2];
@@ -94,10 +96,12 @@ int maxWallCollisionDmg;
 void initObjList() {
   memset(objlist, 0, sizeof(objlist));
   memset(players, 0, sizeof(players));
+	memset(deadPlayers, 0, sizeof(deadPlayers));
   memset(teamscore, 0, sizeof(teamscore));
   memset(flagloc, 0, sizeof(flagloc));
   memset(flagTaken, 0, sizeof(flagTaken));
   frames=0;
+	deadPlayerIdx=0;
 	gameOver=FALSE;
 }
 
@@ -163,12 +167,13 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 	printMessage("%s connected.", p->name);
 
 	p->team=NOTEAM;
+	p->lives=maxLives;
 	orderTeams();
 	updateAllMatchmakers();
   return p;
 }
 
-void removePlayer(int clientid) {
+void removePlayer(int clientid, bool deadlist) {
   int i;
   Object *obj;
 
@@ -180,7 +185,17 @@ void removePlayer(int clientid) {
     }
   }
 
-  free(players[clientid]);
+	if(deadlist) {
+		if(deadPlayerIdx == MAXCLIENTS) {
+			printError("Warning: Dead player list full");
+			free(players[clientid]);
+		}
+		else
+			deadPlayers[deadPlayerIdx++]=players[clientid];
+	}
+	else {
+  	free(players[clientid]);
+	}
   players[clientid]=NULL;
 	orderTeams();
 	updateAllMatchmakers();
@@ -248,6 +263,10 @@ Player *getPlayer(int clientid) {
   return players[clientid];
 }
 
+Player *getDeadPlayer(int id) {
+	return deadPlayers[id];
+}
+
 // Send all the updates that should be sent to each client.
 void makeUpdates() {
   int clientid;
@@ -279,6 +298,16 @@ void makeUpdates() {
   updateAllFlagIndicators();
   sendClientMessages();
   cleanObjects();
+
+	// Deal with any dead players.
+	for(clientid=0; clientid < MAXCLIENTS; clientid++) {
+		p=players[clientid];
+		if(p && p->flags & DEAD) {
+			// Put the player in the 'dead' list.
+			removeClient(clientid, true);
+		}
+	}
+
   frames++;
 
 	// Some time in the future we'll do something better than this
@@ -824,9 +853,17 @@ void resetGame() {
 		Player *p=players[i];
 		if(p) {
 			// this also removes the player from memory
-			removeClient(i);
+			removeClient(i, false);
 		}
 	}
+
+	for(i=0; i<MAXCLIENTS; i++) {
+		Player *p=deadPlayers[i];
+		if(p)
+			free(p);
+		deadPlayers[i]=NULL;
+	}
+	deadPlayerIdx=0;
 
 	for(i=0; i<MAXOBJS; i++) {
 		Object *obj=objlist[i];
@@ -910,6 +947,10 @@ void setWinningScore(int s) {
 // Set the maximum wall damage cap
 void setMaxWallCollisionDmg(int d) {
   maxWallCollisionDmg=d;
+}
+
+void setMaxLives(int l) {
+	maxLives=l;
 }
 
 // Do flag capture stuff
@@ -1091,6 +1132,19 @@ void destroyPlayerObj(Object *obj) {
   if(obj->flags & HASFLAG) {
     flagteam = (obj->team + 1) & 1;
     placeFlag(flagteam, obj->x, obj->y);
+  }
+
+  p=players[obj->owner];
+
+  // -1 = infinite lives
+  if(p->lives > -1) {
+    p->lives--;
+		printMessage("Player %s has %d lives left", p->name, p->lives);
+    if(p->lives == 0)
+    {
+      outOfLives(p);
+			obj->owner=-1;
+    }
   }
 
   // Turn the player into an explosion with a TTL of 15 frames

@@ -92,6 +92,7 @@ extern void __FASTCALL__ setBlueScore(char *score);
 extern void __FASTCALL__ setRedScore(char *score);
 extern void victory();
 extern void defeat();
+extern void outOfLives();
 extern void fadeOut();
 
 #endif

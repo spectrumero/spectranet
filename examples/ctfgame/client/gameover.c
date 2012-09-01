@@ -48,10 +48,17 @@ void __FASTCALL__ gameOver(GameEnd *msg) {
 	uchar key;
 	setupGameOver();
 
-	if(msg->winner)
-		victory();
-	else
-		defeat();
+	switch(msg->reason) {
+		case TEAMWON:
+			if(msg->winner)
+				victory();
+			else
+				defeat();
+			break;
+		case OUTOFLIVES:
+			outOfLives();
+			break;
+	}
 
 	setBlueScore(msg->bluecapture);
 	setRedScore(msg->redcapture);	
@@ -201,6 +208,14 @@ void defeat() {
 #endasm
 }
 
+void outOfLives() {
+	setoutcomepos();
+#asm
+	ld hl, _outoflivesstr
+	call PRINT42
+#endasm
+}
+
 #ifdef LANG_ES
 #asm
 ._gostring
@@ -215,6 +230,8 @@ void defeat() {
 	defb ' ',0xC2,0xA1,'D','e','r','r','o','t','a','!',0
 ._victorystr
 	defb 0xC2,0xA1,'V','i','c','t','o','r','i','a','!',0
+._outoflivesstr
+	defb 0xC2,0xA1,'H','a','s',' ','m','u','e','r','t','o','!',0
 #endasm
 #else
 #asm
@@ -230,5 +247,7 @@ void defeat() {
 	defb 'D','e','f','e','a','t','!',0
 ._victorystr
 	defb 'V','i','c','t','o','r','y','!',0
+._outoflivesstr
+	defb 'N','o',' ','l','i','v','e','s','!',0
 #endasm
 #endif

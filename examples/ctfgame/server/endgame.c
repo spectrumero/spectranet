@@ -44,12 +44,14 @@ void broadcastEndMatch() {
 	GameEnd geMsg;
 	int i;
 	int winner;
+	Player *p, *dead;
 
 	// setup server scoreboard for a new match score
 	newScore(true);
 
 	snprintf(geMsg.bluecapture, 4, "%d", getTeamscore(BLUETEAM));
 	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
+	geMsg.reason=TEAMWON;
 
 	winner = (getTeamscore(BLUETEAM) > getTeamscore(REDTEAM)) 
 		? BLUETEAM : REDTEAM;
@@ -63,11 +65,19 @@ void broadcastEndMatch() {
 	addTeamScore(REDTEAM, getTeamscore(REDTEAM), winner);
 
 	for(i=0; i<MAXCLIENTS; i++) {
-		Player *p=getPlayer(i);
+		p=getPlayer(i);
+		dead=getDeadPlayer(i);
+
 		if(p) {
 			geMsg.winner = (p->team == winner) ? 1 : 0;
 			addMessage(i, ENDGAMESCORE, &geMsg, sizeof(geMsg));
 			addPlayerName(p->team, p->name, winner);
+		}
+
+		// Dead players are no longer connected, so we just
+		// update the score board.
+		if(dead) {
+			addPlayerName(dead->team, dead->name, winner);
 		}
 	}
 	endScore();
@@ -76,11 +86,15 @@ void broadcastEndMatch() {
 // Add the out of lives message. When the client acknowledges
 // then the player gets taken out of the game.
 void outOfLives(Player *p) {
-  PlayerSummary ps;
+	GameEnd geMsg;
 
-  ps.score=p->score;
-  ps.captures=0;  // todo
+	snprintf(geMsg.bluecapture, 4, "%d", getTeamscore(BLUETEAM));
+	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
+	geMsg.reason=OUTOFLIVES;
 
-  addMessage(p->clientid, OUTOFLIVES, &ps, sizeof(PlayerSummary));
+	printMessage("%s ran out of lives", p->name);
+	addMessage(p->clientid, ENDGAMESCORE, &geMsg, sizeof(geMsg));
+	p->flags=SCORESCRN | DEAD;
+
 }
 

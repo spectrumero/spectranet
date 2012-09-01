@@ -46,7 +46,6 @@
 #define MMSTARTABLE							0x09	// Match is or is not startable
 #define MMEXIT									0x0A	// Client should exit matchmaking
 #define ENDGAMESCORE						0x0B	// End game and show scores
-#define OUTOFLIVES              0x0C
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -174,10 +173,15 @@ typedef struct _matchmakeinst {
 
 // Game end data message
 typedef struct _gameend {
+	uchar reason;
 	uchar winner;		// Set if the receiving player is a winner
 	char bluecapture[4];
 	char redcapture[4];
 } GameEnd;
+
+// Reasons for the game end
+#define TEAMWON	0
+#define OUTOFLIVES	1
 
 // Dead player message
 typedef struct _playersummary {

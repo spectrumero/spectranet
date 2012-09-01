@@ -237,8 +237,8 @@ typedef struct _pwrspawn {
 int makeSocket();
 int messageLoop();
 int getMessage();
-void removeClient(int clientno);
-void removePlayer(int clientno);
+void removeClient(int clientno, bool deadlist);
+void removePlayer(int clientno, bool deadlist);
 int findClient(struct sockaddr_in *client);
 int sendMessage(int clientno);
 int sendMessageBuf(int clientno, char *buf, ssize_t bufsz);
@@ -252,6 +252,7 @@ int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 // Object functions
 void initObjList();
 Player *getPlayer(int clientid);
+Player *getDeadPlayer(int id);
 int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid);
 int makeDestructionMsg(int clientid, uchar objid, uchar reason);
 void fireWeapon(Object *firer);
@@ -372,5 +373,6 @@ void awardDestructionPoints(Object *awardTo, Object *destroyed);
 
 // Game options
 void usage(char *cmd);
+void setMaxLives(int l);
 
 #endif
