@@ -92,6 +92,10 @@ int maxLives;
 // Maximum wall collision damage cap
 int maxWallCollisionDmg;
 
+// Player count
+int playerCount;
+bool running;
+
 // Set all object entries to null, clear viewports etc.
 void initObjList() {
   memset(objlist, 0, sizeof(objlist));
@@ -102,6 +106,8 @@ void initObjList() {
   memset(flagTaken, 0, sizeof(flagTaken));
   frames=0;
 	deadPlayerIdx=0;
+	playerCount=0;
+	running=FALSE;
 	gameOver=FALSE;
 }
 
@@ -159,6 +165,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
     perror("makeNewPlayer: malloc");
     return NULL;
   }
+	playerCount++;
 
   memset(p, 0, sizeof(Player));
   p->clientid=clientid;
@@ -176,13 +183,24 @@ Player *makeNewPlayer(int clientid, char *playerName) {
 void removePlayer(int clientid, bool deadlist) {
   int i;
   Object *obj;
+	int flagteam;
 
   for(i = 0; i < MAXOBJS; i++) {
     obj=objlist[i];
-    if(obj && obj->owner == clientid) {
-      obj->flags = VANISHED;
-      obj->owner = -1;
-    }
+
+		if(obj) {
+			// if the player had the flag, ensure it gets put
+			// back on the map.
+  		if(obj->flags & HASFLAG) {
+    		flagteam = (obj->team + 1) & 1;
+	    	placeFlag(flagteam, obj->x, obj->y);
+	  	}
+
+  	  if(obj && obj->owner == clientid) {
+    	  obj->flags = VANISHED;
+      	obj->owner = -1;
+	    }
+		}
   }
 
 	if(deadlist) {
@@ -196,6 +214,7 @@ void removePlayer(int clientid, bool deadlist) {
 	else {
   	free(players[clientid]);
 	}
+	playerCount--;
   players[clientid]=NULL;
 	orderTeams();
 	updateAllMatchmakers();
@@ -207,6 +226,10 @@ void startPlayer(int clientid) {
   MapXY spawn;
   Player *player=players[clientid];
   spawn=spawnPlayer(clientid, player);
+
+	// Make sure the game state is 'running' if there is at
+	// least one player spawned.
+	running=TRUE;
 
   // Tell the client to initialize. The client will use the MapXY
   // to figure out where the viewport should be. The client will
@@ -309,6 +332,13 @@ void makeUpdates() {
 	}
 
   frames++;
+
+	// End the game if it's running and all the players went
+	// away.
+	if(running && playerCount == 0) {
+		gameOver=TRUE;
+		runOutOfPlayers();
+	}
 
 	// Some time in the future we'll do something better than this
 	// (perhaps give access to a ranking table etc)
@@ -498,7 +528,6 @@ bool objWasInView(Object *obj, Viewport *view) {
 void cleanObjects() {
   int i;
   Object *obj;
-	Player *p;
   for(i=0; i<MAXOBJS; i++) {
     obj=objlist[i];
     if(obj) {
@@ -507,22 +536,9 @@ void cleanObjects() {
         // if it's the player's tank that was destroyed
         // respawn the player, but only for DESTROYED (the
         // VANISHED flag meant the player went away)
-				p=players[obj->owner];
         if(obj->owner >= 0 &&
-            p->playerobj == obj && obj->flags & DESTROYED) {
-
-					// update the client with lives remaining
-					if(p->lives > 0) {
-						p->lives--;
-						addLivesMsg(obj->owner);
-					}
-
-					if(p->lives != 0) {
-          	spawnPlayer(obj->owner, p);
-					}
-					else {
-						outOfLives(p);
-					}
+            players[obj->owner]->playerobj == obj && obj->flags & DESTROYED) {
+          spawnPlayer(obj->owner, players[obj->owner]);
         }
         objlist[i]=NULL;
         free(obj);
@@ -833,7 +849,7 @@ void createFlags() {
 
 // Place an individual flag.
 void placeFlag(int team, int x, int y) {
-  Object *flag=newObject(FLAGID, 0, x, y);
+  Object *flag=newObject(FLAGID, -1, x, y);
   flag->team=team;
   if(team == 0) {
     flag->colour = BLUE|BRIGHT;
@@ -981,8 +997,8 @@ void updateScoreboard(Object *obj) {
   addHitpointMsg(obj);
   addTeamScoreMsg(obj->owner, 0);
   addTeamScoreMsg(obj->owner, 1);
-	addLivesMsg(obj->owner);
 	addPlayerScoreMsg(obj->owner);
+	addLivesMsg(obj->owner);
 }
 
 // Update the client with the ammunition quantity
@@ -1014,12 +1030,13 @@ void addPlayerScoreMsg(int clientid) {
 	addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
 }
 
+// Update the client with numbers of lives left.
 void addLivesMsg(int clientid) {
 	NumberMsg msg;
 	Player *p=getPlayer(clientid);
 
 	msg.numtype = LIVES;
-	snprintf(msg.message, sizeof(msg.message), 
+	snprintf(msg.message, sizeof(msg.message),
 			"%d", p->lives);
 	addMessage(clientid, SCOREBOARD, &msg, sizeof(msg));
 }
@@ -1145,6 +1162,9 @@ void destroyPlayerObj(Object *obj) {
       outOfLives(p);
 			obj->owner=-1;
     }
+		else {
+			addLivesMsg(p->clientid);
+		}
   }
 
   // Turn the player into an explosion with a TTL of 15 frames

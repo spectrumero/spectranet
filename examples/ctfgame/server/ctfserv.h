@@ -289,7 +289,6 @@ void addAmmoMsg(Object *obj);
 void addHitpointMsg(Object *obj);
 void broadcastTeamScoreMsg(int team);
 void addTeamScoreMsg(int clientid, int team);
-void addLivesMsg(int clientid);
 void updateScoreboard(Object *obj);
 void doPing();
 
@@ -344,9 +343,11 @@ void setMinPlayers(int p);
 
 // Scoreboard and match end.
 void addPlayerScoreMsg(int clientid);
+void addLivesMsg(int clientid);
 int getTeamscore(int team);
 void endMatch();
 void broadcastEndMatch();
+void runOutOfPlayers();
 void outOfLives(Player *p);
 
 // Server scoreboard.

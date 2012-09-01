@@ -83,6 +83,31 @@ void broadcastEndMatch() {
 	endScore();
 }
 
+void runOutOfPlayers() {
+	// Update the scoreboard with the data that existed when
+	// the last player carked it.
+	int bscore=getTeamscore(BLUETEAM);
+	int rscore=getTeamscore(REDTEAM);
+	int winner;
+
+	printMessage("**** Game Over ****");
+	if(bscore == rscore) {
+		printMessage("We have a draw!");
+		winner=-1;
+	}
+	else {
+		winner = bscore > rscore ? BLUETEAM : REDTEAM;
+		if(winner == BLUETEAM)
+			printMessage("Blue team wins!");
+		else
+			printMessage("Red team wins!");
+	}
+
+  addTeamScore(BLUETEAM, getTeamscore(BLUETEAM), winner);
+  addTeamScore(REDTEAM, getTeamscore(REDTEAM), winner);
+	endScore();
+}
+
 // Add the out of lives message. When the client acknowledges
 // then the player gets taken out of the game.
 void outOfLives(Player *p) {
