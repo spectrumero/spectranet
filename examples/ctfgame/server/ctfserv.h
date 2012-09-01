@@ -243,8 +243,8 @@ typedef struct _plyrspawn {
 int makeSocket();
 int messageLoop();
 int getMessage();
-void removeClient(int clientno, bool deadlist);
-void removePlayer(int clientno, bool deadlist);
+void removeClient(int clientno);
+void removePlayer(int clientno);
 int findClient(struct sockaddr_in *client);
 int sendMessage(int clientno);
 int sendMessageBuf(int clientno, char *buf, ssize_t bufsz);

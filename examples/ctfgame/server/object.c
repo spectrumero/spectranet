@@ -180,7 +180,7 @@ Player *makeNewPlayer(int clientid, char *playerName) {
   return p;
 }
 
-void removePlayer(int clientid, bool deadlist) {
+void removePlayer(int clientid) {
   int i;
   Object *obj;
 	int flagteam;
@@ -203,7 +203,9 @@ void removePlayer(int clientid, bool deadlist) {
 		}
   }
 
-	if(deadlist) {
+	// If the player is in the game, then record them in the
+	// register of deaths.
+	if(players[clientid]->flags & (RUNNING|DEAD)) {
 		if(deadPlayerIdx == MAXCLIENTS) {
 			printError("Warning: Dead player list full");
 			free(players[clientid]);
@@ -329,7 +331,7 @@ void makeUpdates() {
 		p=players[clientid];
 		if(p && p->flags & DEAD) {
 			// Put the player in the 'dead' list.
-			removeClient(clientid, true);
+			removeClient(clientid);
 		}
 	}
 
@@ -871,7 +873,7 @@ void resetGame() {
 		Player *p=players[i];
 		if(p) {
 			// this also removes the player from memory
-			removeClient(i, false);
+			removeClient(i);
 		}
 	}
 

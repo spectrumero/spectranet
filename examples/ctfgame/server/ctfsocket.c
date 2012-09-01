@@ -187,7 +187,7 @@ int getMessage() {
         case BYE:
           msgptr++;
           sendByeAck(clientid);
-          removeClient(clientid, false);
+          removeClient(clientid);
           break;
         case CLIENTRDY:
           msgptr++;
@@ -316,7 +316,7 @@ int addNewClient(char *hello, struct sockaddr_in *client) {
 }
 
 // Find the client's address in the list and remove it.
-void removeClient(int clientid, bool deadlist) {
+void removeClient(int clientid) {
 	if(cliaddr[clientid]) {
 	  free(cliaddr[clientid]);
   	cliaddr[clientid]=NULL;
@@ -328,7 +328,7 @@ void removeClient(int clientid, bool deadlist) {
 	  playerBufPtr[clientid]=NULL;
 	}
 
-  removePlayer(clientid, deadlist);
+  removePlayer(clientid);
 }
 
 // Find the client's address in the list and return the index.
@@ -359,7 +359,7 @@ void sendClientMessages() {
       if(rc < 0) {
         // Error when calling sendto; eliminate the client.
         printError("Transmit error: removing client %d", i);
-        removeClient(i, false);
+        removeClient(i);
       }
     }
   }
@@ -496,7 +496,7 @@ void doPing() {
         gonestr=(char *)malloc(MAXSTATUSMSG);
         snprintf(gonestr, MAXSTATUSMSG, "%s pang out", p->name);
         
-        removeClient(i, false);
+        removeClient(i);
 
         // broadcast the vanishing of the player
         broadcastStatusMsg(gonestr);
