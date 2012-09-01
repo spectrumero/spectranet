@@ -247,14 +247,16 @@ void startPlayer(int clientid) {
 
 // Spawn a player
 MapXY spawnPlayer(int clientid, Player *p) {
-  MapXY spawn;
+  PlayerSpawn spawn;
   Object *po=(Object *)malloc(sizeof(Object));
   memset(po, 0, sizeof(Object));
 
   spawn=getSpawnpoint(p);
 
-  po->x=spawn.mapx*16;
-  po->y=spawn.mapy*16;
+  po->x=spawn.loc.mapx*16;
+  po->y=spawn.loc.mapy*16;
+	po->commanded.dir=spawn.dir;
+	po->actual.dir=spawn.dir;
   po->prevx=po->x;
   po->prevy=po->y;
   po->ttl=-1;
@@ -278,7 +280,7 @@ MapXY spawnPlayer(int clientid, Player *p) {
   p->playerobj=po;
   p->vpcframes=0;
 
-  return spawn;
+  return spawn.loc;
 }
 
 // Get a player by id.

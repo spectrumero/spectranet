@@ -33,8 +33,10 @@ Maptile *map;
 Maptile *maprow[MAXROWS];
 int lastrow;
 
-MapXY spawnpoints[10];
-Player *spawnlist[10];
+// TODO: MAXSPAWNS ought to depend on MAXCLIENTS
+#define MAXSPAWNS 10
+MapXY spawnpoints[MAXSPAWNS];
+uchar spawndirs[MAXSPAWNS];
 MapXY flags[2];
 int numSpawns;
 
@@ -45,11 +47,17 @@ int loadMap(const char *filename) {
   int row=0;
   numSpawns=0;
   memset(maprow, 0, sizeof(maprow));
+	memset(spawndirs, 0, sizeof(spawndirs));
 
   if((stream = fopen(filename, "r"))) {
     while(fgets(txtrow, MAXCOLS, stream)) {
-      maprow[row]=buildMapRow(txtrow, row);
-      row++;
+			if(txtrow[0] == '*') {
+				processMapCmd(txtrow);
+			}
+			else {
+      	maprow[row]=buildMapRow(txtrow, row);
+      	row++;
+			}
     }
     fclose(stream);
 
@@ -60,6 +68,23 @@ int loadMap(const char *filename) {
   }
   lastrow=row-1;
   return 0;
+}
+
+// Process map commands. Currently, there's only a spawn
+// direction command.
+void processMapCmd(const char *cmd) {
+	int i=0;
+	cmd++;
+
+	// Spawn direction.
+	if(*cmd == 'd') {
+		cmd++;
+		while(*cmd >= '0' && *cmd < '4' && i < MAXSPAWNS) {
+			spawndirs[i]=((*cmd) - '0') * 4;
+			i++;
+			cmd++;
+		}
+	}
 }
 
 // Interpret each map row line and store it in memory.
@@ -227,14 +252,18 @@ bool detectTouchingFlagpoint(Object *obj) {
 // Get a spawn point. This just picks the struct from the
 // array for now but it's in a function to allow us to easily 
 // modify things later.
-MapXY getSpawnpoint(Player *p) {
+PlayerSpawn getSpawnpoint(Player *p) {
+	PlayerSpawn spawn;
+
 	// Derive the spawnpoint from the team and player combination
 	// Spawnpoints are ordered by team,playernum
 	int idx;
 
 	// TODO: set players per team from map
 	idx=(p->team * 2) + p->playernum;
-  return spawnpoints[idx];
+	spawn.loc=spawnpoints[idx];
+	spawn.dir=spawndirs[idx];
+  return spawn;
 }
 
 // Get a flag point. See comment above...

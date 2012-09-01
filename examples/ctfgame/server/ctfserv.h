@@ -214,6 +214,12 @@ typedef struct _pwrspawn {
   int type;              // object type to spawn here
 } PowerSpawn;
 
+// Player spawn point
+typedef struct _plyrspawn {
+	MapXY loc;
+	uchar dir;		// As used in a Vector struct
+} PlayerSpawn;
+
 #define MAXPWRSPAWNS  20
 #define MAXPWRCOOLDOWN    720    // 60 seconds
 #define MINPWRCOOLDOWN    240    // 20 seconds
@@ -301,10 +307,11 @@ void setMaxWallCollisionDmg(int d);
 
 // Map functions
 int loadMap(const char *filename);
+void processMapCmd(const char *cmd);
 Maptile *buildMapRow(char *txtrow, int y);
 int sendMapMsg(int clientid, Viewport *vp);
 bool detectMapCollision(Object *pbj);
-MapXY getSpawnpoint(Player *p);
+PlayerSpawn getSpawnpoint(Player *p);
 MapXY getFlagpoint(int team);
 bool detectTouchingFlagpoint(Object *obj);
 int maxPlayersPerTeam();
