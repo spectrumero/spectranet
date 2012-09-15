@@ -237,18 +237,17 @@ Standard header plus directory handle.
 Example:
 0xBEEF 0x00 0x11 0x04 - Read an entry with directory handle 0x04
 
-The server responds with the standard header, with the sequence number
-set to the directory entry number. Following the standard header is
-a NULL terminated string, which is the directory entry. Example:
-0xBEEF 0x00 0x11 . 0x00 - Directory entry for the current working directory
-0xBEEF 0x00 0x11 .. 0x00 - Directory entry for parent
-0xBEEF 0x00 0x11 foo 0x00 - File named "foo"
+The server responds with the standard header, followed by the directory
+entry. Example:
 
-If the end of directory is reached, or other error is reached, the
-header is sent as above, but byte 4 is set to 0x00 and byte 5 is set to
-the code (either EOF or an error):
-0xBEEF 0x00 0x11 0x00 0x01 - EOF
-0xBEEF 0x00 0x11 0x00 0x1F - Error code 0x1F
+0xBEEF 0x17 0x11 0x00 . 0x00 - Directory entry for the current working directory
+0xBEEF 0x18 0x11 0x00 .. 0x00 - Directory entry for parent
+0xBEEF 0x19 0x11 0x00 foo 0x00 - File named "foo"
+
+If the end of directory is reached, or another error occurs, then the
+status byte is set to the error number as for other commands.
+0xBEEF 0x1A 0x11 0x21 - EOF
+0xBEEF 0x1B 0x11 0x1F - Error code 0x1F
 
 CLOSEDIR - Close a directory handle - Command ID 0x12
 -----------------------------------------------------
@@ -308,36 +307,38 @@ OPEN - Opens a file - Command 0x29
 ----------------------------------
 Format: Standard header, flags, mode, then the null terminated filename.
 Flags are a bit field.
-The filemodes are:
 
+The flags are:
 O_RDONLY	0x0001	Open read only
 O_WRONLY	0x0002	Open write only
 O_RDWR		0x0003	Open read/write
-
-The flags are:
-
 O_APPEND	0x0008	Append to the file, if it exists (write only)
-
 O_CREAT		0x0100	Create the file if it doesn't exist (write only)
 O_TRUNC		0x0200	Truncate the file on open for writing
 O_EXCL		0x0400	With O_CREAT, returns an error if the file exists
 
+The modes are the same as described by CHMOD (i.e. POSIX modes). These
+may be modified by the server process's umask. The mode only applies
+when files are created (if the O_CREAT flag is specified)
+
 Examples: 
 Open a file called "/foo/bar/baz.bas" for reading:
 
-0xBEEF 0x00 0x20 0x0001 0x0000 /foo/bar/baz.bas 0x00
+0xBEEF 0x00 0x29 0x0001 0x0000 /foo/bar/baz.bas 0x00
 
 Open a file called "/tmp/foo.dat" for writing, creating the file but
-returning an error if it exists:
+returning an error if it exists. Modes set are S_IRUSR, S_IWUSR, S_IRGRP
+and S_IWOTH (read/write for owner, read-only for group, read-only for
+others):
 
-0xBEEF 0x00 0x20 0x0102 0x0000 /tmp/foo.dat 0x00
+0xBEEF 0x00 0x29 0x0102 0x01A4 /tmp/foo.dat 0x00
 
 The server returns the standard header and a result code in response.
 If the operation was successful, the byte following the result code
 is the file descriptor:
 
-0xBEEF 0x00 0x20 0x00 0x04 - Successful file open, file descriptor = 4
-0xBEEF 0x00 0x20 0x01 - File open failed with "permssion denied"
+0xBEEF 0x00 0x29 0x00 0x04 - Successful file open, file descriptor = 4
+0xBEEF 0x00 0x29 0x01 - File open failed with "permssion denied"
 
 (HISTORICAL NOTE: OPEN used to have command id 0x20, but with the
 addition of extra flags, the id was changed so that servers could
