@@ -161,3 +161,24 @@ void broadcastFlagReturn(Object *returner) {
   broadcastStatusMsg(bcast);
 }
 
+// Broadcast time remaining 
+void broadcastTimeRemaining(int minutes) {
+	if(minutes > 1) {
+#ifdef LANG_ES
+		snprintf(bcast, MAXSTATUSMSG, "Quedan %d minutos...",
+				minutes);
+#else
+		snprintf(bcast, MAXSTATUSMSG, "%d minutes remaining...",
+				minutes);
+#endif
+	}
+	else {
+#ifdef LANG_ES
+		snprintf(bcast, MAXSTATUSMSG, "¡Corre! Queda muy poco tiempo");
+#else
+		snprintf(bcast, MAXSTATUSMSG, "Hurry! Time's running out!");
+#endif
+	}
+	broadcastStatusMsg(bcast);
+}
+

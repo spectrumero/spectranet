@@ -89,6 +89,10 @@ bool gameOver;
 // How many lives a player may have
 int maxLives;
 
+// Time limit in frames
+int timeLimit;
+int timeRemaining;
+
 // Maximum wall collision damage cap
 int maxWallCollisionDmg;
 
@@ -105,6 +109,7 @@ void initObjList() {
   memset(flagloc, 0, sizeof(flagloc));
   memset(flagTaken, 0, sizeof(flagTaken));
   frames=0;
+	timeRemaining=timeLimit;
 	deadPlayerIdx=0;
 	playerCount=0;
 	running=FALSE;
@@ -321,6 +326,22 @@ void makeUpdates() {
       p->flags &= RESETFLAGS;
     }
   }
+
+	// Check for time limit.
+	if(timeLimit > -1 && running) {
+		timeRemaining--;
+		if(timeRemaining == 0) {
+			broadcastEndMatch();
+			endMatch();
+			gameOver=TRUE;
+		}
+		else {
+			if(timeRemaining % (60 * FRAMESPERSEC) == 0) {
+				// broadcast minutes remaining msg.
+				broadcastTimeRemaining(timeRemaining / (60 * FRAMESPERSEC));
+			}
+		}
+	}
 
   updateAllFlagIndicators();
   sendClientMessages();
@@ -971,6 +992,10 @@ void setMaxWallCollisionDmg(int d) {
 
 void setMaxLives(int l) {
 	maxLives=l;
+}
+
+void setTimeLimit(int seconds) {
+	timeLimit=seconds * FRAMESPERSEC;
 }
 
 // Do flag capture stuff

@@ -53,13 +53,43 @@ void broadcastEndMatch() {
 	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
 	geMsg.reason=TEAMWON;
 
-	winner = (getTeamscore(BLUETEAM) > getTeamscore(REDTEAM)) 
-		? BLUETEAM : REDTEAM;
+	if(getTeamscore(BLUETEAM) == getTeamscore(REDTEAM)) {
+		winner=NOTEAM;
+	}
+	else { 
+		winner = (getTeamscore(BLUETEAM) > getTeamscore(REDTEAM)) 
+			? BLUETEAM : REDTEAM;
+	}
+
+#ifdef LANG_ES
+	printMessage("**** Fin de la partida ****");
+#else
 	printMessage("**** Game Over ****");
-	if(winner == BLUETEAM) 
-		printMessage("Blue team wins!");
-	else
-		printMessage("Red team wins!");
+#endif
+
+	switch(winner) {
+		case BLUETEAM:
+#ifdef LANG_ES
+			printMessage("Ha ganado el equipo azul");
+#else
+			printMessage("Blue team wins!");
+#endif
+
+			break;
+		case REDTEAM:
+#ifdef LANG_ES
+			printMessage("Ha ganado el equipo rojo");
+#else
+			printMessage("Red team wins!");
+#endif
+			break;
+		default:
+#ifdef LANG_ES
+			printMessage("Tenemos un empate");
+#else
+			printMessage("Game ended in a draw");
+#endif
+	}
 
 	addTeamScore(BLUETEAM, getTeamscore(BLUETEAM), winner);
 	addTeamScore(REDTEAM, getTeamscore(REDTEAM), winner);
@@ -69,7 +99,14 @@ void broadcastEndMatch() {
 		dead=getDeadPlayer(i);
 
 		if(p) {
-			geMsg.winner = (p->team == winner) ? 1 : 0;
+			// The client is just told if it's a winner or not, not
+			// the actual winning team id.
+			if(winner != NOTEAM) {
+				geMsg.winner = (p->team == winner) ? 1 : 0;
+			}
+			else {
+				geMsg.winner = NOTEAM;
+			}
 			addMessage(i, ENDGAMESCORE, &geMsg, sizeof(geMsg));
 			addPlayerName(p->team, p->name, winner);
 		}
@@ -95,17 +132,34 @@ void runOutOfPlayers() {
 
 	newScore(true);
 
+#ifdef LANG_ES
+	printMessage("**** Fin de la partida ****");
+#else
 	printMessage("**** Game Over ****");
+#endif
+
 	if(bscore == rscore) {
+#ifdef LANG_ES
+		printMessage("Tenemos un empate");
+#else
 		printMessage("We have a draw!");
-		winner=-1;
+#endif
+		winner=NOTEAM;
 	}
 	else {
 		winner = bscore > rscore ? BLUETEAM : REDTEAM;
 		if(winner == BLUETEAM)
+#ifdef LANG_ES
+			printMessage("Ha ganado el equipo azul");
+#else
 			printMessage("Blue team wins!");
+#endif
 		else
+#ifdef LANG_ES
+			printMessage("Ha ganado el equipo rojo");
+#else
 			printMessage("Red team wins!");
+#endif
 	}
 
   addTeamScore(BLUETEAM, getTeamscore(BLUETEAM), winner);

@@ -55,6 +55,7 @@ typedef int socklen_t;
 #endif
 
 #define GAMETICK  43000    // game tick length in microseconds
+#define FRAMESPERSEC	1000000/GAMETICK
 #define MAXCLIENTS  16
 #define MSGBUFSZ  256      // Size of message buffers
 #define MAXROWS    1024    // Maximum map rows
@@ -332,6 +333,7 @@ void broadcastDeath(Object *killed, Object *killedBy);
 void broadcastFlagSteal(Object *stealer);
 void broadcastFlagCapture(Object *capturer);
 void broadcastFlagReturn(Object *returner);
+void broadcastTimeRemaining(int minutes);
 
 void updateAllFlagIndicators();
 void updateFlagIndicators(int clientid, Player *p);
@@ -382,5 +384,6 @@ void awardDestructionPoints(Object *awardTo, Object *destroyed);
 // Game options
 void usage(char *cmd);
 void setMaxLives(int l);
+void setTimeLimit(int seconds);
 
 #endif

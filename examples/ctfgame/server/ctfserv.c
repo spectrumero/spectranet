@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
   int minPlayers=2;
   int lives=-1;
   int ch;
+	int timeLimit=-1;
 
 #ifdef NOGETOPT
   if(argc != 2) {
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
   }
   mapfile=argv[1];
 #else
-  while((ch=getopt(argc, argv, "m:fd:p:l:c:")) != -1) {
+  while((ch=getopt(argc, argv, "t:m:fd:p:l:c:")) != -1) {
     switch(ch) {
       case 'm':   // Mapfile
         mapfile=optarg;
@@ -58,17 +59,20 @@ int main(int argc, char **argv) {
       case 'f':   // Freeplay mode
         winScore=0;
         break;
-      case 'd':
+      case 'd':		// How much damage a wall can do
         wallDmg=strtol(optarg, NULL, 10);
         break;
-      case 'p':
+      case 'p':		// Minimum players required to start
         minPlayers=strtol(optarg, NULL, 10);
         break;
-      case 'l':
+      case 'l':		// Max lives (-1 = infinite)
         lives=strtol(optarg, NULL, 10);
         break;
-			case 'c':
+			case 'c':		// Flags to capture to win
 				winScore=strtol(optarg, NULL, 10);
+				break;
+			case 't':		// Time limit
+				timeLimit=strtol(optarg, NULL, 10);
 				break;
       default:
         usage(argv[0]);
@@ -97,6 +101,7 @@ int main(int argc, char **argv) {
   setMaxWallCollisionDmg(wallDmg);
   setMinPlayers(minPlayers);
 	setMaxLives(lives);
+	setTimeLimit(timeLimit);
 
   initObjList();
   createFlags();
@@ -115,6 +120,7 @@ void usage(char *cmd) {
   fprintf(stderr, " -p <value>  Minimum number of players to start a game\n");
   fprintf(stderr, " -l <value>  How many lives a player has\n");
 	fprintf(stderr, " -c <value>  Capture this many flags to win\n");
+	fprintf(stderr, " -t <value>  Time limit (in seconds)\n");
   fprintf(stderr, "\n");
   exit(1);
 }
