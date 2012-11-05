@@ -48,13 +48,11 @@ void __FASTCALL__ gameOver(GameEnd *msg) {
 	uchar key;
 	setupGameOver();
 
-	switch(msg->reason) {
-		case TEAMWON:
-			if(msg->winner)
-				victory();
-			else
-				defeat();
-			break;
+  switch(msg->reason) {
+    case TEAMWON:
+      showResultPanel(msg->winner);
+      break;
+
 		case OUTOFLIVES:
 			outOfLives();
 			break;
@@ -75,6 +73,19 @@ void __FASTCALL__ gameOver(GameEnd *msg) {
 	while(in_Inkey() != '\n');
 
 	fadeOut();
+}
+
+void __FASTCALL__ showResultPanel(uchar winner) {
+  switch(winner) {
+    case 0:
+      defeat();
+      break;
+    case 1:
+      victory();
+      break;
+    default:
+      scoredraw();
+  }
 }
 
 void setupGameOver() {
@@ -208,6 +219,14 @@ void defeat() {
 #endasm
 }
 
+void scoredraw() {
+  setoutcomepos();
+#asm
+  ld hl, _drawstr
+  call PRINT42
+#endasm
+}
+
 void outOfLives() {
 	setoutcomepos();
 #asm
@@ -230,6 +249,8 @@ void outOfLives() {
 	defb ' ',0xC2,0xA1,'D','e','r','r','o','t','a','!',0
 ._victorystr
 	defb 0xC2,0xA1,'V','i','c','t','o','r','i','a','!',0
+._drawstr
+        defb ' ',' ',0xC2,0xA1,'E','m','p','a','t','e','!',0
 ._outoflivesstr
 	defb 0xC2,0xA1,'H','a','s',' ','m','u','e','r','t','o','!',0
 #endasm
@@ -247,6 +268,8 @@ void outOfLives() {
 	defb 'D','e','f','e','a','t','!',0
 ._victorystr
 	defb 'V','i','c','t','o','r','y','!',0
+._drawstr
+        defb ' ',' ','D','r','a','w','!',0
 ._outoflivesstr
 	defb 'N','o',' ','l','i','v','e','s','!',0
 #endasm

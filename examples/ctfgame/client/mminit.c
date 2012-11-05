@@ -30,9 +30,17 @@
 // Initialize the match making stuff.
 
 //long heap;
+#define HLCALL  0x3FFA
+#define CLEAR42 0x3E30
 
 void main() {
 	int rc;
+  // Reset the PRINT42 routine
+#asm
+  ld hl, CLEAR42
+  call HLCALL
+#endasm
+  
 
 //	mallinit();
 //	sbrk(27000,1024);
