@@ -116,7 +116,9 @@ void tryToStopMatchmaking() {
 			if(p && p->flags & MATCHMAKING) {
 				// Reset all flags so the player can enter the limbo between
 				// leaving matchmaking and starting the game.
-				p->flags=0;
+				// Leave the PLYRREADY flag set so that late joiners
+				// can join.
+				p->flags=PLYRREADY;
 				sendMessageBuf(i, buf, 2);
 			}
 		}

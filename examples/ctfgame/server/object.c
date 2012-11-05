@@ -48,7 +48,7 @@ struct mvlookup vectbl[] = {
 // 4 = Fuel recharge
 // 5 = Ammo recharge
 ObjectProperties objprops[] = {
-  {0, 40, 4, 4, 3, 18, 100, 100, 1, 20, -1, 1, 1, 100},		// Player's tank
+  {0, 40, 4, 4, 3, 18, 100, 100, 1, 0, -1, 1, 1, 100},		// Player's tank
   {100, 320, 0, 0, 0, 0, 10, 1, 0,  45, 20, 3, 1, 0},		// Player's missile
   {0, 0,  0, 0, 0, 0,  0,   0,   0, 0,   0, 0, 0, 0},		// Explosion
   {0, 0, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, 0, 0},					// Flag
