@@ -198,16 +198,16 @@ int messageloop() {
           sendMsg(1);
           msgptr++;
           break;
-				case ENDGAMESCORE:
-					gameOver((GameEnd *)msgptr);
-					msgptr+=sizeof(GameEnd);
+        case ENDGAMESCORE:
+          gameOver((GameEnd *)msgptr);
+          msgptr+=sizeof(GameEnd);
 
-					// May Djkastra turn in his grave.
-					goto leave;
+          // May Djkastra turn in his grave.
+          goto leave;
         default:
-          sendbuf[0]=SERVERKILL;
+//          sendbuf[0]=SERVERKILL;
           //zx_border(RED);
-          sendMsg(1);
+//          sendMsg(1);
           numMsgs=1;	// dump all other msgs
       }
 

@@ -156,12 +156,12 @@ int messageloop() {
     msgptr=rxbuf;
     numMsgs=*msgptr++;
     while(numMsgs) {
-			msgType=*msgptr++;
+      msgType=*msgptr++;
 
       switch(msgType) {
-				case CLRPLAYERLIST:
-					clearPlayerList();
-					break;
+        case CLRPLAYERLIST:
+	  clearPlayerList();
+	  break;
         case MATCHMAKEMSG:
           displayMatchmake((MatchmakeMsg *)msgptr);
           msgptr+=sizeof(MatchmakeMsg);
@@ -170,27 +170,26 @@ int messageloop() {
           displayStatus((MessageMsg *)msgptr);
           msgptr+=sizeof(MessageMsg);
           break;
-				case PINGMSG:
-					sendbuf[0]=PINGMSG;
-					sendMsg(1);
-					break;
-				case MMSTARTABLE:
-					setStartable(*msgptr++);
-					break;
-				case MMEXIT:
-					// Exit the message loop to load the next part.
-					// Save the integer 'sockfd' so the next part can get at
-					// it.
-					wpoke(27000, sockfd);
-					memcpy(27002, remoteaddr, sizeof(struct sockaddr_in));
-//					printk("DEBUG: sockfd=%d\n",sockfd);
-					return 0;					
+        case PINGMSG:
+	  sendbuf[0]=PINGMSG;
+	  sendMsg(1);
+          break;
+        case MMSTARTABLE:
+          setStartable(*msgptr++);
+          break;
+        case MMEXIT:
+          // Exit the message loop to load the next part.
+          // Save the integer 'sockfd' so the next part can get at
+          // it.
+          wpoke(27000, sockfd);
+          memcpy(27002, remoteaddr, sizeof(struct sockaddr_in));
+          return 0;					
         default:
-					printk("\nSERVERKILL: msg = %d\n", msgType);
-          sendbuf[0]=SERVERKILL;
-          zx_border(INK_RED);
-          sendMsg(1);
-					return -1;
+          // Unrecognised message, throw away the rest of the block.
+          // The only reason we should get here is late matchmakers
+          // joining after a game starts. Actual matchmaking messages
+          // will not be mixed with game broadcasts (we hope)
+          numMsgs=1;
       }
 
       numMsgs--;
