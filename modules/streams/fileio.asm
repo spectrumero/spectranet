@@ -20,6 +20,7 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 .include	"fcntl.inc"
+.include	"stat.inc"
 .include	"spectranet.inc"
 .include	"defs.inc"
 .include	"sysvars.inc"
