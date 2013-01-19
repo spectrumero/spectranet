@@ -59,7 +59,7 @@ F_fileopen_impl:
 	ld hl, INTERPWKSPC		; pointer to the filename
 
 	; When creating files, make sure the file mode is sensible
-	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWOTH
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 	call OPEN			; Try to open the file.
 	jr c, .openerror1
 

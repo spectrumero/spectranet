@@ -93,7 +93,7 @@ F_snaptest:
 .globl F_savesna
 F_savesna: 
 	ld de, O_CREAT | O_TRUNC | O_WRONLY
-	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWOTH	; mode 0644
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH	; mode 0644
 	call OPEN			; Open the snapshot file
 	ret c
 	ld (v_snapfd), a		; save the file descriptor
