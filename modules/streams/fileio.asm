@@ -145,7 +145,7 @@ F_getfilemode:
 .next32:
 	cp 't'		; Truncate?
 	jr nz, .next42
-	set 3, d
+	set 2, d
 .next42:
 	inc hl
 	djnz .loop2
@@ -155,7 +155,7 @@ F_getfilemode:
 	ld a, d		; the flags - truncate should be set by
 	and 0x0F	; default if no flags were explicitly set.
 	ret nz
-	ld d, O_TRUNC|O_CREAT
+	ld d, (O_TRUNC >> 8)|(O_CREAT >> 8)
 	ret	
 
 ;-------------------------------------------------------------------------

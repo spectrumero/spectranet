@@ -61,8 +61,10 @@ main() {
 	sbrk(24000,8767);
 
 	// Page in the Spectranet permanently
+	// Make sure all the print42 stuff is reset, too
 #asm
-	call 0x3FF9
+	call 0x3FF9		; PAGEIN
+	call 0x3E30		; CLEAR42
 #endasm
 
 	initSpriteLib();
