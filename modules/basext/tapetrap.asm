@@ -103,9 +103,9 @@ F_loadbytes_nopush:		; (if IX has already been pushed)
 	add ix, sp
 
 	ld hl, (NMISTACK)	; get the old stack pointer
-	ld (hl), 0x3F		; and set the return address to
+	ld (hl), 0x7C		; and set the return address to
 	inc hl
-	ld (hl), 0x05		; 0x053F SA/LD-RET in the Spectrum ROM
+	ld (hl), 0x00		; a convenient RET instruction.
 
 	ld a, (v_trapfd)	; this could be better optimized...
 	ld bc, 1
