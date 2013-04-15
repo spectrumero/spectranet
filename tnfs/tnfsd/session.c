@@ -70,6 +70,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	Session *s;
 	unsigned char repbuf[4];
 	char *cliroot;
+	uint16_t recycledSid=0;
 
 #ifdef DEBUG
 	TNFSMSGLOG(hdr, "Mounting FS");
@@ -87,12 +88,13 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	/* deallocate old, if necessary */
 	if((s=tnfs_findsession_ipaddr(hdr->ipaddr, &sindex)) != NULL)
 	{
+		recycledSid=s->sid;
 		TNFSMSGLOG(hdr, "Freeing existing session");
 		tnfs_freesession(s, sindex);
 	}
 
 	/* allocate a new session */
-	s=tnfs_allocsession(&sindex);
+	s=tnfs_allocsession(&sindex, recycledSid);
 	if(!s)
 	{
 		TNFSMSGLOG(hdr, "Failed to allocate session");
@@ -171,7 +173,7 @@ void tnfs_umount(Header *hdr, Session *s, int sindex)
 }
 
 /* Create a new session */
-Session *tnfs_allocsession(int *sindex)
+Session *tnfs_allocsession(int *sindex, uint16_t withSid)
 {
 	Session *s;
 
@@ -184,7 +186,12 @@ Session *tnfs_allocsession(int *sindex)
 			if(s)
 			{
 				memset(s, 0, sizeof(Session));
-				s->sid=tnfs_newsid();
+				if(withSid > 0) {
+					s->sid=withSid;
+				}
+				else {
+					s->sid=tnfs_newsid();
+				}
 				slist[*sindex]=s;
 			}
 			return s;

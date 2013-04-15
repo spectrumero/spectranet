@@ -40,7 +40,9 @@ void tnfs_umount(Header *hdr, Session *s, int sindex);
 /* Manage sessions */
 /* Most functions also return the index of the session array
  * via the sindex pointer */
-Session *tnfs_allocsession(int *sindex);
+
+/* if withSid is nonzero, use the specified sid */
+Session *tnfs_allocsession(int *sindex, uint16_t withSid);
 void tnfs_freesession(Session *s, int sindex);
 Session *tnfs_findsession_sid(uint16_t sid, int *sindex);
 Session *tnfs_findsession_ipaddr(in_addr_t ipaddr, int *sindex);
