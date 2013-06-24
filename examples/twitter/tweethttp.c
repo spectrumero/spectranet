@@ -38,9 +38,11 @@ int dotweet(char *user, char *passwd, char *tweet)
 	int bytes, totalbytes=0;
 	char rxbuf[RXBUFSZ];
 	char status[32];
+	char host[32];
+	getAPIHost(host);
 
 	tweetUri.proto=PROTO_HTTP;
-	tweetUri.host="api.twitter.com";
+	tweetUri.host=host;
 	tweetUri.location="/1/statuses/update.json?source=twitterandroid";
 	tweetUri.user=user;
 	tweetUri.passwd=passwd;
@@ -77,4 +79,59 @@ int dotweet(char *user, char *passwd, char *tweet)
 		rc=-1;
 	return rc;
 }
+
+// Get the hostname of the Twitter API (the twitter proxy in effect)
+#define PAGEIN		0x3ff9
+#define PAGEOUT		0x007c
+#define OPEN		0x3eb1
+#define READ		0x3ec9
+#define CLOSE		0x3ed2
+
+void __FASTCALL__ getAPIHost(char *buf) {
+#asm
+        call PAGEIN
+        push hl
+        ld hl, _serverfile
+        ld de, O_RDONLY
+        ld bc, 0x00
+        call OPEN
+        jr c, none
+        pop de                  ; buffer to fill
+        push de
+        ld bc, 32		; max. 32 bytes
+        push af
+        call READ
+        jr c, closenone
+        pop af
+        call CLOSE
+.fixstring
+        pop hl
+        ld b, 32
+.fixloop
+        ld a, (hl)
+        cp 0x20
+        jr nc, nochange
+        ld (hl), 0
+
+.nochange
+        inc hl
+        djnz fixloop
+
+        jr done
+
+.closenone
+        pop af
+        call CLOSE
+.none
+        pop hl
+        ld (hl), 0              ; ensure we have an empty string
+
+.done
+        call PAGEOUT
+#endasm
+}
+
+#asm
+._serverfile    defb 's','e','r','v','e','r','.','i','p',0
+#endasm
 

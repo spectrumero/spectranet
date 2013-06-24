@@ -32,7 +32,8 @@ extern char *tweet;
 
 /* Function prototypes */
 void tweet_loadscr();
-extern void resetinput(char sx, char sy, char wid, char hgt, int len);
+extern void resetinput(char sx, char sy, char wid, char hgt, int len,
+	void *callback);
 extern void clearArea(char ink, char paper);
 extern void moveToCurrent();
 extern char *checkKey();
@@ -48,7 +49,8 @@ extern void setUIAttrs();
 extern void mainMenu();
 extern void setpos(char y, char x);
 extern int makeTweet();
-extern char *abortablekbinput(int x, int y, int wid, int ht, int sz, char pw);
+extern char *abortablekbinput(int x, int y, int wid, int ht, int sz, char pw,
+	void *callback);
 extern void ui_status(int code, char *msg);
 
 extern int dotweet(char *user, char *passwd, char *tweet);

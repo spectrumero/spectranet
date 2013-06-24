@@ -63,9 +63,11 @@ char curx;
 char cury;
 int length=0;
 char ispasswd=0;
+void *charsRemainCallback=NULL;
 
 /* resetinput - resets the input routines */
-void resetinput(char sx, char sy, char wid, char hgt, int len)
+void resetinput(char sx, char sy, char wid, char hgt, int len,
+	void *callback)
 {
 	input_ready=0;
 	startx=sx;
@@ -74,6 +76,10 @@ void resetinput(char sx, char sy, char wid, char hgt, int len)
 	height=hgt;
 	length=len;
 	debounce_enter=0;
+	charsRemainCallback=callback;
+
+	if(charsRemainCallback)
+		charsRemainCallback(len);
 
 	curx=sx;
 	cury=sy;
@@ -118,7 +124,7 @@ void clearArea(char ink, char paper)
 	{
 		putchar(22);
 		putchar(y+32);
-		putchar((startx*2)+32);
+		putchar(startx+32);
 		for(x=0; x < width; x++)
 		{
 			putchar(32);
@@ -156,7 +162,7 @@ void moveToCurrent()
 {
 	putchar(22);
 	putchar(32+cury);
-	putchar(32+(curx*2));
+	putchar(32+curx);
 }
 
 /* handlekey - deal with the last key press and put it on the screen */
@@ -188,6 +194,9 @@ void handleKey(uchar key)
 				moveToCurrent();
 				putchar('_');
 			}
+			if(charsRemainCallback) {
+				charsRemainCallback(length-inputidx);
+			}
 			break;
 		case '\n':	/* enter */
 			if(debounce_enter)
@@ -202,6 +211,9 @@ void handleKey(uchar key)
 			break;
 		default:	/* normal key */
 			debounce_enter=1;
+			if(key < 32 || key > 127)
+				break;
+
 			if(inputidx >= sizeof(inputbuf) ||
 			   inputidx >= length)
 				break;	/* no more room in buffer */
@@ -224,6 +236,8 @@ void handleKey(uchar key)
 
 			inputbuf[inputidx++]=key;
 			putchar('_');	/* The cursor */
+			if(charsRemainCallback)
+				charsRemainCallback(length-inputidx);
 	}
 }
 

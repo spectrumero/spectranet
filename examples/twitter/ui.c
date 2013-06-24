@@ -34,15 +34,36 @@
 #include <malloc.h>
 #include "tweet.h"
 
+#ifdef NIXIE_DISPLAY
+#include "spi-nixie.h"
+void charsRemaining(int remain);
+void tweetsSent();
+#endif
+
 char *user=NULL;
 char *passwd=NULL;
 char *tweet=NULL;
 
 char *lastuser=NULL;
 char *lasttweet=NULL;
+int tweets=0;
+
+#ifdef NIXIE_DISPLAY
+void charsRemaining(int remain) {
+	display_int(remain, 2);
+}
+
+void tweetsSent() {
+	display_ra_int(tweets);
+}
+#endif
 
 int ui_init()
 {
+	#ifdef NIXIE_DISPLAY
+	spi_init();
+	tweetsSent();
+	#endif
 	user=(char *)malloc(USERSZ);
 	passwd=(char *)malloc(PASSWDSZ);
 	tweet=(char *)malloc(TWEETSZ);
@@ -65,6 +86,9 @@ void mainMenu()
 	uchar key;
 	while(1)
 	{
+#ifdef NIXIE_DISPLAY
+		tweetsSent();
+#endif
 		ia_cls();
 		setpos(10,0);
 		printk("\x10\x36Welcome to ZX Twitter. Press:\n");
@@ -93,15 +117,19 @@ int makeTweet()
 	printk("Leaving a field blank aborts\n\n");
 	printk("\x10\x36Username:\nPassword:\n\nYour tweet:\n");
 
-	str=abortablekbinput(11, 12, USERSZ+1, 1, USERSZ, 0);
+	str=abortablekbinput(11, 12, USERSZ+1, 1, USERSZ, 0, NULL);
 	if(!str) return 0;
 	memcpy(user, str, USERSZ);
 
-	str=abortablekbinput(11, 13, PASSWDSZ+1, 1, PASSWDSZ, 1);
+	str=abortablekbinput(11, 13, PASSWDSZ+1, 1, PASSWDSZ, 1, NULL);
 	if(!str) return 0;
 	memcpy(passwd, str, PASSWDSZ);
 
-	str=abortablekbinput(0, 16, 32, 5, TWEETSZ, 0);
+#ifdef NIXIE_DISPLAY
+	str=abortablekbinput(0, 16, 32, 5, TWEETSZ, 0, charsRemaining);
+#else
+	str=abortablekbinput(0, 16, 32, 5, TWEETSZ, 0, NULL);
+#endif
 	if(!str) return 0;
 	memcpy(tweet, str, TWEETSZ);
 
@@ -110,6 +138,9 @@ int makeTweet()
 	{
 		memcpy(lastuser, user, USERSZ);
 		memcpy(lasttweet, tweet, TWEETSZ);
+#ifdef NIXIE_DISPLAY
+		tweets++;
+#endif
 	}
 	printk("Press 'c' to continue.");
 	while(getSingleKeypress() != 'c');
@@ -148,14 +179,16 @@ void ui_status(int code, char *msg)
 	setUIAttrs();
 }
 
-char *abortablekbinput(int x, int y, int wid, int ht, int sz, char pw)
+char *abortablekbinput
+	(int x, int y, int wid, int ht, int sz, char pw,
+	 void *callback)
 {
 	char *str;
 	char kb;
 
 	while(1)
 	{
-		resetinput(x, y, wid, ht, sz);
+		resetinput(x, y, wid, ht, sz, callback);
 		str=kbinput(pw);
 		if(!*str)
 		{
