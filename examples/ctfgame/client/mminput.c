@@ -119,7 +119,7 @@ void clearArea(char ink, char paper)
 	{
 		putchar(22);
 		putchar(y+32);
-		putchar((startx*2)+32);
+		putchar(startx+32);
 		for(x=0; x < width; x++)
 		{
 			putchar(32);
@@ -157,7 +157,7 @@ void moveToCurrent()
 {
 	putchar(22);
 	putchar(32+cury);
-	putchar(32+(curx*2));
+	putchar(32+curx);
 }
 
 /* handlekey - deal with the last key press and put it on the screen */

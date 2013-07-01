@@ -248,7 +248,7 @@ void setpos(char y, char x)
 {
   putchar(22);
   putchar(y+32);
-  putchar((x*2)+32);
+  putchar(x+32);
 }
 
 void drawMatchmakingScreen()
