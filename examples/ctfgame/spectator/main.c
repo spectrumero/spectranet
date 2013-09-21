@@ -14,20 +14,8 @@ int main(int argc, char **argv) {
 
     loadMap("map.txt");
 
-    for(i=0; i < 500; i++) {
+    makeSocket("172.16.0.33");
+    messageLoop();
 
-        blitBackground();
-        testRot(i,100,radians);
-        addText("This is a test");
-        doneDrawing();
-        usleep(10000);
-        radians+=0.1;
-    }
-
-    blitBackground();
-    testRot(100,100,0);
-    doneDrawing();
-
-    sleep(10);
     return 0;
 }

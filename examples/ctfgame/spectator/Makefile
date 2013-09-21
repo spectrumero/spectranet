@@ -1,6 +1,7 @@
-OBJS=main.o gfx.o map.o
+OBJS=main.o gfx.o map.o rxtx.o
 PROG=spectate
 LIBS=-lSDL -lSDL_gfx -lSDL_ttf
+CFLAGS=-I../common -DUNIX -g
 RM=rm
 
 all:	$(OBJS)

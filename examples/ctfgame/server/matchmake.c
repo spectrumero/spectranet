@@ -88,7 +88,7 @@ uchar isGameStartable() {
 		if(p) {
 			if(!(p->flags & PLYRREADY))
 				return 0;		// Someone isn't ready
-			if(p->team > 1)
+			if(p->team > 1 && !(p->flags & SPECTATOR) )
 				return 0;		// Someone's not yet on a team
 			count++;
 		}

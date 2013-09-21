@@ -47,7 +47,7 @@ void broadcastEndMatch() {
 	Player *p, *dead;
 
 	// setup server scoreboard for a new match score
-	newScore(true);
+	newScore(TRUE);
 
 	snprintf(geMsg.bluecapture, 4, "%d", getTeamscore(BLUETEAM));
 	snprintf(geMsg.redcapture, 4, "%d", getTeamscore(REDTEAM));
@@ -130,7 +130,7 @@ void runOutOfPlayers() {
 	int rscore=getTeamscore(REDTEAM);
 	int winner;
 
-	newScore(true);
+	newScore(TRUE);
 
 #ifdef LANG_ES
 	printMessage("**** Fin de la partida ****");

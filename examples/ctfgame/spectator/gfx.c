@@ -8,6 +8,7 @@
 #include <math.h>
 
 #include "gfx.h"
+#include "ctfmessage.h"
 
 #define BOXSZ 16
 
@@ -17,13 +18,27 @@ GfxSize gsize;
 
 GfxLine *icon[MAXICONS];
 int *clr[MAXMAPCLRS];
+int fotonAnim;
+int xplodeAnim;
+
+int fotonClr;
+int xplodClr;
 
 TTF_Font *font;
+
+DrawListElement *drawItems;
+DrawListElement *eptr;
 
 void initGfx(int width, int height) {
     int scaledWidth;
     int scaledHeight;
     SDL_PixelFormat *fmt;
+
+    drawItems=NULL;
+    fotonAnim=0;
+    xplodeAnim=0;
+    fotonClr=ZX_RED;
+    xplodClr=ZX_YELLOW;
 
     scaledWidth=width * BOXSZ * gsize.factor;
     scaledHeight=height * BOXSZ * gsize.factor;
@@ -116,9 +131,14 @@ void blitBackground() {
 }
 
 void initColours() {
-   clr[CLR_TEAM1]=makeColour(255,0,0);
-   clr[CLR_TEAM2]=makeColour(0,255,255);
-   clr[CLR_NEUTRAL]=makeColour(255,255,0);
+    clr[ZX_BLACK]=makeColour(0,0,0);
+    clr[ZX_BLUE]=makeColour(0,0,255);
+    clr[ZX_RED]=makeColour(255,0,0);
+    clr[ZX_MAGENTA]=makeColour(255,255,0);
+    clr[ZX_GREEN]=makeColour(0,255,0);
+    clr[ZX_CYAN]=makeColour(0,255,255);
+    clr[ZX_YELLOW]=makeColour(255,255,0);
+    clr[ZX_WHITE]=makeColour(255,255,255);
 }
 
 int *makeColour(int r, int g, int b) {
@@ -187,6 +207,187 @@ void initIcons() {
     l->next=makeGfxLine(2,27,2,7);
     l=l->next;
     l->next=makeGfxLine(2,7,6,7);
+
+    // Foton torpedo frames
+    l=makeGfxLine(10,16,22,16);
+    icon[FOTON1]=l;
+    l->next=makeGfxLine(16,10,16,22);
+    l=l->next;
+    l->next=makeGfxLine(10,14,10,18);
+    l=l->next;
+    l->next=makeGfxLine(22,14,22,18);
+    l=l->next;
+    l->next=makeGfxLine(14,10,18,10);
+    l=l->next;
+    l->next=makeGfxLine(14,22,18,22);
+
+    l=makeGfxLine(8,8,24,24);
+    icon[FOTON2]=l;
+    l->next=makeGfxLine(8,24,24,8);
+    l=l->next;
+    l->next=makeGfxLine(22,6,26,10);
+    l=l->next;
+    l->next=makeGfxLine(26,22,22,26);
+    l=l->next;
+    l->next=makeGfxLine(10,26,16,22);
+    l=l->next;
+    l->next=makeGfxLine(6,10,10,6);
+
+    l=makeGfxLine(10,0,22,31);
+    icon[FOTON3]=l;
+    l->next=makeGfxLine(0,22,31,6);
+    l=l->next;
+    l->next=makeGfxLine(2,20,6,24);
+    l=l->next;
+    l->next=makeGfxLine(20,30,24,26);
+    l=l->next;
+    l->next=makeGfxLine(30,12,26,4);
+    l=l->next;
+    l->next=makeGfxLine(8,4,12,0);
+
+    l=makeGfxLine(8,14,24,18);
+    icon[FOTON4]=l;
+    l->next=makeGfxLine(18,8,14,24);
+
+    // Explosion frames
+    l=makeGfxLine(8,6,12,10);
+    icon[XPLODE1]=l;
+    l->next=makeGfxLine(12,10,14,7);
+    l=l->next;
+    l->next=makeGfxLine(14,7,16,9);
+    l=l->next;
+    l->next=makeGfxLine(16,9,22,2);
+    l=l->next;
+    l->next=makeGfxLine(22,2,20,10);
+    l=l->next;
+    l->next=makeGfxLine(20,10,26,12);
+    l=l->next;
+    l->next=makeGfxLine(26,12,20,14);
+    l=l->next;
+    l->next=makeGfxLine(20,14,28,22);
+    l=l->next;
+    l->next=makeGfxLine(28,22,24,20);
+    l=l->next;
+    l->next=makeGfxLine(24,20,24,31);
+    l=l->next;
+    l->next=makeGfxLine(24,31,16,26);
+    l=l->next;
+    l->next=makeGfxLine(16,26,16,30);
+    l=l->next;
+    l->next=makeGfxLine(16,30,8,24);
+    l=l->next;
+    l->next=makeGfxLine(8,24,1,27);
+    l=l->next;
+    l->next=makeGfxLine(1,27,10,20);
+    l=l->next;
+    l->next=makeGfxLine(10,20,4,16);
+    l=l->next;
+    l->next=makeGfxLine(4,16,9,14);
+    l=l->next;
+    l->next=makeGfxLine(9,14,8,6);
+
+    l=makeGfxLine(5,7,11,12);
+    icon[XPLODE2]=l;
+    l->next=makeGfxLine(11,12,16,5);
+    l=l->next;
+    l->next=makeGfxLine(16,5,18,12);
+    l=l->next;
+    l->next=makeGfxLine(18,12,25,8);
+    l=l->next;
+    l->next=makeGfxLine(25,8,21,15);
+    l=l->next;
+    l->next=makeGfxLine(21,15,30,22);
+    l=l->next;
+    l->next=makeGfxLine(30,22,19,22);
+    l=l->next;
+    l->next=makeGfxLine(19,22,18,30);
+    l=l->next;
+    l->next=makeGfxLine(18,30,9,21);
+    l=l->next;
+    l->next=makeGfxLine(9,21,8,31);
+    l=l->next;
+    l->next=makeGfxLine(8,31,6,20);
+    l=l->next;
+    l->next=makeGfxLine(6,20,1,14);
+    l=l->next;
+    l->next=makeGfxLine(1,14,7,16);
+    l=l->next;
+    l->next=makeGfxLine(7,16,5,7);
+
+    l=makeGfxLine(2,0,8,0);
+    icon[FLAGICON]=l;
+    l->next=makeGfxLine(8,0,8,2);
+    l=l->next;
+    l->next=makeGfxLine(8,2,2,2);
+    l=l->next;
+    l->next=makeGfxLine(2,2,2,0);
+    l=l->next;
+    l->next=makeGfxLine(4,2,4,29);
+    l=l->next;
+    l->next=makeGfxLine(6,2,6,29);
+    l=l->next;
+    l->next=makeGfxLine(2,31,8,31);
+    l=l->next;
+    l->next=makeGfxLine(8,31,8,29);
+    l=l->next;
+    l->next=makeGfxLine(8,29,2,29);
+    l=l->next;
+    l->next=makeGfxLine(2,29,2,31);
+
+    l=l->next;
+    l->next=makeGfxLine(6,2,28,12);
+    l=l->next;
+    l->next=makeGfxLine(28,12,6,20);
+    l=l->next;
+    l->next=makeGfxLine(6,8,16,11);
+    l=l->next;
+    l->next=makeGfxLine(16,11,6,15);
+
+    l=makeGfxLine(20,0,24,0);
+    icon[FUELICON]=l;
+    l->next=makeGfxLine(24,0,24,4);
+    l=l->next;
+    l->next=makeGfxLine(24,4,29,4);
+    l=l->next;
+    l->next=makeGfxLine(29,4,29,31);
+    l=l->next;
+    l->next=makeGfxLine(29,31,6,31);
+    l=l->next;
+    l->next=makeGfxLine(6,31,6,10);
+    l=l->next;
+    l->next=makeGfxLine(6,10,16,4);
+    l=l->next;
+    l->next=makeGfxLine(16,4,20,4);
+    l=l->next;
+    l->next=makeGfxLine(20,4,20,0);
+    l=l->next;
+    l->next=makeGfxLine(10,12,25,12);
+    l=l->next;
+    l->next=makeGfxLine(25,12,25,25);
+    l=l->next;
+    l->next=makeGfxLine(25,25,10,25);
+    l=l->next;
+    l->next=makeGfxLine(10,25,10,12);
+
+    l=makeGfxLine(1,7,30,7);
+    icon[AMMOICON]=l;
+    l->next=makeGfxLine(30,7,30,30);
+    l=l->next;
+    l->next=makeGfxLine(30,30,3,30);
+    l=l->next;
+    l->next=makeGfxLine(3,30,3,15);
+    l=l->next;
+    l->next=makeGfxLine(1,15,5,15);
+    l=l->next;
+    l->next=makeGfxLine(5,15,5,7);
+    l=l->next;
+    l->next=makeGfxLine(1,15,1,7);
+    l=l->next;
+    l->next=makeGfxLine(5,12,30,9);
+    l=l->next;
+    l->next=makeGfxLine(1,15,1,24);
+
+
 }
 
 GfxLine *makeGfxLine(int sx, int sy, int ex, int ey) {
@@ -271,5 +472,66 @@ void addText(const char *t) {
     rect.h=text->h;
     SDL_BlitSurface(text, NULL, surface, &rect);
     SDL_FreeSurface(text);
+}
+
+void manageSprite(SpriteMsg16 *msg) {
+    int *cptr;
+    switch(msg->id) {
+        case PLAYER:
+            showTank(msg);
+            break;
+        case FOTON:
+            if(fotonClr > ZX_WHITE)
+                fotonClr=ZX_RED;
+            cptr=clr[fotonClr];
+            if(fotonAnim > 3) 
+                fotonAnim=0;
+            drawLineGfx(msg->x >> 3, msg->y >> 3,
+                    icon[FOTON1 + fotonAnim], surface,
+                    cptr[0], cptr[1], cptr[2] ,255);
+            fotonAnim++;
+            fotonClr++;
+            break;
+        case XPLODE:
+            xplodClr=(xplodClr == ZX_YELLOW) ? ZX_WHITE : ZX_YELLOW;
+            cptr=clr[xplodClr];
+            drawLineGfx(msg->x >> 3, msg->y >> 3,
+                    icon[XPLODE1 + xplodeAnim], surface,
+                    cptr[0], cptr[1], cptr[2] ,255);
+            xplodeAnim = !xplodeAnim;
+            break;
+        case FLAG:
+            cptr=clr[msg->colour & 0x07];
+            drawLineGfx(msg->x >> 3, msg->y >> 3,
+                    icon[FLAGICON], surface,
+                    cptr[0],cptr[1],cptr[2],255);
+            break;
+        case FUEL:
+            cptr=clr[ZX_GREEN];
+            drawLineGfx(msg->x >> 3, msg->y >> 3,
+                    icon[FUELICON], surface,
+                    cptr[0], cptr[1], cptr[2], 255);
+            break;
+        case AMMO:
+            cptr=clr[ZX_GREEN];
+            drawLineGfx(msg->x >> 3, msg->y >> 3,
+                    icon[AMMOICON], surface,
+                    cptr[0], cptr[1], cptr[2], 255);
+            break;
+        default:
+            fprintf(stderr, "unknown sprite id: %d\n", msg->id);
+            break;
+    }
+}
+
+// tanks are the only graphics that get rotated.
+void showTank(SpriteMsg16 *msg) {
+    int *tankClr=clr[msg->colour & 0x07];
+    double rotation=msg->rotation ? (16 - msg->rotation) * 0.392699082f : 0;
+    GfxLine *tank=rotateGfxLines(icon[TANK], rotation, 15, 15);
+
+    drawLineGfx(msg->x >> 3, msg->y >> 3, tank, surface, 
+            tankClr[0], tankClr[1], tankClr[2], 255);
+    freeGfxLines(tank);
 }
 

@@ -2,6 +2,19 @@
 #define _GFX_H
 
 #include <SDL/SDL.h>
+#include "ctfmessage.h"
+
+#ifndef bool
+#define bool uchar
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 // Defines and function prototypes for SDL graphics.
 // Map icons.
@@ -10,12 +23,34 @@
 #define AMMOPT      2
 #define FUELPT      3
 #define TANK        4
-#define MAXICONS    5
+#define FOTON1      5
+#define FOTON2      6
+#define FOTON3      7
+#define FOTON4      8
+#define XPLODE1     9
+#define XPLODE2     10
+#define FLAGICON    11
+#define FUELICON    12
+#define AMMOICON    13
+#define MAXICONS    14
 
-#define CLR_TEAM1   0
-#define CLR_TEAM2   1
-#define CLR_NEUTRAL 2
-#define MAXMAPCLRS  3
+#define ZX_BLACK    0
+#define ZX_BLUE     1
+#define ZX_RED      2
+#define ZX_MAGENTA  3
+#define ZX_GREEN    4
+#define ZX_CYAN     5
+#define ZX_YELLOW   6
+#define ZX_WHITE    7
+
+#define CLR_TEAM1   2
+#define CLR_TEAM2   5
+#define CLR_NEUTRAL 6
+
+#define MAXMAPCLRS  8
+
+#define BRIGHT      0x40
+#define FLASH       0x80
 
 typedef struct _gfxsize {
     int MapBoxX;
@@ -30,6 +65,15 @@ typedef struct _gfxline {
     int endY;
     void *next;
 } GfxLine;
+
+typedef struct _drawlistel {
+    GfxLine *lines;
+    bool freeLines;
+    int *colour;
+    int x;
+    int y;
+    void *next;
+} DrawListElement;
 
 void initGfx(int width, int height);
 void shutdownGfx();
@@ -51,6 +95,10 @@ void freeGfxLines(GfxLine *l);
 void testRot(int x, int y, double radians);
 
 void addText(const char *text);
+
+// Handle graphics messages
+void manageSprite(SpriteMsg16 *msg);
+void showTank(SpriteMsg16 *msg);
 
 extern GfxSize gsize;
 

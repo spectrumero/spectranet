@@ -182,3 +182,6 @@ void broadcastTimeRemaining(int minutes) {
 	broadcastStatusMsg(bcast);
 }
 
+// Broadcast player ids
+void broadcastPlayerIds() {
+}

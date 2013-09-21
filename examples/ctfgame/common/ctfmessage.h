@@ -46,9 +46,12 @@
 #define MMSTARTABLE							0x09	// Match is or is not startable
 #define MMEXIT									0x0A	// Client should exit matchmaking
 #define ENDGAMESCORE						0x0B	// End game and show scores
+#define SPRITEMSG16             0x0C    // 16 bit sprite msg
+#define PLAYERIDMSG             0x0D    // Player id for spectators
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
+#define SPECHELLO 0x41      // Spectator initial contact
 #define VIEWPORT 0x42      // Set viewport
 #define JOIN     0x43        // Join game
 #define JOINACK  0x44        // Acknowledge join
@@ -61,7 +64,7 @@
 #define MMSTOP    0x4B      // Stop matchmaking
 #define MMREADY 	0x4C			// Player is ready to start
 #define SERVERKILL 0xFF    // Testing message to halt the server when
-                            // the client gets an invalid msg
+// the client gets an invalid msg
 
 // Server replies to synchronous messages
 #define ACK     0x41        // Acknowledgment
@@ -86,63 +89,79 @@
 #define VPYPIXELS 184
 
 typedef struct _spritemsg {
-  uchar  objid;
-  uchar  x;
-  uchar  y;
-  uchar  rotation;
-  uchar  id;
-  uchar colour;
+    uchar  objid;
+    uchar  x;
+    uchar  y;
+    uchar  rotation;
+    uchar  id;
+    uchar colour;
 } SpriteMsg;
+
+typedef struct _spritemsg16 {
+    uchar   objid;
+    uchar   ownerid;
+    unsigned short x;
+    unsigned short y;
+    uchar   rotation;
+    uchar   id;
+    uchar   colour;
+} SpriteMsg16;
+
+typedef struct _playeridmsg {
+    uchar   ownerid;
+    uchar   ownername[MAXNAME];
+} PlayerIdMsg;
 
 // Sprite ID defines
 #define PLAYER  0  // Player's tank
 #define FOTON    1  // Photon cnnon
 #define XPLODE  2  // Explosion
-#define FUEL    3  // Fuel tank
-#define AMMO    4  // Ammo recharge
+#define FLAG    3
+#define FUEL    4  // Fuel tank
+#define AMMO    5  // Ammo recharge
 
 typedef struct _rmspritemsg {
-  uchar objid;
-  uchar reason;
+    uchar objid;
+    uchar reason;
 } RemoveSpriteMsg;
 
 #define OFFSCREEN  0
 #define KILLED  1
 
 typedef struct _maptilemsg {
-  uchar tile;
-  uchar x;
-  uchar y;
+    uchar tile;
+    uchar x;
+    uchar y;
 } MaptileMsg;
 
 // The viewport defines the portion of a map a player can
 // see. The X and Y values are absolute map pixels.
 typedef struct _viewport {
-  uint16_t tx;   // top left X pixel
-  uint16_t ty;   // top left Y pixel
-  uint16_t bx;   // bottom right X pixel
-  uint16_t by;   // bottom right Y pixel
+    uint16_t tx;   // top left X pixel
+    uint16_t ty;   // top left Y pixel
+    uint16_t bx;   // bottom right X pixel
+    uint16_t by;   // bottom right Y pixel
 } Viewport;
 
 // MapXY defines a message with an absolute map XY
 typedef struct _mapxy {
-  uint16_t  mapx;
-  uint16_t  mapy;
+    uint16_t  mapx;
+    uint16_t  mapy;
 } MapXY;
 
 // A message to put messages on the client's screen.
 #define MAXSTATUSMSG 42
 typedef struct _messageMsg {
-  uchar  msgsz;  // Maximum 42 chars
-  uchar message[MAXSTATUSMSG];
+    uchar  msgsz;  // Maximum 42 chars
+    uchar message[MAXSTATUSMSG];
 } MessageMsg;
 
 // Message containing a number to put on the
 // status bar of the client. The message id indicates
 // which one it actually is.
 typedef struct _numbermsg {
-  uchar numtype;
-  uchar message[5];
+    uchar numtype;
+    uchar message[5];
 } NumberMsg;
 
 #define AMMOQTY  0
@@ -155,17 +174,17 @@ typedef struct _numbermsg {
 // Matchmaking message
 // Team is 0 or 1, or 0xFF for "not in a team yet"
 typedef struct _matchmake {
-  uchar team;
-  uchar playernum;	// in this context, means player within team
-  uchar flags;
-  char playername[MAXNAME];
+    uchar team;
+    uchar playernum;	// in this context, means player within team
+    uchar flags;
+    char playername[MAXNAME];
 } MatchmakeMsg;
 
 // Match making instruction
 typedef struct _matchmakeinst {
-	uchar team;
-	uchar playernum;
-	uchar flags;
+    uchar team;
+    uchar playernum;
+    uchar flags;
 } MatchmakeInst;
 
 #define MM_READY  1   // Player is ready  
@@ -173,10 +192,10 @@ typedef struct _matchmakeinst {
 
 // Game end data message
 typedef struct _gameend {
-	uchar reason;
-	uchar winner;		// Set if the receiving player is a winner
-	char bluecapture[4];
-	char redcapture[4];
+    uchar reason;
+    uchar winner;		// Set if the receiving player is a winner
+    char bluecapture[4];
+    char redcapture[4];
 } GameEnd;
 
 // Reasons for the game end
@@ -185,8 +204,8 @@ typedef struct _gameend {
 
 // Dead player message
 typedef struct _playersummary {
-  uint16_t score;
-  uchar captures;
+    uint16_t score;
+    uchar captures;
 } PlayerSummary;
 
 // Control messages from the client. The controls being activated

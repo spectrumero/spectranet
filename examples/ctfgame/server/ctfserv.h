@@ -79,64 +79,64 @@ typedef int socklen_t;
 
 // Structures
 typedef struct _vector {
-  int dir;        // 0-15, 0 = north
-  int velocity;    // in 1/16ths of a map pixel
+    int dir;        // 0-15, 0 = north
+    int velocity;    // in 1/16ths of a map pixel
 } Vector;
 
 typedef struct _object {
-  int owner;    // id of owning player
-  int team;      // id of owning team
-  int type;      // object's type id (maps to sprite on the client + ObjProperty)
-  uchar colour;  // Object colour
-  int size;      // collision size in pixels
-  int prevx;    // previous X location
-  int prevy;    // previous Y location
-  int x;        // Map X position in 1/16ths pixel
-  int y;        // Map Y position in 1/16ths pixel
-  Vector commanded;  // Commanded vector (via wheels/tracks/etc)
-  Vector actual;  // Actual vector of the object
-  Vector push;  // How we are getting pushed
-  int dirChgCount;  // Frames until direction change applied
-  int damage;    // how much damage dealt on collision
-  int armour;    // how much armour against collision damage
-  // (0 means always destroyed on collision)
-  int hp;        // Number of hitpoints remaining
-  int ammo;      // Ammo remaining
-  int cooldown;  // Gun cooldown time remaining in frames
-  int ttl;      // Time to live in frames (-1 = forever)
-  int flying;    // Object flies (can't collide with owner) for this many frames
-	int destructValue;	// Value when destroyed
-  uchar flags;  // various object flags
-  uchar ctrls;  // What controls are being applied
-  int mapColFudge;  // Map collision fudge frames
-  void *extras;  // Extra attributes
-  // This member is a pointer to a function that should get called
-  // on collision detection. Set to null for no action, otherwise
-  // the function pointer contained here will be called.
-  void (*collisionFunc)(struct _object *optr, struct _object *with);
+    int owner;    // id of owning player
+    int team;      // id of owning team
+    int type;      // object's type id (maps to sprite on the client + ObjProperty)
+    uchar colour;  // Object colour
+    int size;      // collision size in pixels
+    int prevx;    // previous X location
+    int prevy;    // previous Y location
+    int x;        // Map X position in 1/16ths pixel
+    int y;        // Map Y position in 1/16ths pixel
+    Vector commanded;  // Commanded vector (via wheels/tracks/etc)
+    Vector actual;  // Actual vector of the object
+    Vector push;  // How we are getting pushed
+    int dirChgCount;  // Frames until direction change applied
+    int damage;    // how much damage dealt on collision
+    int armour;    // how much armour against collision damage
+    // (0 means always destroyed on collision)
+    int hp;        // Number of hitpoints remaining
+    int ammo;      // Ammo remaining
+    int cooldown;  // Gun cooldown time remaining in frames
+    int ttl;      // Time to live in frames (-1 = forever)
+    int flying;    // Object flies (can't collide with owner) for this many frames
+    int destructValue;	// Value when destroyed
+    uchar flags;  // various object flags
+    uchar ctrls;  // What controls are being applied
+    int mapColFudge;  // Map collision fudge frames
+    void *extras;  // Extra attributes
+    // This member is a pointer to a function that should get called
+    // on collision detection. Set to null for no action, otherwise
+    // the function pointer contained here will be called.
+    void (*collisionFunc)(struct _object *optr, struct _object *with);
 
-  // This member specifies a function that will be called when
-  // the object is destroyed in addition to the usual actions (removal
-  // from object lists etc). If it's set to null, just the default
-  // actions will be done.
-  void (*destructFunc)(struct _object *optr);
+    // This member specifies a function that will be called when
+    // the object is destroyed in addition to the usual actions (removal
+    // from object lists etc). If it's set to null, just the default
+    // actions will be done.
+    void (*destructFunc)(struct _object *optr);
 } Object;
 
 typedef struct _objprops {
-  int initVelocity;    // Initial velocity in 1/16ths map pixels per frame
-  int maxVelocity;    // Maximum velocity in 1/16ths map pixels per frame
-  int maxAccel;        // Maximum acceleration, in 1/16ths map pixels per frame
-  int maxBrake;        // Maximum braking in map 1/16th pixels per frame
-  int turnSpeed;      // Turn speed, in frames needed per direction change
-  int gunCooldown;    // Gun cooldown time in frames
-  int mass;            // Object's initial mass
-  int hitpoints;      // Object's initial hitpoints
-  int armour;          // Object's initial armour
-  int damage;          // Base damage to deal on collision
-  int ttl;            // Initial TTL (-1 = forever)
-  int pushdecay;      // How much the push vector decays per frame
-  int velqty;          // How many units to correct per correction
-	int destructValue;	// Points awarded to the destroyer
+    int initVelocity;    // Initial velocity in 1/16ths map pixels per frame
+    int maxVelocity;    // Maximum velocity in 1/16ths map pixels per frame
+    int maxAccel;        // Maximum acceleration, in 1/16ths map pixels per frame
+    int maxBrake;        // Maximum braking in map 1/16th pixels per frame
+    int turnSpeed;      // Turn speed, in frames needed per direction change
+    int gunCooldown;    // Gun cooldown time in frames
+    int mass;            // Object's initial mass
+    int hitpoints;      // Object's initial hitpoints
+    int armour;          // Object's initial armour
+    int damage;          // Base damage to deal on collision
+    int ttl;            // Initial TTL (-1 = forever)
+    int pushdecay;      // How much the push vector decays per frame
+    int velqty;          // How many units to correct per correction
+    int destructValue;	// Points awarded to the destroyer
 } ObjectProperties;
 
 // Object flags
@@ -152,17 +152,17 @@ typedef struct _objprops {
 #define OBJRESET  0xF0  // Flags that won't get reset each frame
 
 typedef struct _player {
-  Object *playerobj;    // Player's tank
-  char name[MAXNAME];    // Player name
-  int team;              // Team number
-  int score;            // Player score
-  int lives;            // Player lives - start at 0 for infinite
-  uchar flags;          // Player flags
-  Viewport view;        // What bit of the map the player sees
-  int vpcframes;        // Frames since last viewport change msg
-  int spawntime;        // If dead, time until respawn in frames
-  uchar playernum;    // The player number decided at the matchup screen
-  int clientid;       // So we can look up the client id from a player object.
+    Object *playerobj;    // Player's tank
+    char name[MAXNAME];    // Player name
+    int team;              // Team number
+    int score;            // Player score
+    int lives;            // Player lives - start at 0 for infinite
+    uchar flags;          // Player flags
+    Viewport view;        // What bit of the map the player sees
+    int vpcframes;        // Frames since last viewport change msg
+    int spawntime;        // If dead, time until respawn in frames
+    uchar playernum;    // The player number decided at the matchup screen
+    int clientid;       // So we can look up the client id from a player object.
 } Player;
 
 #define RUNNING     0x01  // Player's client is ready for messages
@@ -171,13 +171,15 @@ typedef struct _player {
 #define MATCHMAKING 0x08  // Player is in the matchmaking screen
 #define PLYRREADY		0x10	// Player is ready to start
 #define SCORESCRN		0x20	// Player is looking at the score screen
-#define RESETFLAGS  0x3d  // Bits set to 0 get reset on each frame
+#define SPECTATOR       0x40    // Player is a spectator
+#define OMNISCIENT      0x80    // Player sees whole map at once
+#define RESETFLAGS  0xfd  // Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table
 // for working out new X and Y values from a direction and velocity
 struct mvlookup {
-  int dx;
-  int dy;
+    int dx;
+    int dy;
 };
 
 // Player ping. The server periodically sends a 'ping' packet
@@ -185,8 +187,8 @@ struct mvlookup {
 // to make sure the client is still alive. This structure holds
 // the data of when we last pinged.
 struct _ping {
-  int frames;     // Frames since last ping
-  int rspmiss;    // How many responses have been missed
+    int frames;     // Frames since last ping
+    int rspmiss;    // How many responses have been missed
 } Ping;
 
 #define MAXRSPMISS  4   // Maximum responses in a row that may be missed
@@ -197,10 +199,10 @@ struct _ping {
 // units.
 // Note that the Y position is the row in the array.
 typedef struct _maptile {
-  uchar tile;            // Tile identity
-  uchar flags;          // Tile flag
-  uint16_t x;            // X position in tile coordinates
-  struct _maptile *next;
+    uchar tile;            // Tile identity
+    uchar flags;          // Tile flag
+    uint16_t x;            // X position in tile coordinates
+    struct _maptile *next;
 } Maptile;
 
 #define COLLIDABLE  0x01  // Tile can be crashed into
@@ -209,16 +211,16 @@ typedef struct _maptile {
 
 // Power-up spawn points
 typedef struct _pwrspawn {
-  int x;                // X position (1/16ths map px)
-  int y;                // Y position
-  int cooldown;          // How long until the object is respawn
-  int type;              // object type to spawn here
+    int x;                // X position (1/16ths map px)
+    int y;                // Y position
+    int cooldown;          // How long until the object is respawn
+    int type;              // object type to spawn here
 } PowerSpawn;
 
 // Player spawn point
 typedef struct _plyrspawn {
-	MapXY loc;
-	uchar dir;		// As used in a Vector struct
+    MapXY loc;
+    uchar dir;		// As used in a Vector struct
 } PlayerSpawn;
 
 #define MAXPWRSPAWNS  20
@@ -254,13 +256,15 @@ void broadcastStatusMsg(char *str);
 // Game message functions
 int addInitGameMsg(int clientno, MapXY *xy);
 int addSpriteMsg(int clientno, SpriteMsg *msm);
+int addSpriteMsg16(int clientno, SpriteMsg16 *msm);
 int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 
 // Object functions
+Player *makeNewPlayer(int clientid, char *playerName, uchar flags);
 void initObjList();
 Player *getPlayer(int clientid);
 Player *getDeadPlayer(int id);
-int makeSpriteMsg(int clientid, Viewport *view, Object *obj, uchar objid);
+int makeSpriteMsg(int clientid, Player *player, Object *obj, uchar objid);
 int makeDestructionMsg(int clientid, uchar objid, uchar reason);
 void fireWeapon(Object *firer);
 bool isPlayerObject(Object *obj);
@@ -338,6 +342,8 @@ void broadcastTimeRemaining(int minutes);
 void updateAllFlagIndicators();
 void updateFlagIndicators(int clientid, Player *p);
 void cancelFlagIndicators(int team);
+
+void broadcastPlayerIdMsg();
 
 // Matchmaking
 void setPlayerTeam(Player *p, uchar team);
