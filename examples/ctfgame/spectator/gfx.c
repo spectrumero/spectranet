@@ -29,6 +29,8 @@ TTF_Font *font;
 DrawListElement *drawItems;
 DrawListElement *eptr;
 
+PlayerIdMsg players[MAXCLIENTS];
+
 void initGfx(int width, int height) {
     int scaledWidth;
     int scaledHeight;
@@ -39,6 +41,8 @@ void initGfx(int width, int height) {
     xplodeAnim=0;
     fotonClr=ZX_RED;
     xplodClr=ZX_YELLOW;
+
+    memset(players, 0, sizeof(players));
 
     scaledWidth=width * BOXSZ * gsize.factor;
     scaledHeight=height * BOXSZ * gsize.factor;
@@ -457,7 +461,7 @@ void testRot(int x, int y, double radians) {
     freeGfxLines(t);
 }
 
-void addText(const char *t) {
+void addText(const char *t, int x, int y) {
     SDL_Rect rect;
     SDL_Surface *text;
     SDL_Color color={255,255,255};
@@ -466,8 +470,8 @@ void addText(const char *t) {
         exit(-1);
     }
 
-    rect.x=0;
-    rect.y=surface->h-20;
+    rect.x=x * gsize.factor;
+    rect.y=y * gsize.factor;
     rect.w=text->w;
     rect.h=text->h;
     SDL_BlitSurface(text, NULL, surface, &rect);
@@ -533,5 +537,12 @@ void showTank(SpriteMsg16 *msg) {
     drawLineGfx(msg->x >> 3, msg->y >> 3, tank, surface, 
             tankClr[0], tankClr[1], tankClr[2], 255);
     freeGfxLines(tank);
+
+    addText(players[msg->ownerid].ownername, (msg->x >> 3) + 32, 
+            msg->y >> 3);
+}
+
+void handlePlayerIdMsg(PlayerIdMsg *msg) {
+    memcpy(&players[msg->ownerid], msg, sizeof(PlayerIdMsg));
 }
 

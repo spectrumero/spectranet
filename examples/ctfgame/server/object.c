@@ -101,9 +101,11 @@ int playerCount;
 bool running;
 
 // Set all object entries to null, clear viewports etc.
-void initObjList() {
+void initObjList(bool firstInit) {
     memset(objlist, 0, sizeof(objlist));
-    memset(players, 0, sizeof(players));
+    if(firstInit) {
+        memset(players, 0, sizeof(players));
+    }
     memset(deadPlayers, 0, sizeof(deadPlayers));
     memset(teamscore, 0, sizeof(teamscore));
     memset(flagloc, 0, sizeof(flagloc));
@@ -540,6 +542,7 @@ int makeSpriteMsg(int clientid, Player *player, Object *obj, uchar objid) {
         sm16.rotation=obj->commanded.dir;
         sm16.id=obj->type;
         sm16.colour=obj->colour;
+        sm16.ownerid=obj->owner;
         return addSpriteMsg16(clientid, &sm16);
     }
     else {
@@ -929,7 +932,7 @@ void resetGame() {
     int i;
     for(i=0; i<MAXCLIENTS; i++) {
         Player *p=players[i];
-        if(p) {
+        if(p && !(p->flags & SPECTATOR)) {
             // this also removes the player from memory
             removeClient(i);
         }
@@ -951,7 +954,7 @@ void resetGame() {
     }
 
     printMessage("**** Game server reset.");
-    initObjList();
+    initObjList(FALSE);
     createFlags();
 }
 

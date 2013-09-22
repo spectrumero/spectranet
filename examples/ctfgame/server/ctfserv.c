@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 	setMaxLives(lives);
 	setTimeLimit(timeLimit);
 
-  initObjList();
+  initObjList(TRUE);
   createFlags();
   if(messageLoop() < 0) {
           shutdownScoreboard();

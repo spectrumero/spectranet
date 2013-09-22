@@ -56,7 +56,6 @@ typedef int socklen_t;
 
 #define GAMETICK  43000    // game tick length in microseconds
 #define FRAMESPERSEC	1000000/GAMETICK
-#define MAXCLIENTS  16
 #define MSGBUFSZ  256      // Size of message buffers
 #define MAXROWS    1024    // Maximum map rows
 #define  MAXCOLS    1024
@@ -261,7 +260,7 @@ int addDestructionMsg(int clientno, RemoveSpriteMsg *rm);
 
 // Object functions
 Player *makeNewPlayer(int clientid, char *playerName, uchar flags);
-void initObjList();
+void initObjList(bool firstInit);
 Player *getPlayer(int clientid);
 Player *getDeadPlayer(int id);
 int makeSpriteMsg(int clientid, Player *player, Object *obj, uchar objid);

@@ -79,6 +79,7 @@
 // Various sizes
 #define  MAXNAME  16
 #define MAXOBJS  48
+#define MAXCLIENTS  16
 
 #ifndef uchar
 #define uchar    unsigned char

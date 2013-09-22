@@ -94,11 +94,12 @@ void freeGfxLines(GfxLine *l);
 
 void testRot(int x, int y, double radians);
 
-void addText(const char *text);
+void addText(const char *text, int x, int y);
 
 // Handle graphics messages
 void manageSprite(SpriteMsg16 *msg);
 void showTank(SpriteMsg16 *msg);
+void handlePlayerIdMsg(PlayerIdMsg *msg);
 
 extern GfxSize gsize;
 

@@ -224,7 +224,3 @@ int getMessage() {
     return 0;
 }
 
-void handlePlayerIdMsg(PlayerIdMsg *msg) {
-    printf("DEBUG: id=%d name=%s\n", msg->ownerid, msg->ownername);
-}
-
