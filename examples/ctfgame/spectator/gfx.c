@@ -31,6 +31,10 @@ DrawListElement *eptr;
 
 PlayerIdMsg players[MAXCLIENTS];
 
+ScreenMsg smsgs[MAXSCRNMSGS];
+int currmsg;
+SDL_Surface *msgsfcs[MAXSCRNMSGS];
+
 void initGfx(int width, int height) {
     int scaledWidth;
     int scaledHeight;
@@ -43,6 +47,8 @@ void initGfx(int width, int height) {
     xplodClr=ZX_YELLOW;
 
     memset(players, 0, sizeof(players));
+    memset(smsgs, 0, sizeof(smsgs));
+    currmsg=0;
 
     scaledWidth=width * BOXSZ * gsize.factor;
     scaledHeight=height * BOXSZ * gsize.factor;
@@ -77,6 +83,7 @@ void initGfx(int width, int height) {
 }
 
 void doneDrawing() {
+    blitScreenMsgs();
     SDL_Flip(surface);
 }
 
@@ -465,17 +472,20 @@ void addText(const char *t, int x, int y) {
     SDL_Rect rect;
     SDL_Surface *text;
     SDL_Color color={255,255,255};
-    if(!(text=TTF_RenderText_Blended(font, t, color))) {
-        fprintf(stderr, "Can't render text\n");
-        exit(-1);
-    }
+    if(strlen(t)) {
+        if(!(text=TTF_RenderText_Blended(font, t, color))) {
+            fprintf(stderr, "Can't render text at %d,%d: %s\n", 
+                    x, y, SDL_GetError());
+            exit(-1);
+        }
 
-    rect.x=x * gsize.factor;
-    rect.y=y * gsize.factor;
-    rect.w=text->w;
-    rect.h=text->h;
-    SDL_BlitSurface(text, NULL, surface, &rect);
-    SDL_FreeSurface(text);
+        rect.x=x * gsize.factor;
+        rect.y=y * gsize.factor;
+        rect.w=text->w;
+        rect.h=text->h;
+        SDL_BlitSurface(text, NULL, surface, &rect);
+        SDL_FreeSurface(text);
+    }
 }
 
 void manageSprite(SpriteMsg16 *msg) {
@@ -544,5 +554,56 @@ void showTank(SpriteMsg16 *msg) {
 
 void handlePlayerIdMsg(PlayerIdMsg *msg) {
     memcpy(&players[msg->ownerid], msg, sizeof(PlayerIdMsg));
+}
+
+void addScreenMsg(const char *msg) {
+    SDL_Color color={255,255,255};
+    ScreenMsg *mptr=&smsgs[currmsg];
+
+    strncpy(mptr->msg, msg, MAXSCRNMSGSZ);
+    mptr->ttl=TTL;
+
+    if(mptr->rendered != NULL) {
+        SDL_FreeSurface(mptr->rendered);
+    }
+
+    if(!(mptr->rendered=TTF_RenderText_Blended(font, msg, color))) {
+        fprintf(stderr, "Can't render status area text\n");
+        exit(-1);
+    }
+    
+    currmsg++;
+    if(currmsg == MAXSCRNMSGS)
+        currmsg=0;
+}
+
+void blitScreenMsgs() {
+    int i;
+    int mindex=currmsg;
+    int y=surface->h - (24 * MAXSCRNMSGS);
+    ScreenMsg *mptr;
+    SDL_Rect rect;
+
+    for(i=0; i < MAXSCRNMSGS; i++) {
+        mptr=&smsgs[mindex];
+       
+        if(mptr->rendered != NULL) {
+            rect.x=10;
+            rect.y=y;
+            rect.w=mptr->rendered->w;
+            rect.h=mptr->rendered->h;
+            SDL_BlitSurface(mptr->rendered, NULL, surface, &rect);
+            mptr->ttl--;
+
+            if(mptr->ttl == 0) {
+               SDL_FreeSurface(mptr->rendered);
+               mptr->rendered=NULL;
+            }
+        }
+        y+=24;
+        mindex++;
+        if(mindex == MAXSCRNMSGS)
+            mindex=0;
+    }
 }
 

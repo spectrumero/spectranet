@@ -75,6 +75,15 @@ typedef struct _drawlistel {
     void *next;
 } DrawListElement;
 
+#define MAXSCRNMSGSZ 80
+#define MAXSCRNMSGS 5
+#define TTL         400;
+typedef struct _screenmsg {
+    char msg[MAXSCRNMSGSZ];
+    SDL_Surface *rendered;
+    int ttl;
+} ScreenMsg;
+
 void initGfx(int width, int height);
 void shutdownGfx();
 void setGfxScale(double factor);
@@ -100,6 +109,10 @@ void addText(const char *text, int x, int y);
 void manageSprite(SpriteMsg16 *msg);
 void showTank(SpriteMsg16 *msg);
 void handlePlayerIdMsg(PlayerIdMsg *msg);
+
+// Status displays
+void addScreenMsg(const char *msg);
+void blitScreenMsgs();
 
 extern GfxSize gsize;
 

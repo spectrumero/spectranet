@@ -184,7 +184,7 @@ int getMessage() {
                 numMsgs=1;
                 break;					
             case MESSAGEMSG:
-//                setMsgArea((MessageMsg *)msgptr);
+                addScreenMsg(((MessageMsg *)msgptr)->message);
                 msgptr+=sizeof(MessageMsg);
                 break;
             case SCOREBOARD:
