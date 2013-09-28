@@ -48,6 +48,7 @@
 #define ENDGAMESCORE						0x0B	// End game and show scores
 #define SPRITEMSG16             0x0C    // 16 bit sprite msg
 #define PLAYERIDMSG             0x0D    // Player id for spectators
+#define SPECSCOREBOARDMSG       0x0E    // Spectator scoreboard msg
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -108,10 +109,20 @@ typedef struct _spritemsg16 {
     uchar   colour;
 } SpriteMsg16;
 
+// Used by spectator client to label players.
 typedef struct _playeridmsg {
     uchar   ownerid;
     uchar   ownername[MAXNAME];
 } PlayerIdMsg;
+
+// Message sent to spectators containing the current score.
+typedef struct _spectatorscoremsg {
+    uchar   team1score;
+    uchar   team2score;
+    uchar   playerLives[MAXCLIENTS];
+    uchar   playerKills[MAXCLIENTS];
+    uchar   playerTeam[MAXCLIENTS];
+} SpectatorScoreMsg;
 
 // Sprite ID defines
 #define PLAYER  0  // Player's tank
@@ -164,6 +175,7 @@ typedef struct _numbermsg {
     uchar numtype;
     uchar message[5];
 } NumberMsg;
+
 
 #define AMMOQTY  0
 #define HITPOINTQTY  1

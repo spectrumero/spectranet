@@ -300,6 +300,7 @@ void addHitpointMsg(Object *obj);
 void broadcastTeamScoreMsg(int team);
 void addTeamScoreMsg(int clientid, int team);
 void updateScoreboard(Object *obj);
+void updateSpectatorScoreboard();
 void doPing();
 
 // Physics functions

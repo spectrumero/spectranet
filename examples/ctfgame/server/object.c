@@ -330,6 +330,7 @@ Player *getDeadPlayer(int id) {
 void makeUpdates() {
     int clientid;
     Player *p;
+    bool updateSpecSB=FALSE;
 
     doObjectUpdates();
 
@@ -346,6 +347,7 @@ void makeUpdates() {
             if(p->playerobj && p->playerobj->flags & UPDATESB) {
                 updateScoreboard(p->playerobj);
                 p->playerobj->flags ^= UPDATESB;
+                updateSpecSB=TRUE;
             }
 
             // Player updates finished, reset flags that should be
@@ -384,6 +386,12 @@ void makeUpdates() {
     }
 
     frames++;
+
+    // Update spectator scoreboards when something changes, or
+    // once per second otherwise.
+    if((frames % (FRAMESPERSEC)) == 0 || updateSpecSB) {
+        updateSpectatorScoreboard();
+    }
 
     // End the game if it's running and all the players went
     // away.
@@ -1068,6 +1076,32 @@ void updateScoreboard(Object *obj) {
     addTeamScoreMsg(obj->owner, 1);
     addPlayerScoreMsg(obj->owner);
     addLivesMsg(obj->owner);
+}
+
+// updateSpectatorScoreboard updates a spectator's score display.
+void updateSpectatorScoreboard() {
+    SpectatorScoreMsg msg;
+    int i;
+    msg.team1score=teamscore[0];
+    msg.team2score=teamscore[1];
+
+    for(i=0; i<MAXCLIENTS; i++) {
+        Player *p=players[i];
+        if(p && !(p->flags & SPECTATOR)) {
+            msg.playerTeam[i]=p->team;
+            msg.playerLives[i]=p->lives;
+        }
+        else {
+            msg.playerTeam[i]=255;
+        }
+    }
+    
+    for(i=0; i<MAXCLIENTS; i++) {
+        Player *p=players[i];
+        if(p && p->flags & SPECTATOR) {
+            addMessage(i, SPECSCOREBOARDMSG, &msg, sizeof(msg));
+        }
+    }
 }
 
 // Update the client with the ammunition quantity

@@ -208,6 +208,10 @@ int getMessage() {
                 handlePlayerIdMsg((PlayerIdMsg *)msgptr);
                 msgptr+=sizeof(PlayerIdMsg);
                 break;
+            case SPECSCOREBOARDMSG:
+                showScores((SpectatorScoreMsg *)msgptr);
+                msgptr+=sizeof(SpectatorScoreMsg);
+                break;
             default:
                 fprintf(stderr,"Unidentified message: %x\n", msgType);
                 numMsgs=1;	// dump all other msgs
