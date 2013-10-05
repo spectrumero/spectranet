@@ -45,6 +45,8 @@ void drawMap() {
     int row=0;
     Maprow *cur=map;
 
+    drawViewportGrid(VPXPIXELS * 2, VPYPIXELS * 2);
+
     while(cur->next) {
         drawMapRow(row, cur->mapdata);
         row++;

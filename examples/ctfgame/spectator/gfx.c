@@ -48,6 +48,25 @@ ScoreSurface scores[MAXCLIENTS];
 
 uchar flashclock;
 
+RotMat rotation[16]={
+    {1.000,0.000,-0.000,1.000},
+    {0.924,0.383,-0.383,0.924},
+    {0.707,0.707,-0.707,0.707},
+    {0.383,0.924,-0.924,0.383},
+    {-0.000,1.000,-1.000,-0.000},
+    {-0.383,0.924,-0.924,-0.383},
+    {-0.707,0.707,-0.707,-0.707},
+    {-0.924,0.383,-0.383,-0.924},
+    {-1.000,-0.000,0.000,-1.000},
+    {-0.924,-0.383,0.383,-0.924},
+    {-0.707,-0.707,0.707,-0.707},
+    {-0.383,-0.924,0.924,-0.383},
+    {0.000,-1.000,1.000,0.000},
+    {0.383,-0.924,0.924,0.383},
+    {0.707,-0.707,0.707,0.707},
+    {0.924,-0.383,0.383,0.924}
+};
+
 void initGfx(int width, int height) {
     int scaledWidth;
     int scaledHeight;
@@ -454,13 +473,30 @@ void freeGfxLines(GfxLine *l) {
     free(l);
 }
 
+void drawViewportGrid(int w, int h) {
+    int i;
+    for(i=0; i < background->w; i+=(w*gsize.factor)) 
+    {    
+        lineRGBA(background, i, 0, i, background->h-100,
+                32,32,32,255);
+    }
+    for(i=0; i < background->h-100; i+=(h*gsize.factor)) 
+    {
+        lineRGBA(background, 0, i, background->w, i,
+                32,32,32,255);
+    }
+}
+
 // orgX and orgY are the origin offsets (what we will rotate around)
-GfxLine *rotateGfxLines(GfxLine *l, double radians, int orgX, int orgY) {
+GfxLine *rotateGfxLines(GfxLine *l, int rotindex, int orgX, int orgY) {
     GfxLine *newl, *lptr;
     int sx, sy;
     int newsx, newsy;
     int ex, ey;
     int newex, newey;
+    RotMat *rotmat;
+
+    rotmat=&rotation[rotindex];
 
     newl=NULL;
 
@@ -473,11 +509,11 @@ GfxLine *rotateGfxLines(GfxLine *l, double radians, int orgX, int orgY) {
         ex=l->endX-orgX;
         ey=l->endY-orgY;
 
-        newsx=(sx * cos(radians))+(sy * sin(radians));
-        newsy=(sx * -sin(radians))+(sy * cos(radians));
+        newsx=(sx * rotmat->x1y1)+(sy * rotmat->x1y2);
+        newsy=(sx * rotmat->x2y1)+(sy * rotmat->x2y2);
 
-        newex=(ex * cos(radians))+(ey * sin(radians));
-        newey=(ex * -sin(radians)) + (ey * cos(radians));
+        newex=(ex * rotmat->x1y1)+(ey * rotmat->x1y2);
+        newey=(ex * rotmat->x2y1) + (ey * rotmat->x2y2);
 
         if(newl == NULL) {
             lptr=makeGfxLine(newsx + orgX, newsy + orgY, 
@@ -493,12 +529,6 @@ GfxLine *rotateGfxLines(GfxLine *l, double radians, int orgX, int orgY) {
     } while(l=l->next);
 
     return newl;
-}
-
-void testRot(int x, int y, double radians) {
-    GfxLine *t=rotateGfxLines(icon[TANK], radians, 15, 15);
-    drawLineGfx(x, y, t, surface, 255, 255, 255, 255);
-    freeGfxLines(t);
 }
 
 void addText(const char *t, int x, int y) {
@@ -584,8 +614,7 @@ void showTank(SpriteMsg16 *msg) {
     {
         tankClr=clr[msg->colour & 0x07];
     }
-    double rotation=msg->rotation ? (16 - msg->rotation) * 0.392699082f : 0;
-    GfxLine *tank=rotateGfxLines(icon[TANK], rotation, 15, 15);
+    GfxLine *tank=rotateGfxLines(icon[TANK], msg->rotation, 15, 15);
 
     drawLineGfx(msg->x >> 3, msg->y >> 3, tank, surface, 
             tankClr[0], tankClr[1], tankClr[2], 255);

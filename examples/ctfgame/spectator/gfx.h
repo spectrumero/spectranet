@@ -75,6 +75,13 @@ typedef struct _drawlistel {
     void *next;
 } DrawListElement;
 
+typedef struct _rotmat {
+    double x1y1;
+    double x2y1;
+    double x1y2;
+    double x2y2;
+} RotMat;
+
 #define MAXSCRNMSGSZ 80
 #define MAXSCRNMSGS 5
 #define TTL         400;
@@ -94,6 +101,7 @@ void initGfx(int width, int height);
 void shutdownGfx();
 void setGfxScale(double factor);
 void drawMapBox(int x, int y);
+void drawViewportGrid(int w, int h);
 void blitBackground();
 void doneDrawing();
 void drawMapIcon(int x, int y, int iconid, int colourid);
@@ -104,7 +112,7 @@ void initColours();
 void initIcons();
 int *makeColour(int r, int g, int b);
 GfxLine *makeGfxLine(int sx, int sy, int ex, int ey);
-GfxLine *rotateGfxLines(GfxLine *l, double radians, int orgX, int orgY);
+GfxLine *rotateGfxLines(GfxLine *l, int rotindex, int orgX, int orgY);
 void freeGfxLines(GfxLine *l);
 
 void testRot(int x, int y, double radians);
