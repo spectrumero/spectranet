@@ -25,7 +25,7 @@ BB    BB              B    BBBB            BB         BBBBBB                    
 B     BB                   BBBB            BB        BBBBBBBB                      BB               BB        BB
 BB                         BBBB            BB        BBBBBBBB                      BB               BB        BB
 BB                         BBB            BB           BBBB                        BB              BBB        BB
-BB                         BB            BB              BB                        BB               BB        BB
+BB      2      b           BB            BB              BB                        BB               BB        BB
 BB                         BB            BB             BB                         BB                BB       BB
 BBB                       BBBBB          BB            BBBB                        BB               BB       BBB
 BBBBBB                    BBBB            BB          BBB                BB        BB                BB       BB
@@ -53,12 +53,12 @@ B     BB                                                B BBB                   
 B    BB                       BBB                        B BB                     BBBBB      BB        BB    BBB
 B f  B               BBB   BBB BBBBB                   BBBBBBBB                   BBBBB               BB     BBB
 B    BB             BBBBBBBB      BBBB                                            BBBBB                      BBB
-B    BB           BB                 BBBB                            BBBB         BBBBBB          2         BBBB
+B    BB           BB                 BBBB                            BBBB         BBBBBB                    BBBB
 B     BB                               BBB                             BB         BBBBB                      BBB
 B      BBB       BB                     BBB                            BBB        BBBB                        BB
 B     BBB       BB                       BBB                            BB        BBBBB                      BBB
 B      BBB                                BBB         BBBBB              BB       BBBBBB                      BB
-B        BB                                BBB          BBBB             BB      BBBBBB           b           BB
+B        BB                                BBB          BBBB             BB      BBBBBB                       BB
 B                                    g      BBB   f    BBBBB            BBB      BBBBB                      BBBB
 B                                            BB       B BBB                       BBBBB                      BBB
 B                                           BBB         BBB                       BBBBB                     BBBB

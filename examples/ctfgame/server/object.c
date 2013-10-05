@@ -190,7 +190,7 @@ Player *makeNewPlayer(int clientid, char *playerName, uchar flags) {
         updateAllMatchmakers();
     }
 
-    if(flags & OMNISCIENT) {
+    if(flags & SPECTATOR) {
         p->view.tx=0;
         p->view.ty=0;
         p->view.bx=0xFFFF;
@@ -391,6 +391,7 @@ void makeUpdates() {
     // once per second otherwise.
     if((frames % (FRAMESPERSEC)) == 0 || updateSpecSB) {
         updateSpectatorScoreboard();
+        broadcastPlayerIdMsg();
     }
 
     // End the game if it's running and all the players went
@@ -524,7 +525,7 @@ void makeSpriteUpdates(int clientid) {
         // We'll send a message if the object is within the player's viewport,
         // but only if the object moved or was destroyed or left the viewport.
         if(obj != NULL) {
-            if((player->flags & OMNISCIENT) || objIsInView(obj, &player->view)) {
+            if((player->flags & SPECTATOR) || objIsInView(obj, &player->view)) {
                 if(obj->flags & (DESTROYED|VANISHED)) {
                     makeDestructionMsg(clientid, objid, KILLED);
                 }
@@ -542,8 +543,9 @@ void makeSpriteUpdates(int clientid) {
 int makeSpriteMsg(int clientid, Player *player, Object *obj, uchar objid) {
     SpriteMsg sm;
     SpriteMsg16 sm16;
+    Player *p;
 
-    if(player->flags & OMNISCIENT) {
+    if(player->flags & SPECTATOR) {
         sm16.x=obj->x;
         sm16.y=obj->y;
         sm16.objid=objid;
@@ -551,6 +553,14 @@ int makeSpriteMsg(int clientid, Player *player, Object *obj, uchar objid) {
         sm16.id=obj->type;
         sm16.colour=obj->colour;
         sm16.ownerid=obj->owner;
+        sm16.health=obj->hp;
+        sm16.flags=obj->flags;
+        sm16.ammo=obj->ammo;
+        p=players[obj->owner];
+        if(p) {
+            sm16.lives=p->lives;
+        }
+
         return addSpriteMsg16(clientid, &sm16);
     }
     else {
@@ -560,6 +570,7 @@ int makeSpriteMsg(int clientid, Player *player, Object *obj, uchar objid) {
         sm.rotation=obj->commanded.dir;
         sm.id=obj->type;
         sm.colour=obj->colour;
+        sm.flags=obj->flags;
         return addSpriteMsg(clientid, &sm);
     }
 }
@@ -569,6 +580,7 @@ int makeDestructionMsg(int clientid, uchar objid, uchar reason) {
 
     rm.objid=objid;
     rm.reason=reason;
+
     return addDestructionMsg(clientid, &rm);
 }
 
@@ -579,8 +591,9 @@ bool objIsInView(Object *obj, Viewport *view) {
     int oy=obj->y >> 4;
 
     if(ox >= view->tx && ox <= view->bx &&
-            oy >= view->ty && oy <= view->by)
+            oy >= view->ty && oy <= view->by) {
         return TRUE;
+    }
     return FALSE;
 }
 
@@ -1048,6 +1061,7 @@ void setTimeLimit(int seconds) {
 
 // Do flag capture stuff
 void flagCaptured(Object *capturer) {
+    Player *p;
     MapXY mxy;
     int otherteam=(capturer->team + 1) & 1;
     mxy=getFlagpoint(otherteam);
@@ -1059,6 +1073,11 @@ void flagCaptured(Object *capturer) {
 
     teamscore[capturer->team]++;
     broadcastTeamScoreMsg(capturer->team);
+
+    p=players[capturer->owner];
+    if(p) {
+        p->goals++;
+    }
 
     if(winningScore > 0 && teamscore[capturer->team] == winningScore) {
         broadcastEndMatch();
@@ -1089,7 +1108,7 @@ void updateSpectatorScoreboard() {
         Player *p=players[i];
         if(p && !(p->flags & SPECTATOR)) {
             msg.playerTeam[i]=p->team;
-            msg.playerLives[i]=p->lives;
+            msg.playerGoals[i]=p->goals;
         }
         else {
             msg.playerTeam[i]=255;

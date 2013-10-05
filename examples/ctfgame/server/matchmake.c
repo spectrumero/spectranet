@@ -121,6 +121,9 @@ void tryToStopMatchmaking() {
 				p->flags=PLYRREADY;
 				sendMessageBuf(i, buf, 2);
 			}
+            else if(p && p->flags & SPECTATOR) {
+                sendMessageBuf(i, buf, 2);
+            }
 		}
 	}
 }

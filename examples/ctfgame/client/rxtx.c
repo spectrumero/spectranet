@@ -47,81 +47,81 @@ struct sockaddr_in remoteaddr;	// Server's address
 // -4 recvfrom() failed
 // -5 Server full
 //int initConnection(char *host, char *player) {
-	/*
-  struct hostent *he;
-  int rc;
+/*
+   struct hostent *he;
+   int rc;
 
-  // Hello message when connecting to the server.
-  sendbuf[0]=HELLO;
-  strlcpy(&sendbuf[1], player, MAXNAME);
+// Hello message when connecting to the server.
+sendbuf[0]=HELLO;
+strlcpy(&sendbuf[1], player, MAXNAME);
 
-  he=gethostbyname(host);
-  if(!he) return -1;
+he=gethostbyname(host);
+if(!he) return -1;
 
-  remoteaddr.sin_family=AF_INET;
-  remoteaddr.sin_port=htons(CTFPORT);
-  remoteaddr.sin_addr.s_addr=he->h_addr;
+remoteaddr.sin_family=AF_INET;
+remoteaddr.sin_port=htons(CTFPORT);
+remoteaddr.sin_addr.s_addr=he->h_addr;
 
-  // Look up the host.
-  sockfd=socket(AF_INET, SOCK_DGRAM, 0);
-  if(sockfd < 0) return -2;
+// Look up the host.
+sockfd=socket(AF_INET, SOCK_DGRAM, 0);
+if(sockfd < 0) return -2;
 
-  // Send the hello message.
-  rc=sendSyncMsg(MAXNAME+1);
-  if(rc < 0) return rc;
+// Send the hello message.
+rc=sendSyncMsg(MAXNAME+1);
+if(rc < 0) return rc;
 
-  if(*(rxbuf+1) == ACKTOOMANY)
-    return -5;
-  return 0;
+if(*(rxbuf+1) == ACKTOOMANY)
+return -5;
+return 0;
 }*/
 
 void initConnection(int s, struct sockaddr_in *addr) {
-	sockfd=s;
-	memcpy(&remoteaddr, addr, sizeof(struct sockaddr_in));
+    sockfd=s;
+    memcpy(&remoteaddr, addr, sizeof(struct sockaddr_in));
 }
 
 int startGame(MapXY *xy) {
-  int rc;
-  uchar *bufptr;
+    int rc;
+    uchar *bufptr;
 
-  // The game start message is just a single byte.
-  sendbuf[0]=START;
-  rc=sendSyncMsg(1);
-  if(rc < 0)
+    // The game start message is just a single byte.
+    sendbuf[0]=START;
+    rc=sendSyncMsg(1);
+    if(rc < 0)
+        return rc;
+
+    // Only one message should ever come back, advance the
+    // buffer pointer to its start.
+    bufptr=rxbuf+1;
+    if(*bufptr++ != STARTACK)
+        return NACK;
+
+    memcpy(xy, bufptr, sizeof(MapXY));
     return rc;
-
-  // Only one message should ever come back, advance the
-  // buffer pointer to its start.
-  bufptr=rxbuf+1;
-  if(*bufptr++ != STARTACK)
-    return NACK;
-
-  memcpy(xy, bufptr, sizeof(MapXY));
-  return rc;
 }
 
 int sendSyncMsg(int txbytes) {
-  struct sockaddr_in rxaddr;
-  int addrlen;
-  int bytes=0;
-  if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
-    return TXERROR;
+    struct sockaddr_in rxaddr;
+    int addrlen;
+    int bytes=0;
+    if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
+        return TXERROR;
 
-  if((bytes=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrlen)) < 0)
-    return RXERROR;
-  return bytes;
+    if((bytes=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrlen)) < 0)
+        return RXERROR;
+    return bytes;
 }
 
-  int sendMsg(int txbytes) {
+int sendMsg(int txbytes) {
     if(sendto(sockfd, sendbuf, txbytes, 0, &remoteaddr, sizeof(remoteaddr)) < 0)
-      return TXERROR;
+        return TXERROR;
     return 0;
-  }
+}
 
 int sendControlMsg(uchar dirs) {
-  sendbuf[0]=CONTROL;
-  sendbuf[1]=dirs;
-  return sendMsg(2);
+    sendbuf[0]=CONTROL;
+    sendbuf[1]=dirs;
+    return sendMsg(2);
 }
 
 // The game loop is based on sending and receiving messages to the
@@ -130,117 +130,118 @@ int sendControlMsg(uchar dirs) {
 // A negative return code means an error:
 // -1 Poll error
 int messageloop() {
-  struct sockaddr_in rxaddr;
-  char p;
-  char spriteMsgs;
-  int rc;
-  int addrsz;
-  uchar numMsgs;
-  uchar msgType;
-  char *msgptr;
-  spriteMsgs=FALSE;
+    struct sockaddr_in rxaddr;
+    char p;
+    char spriteMsgs;
+    int rc;
+    int addrsz;
+    uchar numMsgs;
+    uchar msgType;
+    char *msgptr;
+    spriteMsgs=FALSE;
 
-  // tell the server that the message loop is running
-  sendbuf[0] = CLIENTRDY;
-  sendMsg(1);
+    // tell the server that the message loop is running
+    sendbuf[0] = CLIENTRDY;
+    sendMsg(1);
 
-  while(1) {
-    p=poll_fd(sockfd);
-    if(p == 128) return -1;
-    if(p != POLLIN) {
-      getInput();
-      updateMsgArea();
-      continue;
+    while(1) {
+        p=poll_fd(sockfd);
+        if(p == 128) return -1;
+        if(p != POLLIN) {
+            getInput();
+            updateMsgArea();
+            continue;
+        }
+
+        // Messages are ready. Read them.
+        rc=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrsz);
+        msgptr=rxbuf;
+        numMsgs=*msgptr++;
+        while(numMsgs) {
+            msgType=*msgptr++;
+
+            switch(msgType) {
+                case SPRITEMSG:
+                    manageSprite((SpriteMsg *)msgptr);
+                    msgptr+=sizeof(SpriteMsg);
+                    spriteMsgs=TRUE;
+                    break;
+                case RMSPRITEMSG:
+                    removeSprite((RemoveSpriteMsg *)msgptr);
+                    msgptr+=sizeof(RemoveSpriteMsg);
+                    spriteMsgs=TRUE;
+                    break;
+                case VIEWPORT:
+                    switchViewport((MapXY *)msgptr);
+                    msgptr+=sizeof(MapXY);
+                    break;
+                case MAPMSG:
+                    // Map messages must be the only (or last) message
+                    // Make sure anything else gets dropped.
+                    drawMap(msgptr);
+                    numMsgs=1;
+                    break;					
+                case MESSAGEMSG:
+                    setMsgArea((MessageMsg *)msgptr);
+                    msgptr+=sizeof(MessageMsg);
+                    break;
+                case SCOREBOARD:
+                    updateScoreboard((NumberMsg *)msgptr);
+                    msgptr+=sizeof(NumberMsg);
+                    break;
+                case FLAGALERT:
+                    flagAlert(*msgptr);
+                    msgptr++;
+                    break;
+                case PINGMSG:
+                    sendbuf[0]=PINGMSG;
+                    sendMsg(1);
+                    msgptr++;
+                    break;
+                case ENDGAMESCORE:
+                    gameOver((GameEnd *)msgptr);
+                    msgptr+=sizeof(GameEnd);
+
+                    // May Djkastra turn in his grave.
+                    goto leave;
+                default:
+                    //          sendbuf[0]=SERVERKILL;
+                    //zx_border(RED);
+                    //          sendMsg(1);
+                    numMsgs=1;	// dump all other msgs
+            }
+
+            numMsgs--;
+        }
+
+        if(spriteMsgs) {
+            flashclk++;
+            sp1_UpdateNow();
+            spriteMsgs=FALSE;
+        }
     }
-
-    // Messages are ready. Read them.
-    rc=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0, &rxaddr, &addrsz);
-    msgptr=rxbuf;
-    numMsgs=*msgptr++;
-    while(numMsgs) {
-      msgType=*msgptr++;
-
-      switch(msgType) {
-        case SPRITEMSG:
-          manageSprite((SpriteMsg *)msgptr);
-          msgptr+=sizeof(SpriteMsg);
-          spriteMsgs=TRUE;
-          break;
-        case RMSPRITEMSG:
-          removeSprite((RemoveSpriteMsg *)msgptr);
-          msgptr+=sizeof(RemoveSpriteMsg);
-          spriteMsgs=TRUE;
-          break;
-        case VIEWPORT:
-          switchViewport((MapXY *)msgptr);
-          msgptr+=sizeof(MapXY);
-          break;
-        case MAPMSG:
-          // Map messages must be the only (or last) message
-          // Make sure anything else gets dropped.
-          drawMap(msgptr);
-          numMsgs=1;
-          break;					
-        case MESSAGEMSG:
-          setMsgArea((MessageMsg *)msgptr);
-          msgptr+=sizeof(MessageMsg);
-          break;
-        case SCOREBOARD:
-          updateScoreboard((NumberMsg *)msgptr);
-          msgptr+=sizeof(NumberMsg);
-          break;
-        case FLAGALERT:
-          flagAlert(*msgptr);
-          msgptr++;
-          break;
-        case PINGMSG:
-          sendbuf[0]=PINGMSG;
-          sendMsg(1);
-          msgptr++;
-          break;
-        case ENDGAMESCORE:
-          gameOver((GameEnd *)msgptr);
-          msgptr+=sizeof(GameEnd);
-
-          // May Djkastra turn in his grave.
-          goto leave;
-        default:
-//          sendbuf[0]=SERVERKILL;
-          //zx_border(RED);
-//          sendMsg(1);
-          numMsgs=1;	// dump all other msgs
-      }
-
-      numMsgs--;
-    }
-
-    if(spriteMsgs) {
-      sp1_UpdateNow();
-      spriteMsgs=FALSE;
-    }
-  }
 leave:
 }
 
 // disconnect from the game, and inform the server that we've gone
 int disconnect(char sendbye) {
-  int rc, i;
-	if(sendbye) {
-	  sendbuf[0]=BYE;
-  	rc=sendSyncMsg(1);
-	} else
-		rc=0;
+    int rc, i;
+    if(sendbye) {
+        sendbuf[0]=BYE;
+        rc=sendSyncMsg(1);
+    } else
+        rc=0;
 
-  sockclose(sockfd);
-  return rc;
+    sockclose(sockfd);
+    return rc;
 }
 
 // Send a viewport message.
 int sendViewportMsg(Viewport *vp) {
-  int bytes;
+    int bytes;
 
-  sendbuf[0]=VIEWPORT;
-  memcpy(&sendbuf[1], vp, sizeof(Viewport));
-  return sendMsg(sizeof(Viewport) + 1);
+    sendbuf[0]=VIEWPORT;
+    memcpy(&sendbuf[1], vp, sizeof(Viewport));
+    return sendMsg(sizeof(Viewport) + 1);
 }
 

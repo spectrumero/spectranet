@@ -62,10 +62,10 @@ void drawMapRow(int row, char *rowdata) {
                 drawMapBox(i, row);
                 break;
             case 'a':
-                drawMapIcon(i, row, FLAGPT, CLR_TEAM1);
+                drawMapIcon(i, row, FLAGPT, CLR_TEAM2);
                 break;
             case 'b':
-                drawMapIcon(i, row, FLAGPT, CLR_TEAM2);
+                drawMapIcon(i, row, FLAGPT, CLR_TEAM1);
                 break;
             case 'f':
                 drawMapIcon(i, row, FUELPT, CLR_NEUTRAL);
@@ -77,7 +77,7 @@ void drawMapRow(int row, char *rowdata) {
                 return;
             default:
                 if(*rowdata >= '0' && *rowdata <= '9') {
-                    c=(*rowdata < '2') ? CLR_TEAM1 : CLR_TEAM2;
+                    c=(*rowdata < '2') ? CLR_TEAM2 : CLR_TEAM1;
                     drawMapIcon(i, row, SPAWNPT, c);
                 }
         }

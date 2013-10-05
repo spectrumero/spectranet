@@ -14,6 +14,7 @@
 
 SDL_Surface *surface;
 SDL_Surface *background;
+SDL_Surface *scsurface;
 GfxSize gsize;
 
 GfxLine *icon[MAXICONS];
@@ -40,8 +41,12 @@ SDL_Surface *msgsfcs[MAXSCRNMSGS];
 
 SDL_Surface *blueScoreSurface;
 SDL_Surface *redScoreSurface;
+SDL_Surface *namesfc;
+SDL_Surface *goalsfc;
 
 ScoreSurface scores[MAXCLIENTS];
+
+uchar flashclock;
 
 void initGfx(int width, int height) {
     int scaledWidth;
@@ -53,6 +58,7 @@ void initGfx(int width, int height) {
     xplodeAnim=0;
     fotonClr=ZX_RED;
     xplodClr=ZX_YELLOW;
+    scsurface=NULL;
 
     memset(players, 0, sizeof(players));
     memset(smsgs, 0, sizeof(smsgs));
@@ -102,13 +108,15 @@ void initGfx(int width, int height) {
         fprintf(stderr, "Error: %s\n", TTF_GetError());
         exit(-1);
     }
-
+    createScoreboardText();
     SDL_Flip(surface);
 }
 
 void doneDrawing() {
+    flashclock++;
     blitScreenMsgs();
     blitScores();
+    blitWinner();
     SDL_Flip(surface);
 }
 
@@ -565,7 +573,17 @@ void manageSprite(SpriteMsg16 *msg) {
 
 // tanks are the only graphics that get rotated.
 void showTank(SpriteMsg16 *msg) {
-    int *tankClr=clr[msg->colour & 0x07];
+    int *tankClr;
+    uchar *owner;
+    char buf[10];
+    
+    if(msg->flags & HASFLAG && flashclock & 0x08) {
+        tankClr=clr[ZX_WHITE];
+    }
+    else
+    {
+        tankClr=clr[msg->colour & 0x07];
+    }
     double rotation=msg->rotation ? (16 - msg->rotation) * 0.392699082f : 0;
     GfxLine *tank=rotateGfxLines(icon[TANK], rotation, 15, 15);
 
@@ -573,8 +591,47 @@ void showTank(SpriteMsg16 *msg) {
             tankClr[0], tankClr[1], tankClr[2], 255);
     freeGfxLines(tank);
 
-    addText(players[msg->ownerid].ownername, (msg->x >> 3) + 32, 
-            msg->y >> 3);
+    owner=strlen(players[msg->ownerid].ownername)
+        ? players[msg->ownerid].ownername
+        : (uchar *)"Unknown!";
+
+    addText(owner, (msg->x >> 3) + 34, 
+            (msg->y >> 3) - 4);
+
+    snprintf(buf, sizeof(buf), "%d", msg->ammo);
+    addText(buf, (msg->x >> 3) + 34, (msg->y >> 3) + 12);
+
+    if(msg->lives != 255) {
+        snprintf(buf, sizeof(buf), "%d", msg->lives);
+        addText(buf, (msg->x >> 3) + 34, (msg->y >> 3) + 30);
+    }
+
+    showHealthBar(msg->health, msg->x >> 3, (msg->y >> 3) + 36);
+}
+
+void showHealthBar(int health, int x, int y) {
+    int barx, bary;
+    int width, height;
+    int *barclr;
+
+    if(health > 100) health=100;
+    else if(health < 0) health=0;
+
+    barx=gsize.factor * x;
+    bary=gsize.factor * y;
+    width=((double)health/100.0f) * (32.0f * gsize.factor);
+    height=(gsize.factor * 3) + 1;
+
+    if(health > 90)
+        barclr=clr[ZX_GREEN];
+    else if(health > 30)
+        barclr=clr[ZX_YELLOW];
+    else
+        barclr=clr[ZX_RED];
+
+    boxRGBA(surface, barx, bary, barx+width, bary+height,
+            barclr[0], barclr[1], barclr[2], 255);
+
 }
 
 void handlePlayerIdMsg(PlayerIdMsg *msg) {
@@ -660,8 +717,7 @@ void showScores(SpectatorScoreMsg *msg) {
         ssfc=&scores[i];
         if(ssfc->player) {
             SDL_FreeSurface(ssfc->player);
-            SDL_FreeSurface(ssfc->lives);
-            SDL_FreeSurface(ssfc->kills);
+            SDL_FreeSurface(ssfc->goals);
             ssfc->player=NULL;
         }
         if(msg->playerTeam[i] < 2) {
@@ -677,21 +733,11 @@ void showScores(SpectatorScoreMsg *msg) {
                             "Unknown!", scoreCol);
             }
 
-            if(msg->playerLives[i] < 255) {
-                snprintf(scoreString, sizeof(scoreString),
-                    "%d", msg->playerLives[i]);
-                ssfc->lives=TTF_RenderText_Blended(pnameFont,
-                    scoreString, scoreCol);
-            }
-            else
-            {
-                ssfc->lives=TTF_RenderText_Blended(pnameFont,
-                        "Inf", scoreCol);
-            }
             snprintf(scoreString, sizeof(scoreString),
-                    "%d", msg->playerKills[i]);
-            ssfc->kills=TTF_RenderText_Blended(pnameFont,
+                    "%d", msg->playerGoals[i]);
+            ssfc->goals=TTF_RenderText_Blended(pnameFont,
                     scoreString, scoreCol);
+
             ssfc->team=msg->playerTeam[i];
         }
     }
@@ -703,11 +749,10 @@ void blitScores() {
     SDL_Rect rect;
     ScoreSurface *ssfc;
     int teamY[2];
-    teamY[0]=surface->h-100;
+    teamY[0]=surface->h-68;
     teamY[1]=teamY[0];
     int displaceName;
-    int displaceLives;
-    int displaceKills;
+    int displaceGoals;
 
     if(blueScoreSurface) {
         rect.x=cntrX-100;
@@ -722,12 +767,23 @@ void blitScores() {
         SDL_BlitSurface(redScoreSurface, NULL, surface, &rect);
     }
 
+    rect.x=cntrX + 100;
+    rect.y=surface->h-100;
+    rect.w=namesfc->w;
+    rect.h=namesfc->h;
+    SDL_BlitSurface(namesfc, NULL, surface, &rect);
+    rect.x=cntrX + 350;
+    SDL_BlitSurface(goalsfc, NULL, surface, &rect);
+    rect.x=cntrX-500;
+    SDL_BlitSurface(namesfc, NULL, surface, &rect);
+    rect.x=cntrX-250;
+    SDL_BlitSurface(goalsfc, NULL, surface, &rect);
+
     for(i=0; i < MAXCLIENTS; i++) {
         ssfc=&scores[i];
         if(ssfc->player) {
-            displaceName=(ssfc->team) ? 100 : -400;
-            displaceLives=(ssfc->team) ? 400 : -200;
-            displaceKills=(ssfc->team) ? 450 : -150;
+            displaceName=(ssfc->team) ? 100 : -500;
+            displaceGoals=(ssfc->team) ? 350 : -250;
 
             rect.x=cntrX + displaceName;
             rect.y=teamY[ssfc->team];
@@ -735,13 +791,67 @@ void blitScores() {
             rect.h=ssfc->player->h;
             SDL_BlitSurface(ssfc->player, NULL, surface, &rect);
             
-            rect.x=cntrX + displaceLives;
-            rect.w=ssfc->lives->w;
-            rect.h=ssfc->lives->h;
-            SDL_BlitSurface(ssfc->lives, NULL, surface, &rect);
+            rect.x=cntrX + displaceGoals;
+            rect.w=ssfc->goals->w;
+            rect.h=ssfc->goals->h;
+            SDL_BlitSurface(ssfc->goals, NULL, surface, &rect);
 
             teamY[ssfc->team]+=32;
         }
     }
+}
+
+void showWinner(SpectatorGameEnd *msg) {
+    char buf[64];
+    SDL_Color msgclr={255,255,128};
+
+    if(msg->teamWin == 0) {
+        snprintf(buf, sizeof(buf), "Blue team wins %d : %d",
+                msg->bluecapture, msg->redcapture);
+    }
+    else if(msg->teamWin == 1) {
+        snprintf(buf, sizeof(buf), "Red team wins %d : %d",
+           msg->redcapture, msg->bluecapture);
+    }
+    else {
+        snprintf(buf, sizeof(buf), "Score draw! %d : %d",
+                msg->bluecapture, msg->redcapture);
+    }
+    
+    scsurface=TTF_RenderText_Blended(scoreFont,
+                    buf, msgclr);
+
+}
+
+void blitWinner() {
+    SDL_Rect rect;
+    if(scsurface != NULL) {
+        rect.x=cntrX - (scsurface->w/2);
+        rect.y=(surface->h/2) - (scsurface->h/2);
+        rect.w=scsurface->w;
+        rect.h=scsurface->h;
+        SDL_BlitSurface(scsurface, NULL, surface, &rect);
+    }
+}
+
+void startGame() {
+    // remove scoreboard
+    if(scsurface) {
+        SDL_FreeSurface(scsurface);
+        scsurface=NULL;
+    }
+}
+
+
+void showCountdown() {
+
+}
+
+void createScoreboardText() {
+    SDL_Color titleCol={255,255,128};
+    namesfc=TTF_RenderText_Blended(pnameFont,
+            "Player", titleCol);
+    goalsfc=TTF_RenderText_Blended(pnameFont,
+            "Goals", titleCol);
 }
 

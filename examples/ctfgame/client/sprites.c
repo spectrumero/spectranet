@@ -52,6 +52,7 @@ uchar attr;
 uchar amask;
 uchar fotonColour;
 uchar flagDirColour;
+uchar flashclk;
 
 // Development: the gr_window sprite graphic
 extern uchar tank[];
@@ -234,6 +235,14 @@ void moveSprite(SpriteMsg *msg) {
 			break;
 		case PLAYER:
 			frameptr=tank + tankdir[msg->rotation];
+            if(msg->flags & HASFLAG && flashclk & 0x08) {
+                attr=INK_WHITE|BRIGHT;
+                sp1_IterateSprChar(s, colourSpr);
+            }
+            else {
+                attr=msg->colour;
+                sp1_IterateSprChar(s, colourSpr);
+            }            
 			break;
 		default:
 			frameptr=spritelist[msg->id];

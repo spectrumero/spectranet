@@ -49,6 +49,8 @@
 #define SPRITEMSG16             0x0C    // 16 bit sprite msg
 #define PLAYERIDMSG             0x0D    // Player id for spectators
 #define SPECSCOREBOARDMSG       0x0E    // Spectator scoreboard msg
+#define SPECGAMEEND             0x0F
+#define SPECGAMESTART           0x10
 
 // Client initiated messages
 #define HELLO    0x40        // Initial contact with server
@@ -90,13 +92,23 @@
 #define VPXPIXELS 224
 #define VPYPIXELS 184
 
+// Object flags
+#define HASMOVED  0x01  // Object has moved since the last frame
+#define NEWOBJ    0x02  // Object was created this frame
+#define DESTROYED  0x04  // Object was destroyed this frame
+#define VANISHED  0x08  // Object was destroyed because the owner disappeared
+#define NOCOLLIDE  0x10  // Can't collide with anything
+#define EXPLODING  0x20  // Is exploding
+#define HASFLAG    0x40  // Has the flag
+
 typedef struct _spritemsg {
     uchar  objid;
     uchar  x;
     uchar  y;
     uchar  rotation;
     uchar  id;
-    uchar colour;
+    uchar  colour;
+    uchar  flags;
 } SpriteMsg;
 
 typedef struct _spritemsg16 {
@@ -107,6 +119,10 @@ typedef struct _spritemsg16 {
     uchar   rotation;
     uchar   id;
     uchar   colour;
+    uchar   flags;
+    uchar   health;
+    uchar   ammo;
+    uchar   lives;
 } SpriteMsg16;
 
 // Used by spectator client to label players.
@@ -119,7 +135,7 @@ typedef struct _playeridmsg {
 typedef struct _spectatorscoremsg {
     uchar   team1score;
     uchar   team2score;
-    uchar   playerLives[MAXCLIENTS];
+    uchar   playerGoals[MAXCLIENTS];
     uchar   playerKills[MAXCLIENTS];
     uchar   playerTeam[MAXCLIENTS];
 } SpectatorScoreMsg;
@@ -210,6 +226,14 @@ typedef struct _gameend {
     char bluecapture[4];
     char redcapture[4];
 } GameEnd;
+
+// Game end message for spectators
+typedef struct _specgameend {
+    uchar reason;
+    uchar teamWin;
+    uchar bluecapture;
+    uchar redcapture;
+} SpectatorGameEnd;
 
 // Reasons for the game end
 #define TEAMWON	0

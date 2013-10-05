@@ -138,16 +138,8 @@ typedef struct _objprops {
     int destructValue;	// Points awarded to the destroyer
 } ObjectProperties;
 
-// Object flags
-#define HASMOVED  0x01  // Object has moved since the last frame
-#define NEWOBJ    0x02  // Object was created this frame
-#define DESTROYED  0x04  // Object was destroyed this frame
-#define VANISHED  0x08  // Object was destroyed because the owner disappeared
-#define NOCOLLIDE  0x10  // Can't collide with anything
-#define EXPLODING  0x20  // Is exploding
-#define HASFLAG    0x40  // Has the flag
+// Additional Object flags (see object flags in ctfmessage.h)
 #define UPDATESB  0x80  // Update scorebord for object's owner
-
 #define OBJRESET  0xF0  // Flags that won't get reset each frame
 
 typedef struct _player {
@@ -162,6 +154,7 @@ typedef struct _player {
     int spawntime;        // If dead, time until respawn in frames
     uchar playernum;    // The player number decided at the matchup screen
     int clientid;       // So we can look up the client id from a player object.
+    uchar goals;        // Flags captured
 } Player;
 
 #define RUNNING     0x01  // Player's client is ready for messages
@@ -171,7 +164,7 @@ typedef struct _player {
 #define PLYRREADY		0x10	// Player is ready to start
 #define SCORESCRN		0x20	// Player is looking at the score screen
 #define SPECTATOR       0x40    // Player is a spectator
-#define OMNISCIENT      0x80    // Player sees whole map at once
+// note, updatesb flag is 0x80
 #define RESETFLAGS  0xfd  // Bits set to 0 get reset on each frame
 
 // Structure to implement a straightforward lookup table

@@ -212,6 +212,14 @@ int getMessage() {
                 showScores((SpectatorScoreMsg *)msgptr);
                 msgptr+=sizeof(SpectatorScoreMsg);
                 break;
+            case SPECGAMEEND:
+                showWinner((SpectatorGameEnd *)msgptr);
+                msgptr+=sizeof(SpectatorGameEnd);
+                break;
+            case MMEXIT:
+                startGame();
+                msgptr++;
+                break;
             default:
                 fprintf(stderr,"Unidentified message: %x\n", msgType);
                 numMsgs=1;	// dump all other msgs

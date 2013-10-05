@@ -35,13 +35,17 @@ void endMatch() {
 
 	for(i=0; i<MAXCLIENTS; i++) {
 		p=getPlayer(i);
-		if(p) 
+
+        // spectator clients remain processing events so
+        // skip them.
+		if(p && !(p->flags & SPECTATOR)) 
 			p->flags = SCORESCRN;
 	}
 }
 
 void broadcastEndMatch() {
 	GameEnd geMsg;
+    SpectatorGameEnd sgeMsg;
 	int i;
 	int winner;
 	Player *p, *dead;
@@ -99,16 +103,25 @@ void broadcastEndMatch() {
 		dead=getDeadPlayer(i);
 
 		if(p) {
-			// The client is just told if it's a winner or not, not
-			// the actual winning team id.
-			if(winner != NOTEAM) {
-				geMsg.winner = (p->team == winner) ? 1 : 0;
-			}
-			else {
-				geMsg.winner = NOTEAM;
-			}
-			addMessage(i, ENDGAMESCORE, &geMsg, sizeof(geMsg));
-			addPlayerName(p->team, p->name, winner);
+            if(p->flags & SPECTATOR) {
+                sgeMsg.reason=TEAMWON;
+                sgeMsg.teamWin=winner;
+                sgeMsg.bluecapture=getTeamscore(BLUETEAM);
+                sgeMsg.redcapture=getTeamscore(REDTEAM);
+                addMessage(i, SPECGAMEEND, &sgeMsg, sizeof(sgeMsg));
+            }
+            else {
+                // The client is just told if it's a winner or not, not
+                // the actual winning team id.
+                if(winner != NOTEAM) {
+                    geMsg.winner = (p->team == winner) ? 1 : 0;
+                }
+                else {
+                    geMsg.winner = NOTEAM;
+                }
+                addMessage(i, ENDGAMESCORE, &geMsg, sizeof(geMsg));
+                addPlayerName(p->team, p->name, winner);
+            }
 		}
 
 		// Dead players are no longer connected, so we just

@@ -21,7 +21,8 @@
 ;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;THE SOFTWARE.
 */
-#pragma output STACKPTR = 53248
+/*#pragma output STACKPTR = 53248*/
+#pragma output STACKPTR=32766
 #include <malloc.h>
 #include <spectrum.h>
 #include <stdio.h>
@@ -58,7 +59,8 @@ main() {
 	// initialize malloc.lib
 	heap = 0L;
 //	sbrk(48736,3999);
-	sbrk(24000,8767);
+//	sbrk(23800,8967);
+    sbrk(23800,7000);
 
 	// Page in the Spectranet permanently
 	// Make sure all the print42 stuff is reset, too

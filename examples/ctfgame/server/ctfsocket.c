@@ -163,7 +163,7 @@ int getMessage() {
     }
     else if(*msgptr == SPECHELLO) {
         // New spectator
-        addNewClient(msgptr+1, &rxaddr, SPECTATOR|OMNISCIENT|PLYRREADY);
+        addNewClient(msgptr+1, &rxaddr, SPECTATOR|PLYRREADY);
 
     } else {
         clientid=findClient(&rxaddr);

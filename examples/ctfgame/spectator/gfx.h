@@ -87,8 +87,7 @@ typedef struct _screenmsg {
 typedef struct _scoresurface {
     char team;
     SDL_Surface *player;
-    SDL_Surface *lives;
-    SDL_Surface *kills;
+    SDL_Surface *goals;
 } ScoreSurface;
 
 void initGfx(int width, int height);
@@ -115,13 +114,17 @@ void addText(const char *text, int x, int y);
 // Handle graphics messages
 void manageSprite(SpriteMsg16 *msg);
 void showTank(SpriteMsg16 *msg);
+void showHealthBar(int health, int x, int y);
 void handlePlayerIdMsg(PlayerIdMsg *msg);
 
 // Status displays
+void createScoreboardText();
 void addScreenMsg(const char *msg);
 void blitScreenMsgs();
 void showScores(SpectatorScoreMsg *msg);
+void showWinner(SpectatorGameEnd *msg);
 void blitScores();
+void blitWinner();
 
 extern GfxSize gsize;
 
