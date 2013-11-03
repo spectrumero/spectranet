@@ -25,6 +25,7 @@
 .include	"snapman.inc"
 .include	"fcntl.inc"
 .include	"spectranet.inc"
+.include	"sysvars.inc"
 
 .text
 ;------------------------------------------------------------------------
@@ -101,6 +102,9 @@ J_unloadheader:
 	; First deal with the screen.
 	call F_restorescreen
 
+	xor a
+	ld (v_interpflags),a	; if we came from %loadsnap we end up not clearing this
+	
 	; Set register values.
 	ld sp, 0x3100		; Temporary stack
 	ld hl, (SNA_AFALT)	; Load alternate registers
