@@ -322,6 +322,7 @@ void updatePowerSpawns();
 void spawnPowerup();
 void resetPowerupSpawn(Object *pwrup);
 void powerupTouched(Object *powerup, Object *with);
+void resetPowerupSpawnPoints();
 
 // Status messages
 void broadcastCrash(Object *crasher);

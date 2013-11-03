@@ -104,6 +104,17 @@ void spawnPowerup(PowerSpawn *sp) {
 	addObject(obj);
 }
 
+// Reset the spawn points.
+void resetPowerupSpawnPoints() {
+	int i;
+	PowerSpawn *sptr;
+
+	for(i=0; i < pwridx; i++) {
+		sptr = powerups[i];
+		sptr->cooldown = getCooldown();
+	}
+}
+
 // Powerup destruction callback
 void resetPowerupSpawn(Object *pwrup) {
 	PowerSpawn *sptr=(PowerSpawn *)pwrup->extras;

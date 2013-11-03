@@ -977,6 +977,7 @@ void resetGame() {
     printMessage("**** Game server reset.");
     initObjList(FALSE);
     createFlags();
+    resetPowerupSpawnPoints();
 }
 
 Object *newObject(int objtype, int owner, int x, int y) {
