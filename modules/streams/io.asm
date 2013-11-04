@@ -96,12 +96,21 @@ F_input:
 .readdirdone1:
 	ld b, c			; get the length returned into B for djnz
 
+; Since the streams module is not designed for binary data
+; (INPUT # isn't really suitable for that) we use a simple
+; method of working with both UNIX and DOS style text files -
+; basically, just use LF to signify end of input and discard
+; any CR characters. It's worth noting that the write routines
+; emit CR/LF 'DOS' style line endings so that they work easily
+; with many internet protocols (e.g. SMTP)
+; By contrast ZX BASIC expects just a CR character (so when
+; we encounter a LF, we send the input routine a CR instead)
 .unloadloop1:
 	ld a, (hl)
 	cp 0x0d			; This is how the Interface 1 does it...
-	jr z, .checkformore1	; Either a CR
+	jr z, .skipctrlchar	; Either a CR which we throw away
 	cp 0x0a
-	jr z, .checkformore1	; or a linefeed
+	jr z, .checkformore1	; or a linefeed which means 'end of line'
 	cp '"'		
 	call z, .addquote1	; Escape the " character to prevent error C
 	push hl
@@ -110,6 +119,7 @@ F_input:
 	defw 0x0F85		; ROM ADD-CHAR subroutine
 	pop bc
 	pop hl
+.skipctrlchar:
 	inc l
 	djnz .unloadloop1
 	ld d, (ix+STRM_READBUF)	; reset everything to get the next set
@@ -163,11 +173,6 @@ F_input:
 	cp b			; no more chars left?
 	jr z, .cleardown1
 	inc l			; next byte in the buffer
-	ld a, (hl)		; see what it is
-	cp 0x0d
-	jr z, .checklastcr1
-	cp 0x0a
-	jr z, .checklastcr1
 .saveposition1:
 	ld (ix+STRM_READPTR), l	; save the current position
 	ld (ix+STRM_REMAINING), b	; save bytes remaining
@@ -176,14 +181,6 @@ F_input:
 	ld (ix+STRM_READPTR), 0	; clear bufpos
 	ld (ix+STRM_REMAINING), 0	; clear bufsz
 	jr .exitnopop1
-
-.checklastcr1:
-	dec b			; have we finally finished?
-	xor a
-	cp b
-	jr z, .cleardown1	; yes, just leave now.
-	inc l			; otherwise advance the buffer
-	jr .saveposition1	; and save where we got to
 
 .flush1:
 	dec a			; make actual end position, not new char pos
