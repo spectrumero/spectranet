@@ -44,6 +44,9 @@
 /* Handle the socket interface */
 void tnfs_sockinit();
 void tnfs_mainloop();
+void tnfs_handle_udpmsg();
+void tcp_accept(int *fdlist);
+void tnfs_handle_tcpmsg(int cli_fd);
 void tnfs_decode(struct sockaddr_in *cliaddr, 
 		int rxbytes, unsigned char *rxbuf);
 void tnfs_badcommand(Header *hdr, Session *sess);

@@ -68,6 +68,8 @@ STR_UNKTYPE:     defb    "Unknown file type",0                   ; 0x26
 STR_MISMCHLEN:   defb    "Data block length mismatch",0          ; 0x27
 STR_EBADURL:     defb    "Bad URL",0                             ; 0x28
 STR_EBADFS:      defb    "Bad filesystem number",0               ; 0x29
+STR_EMPBUSY:     defb    "Mount point already used",0            ; 0x2A
+STR_EUNKPROTO:   defb    "Unknown filesystem type",0             ; 0x2B
 
 ERR_TABLE_END:
 STR_UNKNOWN:     defb    "Unknown error",0

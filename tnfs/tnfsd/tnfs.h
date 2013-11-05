@@ -83,6 +83,7 @@ typedef struct _session
 	unsigned char lastmsg[MAXMSGSZ];/* last message sent */
 	int lastmsgsz;			/* last message's size inc. hdr */
 	uint8_t lastseqno;		/* last sequence number */
+	uint8_t isTCP;			/* uses the TCP transport */
 
 } Session;
 

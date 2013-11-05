@@ -32,6 +32,7 @@ TNFS daemon datagram handler
 #ifdef UNIX
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/select.h>
 #endif
 
 #ifdef WIN32
@@ -47,7 +48,8 @@ TNFS daemon datagram handler
 #include "directory.h"
 #include "tnfs_file.h"
 
-int sockfd;		/* global socket file descriptor */
+int sockfd;		/* UDP global socket file descriptor */
+int tcplistenfd;	/* TCP listening socket file descriptor */
 
 tnfs_cmdfunc dircmd[NUM_DIRCMDS]=
 	{ &tnfs_opendir, &tnfs_readdir, &tnfs_closedir,
@@ -67,6 +69,7 @@ void tnfs_sockinit()
         	die("WSAStartup() failed");
 #endif
 
+	/* Create the UDP socket */
 	sockfd=socket(AF_INET, SOCK_DGRAM, 0);
 	if(sockfd < 0)
 		die("Unable to open socket");
@@ -79,34 +82,130 @@ void tnfs_sockinit()
 	
 	if(bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
 		die("Unable to bind");
+
+	/* Create the TCP socket */
+	tcplistenfd=socket(AF_INET, SOCK_STREAM, 0);
+	if(tcplistenfd < 0) {
+		die("Unable to create TCP socket");
+	}
+
+	memset(&servaddr, 0, sizeof(servaddr));
+	servaddr.sin_family=AF_INET;
+	servaddr.sin_addr.s_addr=htons(INADDR_ANY);
+	servaddr.sin_port=htons(TNFSD_PORT);
+	if (bind(tcplistenfd, (struct sockaddr *) &servaddr,
+              sizeof(servaddr)) < 0) {
+		die("Unable to bind TCP socket");
+	}
+	listen(tcplistenfd, 5);
 }
 
 void tnfs_mainloop()
-{
+{	
+	int readyfds, i;
+	fd_set fdset;
+	fd_set errfdset;
+	int tcpsocks[MAX_TCP_CONN];
+
+	memset(&tcpsocks, 0, sizeof(tcpsocks));
+	while(1) {
+		FD_ZERO(&fdset);
+
+		/* add UDP socket and TCP listen socket to fdset */
+		FD_SET(sockfd, &fdset);
+		FD_SET(tcplistenfd, &fdset);
+
+		for(i=0; i<MAX_TCP_CONN; i++) {
+			if(tcpsocks[i]) {
+				FD_SET(tcpsocks[i], &fdset);
+			}
+		}
+		
+		FD_COPY(&fdset, &errfdset);
+		if((readyfds=select
+			(FD_SETSIZE, &fdset, NULL, &errfdset, NULL)) != 0) {
+			if(readyfds < 0) {
+				die("select() failed\n");
+			}
+
+			/* handle fds ready for reading */
+			/* UDP message? */
+			if(FD_ISSET(sockfd, &fdset)) {
+				tnfs_handle_udpmsg();
+			}
+			/* Incoming TCP connection? */
+			else if(FD_ISSET(tcplistenfd, &fdset)) {
+				tcp_accept(&tcpsocks[0]);
+			}
+
+			else {
+				for(i=0; i<MAX_TCP_CONN; i++) {
+					if(tcpsocks[i]) {
+						if(FD_ISSET(tcpsocks[i],&fdset))
+						{
+							tnfs_handle_tcpmsg(tcpsocks[i]);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void tcp_accept(int *socklist) {
+	int acc_fd, i;
+	struct sockaddr_in cli_addr;
+	int cli_len=sizeof(cli_addr);
+	int *fdptr;
+
+	acc_fd=accept(tcplistenfd, (struct sockaddr *) &cli_addr, &cli_len);
+	if(acc_fd < 1) {
+		fprintf(stderr, "WARNING: unable to accept TCP connection\n");
+		return;
+	}
+
+	fdptr=socklist;
+	for(i=0; i<MAX_TCP_CONN; i++) {
+		if(*fdptr == 0) {
+			*fdptr=acc_fd;
+			return;
+		}		
+	}
+
+	/* tell the client 'too many connections' */
+}
+
+void tnfs_handle_udpmsg() {
 	socklen_t len;
 	int rxbytes;
 	struct sockaddr_in cliaddr;
 	unsigned char rxbuf[MAXMSGSZ];
 
-	while(1)
+	len=sizeof(cliaddr);
+	rxbytes=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0,
+			(struct sockaddr *)&cliaddr, &len);
+
+	if(rxbytes >= TNFS_HEADERSZ)
 	{
-		len=sizeof(cliaddr);
-		rxbytes=recvfrom(sockfd, rxbuf, sizeof(rxbuf), 0,
-				(struct sockaddr *)&cliaddr, &len);
-
-		if(rxbytes >= TNFS_HEADERSZ)
-		{
-			/* probably a valid TNFS packet, decode it */
-			tnfs_decode(&cliaddr, rxbytes, rxbuf);
-		}
-		else
-		{
-			MSGLOG(cliaddr.sin_addr.s_addr,
-				"Invalid datagram received");
-		}
-
-		*(rxbuf+rxbytes)=0;
+		/* probably a valid TNFS packet, decode it */
+		tnfs_decode(&cliaddr, rxbytes, rxbuf);
 	}
+	else
+	{
+		MSGLOG(cliaddr.sin_addr.s_addr,
+			"Invalid datagram received");
+	}
+
+	*(rxbuf+rxbytes)=0;
+}
+
+void tnfs_handle_tcpmsg(int cli_fd) {
+	char buf[255];
+	int sz;
+
+	sz=read(cli_fd, buf, sizeof(buf));
+	printf("DEBUG: rx of tcpmsg: %d bytes: %s\n", sz, buf);
+	
 }
 
 void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)

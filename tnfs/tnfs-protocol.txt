@@ -349,10 +349,15 @@ READ - Reads from a file - Command 0x21
 Reads a block of data from a file. Consists of the standard header
 followed by the file descriptor as returned by OPEN, then a 16 bit
 little endian integer specifying the size of data that is requested.
+
 The server will only reply with as much data as fits in the maximum
-TNFS datagram size of 1K. If there is less than the size requested
-remaining in the file, the server will return the remainder of the file.
-Subsequent READ commands will return the code EOF.
+TNFS datagram size of 1K when using UDP as a transport. For the
+TCP transport, sequencing and buffering etc. are just left up to
+the TCP stack, so a READ operation can return blocks of up to 64K. 
+
+If there is less than the size requested remaining in the file, 
+the server will return the remainder of the file.  Subsequent READ 
+commands will return the code EOF.
 
 Examples:
 Read from fd 4, maximum 256 bytes:

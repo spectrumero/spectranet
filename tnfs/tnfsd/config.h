@@ -26,7 +26,8 @@
 #define MAXMSGSZ	532	/* maximum size of a TNFS message */
 #define MAX_FD_PER_CONN	16	/* maximum open file descriptors per client */
 #define MAX_DHND_PER_CONN 8	/* max open directories per client */
-#define MAX_CLIENTS	256	/* maximum number of clients */
+#define MAX_CLIENTS	256	/* maximum number of UDP clients */
+#define MAX_TCP_CONN	256	/* Maximum number of TCP clients */
 #define TNFS_HEADERSZ	4	/* minimum header size */
 #define MAX_TNFSPATH	256	/* maximum path length */
 #define MAX_FILEPATH	384	/* Maximum path + filename */

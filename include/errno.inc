@@ -65,4 +65,6 @@ TUNKTYPE	equ	0x26	; Unknown file type
 TMISMCHLENGTH	equ	0x27	; Data block length mismatch
 TBADURL		equ	0x28	; Bad URL
 TBADFS		equ	0x29	; Bad FS number
+TMPBUSY     equ 0x2A    ; Mount point already in use
+TUNKPROTO   equ 0x2B    ; Unknown filesystem proto
 

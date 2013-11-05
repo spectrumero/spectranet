@@ -61,6 +61,7 @@
 .include	"sysvars.inc"
 .include	"sysdefs.inc"
 .include	"sockdefs.inc"
+.include    "errno.inc"
 
 ;----------------------------------------------------------------------------
 ; Dispatcher routines.
@@ -224,6 +225,15 @@ isasocket:
 F_mount:
 	; First search for a ROM that handles this protocol.
 	ld (v_mountnumber), a	; save device number
+	add a,VFSVECBASE % 256	; Add the vector table base address to
+	ld l, a			; form the LSB of the table address to fill.
+	ld h, 0x3F		; 0x3F = system variables block
+	ld a,(hl)
+	cp 0
+	jr nz, .notfree	; the mountpoint is in use
+	
+	; search for a ROM that handles this protocol.
+	ld a,(v_mountnumber)
 	ld hl, vectors
 .findrom9:
 	ld a, (hl)		; get ROM ID
@@ -265,11 +275,15 @@ F_mount:
 	pop hl			; restore HL
 	ex af, af'
 	ret
+
+.notfree:			
+    ld a, TMPBUSY   ; mount point already used
+    scf
+    ret
 .notfound9:
-	ld a, 0xFE		; TODO: proper return code here
+	ld a, TUNKPROTO ; unknown VFS protocol
 	scf
 	ret
-
 
 ;--------------------------------------------------------------------------
 ; F_freemountpoint
