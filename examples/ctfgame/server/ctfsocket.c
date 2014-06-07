@@ -272,6 +272,9 @@ int addNewClient(char *hello, struct sockaddr_in *client, uchar pflags) {
             memset(playerBuf[i], 0, MSGBUFSZ);
             playerBufPtr[i]=playerBuf[i]+1;
 
+            printMessage("Hello from client %s:%d",
+                inet_ntoa(client->sin_addr), ntohs(client->sin_port));
+
             // initialize the player object
             if(makeNewPlayer(i, hello, pflags)) {
 
