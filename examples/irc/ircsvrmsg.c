@@ -143,7 +143,7 @@ void parseServerCmd(struct irccmd *ic)
 		/* note, no snprintf in z88dk yet, so this is the
 		   safe way to assemble the string */
 		strcpy(replybuf, "PONG ");
-		strlcat(replybuf, nick, sizeof(replybuf));
+		strlcat(replybuf, ic->param, sizeof(replybuf));
 		sendIrcMsg(replybuf, sizeof(replybuf));
 		return;
 	}

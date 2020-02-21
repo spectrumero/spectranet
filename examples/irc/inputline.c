@@ -44,11 +44,13 @@ uchar in_KeyStartRepeat=20;
 uchar in_KeyRepeatPeriod=5;
 uint in_KbdState;
 uchar input_ready=0;
+uchar allow_blank_string=0;
 
 /* resetinput - resets the input routines */
 void resetinput()
 {
 	input_ready=0;
+	allow_blank_string=0;
 	clearInputArea();
 
 	/* initial cursor */
@@ -57,6 +59,7 @@ void resetinput()
 	/* clear down buffer */
 	memset(inputbuf,0,sizeof(inputbuf));
 	inputidx=0;
+	in_WaitForNoKey();
 	in_GetKeyReset();
 }
 
@@ -95,14 +98,13 @@ void handleKey(uchar key)
 				charpos=63;
 			}
 			break;
-		case '\n':	/* enter */
+		case 13:	/* enter */
 			if(inputidx > 0)
 				input_ready=1;
 			break;
 		default:	/* normal key */
 			if(inputidx >= sizeof(inputbuf))
 				break;	/* no more room in buffer */
-
 			putchar(key);	/* display the key */
 			charpos++;
 			inputbuf[inputidx++]=key;
@@ -137,7 +139,7 @@ char *checkKey()
 			readoffset=0;
 
 		handleKey(k);
-		if(k == '\n' && input_ready)
+		if(k == 13 && (input_ready || allow_blank_string))
 		{
 			return inputbuf;
 		}

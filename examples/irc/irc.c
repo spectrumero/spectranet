@@ -112,6 +112,7 @@ void setupConnection()
 	{
 		mainprint
 		("Type the password if the server has one (or press Enter):");
+		allow_blank_string = 1;
 		str=kbinput();
 		if(strlen(str) > sizeof(pass))
 		{
@@ -165,7 +166,7 @@ void connToServer()
 
 	servaddr.sin_port=6667;
 	servaddr.sin_addr.s_addr=he->h_addr;
-	if(connect(ircfd, &servaddr, sizeof(sockaddr_in)) < 0)
+	if(connect(ircfd, &servaddr, sizeof(struct sockaddr_in)) < 0)
 	{
 		sockclose(ircfd);
 		ircfd=0;
