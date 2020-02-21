@@ -3,8 +3,8 @@
 ; The Spectranet listen() implementation currently does not take a
 ; backlog parameter, but it must be provided for compatibility.
 
-XLIB listen_callee
-XDEF ASMDISP_LISTEN_CALLEE
+PUBLIC listen_callee
+PUBLIC ASMDISP_LISTEN_CALLEE
 	include "spectranet.asm"
 .listen_callee
 	pop hl		; return addr

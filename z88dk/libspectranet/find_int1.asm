@@ -1,8 +1,8 @@
 ; int find_int1();
 ; Gets an 8 bit int
 ; note: call only when Spectranet memory is paged in.
-XLIB find_int1
-LIB libspectranet
+PUBLIC find_int1
+EXTERN libspectranet
 
 	include "zxromdefs.asm"
 .find_int1

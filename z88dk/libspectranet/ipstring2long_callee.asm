@@ -2,8 +2,8 @@
 ; CALLEE linkage for ipstring2long
 ; int ipstring2long_callee(char *str, in_addr_t *addr);
 
-XLIB ipstring2long_callee
-XDEF ASMDISP_IPSTRING2LONG_CALLEE
+PUBLIC ipstring2long_callee
+PUBLIC ASMDISP_IPSTRING2LONG_CALLEE
 
 	include "spectranet.asm"
 .ipstring2long_callee

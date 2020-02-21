@@ -1,7 +1,7 @@
 ; CALLER linkage for socket()
-XLIB socket
-LIB socket_callee
-XREF ASMDISP_SOCKET_CALLEE
+PUBLIC socket
+EXTERN socket_callee
+EXTERN ASMDISP_SOCKET_CALLEE
 
 ; int socket(int domain, int type, int protocol);
 .socket

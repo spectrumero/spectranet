@@ -1,6 +1,6 @@
 ; int __FASTCALL__ spectranet_detect(void);
-XLIB spectranet_detect
-LIB libspectranet
+PUBLIC spectranet_detect
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .spectranet_detect

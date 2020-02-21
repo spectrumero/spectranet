@@ -1,7 +1,7 @@
 ; process
 ; int __FASTCALL__ addbasicext(struct basic_cmd *cmd);
-XLIB addbasicext
-LIB libspectranet
+PUBLIC addbasicext
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .addbasicext

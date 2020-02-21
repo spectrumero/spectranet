@@ -1,7 +1,7 @@
 ; callee linkage for string_fetch
 ; unsigned int string_fetch(char *buf, int bufsz);
-XLIB string_fetch_callee
-XDEF ASMDISP_STRING_FETCH_CALLEE
+PUBLIC string_fetch_callee
+GLOBAL ASMDISP_STRING_FETCH_CALLEE
 
 	include "zxromdefs.asm"
 .string_fetch_callee

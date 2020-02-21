@@ -1,7 +1,7 @@
 ; CALLER linkage for accept()
-XLIB accept
-LIB accept_callee
-XREF ASMDISP_ACCEPT_CALLEE
+PUBLIC accept
+EXTERN accept_callee
+EXTERN ASMDISP_ACCEPT_CALLEE
 
 ; int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 .accept

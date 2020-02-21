@@ -3,8 +3,8 @@
 ; The flags field is not currently used by the Spectranet implementation
 ; of recv, but it must be provided for compatibility.
 
-XLIB recv_callee
-XDEF ASMDISP_RECV_CALLEE
+PUBLIC recv_callee
+PUBLIC ASMDISP_RECV_CALLEE
 	include "spectranet.asm"
 .recv_callee
 	pop hl		; return addr

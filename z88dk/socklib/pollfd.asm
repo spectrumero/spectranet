@@ -1,6 +1,6 @@
 ; process
 ; unsigned char __FASTCALL__ pollfd(int sockfd);
-XLIB poll_fd
+PUBLIC poll_fd
 
 	include "spectranet.asm"
 .poll_fd

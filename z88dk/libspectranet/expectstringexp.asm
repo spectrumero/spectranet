@@ -1,6 +1,6 @@
 ; int expectStringExp()
-XLIB expectStringExp
-LIB libspectranet
+PUBLIC expectStringExp
+EXTERN libspectranet
 
 	include "zxromdefs.asm"
 .expectStringExp

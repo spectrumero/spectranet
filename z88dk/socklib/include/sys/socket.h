@@ -20,6 +20,11 @@
 
 /* Structures */
 
+struct in_addr
+{
+	in_addr_t s_addr;		/* 32 bits */
+};
+
 /* As defined in http://tools.ietf.org/html/draft-ietf-sip-bsd-systems-00 */
 struct sockaddr_in	/* internet socket address structure */
 {
@@ -27,11 +32,6 @@ struct sockaddr_in	/* internet socket address structure */
 	unsigned int sin_port;		/* offset 2 */
 	struct in_addr sin_addr;	/* offset 4 */
 	char sin_zero[8];		/* offset 8 */
-};
-
-struct in_addr
-{
-	in_addr_t s_addr;		/* 32 bits */
 };
 
 #define sockaddr sockaddr_in

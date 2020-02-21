@@ -25,6 +25,7 @@
 
 #include <malloc.h>
 #include <http.h>
+#include <string.h>
 
 int allocateUriElements(URI *uri, 
 		int proto, char *host, char *loc, char *user, char *pw)

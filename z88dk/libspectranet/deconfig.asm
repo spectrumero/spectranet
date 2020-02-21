@@ -1,8 +1,8 @@
 ; process
 ; void deconfig();
 
-XLIB deconfig
-LIB libspectranet
+PUBLIC deconfig
+EXTERN libspectranet
 	include "spectranet.asm"
 .deconfig
 	HLCALL DECONFIG_ROM

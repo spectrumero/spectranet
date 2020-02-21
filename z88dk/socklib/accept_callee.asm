@@ -1,8 +1,8 @@
 ; process
 ; int accept_callee(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
-XLIB accept_callee
-XDEF ASMDISP_ACCEPT_CALLEE
+PUBLIC accept_callee
+PUBLIC ASMDISP_ACCEPT_CALLEE
 	include "spectranet.asm"
 .accept_callee
 	pop hl		; return addr

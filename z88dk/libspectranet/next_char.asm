@@ -1,6 +1,6 @@
 ; next_char() - returns the next character on the BASIC line
-XLIB next_char
-LIB libspectranet
+PUBLIC next_char
+EXTERN libspectranet
 
 	include "zxromdefs.asm"
 .next_char

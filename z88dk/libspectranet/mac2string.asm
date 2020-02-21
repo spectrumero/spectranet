@@ -1,9 +1,9 @@
 ; CALLER linkage for mac2string
 ; void mac2string(char *mac, char *str);
 
-XLIB mac2string
-LIB mac2string_callee
-XREF ASMDISP_MAC2STRING_CALLEE
+PUBLIC mac2string
+EXTERN mac2string_callee
+EXTERN ASMDISP_MAC2STRING_CALLEE
 
 .mac2string
 	pop bc		; ret addr

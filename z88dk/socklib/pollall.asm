@@ -1,6 +1,6 @@
 ; process
 ; unsigned char __FASTCALL__ pollall(struct pollfd *p);
-XLIB pollall
+PUBLIC pollall
 
 	include "spectranet.asm"
 .pollall

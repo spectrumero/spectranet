@@ -1,7 +1,7 @@
 ; process
 ; int __FASTCALL__ sethwaddr(char *hwaddr);
-XLIB sethwaddr
-LIB libspectranet
+PUBLIC sethwaddr
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .sethwaddr

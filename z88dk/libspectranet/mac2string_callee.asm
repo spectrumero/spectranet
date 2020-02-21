@@ -2,8 +2,8 @@
 ; CALLEE linkage for mac2string
 ; void mac2string_callee(char *mac, char *str);
 
-XLIB mac2string_callee
-XDEF ASMDISP_MAC2IPSTRING_CALLEE
+PUBLIC mac2string_callee
+GLOBAL ASMDISP_MAC2IPSTRING_CALLEE
 	include "spectranet.asm"
 .mac2string_callee
 	pop bc		; return addr

@@ -5,8 +5,8 @@
 ; only uses the port address (and sockaddr_in is the only type of struct
 ; sockaddr that's actually defined).
 
-XLIB bind_callee
-XDEF ASMDISP_BIND_CALLEE
+PUBLIC bind_callee
+PUBLIC ASMDISP_BIND_CALLEE
 	include "spectranet.asm"
 .bind_callee
 	pop hl		; return addr

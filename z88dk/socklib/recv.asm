@@ -1,7 +1,7 @@
 ; CALLER linkage for recv()
-XLIB recv
-LIB recv_callee
-XREF ASMDISP_RECV_CALLEE
+PUBLIC recv
+EXTERN recv_callee
+EXTERN ASMDISP_RECV_CALLEE
 
 ; int recv(int sockfd, void *buf, int len, int flags);
 .recv

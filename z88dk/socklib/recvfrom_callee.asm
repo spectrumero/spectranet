@@ -1,8 +1,8 @@
 ; process
 ; int recvfrom_callee(int sockfd, void *buf, size_t len, int flags, 
 ;                     struct sockaddr *from, socklen_t *fromlen);
-XLIB recvfrom_callee
-XDEF ASMDISP_RECVFROM_CALLEE
+PUBLIC recvfrom_callee
+PUBLIC ASMDISP_RECVFROM_CALLEE
 	include "spectranet.asm"
 .recvfrom_callee
 	ld ix, 2

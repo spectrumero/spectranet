@@ -1,7 +1,7 @@
 ; CALLER linkage for send()
-XLIB send
-LIB send_callee
-XREF ASMDISP_SEND_CALLEE
+PUBLIC send
+EXTERN send_callee
+EXTERN ASMDISP_SEND_CALLEE
 
 ; int send(int sockfd, const void *buf, int len, int flags);
 .send

@@ -1,7 +1,7 @@
 ; CALLER linkage for listen()
-XLIB listen
-LIB listen_callee
-XREF ASMDISP_LISTEN_CALLEE
+PUBLIC listen
+EXTERN listen_callee
+EXTERN ASMDISP_LISTEN_CALLEE
 
 ; int listen(int sockfd, int backlog);
 .listen

@@ -1,7 +1,7 @@
 ; process
 ; struct hostent * __FASTCALL__ gethostbyname(const char *name);
-XLIB gethostbyname
-XDEF _h_errno
+PUBLIC gethostbyname
+PUBLIC _h_errno
 
 	include "spectranet.asm"
 .gethostbyname
