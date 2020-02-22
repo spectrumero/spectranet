@@ -70,9 +70,9 @@ $(DATEFILE):
 
 ver:	$(VERFILE) $(VERWORDFILE)
 $(VERFILE):
-	echo "bldstr: defb \"`whoami`@`hostname` R`svn info .|grep -m 1 Rev|cut -d " " -f 2`\",0x0a,0" > $(VERFILE)
+	echo "bldstr: defb \"`cat VERSION`\",0x0a,0" > $(VERFILE)
 $(VERWORDFILE):
-	echo "bldver equ `svn info .|grep -m 1 Rev|cut -d " " -f 2`" > $(VERWORDFILE)
+	echo "bldver equ `cat VERWORD`" > $(VERWORDFILE)
 
 p0syms: page0 $(P0SYMS)
 $(P0SYMS):
