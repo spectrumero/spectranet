@@ -1,6 +1,6 @@
 ; int expect2Num
-XLIB expect2Num
-LIB libspectranet
+PUBLIC expect2Num
+EXTERN libspectranet
 
 	include "zxromdefs.asm"
 .expect2Num

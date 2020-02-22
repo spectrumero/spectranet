@@ -1,1 +1,1 @@
-../socklib/spectranet.asm
+include "../socklib/spectranet.asm"

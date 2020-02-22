@@ -47,7 +47,7 @@ main()
 	printk("Connecting...\n");
 	remoteaddr.sin_port=htons(80);		/* port 80 - http */
 	remoteaddr.sin_addr.s_addr=he->h_addr;	/* ip address */
-	if(connect(sockfd, &remoteaddr, sizeof(sockaddr_in)) < 0)
+	if(connect(sockfd, &remoteaddr, sizeof(struct sockaddr_in)) < 0)
 	{
 		sockclose(sockfd);
 		printk("Connect failed!\n");

@@ -1,6 +1,6 @@
 ; void setpagea(unsigned char page);
-XLIB setpagea
-LIB libspectranet
+PUBLIC setpagea
+EXTERN libspectranet
 	
 	include "spectranet.asm"
 .setpagea

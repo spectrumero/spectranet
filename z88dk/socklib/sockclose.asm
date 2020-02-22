@@ -1,7 +1,7 @@
 ; process
 ; int __FASTCALL__ sockclose(int fd);
-XLIB sockclose
-LIB libsocket
+PUBLIC sockclose
+EXTERN libsocket
 
 	include "spectranet.asm"
 .sockclose

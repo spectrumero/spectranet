@@ -1,7 +1,7 @@
 ; CALLER linkage for bind()
-XLIB bind
-LIB bind_callee
-XREF ASMDISP_BIND_CALLEE
+PUBLIC bind
+EXTERN bind_callee
+EXTERN ASMDISP_BIND_CALLEE
 
 ; int bind(int sockfd, const struct sockaddr *my_addr, socklen_t addrlen);
 .bind

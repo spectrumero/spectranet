@@ -1,7 +1,7 @@
 ; process
 ; void __FASTCALL__ ifconfig_gw(in_addr_t *addr);
-XLIB ifconfig_gw
-LIB libspectranet
+PUBLIC ifconfig_gw
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .ifconfig_gw

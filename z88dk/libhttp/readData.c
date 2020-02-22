@@ -30,13 +30,13 @@
 #include <stdlib.h>
 #include <stdio.h> /* debug */
 
-static Headerdata *headerhead=NULL;
-static Headerdata *headertail=NULL;
-static char *headerbuf=NULL;
-static char chunked=0;
-static long dataleft=0;
-static int bufleft=0;
-static char *bufptr=NULL;
+Headerdata *headerhead=NULL;
+Headerdata *headertail=NULL;
+char *headerbuf=NULL;
+char chunked=0;
+long dataleft=0;
+int bufleft=0;
+char *bufptr=NULL;
 
 int readData(int sockfd, char *buf, int bufsz)
 {

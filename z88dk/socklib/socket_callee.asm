@@ -2,8 +2,8 @@
 ; int __CALLEE__ socket_callee(int domain, int type, int protocol);
 ; Open a socket.
 ; The Spectranet only supports domain AF_INET and IP.
-XLIB socket_callee
-XDEF ASMDISP_SOCKET_CALLEE
+PUBLIC socket_callee
+PUBLIC ASMDISP_SOCKET_CALLEE
 
 	include "spectranet.asm"
 

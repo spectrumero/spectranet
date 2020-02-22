@@ -1,7 +1,7 @@
 ; CALLER linkage for long2ipstring()
-XLIB long2ipstring
-LIB long2ipstring_callee
-XREF ASMDISP_LONG2IPSTRING_CALLEE
+PUBLIC long2ipstring
+EXTERN long2ipstring_callee
+EXTERN ASMDISP_LONG2IPSTRING_CALLEE
 
 ; void long2ipstring(inet_addr_t *addr, char *str);
 .long2ipstring

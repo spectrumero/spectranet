@@ -1,7 +1,7 @@
 ; CALLER linkage for connect()
-XLIB connect
-LIB connect_callee
-XREF ASMDISP_CONNECT_CALLEE
+PUBLIC connect
+EXTERN connect_callee
+EXTERN ASMDISP_CONNECT_CALLEE
 
 ; int connect(int sockfd, const struct sockaddr *serv_addr, socklen_t len);
 .connect

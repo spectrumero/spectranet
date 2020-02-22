@@ -1,6 +1,6 @@
 ; Define PAGEOUT call address
-XLIB pageout
-LIB libspectranet
+PUBLIC pageout
+EXTERN libspectranet
 
 .pageout
 	jp 0x007C

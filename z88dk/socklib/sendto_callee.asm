@@ -1,8 +1,8 @@
 ; process
 ; int sendto_callee(int sockfd, const void *buf, int len, int flags,
 ;                   const struct sockaddr *to, socklen_t tolen);
-XLIB sendto_callee
-XDEF ASMDISP_SENDTO_CALLEE
+PUBLIC sendto_callee
+PUBLIC ASMDISP_SENDTO_CALLEE
 	include "spectranet.asm"
 
 .sendto_callee

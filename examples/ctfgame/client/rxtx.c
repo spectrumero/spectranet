@@ -118,9 +118,9 @@ int sendMsg(int txbytes) {
     return 0;
 }
 
-int sendControlMsg(uchar dirs) {
+int sendControlMsg(int dirs) {
     sendbuf[0]=CONTROL;
-    sendbuf[1]=dirs;
+    sendbuf[1]=(uchar)dirs;
     return sendMsg(2);
 }
 
@@ -137,7 +137,7 @@ int messageloop() {
     int addrsz;
     uchar numMsgs;
     uchar msgType;
-    char *msgptr;
+    uchar *msgptr;
     spriteMsgs=FALSE;
 
     // tell the server that the message loop is running

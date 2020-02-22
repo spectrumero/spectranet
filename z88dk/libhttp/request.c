@@ -30,10 +30,10 @@
 #include <string.h>
 #include <malloc.h>
 
-static Formdata *formhead=NULL; 
-static Formdata *formtail=NULL; 
+Formdata *formhead=NULL; 
+Formdata *formtail=NULL; 
 
-static char headersread=0;
+char headersread=0;
 
 #define HDRBUFSZ	512
 
@@ -59,7 +59,7 @@ int request(int type, URI *uri)
 	/* TODO: implement arbitrary ports for http */
 	remoteaddr.sin_port=htons(80);
 	remoteaddr.sin_addr.s_addr=he->h_addr;
-	if(connect(sockfd, &remoteaddr, sizeof(sockaddr_in)) < 0)
+	if(connect(sockfd, &remoteaddr, sizeof(struct sockaddr_in)) < 0)
 	{
 		sockclose(sockfd);
 		return EHTTP_CONNFAIL;

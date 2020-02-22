@@ -1,7 +1,7 @@
 ; int find_int2();
 ; note: call only when Spectranet memory is paged in.
-XLIB find_int2
-LIB libspectranet
+PUBLIC find_int2
+EXTERN libspectranet
 
 	include "zxromdefs.asm"
 .find_int2

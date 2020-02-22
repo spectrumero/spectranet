@@ -1,7 +1,7 @@
 ; process
 ; void __FASTCALL__ gethwaddr(char *hwaddr); /* hwaddr points to 6 byte buf */
-XLIB gethwaddr
-LIB libspectranet
+PUBLIC gethwaddr
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .gethwaddr

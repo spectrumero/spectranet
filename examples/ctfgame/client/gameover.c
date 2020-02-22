@@ -70,7 +70,7 @@ void __FASTCALL__ gameOver(GameEnd *msg) {
 #endif
 
 	// wait for ENTER
-	while(in_Inkey() != '\n');
+	while(in_Inkey() != 13);
 
 	fadeOut();
 }

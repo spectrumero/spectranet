@@ -3,12 +3,12 @@ CC = zcc
 LIBLINKER = z80asm
 ASSEMBLER = z80asm
 RM = rm -f
-LIBLDFLAGS = -d -ns -nm -Mo
-ASMFLAGS = -d -ns -nm -Mo
+LIBLDFLAGS = -d
+ASMFLAGS = -d
 CP = cp
 
 .PHONY:	clean
 
 clean:
-	$(RM) *.o *.lib *.def *_p.asm *_np.asm
+	$(RM) *.o *.lib *.def *_p.asm *_np.asm *.sym
 

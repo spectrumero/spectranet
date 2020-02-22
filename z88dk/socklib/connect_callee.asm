@@ -4,8 +4,8 @@
 ; This is simplified compared to the full BSD implementation; the Spectranet
 ; only is aware of inet sockets (so this only handles struct sockaddr_in)
 
-XLIB connect_callee
-XDEF ASMDISP_CONNECT_CALLEE
+PUBLIC connect_callee
+PUBLIC ASMDISP_CONNECT_CALLEE
 	include "spectranet.asm"
 .connect_callee
 	pop hl		; return addr

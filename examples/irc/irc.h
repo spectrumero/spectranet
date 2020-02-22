@@ -102,6 +102,7 @@ extern char pass[PASSSZ];
 #ifndef __INPUTLINE__C
 extern char kbuf[KBUFSZ];
 extern int bufoffset;
+extern uchar allow_blank_string;
 #endif
 
 #endif

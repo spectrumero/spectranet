@@ -3,8 +3,8 @@
 ; The flags field is not currently used by the Spectranet implementation
 ; of send, but it must be provided for compatibility.
 
-XLIB send_callee
-XDEF ASMDISP_SEND_CALLEE
+PUBLIC send_callee
+PUBLIC ASMDISP_SEND_CALLEE
 	include "spectranet.asm"
 .send_callee
 	pop hl		; return addr

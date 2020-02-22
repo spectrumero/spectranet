@@ -1,6 +1,6 @@
 ; void statement_end()
-XLIB statement_end
-LIB libspectranet
+PUBLIC statement_end
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .statement_end

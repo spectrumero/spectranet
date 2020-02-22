@@ -1,8 +1,8 @@
 ; caller linkage for string_fetch
 ; unsigned int string_fetch(char *buf, int bufsz);
-XLIB string_fetch
-LIB libspectranet
-XREF ASMDISP_STRING_FETCH_CALLEE
+PUBLIC string_fetch
+EXTERN string_fetch_callee
+EXTERN ASMDISP_STRING_FETCH_CALLEE
 	
 .string_fetch
 	pop de		; return address

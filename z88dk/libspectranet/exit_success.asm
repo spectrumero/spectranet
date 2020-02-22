@@ -1,9 +1,9 @@
 ; void exit_success()
-XLIB exit_success
-LIB libspectranet
+PUBLIC exit_success
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .exit_success
 	pop hl		; unwind return address from the stack
-	jp EXIT_SUCCESS
+	jp EXIT_SUCCESS_ROM
 

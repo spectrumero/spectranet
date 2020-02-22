@@ -1,7 +1,7 @@
 ; process
 ; void __FASTCALL__ ifconfig_netmask(in_addr_t *addr);
-XLIB ifconfig_netmask
-LIB libspectranet
+PUBLIC ifconfig_netmask
+EXTERN libspectranet
 
 	include "spectranet.asm"
 .ifconfig_netmask
