@@ -6,7 +6,7 @@ CFSERVOBJS = configserv.o
 CFSERVOUT = configserv
 RM = rm
 
-ifeq ($(OS),win32)
+ifeq ($(OS),Windows_NT)
 B2TOUT = bin2tape.exe
 CFSERVOUT = configserv.exe
 LIBS = -lwsock32

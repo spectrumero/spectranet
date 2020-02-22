@@ -1,7 +1,7 @@
 # devtools makefile
 CC = gcc
 ETHUPOBJS = ethup.o
-ifeq ($(OS),win32)
+ifeq ($(OS),Windows_NT)
 ETHUPLIBS = -lwsock32
 CFLAGS = -DWIN32
 else

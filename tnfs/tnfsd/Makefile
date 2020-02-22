@@ -10,7 +10,7 @@ ifeq ($(OS),LINUX)
     LIBS =
     EXEC = tnfsd
 endif
-ifeq ($(OS),WINDOWS)
+ifeq ($(OS),Windows_NT)
     FLAGS = -Wall -DWIN32 -DNEED_ERRTABLE -DNEED_BSDCOMPAT
     EXOBJS = strlcpy.o strlcat.o
     LIBS = -lwsock32

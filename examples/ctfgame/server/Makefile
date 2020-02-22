@@ -5,7 +5,7 @@ ifeq ($(OS), LINUX)
 	LIBS = -lm -lncurses
 	CTFSERVER = ctfserver
 endif
-ifeq ($(OS), WIN32)
+ifeq ($(OS), Windows_NT)
 	FLAGS = -I../common -g -DWIN32 -DNEED_BSDCOMPAT
 	EXOBJS = strlcpy.o
 	LIBS = -lwsock32

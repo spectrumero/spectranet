@@ -26,10 +26,10 @@
  * */
 
 #include <sys/types.h>
-#include <sys/select.h>
 
 #ifdef UNIX
 #include <arpa/inet.h>
+#include <sys/select.h>
 #endif
 
 #ifdef WIN32
