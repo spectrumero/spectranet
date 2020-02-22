@@ -75,7 +75,7 @@ extern int sendMsg(int txbytes);
 extern int messageloop();
 
 extern int readyToMatchmake();
-extern int sendJoinTeam();
+extern int sendJoinTeam(int team);
 extern int sendPlayerRdy();
 extern int sendMatchmakeStop();
 

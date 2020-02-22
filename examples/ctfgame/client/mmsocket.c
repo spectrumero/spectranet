@@ -114,10 +114,10 @@ int readyToMatchmake() {
 }
 
 // Request to join a team
-int sendJoinTeam(uchar team) {
+int sendJoinTeam(int team) {
 	zx_border(INK_RED);
 	sendbuf[0]=TEAMREQUEST;
-	sendbuf[1]=team;
+	sendbuf[1]=(uchar)team;
 	zx_border(INK_BLACK);
 	return sendMsg(2);
 }
@@ -136,7 +136,7 @@ int sendMatchmakeStop() {
 
 int messageloop() {
   struct sockaddr_in rxaddr;
-  char *msgptr;
+  uchar *msgptr;
   int addrsz;
   int rc;
   int p;
@@ -182,7 +182,7 @@ int messageloop() {
           // Save the integer 'sockfd' so the next part can get at
           // it.
           wpoke(27000, sockfd);
-          memcpy(27002, remoteaddr, sizeof(struct sockaddr_in));
+          memcpy(27002, &remoteaddr, sizeof(struct sockaddr_in));
           return 0;					
         default:
           // Unrecognised message, throw away the rest of the block.

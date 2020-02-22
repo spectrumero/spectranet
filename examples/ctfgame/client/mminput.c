@@ -190,7 +190,7 @@ void handleKey(uchar key)
 				putchar('_');
 			}
 			break;
-		case '\n':	/* enter */
+		case 13:	/* enter */
 			if(debounce_enter)
 			{
 				inputbuf[inputidx]=0;	/* null terminate */
@@ -248,7 +248,7 @@ char *checkKey()
 			readoffset=0;
 
 		handleKey(k);
-		if(k == '\n' && input_ready)
+		if(k == 13 && input_ready)
 		{
 			return inputbuf;
 		}

@@ -45,6 +45,10 @@ extern uchar flashclk;
 void *u_malloc(uint size);
 void u_free(void *addr);
 
+// Viewport
+extern void findViewport(MapXY *xy);
+extern void switchViewport(MapXY *xy);
+
 // Sprite display
 extern void initSpriteLib();
 extern void putSprite(SpriteMsg *msg);
@@ -66,8 +70,9 @@ extern int startGame(MapXY *xy);
 extern int disconnect(char sendbye);
 extern int sendSyncMsg(int txbytes);
 extern int sendMsg(int txbytes);
-extern int sendControlMsg(uchar dirs);
+extern int sendControlMsg(int dirs);
 extern int messageloop();
+extern int sendViewportMsg(Viewport *vp);
 
 // Status displays.
 extern void setupStatusAreas(uchar teamcolours);
@@ -77,6 +82,7 @@ extern void __FASTCALL__ setMsgArea(MessageMsg *msg);
 extern void __FASTCALL__ putmsgchar(char ch);
 extern void clearStatusLine();
 extern void __FASTCALL__ putEntireMessage(char *msg);
+extern void __FASTCALL__ flagAlert(uchar msg);
 //extern void __FASTCALL__ displayPlayerScore(char *msg);
 extern void __FASTCALL__ displayLives(char *msg);
 extern void __FASTCALL__ displayBlueScore(char *msg);
@@ -95,6 +101,7 @@ extern void __FASTCALL__ setBlueScore(char *score);
 extern void __FASTCALL__ setRedScore(char *score);
 extern void victory();
 extern void defeat();
+extern void scoredraw();
 extern void outOfLives();
 extern void fadeOut();
 

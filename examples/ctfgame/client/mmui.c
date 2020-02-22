@@ -71,7 +71,7 @@ void displayMatchmake(MatchmakeMsg *mmsg) {
 
 	setpos(vpos, hpos);
 	if(mmsg->flags & MM_READY)
-		printk("\x121*\x120");
+		printk("\x12""1*\x12""0");
 
 	printk("%s", mmsg->playername);
 }
@@ -266,21 +266,21 @@ void drawMatchmakingScreen()
 #endif
 	setpos(11,1);
 #ifdef LANG_ES
-	printk("\x111EQUIPO AZUL");
+	printk("\x11""1EQUIPO AZUL");
 #else
-	printk("\x111BLUE TEAM");
+	printk("\x11""1BLUE TEAM");
 #endif
 	setpos(11,20);
 #ifdef LANG_ES
-	printk("\x112EQUIPO ROJO");
+	printk("\x11""2EQUIPO ROJO");
 #else
-	printk("\x112RED TEAM");
+	printk("\x11""2RED TEAM");
 #endif
 	setpos(17,1);
 #ifdef LANG_ES
-	printk("\x110No pertenecen a un equipo:");
+	printk("\x11""0No pertenecen a un equipo:");
 #else
-	printk("\x110Not on a team yet:");
+	printk("\x11""0Not on a team yet:");
 #endif
 }
 
