@@ -54,6 +54,8 @@
 #define TNFS_OPENDIR	0x10
 #define TNFS_READDIR	0x11
 #define TNFS_CLOSEDIR	0x12
+#define TNFS_SEEKDIR    0x13
+#define TNFS_TELLDIR    0x14
 
 #define TNFS_OPENFILE	0x20
 #define	TNFS_READBLOCK	0x21

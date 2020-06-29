@@ -296,3 +296,11 @@ void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 		}
 	}
 }
+
+void tnfs_seekdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
+{
+}
+
+void tnfs_telldir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
+{
+}
