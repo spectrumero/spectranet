@@ -71,7 +71,7 @@
 #define CLASS_SESSION	0x00
 #define CLASS_DIRECTORY	0x10
 #define CLASS_FILE	0x20
-#define NUM_DIRCMDS	5
+#define NUM_DIRCMDS	7
 #define NUM_FILECMDS	10
 
 typedef struct _session

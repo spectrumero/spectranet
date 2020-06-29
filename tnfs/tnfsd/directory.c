@@ -38,6 +38,7 @@
 #include "datagram.h"
 #include "errortable.h"
 #include "bsdcompat.h"
+#include "endian.h"
 
 char root[MAX_ROOT];	/* root for all operations */
 char dirbuf[MAX_FILEPATH];
@@ -299,12 +300,30 @@ void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 
 void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
+        int32_t pos;
 
+	if(datasz != 1 || 
+	  *databuf > MAX_DHND_PER_CONN || 
+	  s->dhnd[*databuf] == NULL)
+	{
+		hdr->status=TNFS_EBADF;
+		tnfs_send(s, hdr, NULL, 0);
+		return;
+	}
+
+	// Seekdir's API is brain damaged, it has no way to return an error.
+	// perhaps a subsequent call to telldir might be prudent?
+	
+	pos=(int32_t)tnfs32uint(databuf+2);
+        seekdir(s->dhnd[*databuf],pos); // Returns no value.
+
+	hdr->status=TNFS_SUCCESS;
+	tnfs_send(s, hdr, NULL, 0);	
 }
 
 void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-        long pos;
+        int32_t pos;
 	
 	if(datasz != 1 || 
 	  *databuf > MAX_DHND_PER_CONN || 
@@ -317,5 +336,5 @@ void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 	pos=telldir(s->dhnd[*databuf]);
 
-	tnfs_send(s, hdr, (unsigned char *)pos, sizeof(pos));
+	tnfs_send(s, hdr, (unsigned char *)&pos, sizeof(pos));
 }
