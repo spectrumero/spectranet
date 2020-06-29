@@ -297,10 +297,25 @@ void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	}
 }
 
-void tnfs_seekdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
+void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
+
 }
 
-void tnfs_telldir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
+void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
+        long pos;
+	
+	if(datasz != 1 || 
+	  *databuf > MAX_DHND_PER_CONN || 
+	  s->dhnd[*databuf] == NULL)
+	{
+		hdr->status=TNFS_EBADF;
+		tnfs_send(s, hdr, NULL, 0);
+		return;
+	}
+
+	pos=telldir(s->dhnd[*databuf]);
+
+	tnfs_send(s, hdr, (unsigned char *)pos, sizeof(pos));
 }
