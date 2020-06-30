@@ -198,7 +198,7 @@ void tnfs_lseek(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
 	int32_t offset;
 	int whence;
-	int result;
+	int32_t result;
 
 	int fd=validate_fd(hdr, s, buf, bufsz, 6);
 	if(!fd) return;
@@ -223,10 +223,10 @@ void tnfs_lseek(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	else
 	{
 #ifdef DEBUG
-		fprintf(stderr,"lseek: New location=%d (%x)\n", result, result);
+		fprintf(stderr,"lseek: New location=%ld (%lx)\n", result, result);
 #endif
 		hdr->status=TNFS_SUCCESS;
-		tnfs_send(s, hdr, NULL, 0);
+		tnfs_send(s, hdr, (unsigned char *)&result, sizeof(result));
 	}
 }
 
