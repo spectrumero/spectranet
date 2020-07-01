@@ -102,8 +102,8 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	}
 
 	/* find out how much to allocate for the mount point */
-	cliroot=buf+2;
-	mplen=strlen((char *)cliroot);
+	cliroot=((char *)buf)+2;
+	mplen=strlen(cliroot);
 	if(mplen < 1)
 	{
 		mplen=1;

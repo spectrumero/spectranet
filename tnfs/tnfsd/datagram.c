@@ -28,6 +28,7 @@ TNFS daemon datagram handler
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #ifdef UNIX
 #include <sys/socket.h>
@@ -155,7 +156,7 @@ void tnfs_mainloop()
 void tcp_accept(int *socklist) {
 	int acc_fd, i;
 	struct sockaddr_in cli_addr;
-	int cli_len=sizeof(cli_addr);
+	socklen_t cli_len=sizeof(cli_addr);
 	int *fdptr;
 
 	acc_fd=accept(tcplistenfd, (struct sockaddr *) &cli_addr, &cli_len);

@@ -42,7 +42,7 @@
 #endif
 
 #ifndef socklen_t
-#define socklen_t int
+#define socklen_t uint32_t
 #endif
 
 #include "config.h"
