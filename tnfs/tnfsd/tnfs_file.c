@@ -223,7 +223,7 @@ void tnfs_lseek(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 	else
 	{
 #ifdef DEBUG
-		fprintf(stderr,"lseek: New location=%ld (%lx)\n", result, result);
+		fprintf(stderr,"lseek: New location=%d (%x)\n", result, result);
 #endif
 		hdr->status=TNFS_SUCCESS;
 		tnfs_send(s, hdr, (unsigned char *)&result, sizeof(result));
