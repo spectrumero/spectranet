@@ -42,6 +42,8 @@ void get_root(Session *s, char *buf, int bufsz);
 void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
+void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
+void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 
 /* create and remove directories */
 void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
