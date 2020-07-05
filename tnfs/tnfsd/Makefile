@@ -31,8 +31,8 @@ CFLAGS=$(FLAGS) $(EXFLAGS)
 OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o chroot.o $(EXOBJS)
 
 all:	$(OBJS)
-	$(CC) -o $(EXEC) $(OBJS) $(LIBS)
+	$(CC) -o bin/$(EXEC) $(OBJS) $(LIBS)
 
 clean:
-	$(RM) -f $(OBJS) $(EXEC)
+	$(RM) -f $(OBJS) bin/$(EXEC)
 

@@ -40,17 +40,17 @@
 #include "bsdcompat.h"
 #include "endian.h"
 
-char root[MAX_ROOT];	/* root for all operations */
+char root[MAX_ROOT]; /* root for all operations */
 char dirbuf[MAX_FILEPATH];
 
 int tnfs_setroot(char *rootdir)
 {
-	if(strlen(rootdir) > MAX_ROOT)
+	if (strlen(rootdir) > MAX_ROOT)
 		return -1;
 
 	strlcpy(root, rootdir, MAX_ROOT);
 	return 0;
-}	
+}
 
 /* validates a path points to an actual directory */
 int validate_dir(Session *s, const char *path)
@@ -60,7 +60,7 @@ int validate_dir(Session *s, const char *path)
 	get_root(s, fullpath, MAX_TNFSPATH);
 
 	/* relative paths are always illegal in tnfs messages */
-	if(strstr(fullpath, "../") != NULL)
+	if (strstr(fullpath, "../") != NULL)
 		return -1;
 
 	normalize_path(fullpath, fullpath, MAX_TNFSPATH);
@@ -69,9 +69,9 @@ int validate_dir(Session *s, const char *path)
 #endif
 
 	/* check we have an actual directory */
-	if(stat(fullpath, &dirstat) == 0)
+	if (stat(fullpath, &dirstat) == 0)
 	{
-		if(dirstat.st_mode & S_IFDIR)
+		if (dirstat.st_mode & S_IFDIR)
 		{
 #ifdef DEBUG
 			fprintf(stderr, "validate_dir: Directory OK\n");
@@ -87,7 +87,7 @@ int validate_dir(Session *s, const char *path)
 /* get the root directory for the given session */
 void get_root(Session *s, char *buf, int bufsz)
 {
-	if(s->root == NULL)
+	if (s->root == NULL)
 	{
 		snprintf(buf, bufsz, "%s/", root);
 	}
@@ -105,41 +105,41 @@ void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 {
 	/* normalize the directory delimiters. Windows of course
 	 * has problems with multiple delimiters... */
-	int count=0;
-	int slash=0;
+	int count = 0;
+	int slash = 0;
 #ifdef WIN32
-	char *nbstart=newbuf;
+	char *nbstart = newbuf;
 #endif
 
-	while(*oldbuf && count < bufsz-1)
+	while (*oldbuf && count < bufsz - 1)
 	{
 		/* ...convert backslashes, too */
-		if(*oldbuf != '/')
+		if (*oldbuf != '/')
 		{
-			slash=0;
+			slash = 0;
 			*newbuf++ = *oldbuf++;
 		}
-		else if(!slash && (*oldbuf == '/' || *oldbuf == '\\'))
+		else if (!slash && (*oldbuf == '/' || *oldbuf == '\\'))
 		{
 			*newbuf++ = '/';
 			oldbuf++;
-			slash=1;
+			slash = 1;
 		}
-		else if(slash)
+		else if (slash)
 		{
 			oldbuf++;
 		}
 	}
 
 	/* guarantee null termination */
-	*newbuf=0;
+	*newbuf = 0;
 
 	/* remove a standalone trailing slash, it can cause problems
 	 * with Windows, except for cases of "C:/" where it is
 	 * mandatory */
 #ifdef WIN32
-	if(*(newbuf-1) == '/' && strlen(nbstart) > 3) 
-		*(newbuf-1)=0;
+	if (*(newbuf - 1) == '/' && strlen(nbstart) > 3)
+		*(newbuf - 1) = 0;
 #endif
 }
 
@@ -151,13 +151,13 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	unsigned char reply[2];
 	int i;
 
-	if(*(databuf+datasz-1) != 0)
+	if (*(databuf + datasz - 1) != 0)
 	{
 #ifdef DEBUG
-		fprintf(stderr,"Invalid dirname: no NULL\n");
+		fprintf(stderr, "Invalid dirname: no NULL\n");
 #endif
 		/* no null terminator */
-		hdr->status=TNFS_EINVAL;
+		hdr->status = TNFS_EINVAL;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
@@ -167,35 +167,35 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 #endif
 
 	/* find the first available slot in the session */
-	for(i=0; i<MAX_DHND_PER_CONN; i++)
+	for (i = 0; i < MAX_DHND_PER_CONN; i++)
 	{
-		if(s->dhnd[i]==NULL)
+		if (s->dhnd[i] == NULL)
 		{
-			snprintf(path, MAX_TNFSPATH, "%s/%s/%s", 
-					root, s->root, databuf);
-			normalize_path(path, path, MAX_TNFSPATH);
-			if((dptr=opendir(path)) != NULL)
+			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
+					 root, s->root, databuf);
+			normalize_path(s->dpaths[i], path, MAX_TNFSPATH);
+			if ((dptr = opendir(s->dpaths[i])) != NULL)
 			{
-				s->dhnd[i]=dptr;
+				s->dhnd[i] = dptr;
 
 				/* send OK response */
-				hdr->status=TNFS_SUCCESS;
-				reply[0]=(unsigned char)i;
+				hdr->status = TNFS_SUCCESS;
+				reply[0] = (unsigned char)i;
 				tnfs_send(s, hdr, reply, 1);
 			}
 			else
 			{
-				hdr->status=tnfs_error(errno);
+				hdr->status = tnfs_error(errno);
 				tnfs_send(s, hdr, NULL, 0);
 			}
-			
+
 			/* done what is needed, return */
 			return;
 		}
 	}
 
 	/* no free handles left */
-	hdr->status=TNFS_EMFILE;
+	hdr->status = TNFS_EMFILE;
 	tnfs_send(s, hdr, NULL, 0);
 }
 
@@ -205,25 +205,25 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	struct dirent *entry;
 	char reply[MAX_FILENAME_LEN];
 
-	if(datasz != 1 || 
-	  *databuf > MAX_DHND_PER_CONN || 
-	  s->dhnd[*databuf] == NULL)
+	if (datasz != 1 ||
+		*databuf > MAX_DHND_PER_CONN ||
+		s->dhnd[*databuf] == NULL)
 	{
-		hdr->status=TNFS_EBADF;
+		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	entry=readdir(s->dhnd[*databuf]);
-	if(entry)
+	entry = readdir(s->dhnd[*databuf]);
+	if (entry)
 	{
 		strlcpy(reply, entry->d_name, MAX_FILENAME_LEN);
-		hdr->status=TNFS_SUCCESS;
-		tnfs_send(s, hdr, (unsigned char *)reply, strlen(reply)+1);
+		hdr->status = TNFS_SUCCESS;
+		tnfs_send(s, hdr, (unsigned char *)reply, strlen(reply) + 1);
 	}
 	else
 	{
-		hdr->status=TNFS_EOF;
+		hdr->status = TNFS_EOF;
 		tnfs_send(s, hdr, NULL, 0);
 	}
 }
@@ -231,44 +231,45 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 /* Close a directory */
 void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-        if(datasz != 1 || 
-          *databuf > MAX_DHND_PER_CONN || 
-          s->dhnd[*databuf] == NULL)         
-        {                                    
-                hdr->status=TNFS_EBADF;           
-                tnfs_send(s, hdr, NULL, 0);  
+	if (datasz != 1 ||
+		*databuf > MAX_DHND_PER_CONN ||
+		s->dhnd[*databuf] == NULL)
+	{
+		hdr->status = TNFS_EBADF;
+		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
 	closedir(s->dhnd[*databuf]);
-	s->dhnd[*databuf]=0;
-	hdr->status=TNFS_SUCCESS;
+	s->dhnd[*databuf] = 0;
+	s->dpaths[*databuf][0] = '\0';
+	hdr->status = TNFS_SUCCESS;
 	tnfs_send(s, hdr, NULL, 0);
 }
 
 /* Make a directory */
 void tnfs_mkdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
-        if(*(buf+bufsz-1) != 0 ||
-	           tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
-        {
-		hdr->status=TNFS_EINVAL;
-	        tnfs_send(s, hdr, NULL, 0);
-        }
-        else
+	if (*(buf + bufsz - 1) != 0 ||
+		tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
+	{
+		hdr->status = TNFS_EINVAL;
+		tnfs_send(s, hdr, NULL, 0);
+	}
+	else
 	{
 #ifdef WIN32
-		if(mkdir(dirbuf) == 0)
+		if (mkdir(dirbuf) == 0)
 #else
-		if(mkdir(dirbuf, 0755) == 0)
+		if (mkdir(dirbuf, 0755) == 0)
 #endif
 		{
-			hdr->status=TNFS_SUCCESS;
+			hdr->status = TNFS_SUCCESS;
 			tnfs_send(s, hdr, NULL, 0);
 		}
 		else
 		{
-			hdr->status=tnfs_error(errno);
+			hdr->status = tnfs_error(errno);
 			tnfs_send(s, hdr, NULL, 0);
 		}
 	}
@@ -277,22 +278,22 @@ void tnfs_mkdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 /* Remove a directory */
 void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 {
-        if(*(buf+bufsz-1) != 0 ||
-	           tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
-        {
-		hdr->status=TNFS_EINVAL;
-	        tnfs_send(s, hdr, NULL, 0);
-        }
-        else
+	if (*(buf + bufsz - 1) != 0 ||
+		tnfs_valid_filename(s, dirbuf, (char *)buf, bufsz) < 0)
 	{
-		if(rmdir(dirbuf) == 0)
+		hdr->status = TNFS_EINVAL;
+		tnfs_send(s, hdr, NULL, 0);
+	}
+	else
+	{
+		if (rmdir(dirbuf) == 0)
 		{
-			hdr->status=TNFS_SUCCESS;
+			hdr->status = TNFS_SUCCESS;
 			tnfs_send(s, hdr, NULL, 0);
 		}
 		else
 		{
-			hdr->status=tnfs_error(errno);
+			hdr->status = tnfs_error(errno);
 			tnfs_send(s, hdr, NULL, 0);
 		}
 	}
@@ -300,41 +301,175 @@ void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 
 void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-        int32_t pos;
+	int32_t pos;
 
-	if(datasz != 1 || 
-	  *databuf > MAX_DHND_PER_CONN || 
-	  s->dhnd[*databuf] == NULL)
+	if (datasz != 1 ||
+		*databuf > MAX_DHND_PER_CONN ||
+		s->dhnd[*databuf] == NULL)
 	{
-		hdr->status=TNFS_EBADF;
+		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
 	// Seekdir's API is brain damaged, it has no way to return an error.
 	// perhaps a subsequent call to telldir might be prudent?
-	
-	pos=(int32_t)tnfs32uint(databuf+2);
-        seekdir(s->dhnd[*databuf],pos); // Returns no value.
 
-	hdr->status=TNFS_SUCCESS;
-	tnfs_send(s, hdr, NULL, 0);	
+	pos = (int32_t)tnfs32uint(databuf + 2);
+	seekdir(s->dhnd[*databuf], pos); // Returns no value.
+
+	hdr->status = TNFS_SUCCESS;
+	tnfs_send(s, hdr, NULL, 0);
 }
 
 void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-        int32_t pos;
-	
-	if(datasz != 1 || 
-	  *databuf > MAX_DHND_PER_CONN || 
-	  s->dhnd[*databuf] == NULL)
+	int32_t pos;
+
+	if (datasz != 1 ||
+		*databuf > MAX_DHND_PER_CONN ||
+		s->dhnd[*databuf] == NULL)
 	{
-		hdr->status=TNFS_EBADF;
+		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	pos=telldir(s->dhnd[*databuf]);
+	pos = telldir(s->dhnd[*databuf]);
 
 	tnfs_send(s, hdr, (unsigned char *)&pos, sizeof(pos));
+}
+
+/* Read a directory entry and provide extended results */
+void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
+{
+	struct dirent *entry;
+	/*
+	We're returning:
+	flags - 1 byte: Flags providing additional information about the file (see below)
+	size  - 4 bytes: Unsigned 32 bit little endian size of file in bytes
+	mtime - 4 bytes: Modification time in seconds since the epoch, little endian
+	ctime - 4 bytes: Creation time in seconds since the epoch, little endian
+	entry - X bytes: Zero-terminated string providing directory entry path
+*/
+	struct _readdirx_ent
+	{
+		uint8_t flags;
+		uint32_t size;
+		uint32_t mtime;
+		uint32_t ctime;
+		char entrypath[MAX_FILENAME_LEN];
+	} __attribute__((packed));
+
+	int replyheaderlen = sizeof(uint8_t) + (sizeof(uint32_t) * 3);
+
+	struct _readdirx_ent reply = {
+		.flags = 0,
+		.size = 0,
+		.mtime = 0,
+		.ctime = 0,
+		.entrypath = {'\0'}};
+
+	// databuf holds our directory handle: check it
+	if (datasz != 1 ||
+		*databuf > MAX_DHND_PER_CONN ||
+		s->dhnd[*databuf] == NULL)
+	{
+		hdr->status = TNFS_EBADF;
+		tnfs_send(s, hdr, NULL, 0);
+		return;
+	}
+
+	struct stat statinfo;
+	char statpath[MAX_TNFSPATH];
+	entry = readdir(s->dhnd[*databuf]);
+	if (entry)
+	{
+
+#ifdef WIN32
+#define PATH_SEP '\\'
+#else
+#define PATH_SEP '/'
+#endif
+		snprintf(statpath, sizeof(statpath), "%s%c%s", s->dpaths[*databuf], PATH_SEP, entry->d_name);
+		
+		// Try to get the additional details we want to include
+		if (stat(statpath, &statinfo) == 0)
+		{
+			uint32tnfs((unsigned char *)&reply.size, statinfo.st_size);
+			uint32tnfs((unsigned char *)&reply.mtime, statinfo.st_mtime);
+			uint32tnfs((unsigned char *)&reply.ctime, statinfo.st_ctime);
+
+			if (S_ISDIR(statinfo.st_mode))
+			{
+				reply.flags |= TNFS_DIRENTRY_DIR;
+			}
+		}
+
+		int pathlen = strlcpy(reply.entrypath, entry->d_name, MAX_FILENAME_LEN);
+		hdr->status = TNFS_SUCCESS;
+
+		tnfs_send(s, hdr, (unsigned char *)&reply, replyheaderlen + pathlen + 1);
+	}
+	else
+	{
+		hdr->status = TNFS_EOF;
+		tnfs_send(s, hdr, NULL, 0);
+	}
+}
+
+/* Open a directory with additional options */
+void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
+{
+	DIR *dptr;
+	char path[MAX_TNFSPATH];
+	unsigned char reply[2];
+	int i;
+
+	if (*(databuf + datasz - 1) != 0)
+	{
+#ifdef DEBUG
+		fprintf(stderr, "Invalid dirname: no NULL\n");
+#endif
+		/* no null terminator */
+		hdr->status = TNFS_EINVAL;
+		tnfs_send(s, hdr, NULL, 0);
+		return;
+	}
+
+#ifdef DEBUG
+	fprintf(stderr, "opendir: %s\n", databuf);
+#endif
+
+	/* find the first available slot in the session */
+	for (i = 0; i < MAX_DHND_PER_CONN; i++)
+	{
+		if (s->dhnd[i] == NULL)
+		{
+			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
+					 root, s->root, databuf);
+			normalize_path(path, path, MAX_TNFSPATH);
+			if ((dptr = opendir(path)) != NULL)
+			{
+				s->dhnd[i] = dptr;
+
+				/* send OK response */
+				hdr->status = TNFS_SUCCESS;
+				reply[0] = (unsigned char)i;
+				tnfs_send(s, hdr, reply, 1);
+			}
+			else
+			{
+				hdr->status = tnfs_error(errno);
+				tnfs_send(s, hdr, NULL, 0);
+			}
+
+			/* done what is needed, return */
+			return;
+		}
+	}
+
+	/* no free handles left */
+	hdr->status = TNFS_EMFILE;
+	tnfs_send(s, hdr, NULL, 0);
 }

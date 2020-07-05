@@ -35,6 +35,7 @@
 #endif
 #ifdef WIN32
 #include <windows.h>
+#define WIN32_CHAR_P (char *)
 #endif
 
 #ifndef in_addr_t
@@ -42,7 +43,7 @@
 #endif
 
 #ifndef socklen_t
-#define socklen_t uint32_t
+#define socklen_t int32_t
 #endif
 
 #include "config.h"
@@ -54,10 +55,14 @@
 #define TNFS_OPENDIR	0x10
 #define TNFS_READDIR	0x11
 #define TNFS_CLOSEDIR	0x12
-#define TNFS_SEEKDIR    0x13
-#define TNFS_TELLDIR    0x14
+#define TNFS_MKDIR      0x13
+#define TNFS_RMDIR      0x14
+#define TNFS_TELLDIR    0x15
+#define TNFS_SEEKDIR    0x16
+#define TNFS_OPENDIRX   0x17
+#define TNFS_READDIRX   0x18
 
-#define TNFS_OPENFILE	0x20
+#define TNFS_OPENFILE_OLD 0x20
 #define	TNFS_READBLOCK	0x21
 #define TNFS_WRITEBLOCK	0x22
 #define TNFS_CLOSEFILE	0x23
@@ -66,13 +71,17 @@
 #define TNFS_UNLINKFILE	0x26
 #define TNFS_CHMODFILE	0x27
 #define TNFS_RENAMEFILE	0x28
+#define TNFS_OPENFILE	0x29
 
 /* command classes etc. */
 #define CLASS_SESSION	0x00
 #define CLASS_DIRECTORY	0x10
 #define CLASS_FILE	0x20
-#define NUM_DIRCMDS	7
-#define NUM_FILECMDS	10
+
+#define NUM_DIRCMDS	9
+#define NUM_FILECMDS 10
+
+#define TNFS_DIRENTRY_DIR 0x01
 
 typedef struct _session
 {
@@ -81,6 +90,7 @@ typedef struct _session
 	uint8_t seqno;			/* last sequence number */
 	int fd[MAX_FD_PER_CONN];	/* file descriptors */
 	DIR *dhnd[MAX_DHND_PER_CONN];	/* directory handles */
+	char dpaths[MAX_DHND_PER_CONN][MAX_TNFSPATH]; /* directory path for each handle */
 	char *root;			/* requested root dir */
 	unsigned char lastmsg[MAXMSGSZ];/* last message sent */
 	int lastmsgsz;			/* last message's size inc. hdr */
