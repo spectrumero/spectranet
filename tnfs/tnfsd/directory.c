@@ -77,7 +77,7 @@ int validate_dir(Session *s, const char *path)
 	/* check we have an actual directory */
 	if (stat(fullpath, &dirstat) == 0)
 	{
-		if (dirstat.st_mode & S_IFDIR)
+		if (S_ISDIR(dirstat.st_mode))
 		{
 #ifdef DEBUG
 			fprintf(stderr, "validate_dir: Directory OK\n");

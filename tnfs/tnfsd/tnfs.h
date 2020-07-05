@@ -36,6 +36,8 @@
 #ifdef WIN32
 #include <windows.h>
 #define WIN32_CHAR_P (char *)
+#else
+#define WIN32_CHAR_P
 #endif
 
 #ifndef in_addr_t
