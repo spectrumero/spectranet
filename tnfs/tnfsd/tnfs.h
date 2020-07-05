@@ -83,20 +83,50 @@
 
 #define TNFS_DIRENTRY_DIR 0x01
 
+// Extended directory entry contents
+struct _dir_entry
+{
+    uint8_t flags;
+    uint32_t size;
+    uint32_t mtime;
+    uint32_t ctime;
+    char entrypath[MAX_FILENAME_LEN];
+} __attribute__((packed));
+
+typedef struct _dir_entry directory_entry;
+
+struct _dir_entry_list_node
+{
+	directory_entry entry;
+	struct _dir_entry_list_node *next;
+} __attribute__((packed));
+
+typedef struct _dir_entry_list_node directory_entry_list_node;
+typedef directory_entry_list_node * directory_entry_list;
+
+typedef struct _dir_handle
+{
+	DIR *handle;
+	char path[MAX_TNFSPATH];
+	uint32_t entry_count;
+	directory_entry_list entry_list;
+	directory_entry_list_node * current_entry;
+} dir_handle;
+
 typedef struct _session
 {
 	uint16_t sid;			/* session ID */
 	in_addr_t ipaddr;		/* client addr */
 	uint8_t seqno;			/* last sequence number */
 	int fd[MAX_FD_PER_CONN];	/* file descriptors */
-	DIR *dhnd[MAX_DHND_PER_CONN];	/* directory handles */
-	char dpaths[MAX_DHND_PER_CONN][MAX_TNFSPATH]; /* directory path for each handle */
+	//DIR *dhnd[MAX_DHND_PER_CONN];	/* directory handles */
+	//char dpaths[MAX_DHND_PER_CONN][MAX_TNFSPATH]; /* directory path for each handle */
+	dir_handle dhandles[MAX_DHND_PER_CONN];
 	char *root;			/* requested root dir */
 	unsigned char lastmsg[MAXMSGSZ];/* last message sent */
 	int lastmsgsz;			/* last message's size inc. hdr */
 	uint8_t lastseqno;		/* last sequence number */
 	uint8_t isTCP;			/* uses the TCP transport */
-
 } Session;
 
 typedef struct _header

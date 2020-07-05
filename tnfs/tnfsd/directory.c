@@ -40,6 +40,12 @@
 #include "bsdcompat.h"
 #include "endian.h"
 
+#ifdef WIN32
+#define PATH_SEP '\\'
+#else
+#define PATH_SEP '/'
+#endif
+
 char root[MAX_ROOT]; /* root for all operations */
 char dirbuf[MAX_FILEPATH];
 
@@ -169,14 +175,14 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	/* find the first available slot in the session */
 	for (i = 0; i < MAX_DHND_PER_CONN; i++)
 	{
-		if (s->dhnd[i] == NULL)
+		if (s->dhandles[i].handle == NULL)
 		{
 			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
 					 root, s->root, databuf);
-			normalize_path(s->dpaths[i], path, MAX_TNFSPATH);
-			if ((dptr = opendir(s->dpaths[i])) != NULL)
+			normalize_path(s->dhandles[i].path, path, MAX_TNFSPATH);
+			if ((dptr = opendir(s->dhandles[i].path)) != NULL)
 			{
-				s->dhnd[i] = dptr;
+				s->dhandles[i].handle = dptr;
 
 				/* send OK response */
 				hdr->status = TNFS_SUCCESS;
@@ -207,14 +213,14 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 	if (datasz != 1 ||
 		*databuf > MAX_DHND_PER_CONN ||
-		s->dhnd[*databuf] == NULL)
+		s->dhandles[*databuf].handle == NULL)
 	{
 		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	entry = readdir(s->dhnd[*databuf]);
+	entry = readdir(s->dhandles[*databuf].handle);
 	if (entry)
 	{
 		strlcpy(reply, entry->d_name, MAX_FILENAME_LEN);
@@ -233,16 +239,21 @@ void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
 	if (datasz != 1 ||
 		*databuf > MAX_DHND_PER_CONN ||
-		s->dhnd[*databuf] == NULL)
+		s->dhandles[*databuf].handle == NULL)
 	{
 		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	closedir(s->dhnd[*databuf]);
-	s->dhnd[*databuf] = 0;
-	s->dpaths[*databuf][0] = '\0';
+	closedir(s->dhandles[*databuf].handle);
+
+	s->dhandles[*databuf].handle = NULL;
+	s->dhandles[*databuf].path[0] = '\0';
+	dirlist_free(s->dhandles[*databuf].entry_list);
+	s->dhandles[*databuf].current_entry = s->dhandles[*databuf].entry_list = NULL;
+	s->dhandles[*databuf].entry_count = 0;
+
 	hdr->status = TNFS_SUCCESS;
 	tnfs_send(s, hdr, NULL, 0);
 }
@@ -301,22 +312,32 @@ void tnfs_rmdir(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 
 void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	int32_t pos;
+	uint32_t pos;
 
-	if (datasz != 1 ||
+	// databuf holds our directory handle
+	// followed by 4 bytes for the new position
+	if (datasz != 5 ||
 		*databuf > MAX_DHND_PER_CONN ||
-		s->dhnd[*databuf] == NULL)
+		s->dhandles[*databuf].handle == NULL)
 	{
 		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	// Seekdir's API is brain damaged, it has no way to return an error.
-	// perhaps a subsequent call to telldir might be prudent?
-
-	pos = (int32_t)tnfs32uint(databuf + 2);
-	seekdir(s->dhnd[*databuf], pos); // Returns no value.
+	pos = tnfs32uint(databuf + 1);
+#ifdef DEBUG
+	fprintf(stderr, "tnfs_seekdir to pos %u\n", pos);
+#endif
+	// We handle this differently depending on whether we've pre-loaded the directory or not
+	if(s->dhandles[*databuf].entry_list == NULL)
+	{
+		seekdir(s->dhandles[*databuf].handle, (long)pos);
+	}
+	else
+	{
+		s->dhandles[*databuf].current_entry = dirlist_get_node_at_index(s->dhandles[*databuf].entry_list, pos);
+	}
 
 	hdr->status = TNFS_SUCCESS;
 	tnfs_send(s, hdr, NULL, 0);
@@ -326,16 +347,32 @@ void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
 	int32_t pos;
 
+	// databuf holds our directory handle: check it
 	if (datasz != 1 ||
 		*databuf > MAX_DHND_PER_CONN ||
-		s->dhnd[*databuf] == NULL)
+		s->dhandles[*databuf].handle == NULL)
 	{
 		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	pos = telldir(s->dhnd[*databuf]);
+	// We handle this differently depending on whether we've pre-loaded the directory or not
+	if(s->dhandles[*databuf].entry_list == NULL)
+	{
+		pos = telldir(s->dhandles[*databuf].handle);
+	}
+	else
+	{
+		pos = dirlist_get_index_for_node(s->dhandles[*databuf].entry_list, s->dhandles[*databuf].current_entry);
+	}
+
+#ifdef DEBUG
+	fprintf(stderr, "tnfs_telldir returning %d\n", pos);
+#endif
+
+	hdr->status = TNFS_SUCCESS;
+	uint32tnfs((unsigned char *)&pos, (uint32_t)pos);
 
 	tnfs_send(s, hdr, (unsigned char *)&pos, sizeof(pos));
 }
@@ -343,7 +380,6 @@ void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 /* Read a directory entry and provide extended results */
 void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	struct dirent *entry;
 	/*
 	We're returning:
 	flags - 1 byte: Flags providing additional information about the file (see below)
@@ -352,62 +388,42 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	ctime - 4 bytes: Creation time in seconds since the epoch, little endian
 	entry - X bytes: Zero-terminated string providing directory entry path
 */
-	struct _readdirx_ent
-	{
-		uint8_t flags;
-		uint32_t size;
-		uint32_t mtime;
-		uint32_t ctime;
-		char entrypath[MAX_FILENAME_LEN];
-	} __attribute__((packed));
-
-	int replyheaderlen = sizeof(uint8_t) + (sizeof(uint32_t) * 3);
-
-	struct _readdirx_ent reply = {
+	directory_entry reply = {
 		.flags = 0,
 		.size = 0,
 		.mtime = 0,
 		.ctime = 0,
 		.entrypath = {'\0'}};
 
+	int replyheaderlen = sizeof(uint8_t) + (sizeof(uint32_t) * 3);
+
 	// databuf holds our directory handle: check it
 	if (datasz != 1 ||
 		*databuf > MAX_DHND_PER_CONN ||
-		s->dhnd[*databuf] == NULL)
+		s->dhandles[*databuf].handle == NULL)
 	{
 		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
-	struct stat statinfo;
-	char statpath[MAX_TNFSPATH];
-	entry = readdir(s->dhnd[*databuf]);
-	if (entry)
+	dir_handle *dh = &s->dhandles[*databuf];
+	directory_entry *entry;
+
+	if (dh->current_entry)
 	{
+		entry = &dh->current_entry->entry;
 
-#ifdef WIN32
-#define PATH_SEP '\\'
-#else
-#define PATH_SEP '/'
-#endif
-		snprintf(statpath, sizeof(statpath), "%s%c%s", s->dpaths[*databuf], PATH_SEP, entry->d_name);
-		
-		// Try to get the additional details we want to include
-		if (stat(statpath, &statinfo) == 0)
-		{
-			uint32tnfs((unsigned char *)&reply.size, statinfo.st_size);
-			uint32tnfs((unsigned char *)&reply.mtime, statinfo.st_mtime);
-			uint32tnfs((unsigned char *)&reply.ctime, statinfo.st_ctime);
+		reply.flags = entry->flags;
+		uint32tnfs((unsigned char *)&reply.size, entry->size);
+		uint32tnfs((unsigned char *)&reply.mtime, entry->mtime);
+		uint32tnfs((unsigned char *)&reply.ctime, entry->ctime);
 
-			if (S_ISDIR(statinfo.st_mode))
-			{
-				reply.flags |= TNFS_DIRENTRY_DIR;
-			}
-		}
-
-		int pathlen = strlcpy(reply.entrypath, entry->d_name, MAX_FILENAME_LEN);
+		int pathlen = strlcpy(reply.entrypath, entry->entrypath, MAX_FILENAME_LEN);
 		hdr->status = TNFS_SUCCESS;
+
+		// Point to the next entry
+		dh->current_entry = dh->current_entry->next;
 
 		tnfs_send(s, hdr, (unsigned char *)&reply, replyheaderlen + pathlen + 1);
 	}
@@ -418,13 +434,75 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 }
 
+/* Returns errno on failure, otherwise zero */
+int _load_directory(dir_handle *dirh)
+{
+	struct dirent *entry;
+	struct stat statinfo;
+	char statpath[MAX_TNFSPATH];
+
+	// Free any existing entries
+	dirlist_free(dirh->entry_list);
+	dirh->entry_count = 0;
+
+	if ((dirh->handle = opendir(dirh->path)) == NULL)
+		return errno;
+
+	while ((entry = readdir(dirh->handle)) != NULL)
+	{
+		// Create a new directory_entry_node to add to our list
+		directory_entry_list_node *node = calloc(1, sizeof(directory_entry_list_node));
+
+		// Copy the name into the node
+		strlcpy(node->entry.entrypath, entry->d_name, MAX_FILENAME_LEN);
+
+		// Try to stat the file and copy that data into the node
+		snprintf(statpath, sizeof(statpath), "%s%c%s", dirh->path, PATH_SEP, entry->d_name);
+		if (stat(statpath, &statinfo) == 0)
+		{
+			node->entry.size = statinfo.st_size;
+			node->entry.mtime = statinfo.st_mtime;
+			node->entry.ctime = statinfo.st_ctime;
+
+			if (S_ISDIR(statinfo.st_mode))
+			{
+				node->entry.flags |= TNFS_DIRENTRY_DIR;
+			}
+		}
+
+		// Add this node to our list
+		dirlist_push(&(dirh->entry_list), node);
+		dirh->entry_count++;
+
+#ifdef DEBUG
+		fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
+#endif
+	}
+#ifdef DEBUG
+		fprintf(stderr, "_load_directory count = %hu\n", dirh->entry_count);
+#endif
+		dirlist_sort(&dirh->entry_list);
+#ifdef DEBUG
+		fprintf(stderr, "POST SORT LIST:\n");
+		directory_entry_list _dl = dirh->entry_list;
+		while(_dl)
+		{
+			fprintf(stderr, "\t%s\n", _dl->entry.entrypath);
+			_dl = _dl->next;
+		}
+#endif
+	dirh->current_entry = dirh->entry_list;
+
+	return 0;
+}
+
 /* Open a directory with additional options */
 void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
-	DIR *dptr;
 	char path[MAX_TNFSPATH];
-	unsigned char reply[2];
+	unsigned char reply[5];
 	int i;
+	uint8_t result;
 
 	if (*(databuf + datasz - 1) != 0)
 	{
@@ -438,29 +516,30 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 
 #ifdef DEBUG
-	fprintf(stderr, "opendir: %s\n", databuf);
+	fprintf(stderr, "opendirx: %s\n", databuf);
 #endif
 
 	/* find the first available slot in the session */
 	for (i = 0; i < MAX_DHND_PER_CONN; i++)
 	{
-		if (s->dhnd[i] == NULL)
+		if (s->dhandles[i].handle == NULL)
 		{
 			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
 					 root, s->root, databuf);
-			normalize_path(path, path, MAX_TNFSPATH);
-			if ((dptr = opendir(path)) != NULL)
-			{
-				s->dhnd[i] = dptr;
+			normalize_path(s->dhandles[i].path, path, MAX_TNFSPATH);
 
+			result = _load_directory(&(s->dhandles[i]));
+			if (result == 0)
+			{
 				/* send OK response */
 				hdr->status = TNFS_SUCCESS;
 				reply[0] = (unsigned char)i;
-				tnfs_send(s, hdr, reply, 1);
+				uint32tnfs(reply + 1, s->dhandles[i].entry_count);
+				tnfs_send(s, hdr, reply, 5);
 			}
 			else
 			{
-				hdr->status = tnfs_error(errno);
+				hdr->status = tnfs_error(result);
 				tnfs_send(s, hdr, NULL, 0);
 			}
 
@@ -472,4 +551,117 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	/* no free handles left */
 	hdr->status = TNFS_EMFILE;
 	tnfs_send(s, hdr, NULL, 0);
+}
+
+void dirlist_push(directory_entry_list *dlist, directory_entry_list_node *node)
+{
+	if (dlist == NULL || node == NULL)
+		return;
+
+	// This entry becomes the head, any current head becomes the second node
+	node->next = *dlist;
+	*dlist = node;
+}
+
+/* Returns poitner to node at index given or NULL if no such index */
+directory_entry_list_node * dirlist_get_node_at_index(directory_entry_list dlist, uint32_t index)
+{
+	uint32_t i = 0;
+	while (dlist && i++ < index)
+		dlist = dlist->next;
+
+	return dlist;
+}
+
+/* Returns poitner to node at index given or NULL if no such index */
+uint32_t dirlist_get_index_for_node(directory_entry_list dlist, directory_entry_list_node *node)
+{
+	uint32_t i = 0;
+	while (dlist)
+	{
+		if(dlist == node)
+			break;
+		dlist = dlist->next;
+		i++;
+	}
+
+	return i;
+}
+
+/* Free the linked list of directory entries */
+void dirlist_free(directory_entry_list dlist)
+{
+	while (dlist)
+	{
+		directory_entry_list_node *next = dlist->next;
+		free(dlist);
+		dlist = next;
+	}
+}
+
+directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_entry_list list_right)
+{
+	if(list_left == NULL)
+		return list_right;
+	if(list_right == NULL)
+		return list_left;
+
+	directory_entry_list result;
+	if(strcmp(list_left->entry.entrypath, list_right->entry.entrypath) < 0)
+	{
+		result = list_left;
+		result->next = _mergesort_merge(list_left->next, list_right);
+	}
+	else
+	{
+		result = list_right;
+		result->next = _mergesort_merge(list_left, list_right->next);
+	}
+
+	return result;
+}
+
+directory_entry_list _mergesort_get_middle(directory_entry_list head)
+{
+    if(head == NULL)
+		return head;
+
+	directory_entry_list slow, fast;
+	slow = fast = head;
+
+    while(fast->next != NULL && fast->next->next != NULL)
+    {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+
+void _mergesort(directory_entry_list *headP)
+{
+	directory_entry_list head = *headP;
+
+	if(head == NULL || head->next == NULL)
+		return;
+
+	directory_entry_list list_left;
+	directory_entry_list list_right;
+	directory_entry_list list_mid;
+
+	// Split the list into two separate lists
+	list_left = head;
+	list_mid = _mergesort_get_middle(head);
+	list_right = list_mid->next;
+	list_mid->next = NULL;
+
+	// Merge the two lists
+	_mergesort(&list_left);
+	_mergesort(&list_right);
+	*headP =  _mergesort_merge(list_left, list_right);
+}
+
+/* Merge sort on a singly-linked list */
+void dirlist_sort(directory_entry_list *dlist)
+{
+	_mergesort(dlist);
 }

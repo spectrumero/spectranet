@@ -217,8 +217,10 @@ void tnfs_freesession(Session *s, int sindex)
 	}
 	for(i=0; i<MAX_DHND_PER_CONN; i++)
 	{
-		if(s->dhnd[i])
-			closedir(s->dhnd[i]);
+		if(s->dhandles[i].handle)
+			closedir(s->dhandles[i].handle);
+		dirlist_free(s->dhandles[i].entry_list);
+		s->dhandles[i].entry_count = 0;
 	}
 	free(s);
 	slist[sindex]=NULL;
