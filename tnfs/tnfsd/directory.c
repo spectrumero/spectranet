@@ -30,6 +30,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "tnfs.h"
 #include "config.h"
@@ -39,12 +40,9 @@
 #include "errortable.h"
 #include "bsdcompat.h"
 #include "endian.h"
+#include "fileinfo.h"
 
-#ifdef WIN32
-#define PATH_SEP '\\'
-#else
-#define PATH_SEP '/'
-#endif
+directory_entry_list dirlist_concat(directory_entry_list list1, directory_entry_list list2);
 
 char root[MAX_ROOT]; /* root for all operations */
 char dirbuf[MAX_FILEPATH];
@@ -330,7 +328,7 @@ void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	fprintf(stderr, "tnfs_seekdir to pos %u\n", pos);
 #endif
 	// We handle this differently depending on whether we've pre-loaded the directory or not
-	if(s->dhandles[*databuf].entry_list == NULL)
+	if (s->dhandles[*databuf].entry_list == NULL)
 	{
 		seekdir(s->dhandles[*databuf].handle, (long)pos);
 	}
@@ -358,7 +356,7 @@ void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 
 	// We handle this differently depending on whether we've pre-loaded the directory or not
-	if(s->dhandles[*databuf].entry_list == NULL)
+	if (s->dhandles[*databuf].entry_list == NULL)
 	{
 		pos = telldir(s->dhandles[*databuf].handle);
 	}
@@ -434,11 +432,76 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 }
 
+// Returns false if pattern doesn't match, otherwise true
+bool _pattern_match(const char *src, const char *pattern)
+{
+	if (src == NULL || pattern == NULL)
+		return false;
+
+	int m = strlen(pattern);
+	int n = strlen(src);
+
+#ifdef DEBUG
+	fprintf(stderr, "Pattern match: \"%s\", \"%s\" = ", src, pattern);
+#endif
+	// Empty pattern can only match with empty string
+	if (m == 0)
+		return (n == 0);
+
+	// Lookup table for storing results of subproblems
+	bool lookup[n + 1][m + 1];
+
+	// Initailze lookup table to false
+	memset(lookup, false, sizeof(lookup));
+
+	// Empty pattern can match with empty string
+	lookup[0][0] = true;
+
+	// Only '*' can match with empty string
+	for (int j = 1; j <= m; j++)
+		if (pattern[j - 1] == '*')
+			lookup[0][j] = lookup[0][j - 1];
+
+	// Fill the table in bottom-up fashion
+	for (int i = 1; i <= n; i++)
+	{
+		for (int j = 1; j <= m; j++)
+		{
+			// Two cases if we see a '*'
+			// a) We ignore ‘*’ character and move
+			//    to next  character in the pattern,
+			//     i.e., ‘*’ indicates an empty sequence.
+			// b) '*' character matches with ith
+			//     character in input
+			if (pattern[j - 1] == '*')
+				lookup[i][j] = lookup[i][j - 1] ||
+							   lookup[i - 1][j];
+
+			// Current characters are considered as
+			// matching in two cases
+			// (a) current character of pattern is '?'
+			// (b) characters actually match
+			else if (pattern[j - 1] == '?' ||
+					 src[i - 1] == pattern[j - 1])
+				lookup[i][j] = lookup[i - 1][j - 1];
+
+			// If characters don't match
+			else
+				lookup[i][j] = false;
+		}
+	}
+	bool result = lookup[n][m];
+
+#ifdef DEBUG
+	fprintf(stderr, result ? "TRUE\n" : "FALSE\n");
+#endif
+	return result;
+}
+
 /* Returns errno on failure, otherwise zero */
-int _load_directory(dir_handle *dirh)
+int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_t maxresults, const char *pattern)
 {
 	struct dirent *entry;
-	struct stat statinfo;
 	char statpath[MAX_TNFSPATH];
 
 	// Free any existing entries
@@ -448,48 +511,76 @@ int _load_directory(dir_handle *dirh)
 	if ((dirh->handle = opendir(dirh->path)) == NULL)
 		return errno;
 
+	// A list to hold all subdirectory names
+	directory_entry_list list_dirs = NULL;
+	// A list to hold all normal file names
+	directory_entry_list list_files = NULL;
+	uint16_t entrycount = 0;
+
 	while ((entry = readdir(dirh->handle)) != NULL)
 	{
-		// Create a new directory_entry_node to add to our list
-		directory_entry_list_node *node = calloc(1, sizeof(directory_entry_list_node));
-
-		// Copy the name into the node
-		strlcpy(node->entry.entrypath, entry->d_name, MAX_FILENAME_LEN);
-
-		// Try to stat the file and copy that data into the node
-		snprintf(statpath, sizeof(statpath), "%s%c%s", dirh->path, PATH_SEP, entry->d_name);
-		if (stat(statpath, &statinfo) == 0)
+		// Try to stat the file before we can decide on other things
+		fileinfo_t finf;
+		snprintf(statpath, sizeof(statpath), "%s%c%s", dirh->path, FILEINFO_PATHSEPARATOR, entry->d_name);
+		if (get_fileinfo(statpath, &finf) == 0)
 		{
-			node->entry.size = statinfo.st_size;
-			node->entry.mtime = statinfo.st_mtime;
-			node->entry.ctime = statinfo.st_ctime;
+			// If it's a regular file and we have a pattern and this doesn't match, skip it
+			if (!(finf.flags & FILEINFOFLAG_DIRECTORY) && pattern != NULL && _pattern_match(entry->d_name, pattern) == false)
+				continue;
 
-			if (S_ISDIR(statinfo.st_mode))
+			// Skip this if it's hidden
+			if(finf.flags & FILEINFOFLAG_HIDDEN)
+				continue;
+
+			// Skip this if it's special
+			if(finf.flags & FILEINFOFLAG_SPECIAL)
+				continue;
+
+			// Create a new directory_entry_node to add to our list
+			directory_entry_list_node *node = calloc(1, sizeof(directory_entry_list_node));
+
+			// Copy the name into the node
+			strlcpy(node->entry.entrypath, entry->d_name, MAX_FILENAME_LEN);
+
+			directory_entry_list *list_dest_p = &list_files;
+
+			if(finf.flags & FILEINFOFLAG_DIRECTORY)
 			{
 				node->entry.flags |= TNFS_DIRENTRY_DIR;
+				list_dest_p = &list_dirs;
 			}
-		}
+			node->entry.size = finf.size;
+			node->entry.mtime = finf.m_time;
+			node->entry.ctime = finf.c_time;
 
-		// Add this node to our list
-		dirlist_push(&(dirh->entry_list), node);
-		dirh->entry_count++;
+			dirlist_push(list_dest_p, node);
+			entrycount++;
 
 #ifdef DEBUG
-		fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
+			fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
 #endif
+		}
 	}
+
+	// Sort the two lists
+	if(list_dirs != NULL)
+		dirlist_sort(&list_dirs);
+	if(list_files != NULL)
+		dirlist_sort(&list_files);
+
+	// Combine the two lists into one
+	dirh->entry_list = dirlist_concat(list_dirs, list_files);
+	dirh->entry_count = entrycount;
+
 #ifdef DEBUG
-		fprintf(stderr, "_load_directory count = %hu\n", dirh->entry_count);
-#endif
-		dirlist_sort(&dirh->entry_list);
-#ifdef DEBUG
-		fprintf(stderr, "POST SORT LIST:\n");
-		directory_entry_list _dl = dirh->entry_list;
-		while(_dl)
-		{
-			fprintf(stderr, "\t%s\n", _dl->entry.entrypath);
-			_dl = _dl->next;
-		}
+	fprintf(stderr, "_load_directory count = %hu\n", dirh->entry_count);
+	fprintf(stderr, "POST SORT LIST:\n");
+	directory_entry_list _dl = dirh->entry_list;
+	while (_dl)
+	{
+		fprintf(stderr, "\t%s\n", _dl->entry.entrypath);
+		_dl = _dl->next;
+	}
 #endif
 	dirh->current_entry = dirh->entry_list;
 
@@ -500,23 +591,52 @@ int _load_directory(dir_handle *dirh)
 void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
 	char path[MAX_TNFSPATH];
-	unsigned char reply[5];
-	int i;
-	uint8_t result;
+	unsigned char reply[3];
 
-	if (*(databuf + datasz - 1) != 0)
+	uint8_t diropts;
+	uint8_t sortopts;
+	uint16_t maxresults;
+	uint8_t result;
+	char *pPattern;
+	char *pDirpath;
+
+	int i;
+
+	// We should have a minimum of 7 bytes in the request
+	// And the buffer should be null-terminated
+	if ((datasz < 7) || (*(databuf + datasz - 1) != 0))
 	{
 #ifdef DEBUG
-		fprintf(stderr, "Invalid dirname: no NULL\n");
+		fprintf(stderr, "Invalid argument count or missing NULL terminator\n");
 #endif
-		/* no null terminator */
 		hdr->status = TNFS_EINVAL;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
 
+	diropts = databuf[0];
+	sortopts = databuf[1];
+	maxresults = tnfs16uint(databuf + 2);
+	pPattern = (char *)(databuf + 4);
+
+	// If there's no NULL between the glob pattern and the directory name,
+	// just assume there's no glob pattern rather than return an error
+	i = strlen(pPattern);
+	if (i + 5 == datasz)
+	{
+		pDirpath = pPattern;
+		pPattern = NULL;
+	}
+	else
+	{
+		pDirpath = pPattern + i + 1;
+	}
+	if(i == 0)
+		pPattern = NULL;
+
 #ifdef DEBUG
-	fprintf(stderr, "opendirx: %s\n", databuf);
+	fprintf(stderr, "opendirx: diropt=0x%02x, sortopt=0x%02x, max=0x%04hx, pat=\"%s\", path=\"%s\"\n",
+			diropts, sortopts, maxresults, pPattern ? pPattern : "", pDirpath);
 #endif
 
 	/* find the first available slot in the session */
@@ -524,17 +644,19 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	{
 		if (s->dhandles[i].handle == NULL)
 		{
-			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
-					 root, s->root, databuf);
+			snprintf(path, sizeof(path), "%s/%s/%s",
+					 root, s->root, pDirpath);
+
+			// Remove any doubled-up path separators
 			normalize_path(s->dhandles[i].path, path, MAX_TNFSPATH);
 
-			result = _load_directory(&(s->dhandles[i]));
+			result = _load_directory(&(s->dhandles[i]), diropts, sortopts, maxresults, pPattern);
 			if (result == 0)
 			{
 				/* send OK response */
 				hdr->status = TNFS_SUCCESS;
 				reply[0] = (unsigned char)i;
-				uint32tnfs(reply + 1, s->dhandles[i].entry_count);
+				uint16tnfs(reply + 1, s->dhandles[i].entry_count);
 				tnfs_send(s, hdr, reply, 5);
 			}
 			else
@@ -553,6 +675,23 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	tnfs_send(s, hdr, NULL, 0);
 }
 
+
+// Attaches list2 to the end of list1 and returns the head of the result
+// Return will be list2 if list1 is NULL
+directory_entry_list dirlist_concat(directory_entry_list list1, directory_entry_list list2)
+{
+	if(list1 == NULL)
+		return list2;
+	
+	// Get to the end of the first list
+	directory_entry_list_node *	pEnd = list1;
+	while(pEnd->next != NULL)
+		pEnd = pEnd->next;
+
+	pEnd->next = list2;
+	return list1;
+}
+
 void dirlist_push(directory_entry_list *dlist, directory_entry_list_node *node)
 {
 	if (dlist == NULL || node == NULL)
@@ -564,7 +703,7 @@ void dirlist_push(directory_entry_list *dlist, directory_entry_list_node *node)
 }
 
 /* Returns poitner to node at index given or NULL if no such index */
-directory_entry_list_node * dirlist_get_node_at_index(directory_entry_list dlist, uint32_t index)
+directory_entry_list_node *dirlist_get_node_at_index(directory_entry_list dlist, uint32_t index)
 {
 	uint32_t i = 0;
 	while (dlist && i++ < index)
@@ -579,7 +718,7 @@ uint32_t dirlist_get_index_for_node(directory_entry_list dlist, directory_entry_
 	uint32_t i = 0;
 	while (dlist)
 	{
-		if(dlist == node)
+		if (dlist == node)
 			break;
 		dlist = dlist->next;
 		i++;
@@ -601,13 +740,13 @@ void dirlist_free(directory_entry_list dlist)
 
 directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_entry_list list_right)
 {
-	if(list_left == NULL)
+	if (list_left == NULL)
 		return list_right;
-	if(list_right == NULL)
+	if (list_right == NULL)
 		return list_left;
 
 	directory_entry_list result;
-	if(strcmp(list_left->entry.entrypath, list_right->entry.entrypath) < 0)
+	if (stricmp(list_left->entry.entrypath, list_right->entry.entrypath) < 0)
 	{
 		result = list_left;
 		result->next = _mergesort_merge(list_left->next, list_right);
@@ -623,25 +762,25 @@ directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_
 
 directory_entry_list _mergesort_get_middle(directory_entry_list head)
 {
-    if(head == NULL)
+	if (head == NULL)
 		return head;
 
 	directory_entry_list slow, fast;
 	slow = fast = head;
 
-    while(fast->next != NULL && fast->next->next != NULL)
-    {
-        slow = slow->next;
-        fast = fast->next->next;
-    }
-    return slow;
+	while (fast->next != NULL && fast->next->next != NULL)
+	{
+		slow = slow->next;
+		fast = fast->next->next;
+	}
+	return slow;
 }
 
 void _mergesort(directory_entry_list *headP)
 {
 	directory_entry_list head = *headP;
 
-	if(head == NULL || head->next == NULL)
+	if (head == NULL || head->next == NULL)
 		return;
 
 	directory_entry_list list_left;
@@ -657,7 +796,7 @@ void _mergesort(directory_entry_list *headP)
 	// Merge the two lists
 	_mergesort(&list_left);
 	_mergesort(&list_right);
-	*headP =  _mergesort_merge(list_left, list_right);
+	*headP = _mergesort_merge(list_left, list_right);
 }
 
 /* Merge sort on a singly-linked list */

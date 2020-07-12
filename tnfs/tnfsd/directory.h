@@ -29,6 +29,17 @@
 
 #include "tnfs.h"
 
+#define TNFS_DIROPT_NO_FOLDERSFIRST 0x01 
+#define TNFS_DIROPT_NO_SKIPHIDDEN 0x02
+#define TNFS_DIROPT_NO_SKIPSPECIAL 0x04
+#define TNFS_DIROPT_DIR_PATTERN 0x08
+
+#define TNFS_DIRSORT_NONE 0x01
+#define TNFS_DIRSORT_CASE 0x02
+#define TNFS_DIRSORT_DECENDING 0x04
+#define TNFS_DIRSORT_MODIFIED 0x08
+#define TNFS_DIROSRT_SIZE 0x10
+
 /* initialize and set the root dir */
 int tnfs_setroot(char *rootdir);
 

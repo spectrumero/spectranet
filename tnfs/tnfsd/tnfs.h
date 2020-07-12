@@ -110,7 +110,7 @@ typedef struct _dir_handle
 {
 	DIR *handle;
 	char path[MAX_TNFSPATH];
-	uint32_t entry_count;
+	uint16_t entry_count;
 	directory_entry_list entry_list;
 	directory_entry_list_node * current_entry;
 } dir_handle;
