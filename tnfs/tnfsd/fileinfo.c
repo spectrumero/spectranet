@@ -4,13 +4,16 @@
 
 #include <sys/stat.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <errno.h>
 
 #include "fileinfo.h"
 
 int get_fileinfo(const char *path, fileinfo_t *fileinf)
 {
     if(path == NULL || fileinf == NULL)
-        return E_INVALIDARG;
+        return EINVAL;
+
 
     fileinf->flags = 0;
     fileinf->size = 0;

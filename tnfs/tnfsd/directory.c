@@ -24,6 +24,7 @@
  *
  * */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -778,7 +779,7 @@ directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_
 		if(sortopts & TNFS_DIRSORT_CASE)
 			r = strcmp(list_left->entry.entrypath, list_right->entry.entrypath);
 		else
-			r = stricmp(list_left->entry.entrypath, list_right->entry.entrypath);
+			r = strcasecmp(list_left->entry.entrypath, list_right->entry.entrypath);
 	}
 
 	// Reverse the result if we're sorting descending
