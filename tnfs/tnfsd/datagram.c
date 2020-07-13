@@ -148,7 +148,6 @@ void tnfs_mainloop()
 			{
 				tcp_accept(&tcpsocks[0]);
 			}
-
 			else
 			{
 				for (i = 0; i < MAX_TCP_CONN; i++)
