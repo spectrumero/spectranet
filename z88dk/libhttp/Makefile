@@ -9,7 +9,7 @@ all:	$(COBJS)
 	$(LIBLINKER) $(LIBLDFLAGS) -x$(LIBNAME) $(COBJS)
 
 install:
-	$(CP) *.lib $(Z80_OZFILES)/clibs
-	$(CP) -r ./include $(Z80_OZFILES)/../
+	$(CP) *.lib $(ZCCCFG)/../clibs
+	$(CP) -r ./include $(ZCCCFG)/../../
 
 include ../make.inc
