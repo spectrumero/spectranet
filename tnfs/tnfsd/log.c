@@ -40,7 +40,7 @@ void die(const char *msg)
 void TNFSMSGLOG(Header *hdr, const char *msg)
 {
 	unsigned char *ip=(unsigned char *)&hdr->ipaddr;
-	fprintf(stderr, "Cli: %d.%d.%d.%d Session: %x : %s\n",
+	fprintf(stderr, "Client: %d.%d.%d.%d Session: %x : %s\n",
 			ip[0], ip[1], ip[2], ip[3],
 			hdr->sid, msg);
 #ifdef WIN32

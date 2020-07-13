@@ -517,7 +517,8 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 	directory_entry_list list_files = NULL;
 	uint16_t entrycount = 0;
 
-	while ((entry = readdir(dirh->handle)) != NULL && entrycount <= maxresults)
+	// Read every entry
+	while ((entry = readdir(dirh->handle)) != NULL)
 	{
 		// Try to stat the file before we can decide on other things
 		fileinfo_t finf;
@@ -563,6 +564,9 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 			dirlist_push(list_dest_p, node);
 			entrycount++;
 
+			// If we were given a max, break if we've reached it
+			if(maxresults > 0 && entrycount >= maxresults)
+				break;
 #ifdef DEBUG
 			fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
 #endif
