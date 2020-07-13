@@ -517,23 +517,27 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 	directory_entry_list list_files = NULL;
 	uint16_t entrycount = 0;
 
-	while ((entry = readdir(dirh->handle)) != NULL)
+	while ((entry = readdir(dirh->handle)) != NULL && entrycount <= maxresults)
 	{
 		// Try to stat the file before we can decide on other things
 		fileinfo_t finf;
 		snprintf(statpath, sizeof(statpath), "%s%c%s", dirh->path, FILEINFO_PATHSEPARATOR, entry->d_name);
 		if (get_fileinfo(statpath, &finf) == 0)
 		{
-			// If it's a regular file and we have a pattern and this doesn't match, skip it
-			if (!(finf.flags & FILEINFOFLAG_DIRECTORY) && pattern != NULL && _pattern_match(entry->d_name, pattern) == false)
+			/* If it's not a directory and we have a pattern that this doesn't match, skip it
+				Ignore the directory qualification if TNFS_DIROPT_DIR_PATTERN is set */
+			if ((diropts & TNFS_DIROPT_DIR_PATTERN)  || !(finf.flags & FILEINFOFLAG_DIRECTORY))
+			{
+				if (pattern != NULL && _pattern_match(entry->d_name, pattern) == false)
+					continue;
+			}
+
+			// Skip this if it's hidden (assuming TNFS_DIROPT_NO_SKIPHIDDEN isn't set)
+			if (!(diropts & TNFS_DIROPT_NO_SKIPHIDDEN) && (finf.flags & FILEINFOFLAG_HIDDEN))
 				continue;
 
-			// Skip this if it's hidden
-			if(finf.flags & FILEINFOFLAG_HIDDEN)
-				continue;
-
-			// Skip this if it's special
-			if(finf.flags & FILEINFOFLAG_SPECIAL)
+			// Skip this if it's special (assuming TNFS_DIROPT_NO_SKIPSPECIAL isn't set)
+			if (!(diropts & TNFS_DIROPT_NO_SKIPSPECIAL) && (finf.flags & FILEINFOFLAG_SPECIAL))
 				continue;
 
 			// Create a new directory_entry_node to add to our list
@@ -544,10 +548,13 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 
 			directory_entry_list *list_dest_p = &list_files;
 
-			if(finf.flags & FILEINFOFLAG_DIRECTORY)
+			if (finf.flags & FILEINFOFLAG_DIRECTORY)
 			{
 				node->entry.flags |= TNFS_DIRENTRY_DIR;
-				list_dest_p = &list_dirs;
+				/* If the TNFS_DIROPT_NO_FOLDERSFIRST 0x01  flag hasn't been set, put this node
+				   in a separate list for directories so they're sorted separately */
+				if (!(diropts & TNFS_DIROPT_NO_FOLDERSFIRST))
+					list_dest_p = &list_dirs;
 			}
 			node->entry.size = finf.size;
 			node->entry.mtime = finf.m_time;
@@ -562,19 +569,21 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 		}
 	}
 
-	// Sort the two lists
-	if(list_dirs != NULL)
-		dirlist_sort(&list_dirs);
-	if(list_files != NULL)
-		dirlist_sort(&list_files);
+	// Sort the two lists (assuming TNFS_DIRSORT_NONE isn't set)
+	if(!(sortopts & TNFS_DIRSORT_NONE))
+	{
+		if (list_dirs != NULL)
+			dirlist_sort(&list_dirs, sortopts);
+		if (list_files != NULL)
+			dirlist_sort(&list_files, sortopts);
+	}
 
 	// Combine the two lists into one
 	dirh->entry_list = dirlist_concat(list_dirs, list_files);
 	dirh->entry_count = entrycount;
 
 #ifdef DEBUG
-	fprintf(stderr, "_load_directory count = %hu\n", dirh->entry_count);
-	fprintf(stderr, "POST SORT LIST:\n");
+	fprintf(stderr, "RETURNING LIST:\n");
 	directory_entry_list _dl = dirh->entry_list;
 	while (_dl)
 	{
@@ -582,6 +591,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 		_dl = _dl->next;
 	}
 #endif
+
 	dirh->current_entry = dirh->entry_list;
 
 	return 0;
@@ -631,7 +641,7 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	{
 		pDirpath = pPattern + i + 1;
 	}
-	if(i == 0)
+	if (i == 0)
 		pPattern = NULL;
 
 #ifdef DEBUG
@@ -675,17 +685,16 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	tnfs_send(s, hdr, NULL, 0);
 }
 
-
 // Attaches list2 to the end of list1 and returns the head of the result
 // Return will be list2 if list1 is NULL
 directory_entry_list dirlist_concat(directory_entry_list list1, directory_entry_list list2)
 {
-	if(list1 == NULL)
+	if (list1 == NULL)
 		return list2;
-	
+
 	// Get to the end of the first list
-	directory_entry_list_node *	pEnd = list1;
-	while(pEnd->next != NULL)
+	directory_entry_list_node *pEnd = list1;
+	while (pEnd->next != NULL)
 		pEnd = pEnd->next;
 
 	pEnd->next = list2;
@@ -738,7 +747,7 @@ void dirlist_free(directory_entry_list dlist)
 	}
 }
 
-directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_entry_list list_right)
+directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_entry_list list_right, uint8_t sortopts)
 {
 	if (list_left == NULL)
 		return list_right;
@@ -746,15 +755,41 @@ directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_
 		return list_left;
 
 	directory_entry_list result;
-	if (stricmp(list_left->entry.entrypath, list_right->entry.entrypath) < 0)
+
+	int r;
+	// Sort by size
+	if(sortopts & TNFS_DIRSORT_SIZE)
+	{
+		r = list_left->entry.size - list_right->entry.size;
+	}
+	// Sort by modified timestamp
+	else if(sortopts & TNFS_DIRSORT_MODIFIED)
+	{
+		r = list_left->entry.mtime - list_right->entry.mtime;
+	}
+	// Sort by name
+	else
+	{
+		// Decide whether to use case-sensitive or insensitive sorting
+		if(sortopts & TNFS_DIRSORT_CASE)
+			r = strcmp(list_left->entry.entrypath, list_right->entry.entrypath);
+		else
+			r = stricmp(list_left->entry.entrypath, list_right->entry.entrypath);
+	}
+
+	// Reverse the result if we're sorting descending
+	if(sortopts & TNFS_DIRSORT_DESCENDING)
+		r *= -1;
+
+	if (r < 0)
 	{
 		result = list_left;
-		result->next = _mergesort_merge(list_left->next, list_right);
+		result->next = _mergesort_merge(list_left->next, list_right, sortopts);
 	}
 	else
 	{
 		result = list_right;
-		result->next = _mergesort_merge(list_left, list_right->next);
+		result->next = _mergesort_merge(list_left, list_right->next, sortopts);
 	}
 
 	return result;
@@ -776,7 +811,7 @@ directory_entry_list _mergesort_get_middle(directory_entry_list head)
 	return slow;
 }
 
-void _mergesort(directory_entry_list *headP)
+void _mergesort(directory_entry_list *headP, uint8_t sortopts)
 {
 	directory_entry_list head = *headP;
 
@@ -794,13 +829,13 @@ void _mergesort(directory_entry_list *headP)
 	list_mid->next = NULL;
 
 	// Merge the two lists
-	_mergesort(&list_left);
-	_mergesort(&list_right);
-	*headP = _mergesort_merge(list_left, list_right);
+	_mergesort(&list_left, sortopts);
+	_mergesort(&list_right, sortopts);
+	*headP = _mergesort_merge(list_left, list_right, sortopts);
 }
 
 /* Merge sort on a singly-linked list */
-void dirlist_sort(directory_entry_list *dlist)
+void dirlist_sort(directory_entry_list *dlist, uint8_t sortopts)
 {
-	_mergesort(dlist);
+	_mergesort(dlist, sortopts);
 }

@@ -281,9 +281,9 @@ TNFS_DIROPT_DIR_PATTERN - Match pattern applies to directories also
 
 TNFS_DIRSORT_NONE - Disable all sorting
 TNFS_DIRSORT_CASE - Sorting is case-sensitive
-TNFS_DIRSORT_DECENDING - Sorting is descendnig, not ascending
+TNFS_DIRSORT_DESCENDING - Sorting is descendnig, not ascending
 TNFS_DIRSORT_MODIFIED - Sort by file's modified timestamp instead of name
-TNFS_DIROSRT_SIZE - Sort by the file's size instead of name
+TNFS_DIRSORT_SIZE - Sort by the file's size instead of name
 
 READDIR - Reads a directory entry - Command ID 0x11
 ---------------------------------------------------
