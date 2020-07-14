@@ -1,7 +1,7 @@
 CC=gcc
 
 ifndef OS
-    $(error Must specify an OS with make OS=... where OS is LINUX, BSD or WINDOWS. Use BSD for MacOSX)
+    $(error Must specify an OS with make OS=... where OS is LINUX, BSD or Windows_NT. Use BSD for macOS)
 endif
 
 ifeq ($(OS),LINUX)
