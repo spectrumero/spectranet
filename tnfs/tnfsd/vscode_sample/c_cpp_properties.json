@@ -1,17 +1,59 @@
 {
     "configurations": [
         {
-            "name": "Win64",
+            "name": "Windows",
             "includePath": [
+                "C:/msys64/usr/include/**",
                 "${workspaceFolder}/**"
             ],
-            "defines": [ 
-                "OS=Windows_NT","WIN32", "NEED_ERRTABLE", "NEED_BSDCOMPAT", "DEBUG"
+            "defines": [
+                "OS=Windows_NT",
+                "WIN32",
+                "NEED_ERRTABLE",
+                "NEED_BSDCOMPAT",
+                "DEBUG"
             ],
             "compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "OS=LINUX",
+                "UNIX",
+                "NEED_ERRTABLE",
+                "NEED_BSDCOMPAT",
+                "ENABLE_CHROOT",
+                "DEBUG"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        },
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "OS=BSD",
+                "UNIX",
+                "NEED_ERRTABLE",
+                "ENABLE_CHROOT",
+                "DEBUG"
+            ],
+            "macFrameworkPath": [
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 4

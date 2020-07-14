@@ -3,17 +3,40 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "GNU Make Project",
-            "command": "mingw32-make.exe",
+            "label": "Make Project",
+            "windows": {
+                "command": "mingw32-make.exe",
+                "options": {
+                    "cwd": "${workspaceFolder}",
+                    "env": {
+                        "DEBUG": "Y",
+                        "OS": "Windows_NT"
+                    }
+                }
+            },
+            "linux": {
+                "command": "make",
+                "options": {
+                    "cwd": "${workspaceFolder}",
+                    "env": {
+                        "DEBUG": "Y",
+                        "OS": "LINUX"
+                    }
+                }
+            },
+            "osx": {
+                "command": "make",
+                "options": {
+                    "cwd": "${workspaceFolder}",
+                    "env": {
+                        "DEBUG": "Y",
+                        "OS": "BSD"
+                    }
+                }
+            },
             "args": [
                 "all"
             ],
-            "options": {
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "DEBUG":"Y"
-                }
-            },
             "problemMatcher": [
                 "$gcc"
             ],

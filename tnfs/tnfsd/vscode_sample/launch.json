@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "gcc.exe - Build and debug active file",
+            "name": "Winodws gcc.exe - Build and debug project",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\${workspaceFolderBasename}.exe",
-            "args": ["."],
+            "program": "${workspaceFolder}\\bin\\${workspaceFolderBasename}.exe",
+            "args": ["C:\\Users\\omf\\Desktop\\tnfsd"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -23,7 +23,41 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "GNU Make Project"
-        }
+            "preLaunchTask": "Make Project"
+        },
+        {
+            "name": "Linux gcc - Build and debug project",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
+            "args": ["~/Desktop/tnfsd"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Make Project"
+        },        
+        {
+            "name": "Mac clang - Build and debug project",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
+            "args": [ "/Users/omf/Desktop/tnfsd" ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "Make Project"
+        }        
     ]
 }
