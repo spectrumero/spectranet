@@ -70,6 +70,10 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
+#ifdef DEBUG	
+	fprintf(stderr, "Starting tnfsd using root directory \"%s\"\n", argv[1]);
+#endif
+
 	tnfs_init();		/* initialize structures etc. */
 	tnfs_init_errtable();	/* initialize error lookup table */
 	tnfs_sockinit();	/* initialize communications */

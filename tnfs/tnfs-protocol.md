@@ -380,26 +380,58 @@ READDIRX
 > initiate the directory read, otherwise `READDIRX` may not return any results.  
 > Command `0x18`
 
-Standard header plus directory handle.
+Standard header followed by directory handle (opened by `OPENDIRX`) and a single
+byte indicating the number of entries desired. A zero for this value will
+result in the server providing as many entries as fit within a single response
+(when using UDP). Any other value will cause the server to return no more
+than that many entries, although less than that may be provided if that
+number will not fit in a single response or if there are less than that many
+entries remaining.
 
 Example:
 
-Read an entry with directory handle 0x04:
+Read at most two directory entries with the open directory handle of 0x04:
 
-    0xBEEF 0x00 0x18 0x04
+    0xBEEF 0x00 0x18 0x04 0x02
 
 The server replies with the standard header followed by the return code.
 On success, the file information follows this in the following order:
 
-    flags - 1 byte: Flags providing additional information about the file (see below)
-    size  - 4 bytes: Unsigned 32 bit little endian size of file in bytes
-    mtime - 4 bytes: Modification time in seconds since the epoch, little endian
-    ctime - 4 bytes: Creation time in seconds since the epoch, little endian
-    entry - X bytes: Zero-terminated string providing directory entry path
+Bytes | Item   | Description
+:---: | ------ | -------------------------------------------------------
+  1   | count  | Number of entries returned
+  2   | dirpos | Position of first entry as given by `TELLDIR`
+  1   | flags  | Entry flags providing additional information (see below)
+  4   | size   | Entry size in bytes as unsigned 32-bit little endian value
+  4   | mtime  | Entry modification time in seconds since epoch
+  4   | ctime  | Entry change time (as above)
+  1+  | name   | Entry name as NULL-terminated string
+  .   | ...    | ... additional entries (if available) ...
+
+If more than one entry is returned in a reply (as indicated by `count`),
+those entries follow after the NULL terminating the `name` of the initial
+entry. Each entry begins with its own `flags` value and is followed by
+`size`, `mtime`, `ctime`, and `name`.
+
+`dirpos` may be used in subsequent calls to `SEEKDIR`. If more than one
+entry is returned in the reply, the `dirpos` value for those entries is
+simply calculated by incrementing the initial value by one for each entry.
 
 `TNFS_DIRENTRY` flags:
 
 * TNFS_DIRENTRY_DIR  - Entry denotes a directory
+
+Example:
+
+Two directory entries are returned, the first of which has a `dirpos`
+of 23 (the second is assumed to be 24). The first entry is a directory
+named `folder` and the second is a file named `readme.txt`. Modified time
+for each is `July 15, 2020` and changed/created time for each is
+`July 4, 2020`.  The size of the file is `12,316` bytes.
+
+    0xBEEF 0x01 0x18 0x00 0x02 0x1700
+           0x01 0x00000000 0x10550E5F 0x90D4FF5E folder 0x00
+           0x00 0x00001C30 0x10550E5F 0x90D4FF5E readme.txt 0x00
 
 If the end of directory is reached or another error occurs, then the
 status byte is set to the error number as for other commands.

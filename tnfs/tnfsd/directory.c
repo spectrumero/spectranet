@@ -380,57 +380,104 @@ void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 {
 	/*
-	We're returning:
+	The response starts with:
+	count - 1 byte: number of entries returned
+	dpos  - 2 bytes: directory position of first returned entry (as TELLDIR would return)
+
+	With each entry we're returning:
 	flags - 1 byte: Flags providing additional information about the file (see below)
 	size  - 4 bytes: Unsigned 32 bit little endian size of file in bytes
 	mtime - 4 bytes: Modification time in seconds since the epoch, little endian
 	ctime - 4 bytes: Creation time in seconds since the epoch, little endian
 	entry - X bytes: Zero-terminated string providing directory entry path
 */
-	directory_entry reply = {
-		.flags = 0,
-		.size = 0,
-		.mtime = 0,
-		.ctime = 0,
-		.entrypath = {'\0'}};
-
-	int replyheaderlen = sizeof(uint8_t) + (sizeof(uint32_t) * 3);
-
-	// databuf holds our directory handle: check it
-	if (datasz != 1 ||
-		*databuf > MAX_DHND_PER_CONN ||
-		s->dhandles[*databuf].handle == NULL)
+	uint8_t sid;
+	// databuf holds our directory handle followed by number of entries requested
+	if (datasz != 2 ||
+		(sid = databuf[0]) > MAX_DHND_PER_CONN ||
+		s->dhandles[sid].handle == NULL)
 	{
 		hdr->status = TNFS_EBADF;
 		tnfs_send(s, hdr, NULL, 0);
 		return;
 	}
+	// req_count of '0' means "as many as will fit in the reply"
+	// any other value sets a max number of replies to send
+	uint8_t req_count = databuf[1];
 
-	dir_handle *dh = &s->dhandles[*databuf];
-	directory_entry *entry;
+	dir_handle *dh = &s->dhandles[sid];
 
-	if (dh->current_entry)
-	{
-		entry = &dh->current_entry->entry;
-
-		reply.flags = entry->flags;
-		uint32tnfs((unsigned char *)&reply.size, entry->size);
-		uint32tnfs((unsigned char *)&reply.mtime, entry->mtime);
-		uint32tnfs((unsigned char *)&reply.ctime, entry->ctime);
-
-		int pathlen = strlcpy(reply.entrypath, entry->entrypath, MAX_FILENAME_LEN);
-		hdr->status = TNFS_SUCCESS;
-
-		// Point to the next entry
-		dh->current_entry = dh->current_entry->next;
-
-		tnfs_send(s, hdr, (unsigned char *)&reply, replyheaderlen + pathlen + 1);
-	}
-	else
+	// Return EOF if we're already at the end of the list
+	if (dh->current_entry == NULL)
 	{
 		hdr->status = TNFS_EOF;
 		tnfs_send(s, hdr, NULL, 0);
 	}
+
+/* The number of bytes required by the response 'header'
+ response_count (1) + dirpos (2) = 3 bytes
+*/
+#define READDIRX_HEADER_SIZE 3
+
+/* The number of bytes each entry takes not including the
+ length of the actual file/directory name
+ flags (1) + size (4) + mtime (4) + ctime(4) + NULL (1) = 14 bytes
+ */
+#define READDIRX_ENTRY_SIZE 14
+
+	// our reply must hold up to MAXMSGSZ bytes
+	uint8_t reply[MAXMSGSZ];
+	// set the reply count to 0
+	reply[0] = 0;
+
+	directory_entry *pThisEntry, *pEntryInReply;
+	// Start by pointing to just after the reply 'header' in the buffer
+	pEntryInReply = (directory_entry *)(reply + READDIRX_HEADER_SIZE);
+
+	uint8_t count_sent = 0;
+	int total_size = READDIRX_HEADER_SIZE;
+
+	while (dh->current_entry != NULL)
+	{
+		// Quit if we've reached the requested count
+		if (req_count != 0 && count_sent >= req_count)
+			break;
+
+		pThisEntry = &dh->current_entry->entry;
+		int namelen = strlen(pThisEntry->entrypath);
+
+		// Quit if this entry won't fit in what's left of the reply buffer
+		if ((total_size + READDIRX_ENTRY_SIZE + namelen) > sizeof(reply))
+			break;
+
+		// If this is the first entry, copy the directory position into the reply
+		if (count_sent == 0)
+			uint16tnfs(reply + 1, dirlist_get_index_for_node(dh->entry_list, dh->current_entry));
+
+		// Copy the entry data into the appropriate spots in the reply buffer
+		strcpy(pEntryInReply->entrypath, pThisEntry->entrypath);
+
+		pEntryInReply->flags = pThisEntry->flags;
+		uint32tnfs((unsigned char *)&pEntryInReply->size, pThisEntry->size);
+		uint32tnfs((unsigned char *)&pEntryInReply->mtime, pThisEntry->mtime);
+		uint32tnfs((unsigned char *)&pEntryInReply->ctime, pThisEntry->ctime);
+
+		// Update our count and save it in the reply
+		count_sent++;
+		reply[0] = count_sent;
+
+		// Keep track of how much of the buffer we've used
+		total_size += READDIRX_ENTRY_SIZE + namelen;
+		// Move our pointer within the reply to the end of the current entry
+		pEntryInReply = (directory_entry *)(reply + total_size);
+
+		// Point to the next directory entry
+		dh->current_entry = dh->current_entry->next;
+	}
+
+	// Respond with whatever we've collected
+	hdr->status = TNFS_SUCCESS;
+	tnfs_send(s, hdr, reply, total_size);
 }
 
 // Returns false if pattern doesn't match, otherwise true
@@ -528,7 +575,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 		{
 			/* If it's not a directory and we have a pattern that this doesn't match, skip it
 				Ignore the directory qualification if TNFS_DIROPT_DIR_PATTERN is set */
-			if ((diropts & TNFS_DIROPT_DIR_PATTERN)  || !(finf.flags & FILEINFOFLAG_DIRECTORY))
+			if ((diropts & TNFS_DIROPT_DIR_PATTERN) || !(finf.flags & FILEINFOFLAG_DIRECTORY))
 			{
 				if (pattern != NULL && _pattern_match(entry->d_name, pattern) == false)
 					continue;
@@ -566,7 +613,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 			entrycount++;
 
 			// If we were given a max, break if we've reached it
-			if(maxresults > 0 && entrycount >= maxresults)
+			if (maxresults > 0 && entrycount >= maxresults)
 				break;
 #ifdef DEBUG
 			fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
@@ -575,7 +622,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 	}
 
 	// Sort the two lists (assuming TNFS_DIRSORT_NONE isn't set)
-	if(!(sortopts & TNFS_DIRSORT_NONE))
+	if (!(sortopts & TNFS_DIRSORT_NONE))
 	{
 		if (list_dirs != NULL)
 			dirlist_sort(&list_dirs, sortopts);
@@ -670,9 +717,12 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 			{
 				/* send OK response */
 				hdr->status = TNFS_SUCCESS;
-				reply[0] = (unsigned char)i;
+				#ifdef DEBUG
+				fprintf(stderr, "opendirx: handle=%hu, count=%hu\n", i, s->dhandles[i].entry_count);
+				#endif
+				reply[0] = (unsigned char) i;
 				uint16tnfs(reply + 1, s->dhandles[i].entry_count);
-				tnfs_send(s, hdr, reply, 5);
+				tnfs_send(s, hdr, reply, 3);
 			}
 			else
 			{
@@ -763,12 +813,12 @@ directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_
 
 	int r;
 	// Sort by size
-	if(sortopts & TNFS_DIRSORT_SIZE)
+	if (sortopts & TNFS_DIRSORT_SIZE)
 	{
 		r = list_left->entry.size - list_right->entry.size;
 	}
 	// Sort by modified timestamp
-	else if(sortopts & TNFS_DIRSORT_MODIFIED)
+	else if (sortopts & TNFS_DIRSORT_MODIFIED)
 	{
 		r = list_left->entry.mtime - list_right->entry.mtime;
 	}
@@ -776,14 +826,14 @@ directory_entry_list _mergesort_merge(directory_entry_list list_left, directory_
 	else
 	{
 		// Decide whether to use case-sensitive or insensitive sorting
-		if(sortopts & TNFS_DIRSORT_CASE)
+		if (sortopts & TNFS_DIRSORT_CASE)
 			r = strcmp(list_left->entry.entrypath, list_right->entry.entrypath);
 		else
 			r = strcasecmp(list_left->entry.entrypath, list_right->entry.entrypath);
 	}
 
 	// Reverse the result if we're sorting descending
-	if(sortopts & TNFS_DIRSORT_DESCENDING)
+	if (sortopts & TNFS_DIRSORT_DESCENDING)
 		r *= -1;
 
 	if (r < 0)

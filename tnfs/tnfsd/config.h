@@ -33,7 +33,7 @@
 #define MAX_TNFSPATH	256	/* maximum path length */
 #define MAX_FILEPATH	384	/* Maximum path + filename */
 #define MAX_ROOT	128	/* maximum root dir length */
-#define PROTOVERSION_LSB 0x03	/* Protocol version, LSB */
+#define PROTOVERSION_LSB 0x02	/* Protocol version, LSB */
 #define PROTOVERSION_MSB 0x01	/* Protocol version, MSB */
 #define TIMEOUT_LSB	0xE8	/* Timeout LSB (1 sec) */
 #define TIMEOUT_MSB	0x03	/* Timeout MSB (1 sec) */
