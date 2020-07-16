@@ -1,5 +1,6 @@
 The TNFS Protocol
-=================
+===========================
+Updated July 14, 2020
 
 ### Rationale
 

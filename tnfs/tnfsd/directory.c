@@ -616,7 +616,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 			if (maxresults > 0 && entrycount >= maxresults)
 				break;
 #ifdef DEBUG
-			fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
+			//fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
 #endif
 		}
 	}
@@ -635,6 +635,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 	dirh->entry_count = entrycount;
 
 #ifdef DEBUG
+/*
 	fprintf(stderr, "RETURNING LIST:\n");
 	directory_entry_list _dl = dirh->entry_list;
 	while (_dl)
@@ -642,6 +643,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 		fprintf(stderr, "\t%s\n", _dl->entry.entrypath);
 		_dl = _dl->next;
 	}
+*/
 #endif
 
 	dirh->current_entry = dirh->entry_list;
