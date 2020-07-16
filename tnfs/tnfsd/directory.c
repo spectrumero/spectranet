@@ -382,10 +382,11 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	/*
 	The response starts with:
 	count - 1 byte: number of entries returned
+	status- 1 byte: directory status
 	dpos  - 2 bytes: directory position of first returned entry (as TELLDIR would return)
 
 	With each entry we're returning:
-	flags - 1 byte: Flags providing additional information about the file (see below)
+	flags - 1 byte: Flags providing additional information about the file
 	size  - 4 bytes: Unsigned 32 bit little endian size of file in bytes
 	mtime - 4 bytes: Modification time in seconds since the epoch, little endian
 	ctime - 4 bytes: Creation time in seconds since the epoch, little endian
@@ -415,9 +416,9 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 
 /* The number of bytes required by the response 'header'
- response_count (1) + dirpos (2) = 3 bytes
+ response_count (1) + dir_status (1) + dirpos (2) = 3 bytes
 */
-#define READDIRX_HEADER_SIZE 3
+#define READDIRX_HEADER_SIZE 4
 
 /* The number of bytes each entry takes not including the
  length of the actual file/directory name
@@ -429,6 +430,8 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	uint8_t reply[MAXMSGSZ];
 	// set the reply count to 0
 	reply[0] = 0;
+	// set the status to 0
+	reply[1] = 0;
 
 	directory_entry *pThisEntry, *pEntryInReply;
 	// Start by pointing to just after the reply 'header' in the buffer
@@ -452,7 +455,7 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 		// If this is the first entry, copy the directory position into the reply
 		if (count_sent == 0)
-			uint16tnfs(reply + 1, dirlist_get_index_for_node(dh->entry_list, dh->current_entry));
+			uint16tnfs(reply + 2, dirlist_get_index_for_node(dh->entry_list, dh->current_entry));
 
 		// Copy the entry data into the appropriate spots in the reply buffer
 		strcpy(pEntryInReply->entrypath, pThisEntry->entrypath);
@@ -474,6 +477,10 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		// Point to the next directory entry
 		dh->current_entry = dh->current_entry->next;
 	}
+
+	// If we've reached the end of the directory, set the TNFS_DIRSTATUS_EOF flag
+	if(dh->current_entry == NULL)
+		reply[1] |= TNFS_DIRSTATUS_EOF;
 
 	// Respond with whatever we've collected
 	hdr->status = TNFS_SUCCESS;
@@ -599,7 +606,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 
 			if (finf.flags & FILEINFOFLAG_DIRECTORY)
 			{
-				node->entry.flags |= TNFS_DIRENTRY_DIR;
+				node->entry.flags = finf.flags;
 				/* If the TNFS_DIROPT_NO_FOLDERSFIRST 0x01  flag hasn't been set, put this node
 				   in a separate list for directories so they're sorted separately */
 				if (!(diropts & TNFS_DIROPT_NO_FOLDERSFIRST))

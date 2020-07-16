@@ -70,9 +70,9 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-#ifdef DEBUG	
-	fprintf(stderr, "Starting tnfsd using root directory \"%s\"\n", argv[1]);
-#endif
+	const char *version = "20.0715.1";
+	fprintf(stdout, "Starting tnfsd version %s using root directory \"%s\"\n",
+		version, argv[1]);
 
 	tnfs_init();		/* initialize structures etc. */
 	tnfs_init_errtable();	/* initialize error lookup table */

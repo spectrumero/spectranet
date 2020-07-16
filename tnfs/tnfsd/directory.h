@@ -40,6 +40,8 @@
 #define TNFS_DIRSORT_MODIFIED 0x08
 #define TNFS_DIRSORT_SIZE 0x10
 
+#define TNFS_DIRSTATUS_EOF 0x01
+
 /* initialize and set the root dir */
 int tnfs_setroot(char *rootdir);
 

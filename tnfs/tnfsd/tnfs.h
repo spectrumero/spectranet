@@ -84,6 +84,8 @@
 #define NUM_FILECMDS 10
 
 #define TNFS_DIRENTRY_DIR 0x01
+#define TNFS_DIRENTRY_HIDDEN 0x02
+#define TNFS_DIRENTRY_SPECIAL 0x04
 
 // Extended directory entry contents
 struct _dir_entry
