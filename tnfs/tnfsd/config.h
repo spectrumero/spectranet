@@ -30,6 +30,7 @@
 #define MAX_CLIENTS_PER_IP 8 /* maximum number of UDP clients from single IP */
 #define MAX_TCP_CONN	256	/* Maximum number of TCP clients */
 #define TNFS_HEADERSZ	4	/* minimum header size */
+#define TNFS_MAX_PAYLOAD (MAXMSGSZ - TNFS_HEADERSZ - 1) /* Maximum usuable payload in a UDP datagram (-1 for status byte) */
 #define MAX_TNFSPATH	256	/* maximum path length */
 #define MAX_FILEPATH	384	/* Maximum path + filename */
 #define MAX_ROOT	128	/* maximum root dir length */

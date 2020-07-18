@@ -326,7 +326,8 @@ void tnfs_send(Session *sess, Header *hdr, unsigned char *msg, int msgsz)
 	ssize_t txbytes;
 	unsigned char *txbuf = sess->lastmsg;
 
-	if (msgsz + TNFS_HEADERSZ > MAXMSGSZ)
+	// TNFS_HEADERSZ + statuscode + msg
+	if (TNFS_HEADERSZ + 1 + msgsz > MAXMSGSZ)
 	{
 		die("tnfs_send: Message too big");
 	}
@@ -341,15 +342,18 @@ void tnfs_send(Session *sess, Header *hdr, unsigned char *msg, int msgsz)
 	*(txbuf + 4) = hdr->status;
 	if (msg)
 		memcpy(txbuf + 5, msg, msgsz);
-	sess->lastmsgsz = msgsz + TNFS_HEADERSZ + 1; /* header + status code */
+
+	sess->lastmsgsz = TNFS_HEADERSZ + 1 + msgsz; /* header + status code + payload */
 	sess->lastseqno = hdr->seqno;
 
 	txbytes = sendto(sockfd, WIN32_CHAR_P txbuf, msgsz + TNFS_HEADERSZ + 1, 0,
 					 (struct sockaddr *)&cliaddr, sizeof(cliaddr));
-	if (txbytes < msgsz + TNFS_HEADERSZ)
+
+	if (txbytes < TNFS_HEADERSZ + 1 + msgsz)
 	{
 		TNFSMSGLOG(hdr, "Message was truncated");
 	}
+	fprintf(stderr,"DEBUG: tnfs_send sent %d bytes\n", txbytes);
 }
 
 void tnfs_resend(Session *sess, struct sockaddr_in *cliaddr)
