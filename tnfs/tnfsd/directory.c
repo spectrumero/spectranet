@@ -416,7 +416,7 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 
 /* The number of bytes required by the response 'header'
- response_count (1) + dir_status (1) + dirpos (2) = 3 bytes
+ response_count (1) + dir_status (1) + dirpos (2) = 4 bytes
 */
 #define READDIRX_HEADER_SIZE 4
 
@@ -426,8 +426,8 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
  */
 #define READDIRX_ENTRY_SIZE 14
 
-	// our reply must hold up to MAXMSGSZ bytes
-	uint8_t reply[MAXMSGSZ];
+	// our reply must hold up to (MAXMSGSZ - TNFS_HEADERSZ) bytes
+	uint8_t reply[MAXMSGSZ - TNFS_HEADERSZ];
 	// set the reply count to 0
 	reply[0] = 0;
 	// set the status to 0
