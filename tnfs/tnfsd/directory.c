@@ -442,7 +442,6 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 	while (dh->current_entry != NULL)
 	{
-		fprintf(stderr, "DEBUG: total_size=%d\n", total_size);
 		// Quit if we've reached the requested count
 		if (req_count != 0 && count_sent >= req_count)
 			break;
@@ -451,7 +450,6 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		int namelen = strlen(pThisEntry->entrypath);
 
 		// Quit if this entry won't fit in what's left of the reply buffer
-		fprintf(stderr, "DEBUG: (%d + %d + %d) = %d > %d ?\n", total_size, READDIRX_ENTRY_SIZE, namelen, (total_size + READDIRX_ENTRY_SIZE + namelen), sizeof(reply));
 		if ((total_size + READDIRX_ENTRY_SIZE + namelen) > sizeof(reply))
 			break;
 
@@ -461,10 +459,6 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 		// Copy the entry data into the appropriate spots in the reply buffer
 		strcpy(pEntryInReply->entrypath, pThisEntry->entrypath);
-
-#ifdef DEBUG
-	fprintf(stderr, "Adding to reply: \"%s\", \"%s\"\n", pEntryInReply->entrypath, pThisEntry->entrypath);
-#endif
 
 		pEntryInReply->flags = pThisEntry->flags;
 		uint32tnfs((unsigned char *)&pEntryInReply->size, pThisEntry->size);
@@ -478,7 +472,6 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		// Keep track of how much of the buffer we've used
 		total_size += READDIRX_ENTRY_SIZE + namelen;
 		// Move our pointer within the reply to the end of the current entry
-		fprintf(stderr, "DEBUG new total_size = %d\n", total_size);
 		pEntryInReply = (directory_entry *)(reply + total_size);
 
 		// Point to the next directory entry
@@ -491,7 +484,6 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 	// Respond with whatever we've collected
 	hdr->status = TNFS_SUCCESS;
-	fprintf(stderr, "DEBUG: Requesting send of %d bytes\n", total_size);
 	tnfs_send(s, hdr, reply, total_size);
 }
 
@@ -631,7 +623,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 			if (maxresults > 0 && entrycount >= maxresults)
 				break;
 #ifdef DEBUG
-			fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
+			//fprintf(stderr, "_load_directory added \"%s\" %u\n", node->entry.entrypath, node->entry.size);
 #endif
 		}
 	}
@@ -650,7 +642,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 	dirh->entry_count = entrycount;
 
 #ifdef DEBUG
-
+/*
 	fprintf(stderr, "RETURNING LIST:\n");
 	directory_entry_list _dl = dirh->entry_list;
 	while (_dl)
@@ -658,7 +650,7 @@ int _load_directory(dir_handle *dirh, uint8_t diropts, uint8_t sortopts, uint16_
 		fprintf(stderr, "\t%s\n", _dl->entry.entrypath);
 		_dl = _dl->next;
 	}
-
+*/
 #endif
 
 	dirh->current_entry = dirh->entry_list;

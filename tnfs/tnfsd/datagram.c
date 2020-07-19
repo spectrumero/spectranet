@@ -353,7 +353,6 @@ void tnfs_send(Session *sess, Header *hdr, unsigned char *msg, int msgsz)
 	{
 		TNFSMSGLOG(hdr, "Message was truncated");
 	}
-	fprintf(stderr,"DEBUG: tnfs_send sent %d bytes\n", txbytes);
 }
 
 void tnfs_resend(Session *sess, struct sockaddr_in *cliaddr)
