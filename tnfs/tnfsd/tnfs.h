@@ -80,6 +80,7 @@
 #define CLASS_DIRECTORY	0x10
 #define CLASS_FILE	0x20
 
+#define NUM_SESSCMDS 2
 #define NUM_DIRCMDS	9
 #define NUM_FILECMDS 10
 

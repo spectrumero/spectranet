@@ -62,6 +62,61 @@ tnfs_cmdfunc filecmd[NUM_FILECMDS] =
 	 &tnfs_stat, &tnfs_lseek, &tnfs_unlink, &tnfs_chmod, &tnfs_rename,
 	 &tnfs_open};
 
+const char *sesscmd_names[NUM_SESSCMDS] =
+	{
+		"TNFS_MOUNT",
+		"TNFS_UMOUNT"};
+
+const char *dircmd_names[NUM_DIRCMDS] =
+	{"TNFS_OPENDIR",
+	 "TNFS_READDIR",
+	 "TNFS_CLOSEDIR",
+	 "TNFS_MKDIR",
+	 "TNFS_RMDIR",
+	 "TNFS_TELLDIR",
+	 "TNFS_SEEKDIR",
+	 "TNFS_OPENDIRX",
+	 "TNFS_READDIRX"};
+
+const char *filecmd_names[NUM_FILECMDS] =
+	{
+		"TNFS_OPENFILE_OLD",
+		"TNFS_READ",
+		"TNFS_WRITE",
+		"TNFS_CLOSE",
+		"TNFS_STAT",
+		"TNFS_SEEK",
+		"TNFS_UNLINK",
+		"TNFS_CHMOD",
+		"TNFS_RENAME",
+		"TNFS_OPEN"};
+
+const char *get_cmd_name(uint8_t cmd)
+{
+	uint8_t class = cmd & 0xF0;
+	uint8_t index = cmd & 0x0F;
+
+	if(class == CLASS_FILE)
+	{
+		if(index < NUM_FILECMDS)
+			return filecmd_names[index];
+
+	}
+	else if(class == CLASS_DIRECTORY)
+	{
+		if(index < NUM_DIRCMDS)
+			return dircmd_names[index];
+
+	}
+	else if(class == CLASS_SESSION)
+	{
+		if(index < NUM_SESSCMDS)
+			return sesscmd_names[index];
+	}
+
+	return "UNKNOWN_CMD";
+}
+
 void tnfs_sockinit()
 {
 	struct sockaddr_in servaddr;
@@ -113,6 +168,7 @@ void tnfs_mainloop()
 	int tcpsocks[MAX_TCP_CONN];
 
 	memset(&tcpsocks, 0, sizeof(tcpsocks));
+
 	while (1)
 	{
 		FD_ZERO(&fdset);
@@ -246,8 +302,7 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 	hdr.port = ntohs(cliaddr->sin_port);
 
 #ifdef DEBUG
-	TNFSMSGLOG(&hdr, "DEBUG: Decoding datagram");
-	fprintf(stderr, "DEBUG: cmd=0x%02x msgsz=%d\n", hdr.cmd, rxbytes);
+	TNFSMSGLOG(&hdr, "REQUEST cmd=0x%02x %s", hdr.cmd, get_cmd_name(hdr.cmd));
 #endif
 
 	/* The MOUNT command is the only one that doesn't need an

@@ -73,7 +73,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 	uint16_t recycledSid = 0;
 
 #ifdef DEBUG
-	TNFSMSGLOG(hdr, "Mounting FS");
+	TNFSMSGLOG(hdr, "TNFS_MOUNT");
 #endif
 	/* Mount packet looks like:
 	 * Header + mountpoint + user + pass.
@@ -136,8 +136,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 		hdr->sid = s->sid;
 		tnfs_send(s, hdr, repbuf, 4);
 #ifdef DEBUG
-		fprintf(stderr, "Mounted %s OK, SID=%x\n",
-				s->root, s->sid);
+		TNFSMSGLOG(hdr, "Mounted %s OK, SID=%x", s->root, s->sid);
 #endif
 	}
 	else
@@ -151,7 +150,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 		/* free the session */
 		tnfs_freesession(s, sindex);
 #ifdef DEBUG
-		fprintf(stderr, "Failed to mount %s\n", s->root);
+		TNFSMSGLOG(hdr, "Failed to mount %s", s->root);
 #endif
 	}
 
@@ -177,6 +176,7 @@ Session *tnfs_allocsession(int *sindex, uint16_t withSid)
 {
 	Session *s;
 
+	LOG("Allocating new session for 0x%02x\n", withSid);
 	for (*sindex = 0; (*sindex) < MAX_CLIENTS; (*sindex)++)
 	{
 		if (slist[*sindex] == NULL)
@@ -194,6 +194,7 @@ Session *tnfs_allocsession(int *sindex, uint16_t withSid)
 				{
 					s->sid = tnfs_newsid();
 				}
+				LOG("Allocated new session for 0x%02x\n", s->sid);
 				slist[*sindex] = s;
 			}
 			return s;
@@ -265,6 +266,11 @@ Session *tnfs_findsession_ipaddr(in_addr_t ipaddr, int *sindex)
 
 	int count = 0;
 
+#ifdef DEBUG
+	unsigned char *ip = (unsigned char *)&ipaddr;
+	LOG("Looking for existing sessions with IP %d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+#endif
+
 	for (i = 0; i < MAX_CLIENTS; i++)
 	{
 		if (slist[i])
@@ -275,6 +281,7 @@ Session *tnfs_findsession_ipaddr(in_addr_t ipaddr, int *sindex)
 				// If we've reached the max for this IP, return the first match
 				if ((count + 1) >= MAX_CLIENTS_PER_IP)
 				{
+					LOG("Found we already %d sessions for this IP - returning oldest entry\n", MAX_CLIENTS_PER_IP);
 					*sindex = first_match_idx;
 					return first_match_sess;
 				}

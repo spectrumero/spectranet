@@ -32,6 +32,7 @@
 #include "directory.h"
 #include "errortable.h"
 #include "chroot.h"
+#include "log.h"
 
 /* declare the main() - it won't be used elsewhere so I'll not bother
  * with putting it in a .h file */
@@ -42,9 +43,9 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 #ifdef ENABLE_CHROOT
-		fprintf(stderr, "Usage: tnfsd <root dir> [-c <username>]\n");
+		LOG("Usage: tnfsd <root dir> [-c <username>]\n");
 #else
-		fprintf(stderr, "Usage: tnfsd <root dir>\n");
+		LOG("Usage: tnfsd <root dir>\n");
 #endif
 		exit(-1);
 	}
@@ -56,7 +57,7 @@ int main(int argc, char **argv)
 		chroot_tnfs(argv[3], argv[1]);
 		if(tnfs_setroot("/") < 0)
 		{
-			fprintf(stderr, "Unable to chdir to /...\n");
+			LOG("Unable to chdir to /...\n");
 			exit(-1);
 		}
 	}
@@ -66,18 +67,18 @@ int main(int argc, char **argv)
 	if(tnfs_setroot(argv[1]) < 0)
 	{
 #endif
-		fprintf(stderr, "Invalid root directory\n");
+		LOG("Invalid root directory\n");
 		exit(-1);
 	}
 
-	const char *version = "20.0718.1";
-	fprintf(stdout, "Starting tnfsd version %s using root directory \"%s\"\n",
-		version, argv[1]);
+	const char *version = "20.0719.1";
+
+	LOG("Starting tnfsd version %s using root directory \"%s\"\n", version, argv[1]);
 
 	tnfs_init();		/* initialize structures etc. */
 	tnfs_init_errtable();	/* initialize error lookup table */
 	tnfs_sockinit();	/* initialize communications */
 	tnfs_mainloop();	/* run */
+
 	return 0;
 }
-

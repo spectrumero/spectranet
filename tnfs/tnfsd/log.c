@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sys/types.h>
 
 #include "log.h"
@@ -37,23 +38,50 @@ void die(const char *msg)
 	exit(-1);
 }
 
-void TNFSMSGLOG(Header *hdr, const char *msg)
+void TNFSMSGLOG(Header *hdr, const char *msg, ...)
 {
-	unsigned char *ip=(unsigned char *)&hdr->ipaddr;
-	fprintf(stderr, "Client: %d.%d.%d.%d Session: %x : %s\n",
-			ip[0], ip[1], ip[2], ip[3],
-			hdr->sid, msg);
+	unsigned char *ip = (unsigned char *)&hdr->ipaddr;
+	char buff[128];
+
+	va_list vargs;
+	va_start(vargs, msg);
+
+	vsnprintf(buff, sizeof(buff), msg, vargs);
+	va_end(vargs);
+
+	fprintf(stderr, "%d.%d.%d.%d s=%02x c=%02x q=%02x | %s\n", ip[0], ip[1], ip[2], ip[3], hdr->sid, hdr->cmd, hdr->seqno, buff);
+
 #ifdef WIN32
 	fflush(stderr);
 #endif
 }
 
-void MSGLOG(in_addr_t ipaddr, const char *msg)
+void MSGLOG(in_addr_t ipaddr, const char *msg, ...)
 {
-	unsigned char *ip=(unsigned char *)&ipaddr;
-	fprintf(stderr, "Cli: %d.%d.%d.%d: %s\n",
-			ip[0], ip[1], ip[2], ip[3],
-			msg);
+	unsigned char *ip = (unsigned char *)&ipaddr;
+	char buff[128];
+
+	va_list vargs;
+	va_start(vargs, msg);
+
+	vsnprintf(buff, sizeof(buff), msg, vargs);
+	va_end(vargs);
+
+	fprintf(stderr, "%d.%d.%d.%d | %s\n", ip[0], ip[1], ip[2], ip[3], buff);
+
+#ifdef WIN32
+	fflush(stderr);
+#endif
+}
+
+void LOG(const char *msg, ...)
+{
+	va_list vargs;
+	va_start(vargs, msg);
+
+	vfprintf(stderr, msg, vargs);
+	va_end(vargs);
+
 #ifdef WIN32
 	fflush(stderr);
 #endif

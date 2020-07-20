@@ -41,6 +41,7 @@
 #include "errortable.h"
 #include "bsdcompat.h"
 #include "endian.h"
+#include "log.h"
 #include "fileinfo.h"
 
 directory_entry_list dirlist_concat(directory_entry_list list1, directory_entry_list list2);
@@ -407,13 +408,29 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	uint8_t req_count = databuf[1];
 
 	dir_handle *dh = &s->dhandles[sid];
+#ifdef DEBUG
+/*  // Force a delay to check handling on the client
+	LOG("A LITTLE PAUSE\n");
+	unsigned long wl = 0;
+	for(int w=0; w < 1000000000LL; w++)
+		wl = wl + w * w;
+	LOG("PAUSE = %lu\n", wl);
+*/	
+#endif
 
 	// Return EOF if we're already at the end of the list
 	if (dh->current_entry == NULL)
 	{
+#ifdef DEBUG	
+		TNFSMSGLOG(hdr, "readdirx no more entries - returning EOF");
+#endif	
 		hdr->status = TNFS_EOF;
 		tnfs_send(s, hdr, NULL, 0);
 	}
+
+#ifdef DEBUG	
+	TNFSMSGLOG(hdr, "readdirx request for %hu entries", req_count);
+#endif	
 
 /* The number of bytes required by the response 'header'
  response_count (1) + dir_status (1) + dirpos (2) = 4 bytes
@@ -484,6 +501,9 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 
 	// Respond with whatever we've collected
 	hdr->status = TNFS_SUCCESS;
+#ifdef DEBUG
+	TNFSMSGLOG(hdr, "readdirx responding with %hu entries, status_flags=0x%x", reply[0], reply[1]);
+#endif	
 	tnfs_send(s, hdr, reply, total_size);
 }
 
@@ -548,7 +568,7 @@ bool _pattern_match(const char *src, const char *pattern)
 	bool result = lookup[n][m];
 
 #ifdef DEBUG
-	fprintf(stderr, result ? "TRUE\n" : "FALSE\n");
+	fprintf(stderr, "%s\n", result ? "TRUE" : "FALSE");
 #endif
 	return result;
 }
@@ -678,7 +698,7 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	if ((datasz < 7) || (*(databuf + datasz - 1) != 0))
 	{
 #ifdef DEBUG
-		fprintf(stderr, "Invalid argument count or missing NULL terminator\n");
+		TNFSMSGLOG(hdr, "Invalid argument count or missing NULL terminator");
 #endif
 		hdr->status = TNFS_EINVAL;
 		tnfs_send(s, hdr, NULL, 0);
@@ -706,7 +726,7 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		pPattern = NULL;
 
 #ifdef DEBUG
-	fprintf(stderr, "opendirx: diropt=0x%02x, sortopt=0x%02x, max=0x%04hx, pat=\"%s\", path=\"%s\"\n",
+	TNFSMSGLOG(hdr, "opendirx: diropt=0x%02x, sortopt=0x%02x, max=0x%04hx, pat=\"%s\", path=\"%s\"",
 			diropts, sortopts, maxresults, pPattern ? pPattern : "", pDirpath);
 #endif
 
@@ -727,7 +747,7 @@ void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 				/* send OK response */
 				hdr->status = TNFS_SUCCESS;
 				#ifdef DEBUG
-				fprintf(stderr, "opendirx: handle=%hu, count=%hu\n", i, s->dhandles[i].entry_count);
+				TNFSMSGLOG(hdr, "opendirx response: handle=%hu, count=%hu", i, s->dhandles[i].entry_count);
 				#endif
 				reply[0] = (unsigned char) i;
 				uint16tnfs(reply + 1, s->dhandles[i].entry_count);
