@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	const char *version = "20.0719.1";
+	const char *version = "20.0813.1";
 
 	LOG("Starting tnfsd version %s using root directory \"%s\"\n", version, argv[1]);
 

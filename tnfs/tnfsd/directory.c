@@ -542,24 +542,23 @@ bool _pattern_match(const char *src, const char *pattern)
 	{
 		for (int j = 1; j <= m; j++)
 		{
-			// Two cases if we see a '*'
-			// a) We ignore ‘*’ character and move
-			//    to next  character in the pattern,
-			//     i.e., ‘*’ indicates an empty sequence.
-			// b) '*' character matches with ith
-			//     character in input
+			// Two cases if we see a '*':
+			// a) We ignore '*' character and move to next character in the pattern,
+			//     i.e., '*' indicates an empty sequence.
+			// b) '*' character matches with i-th character in input
 			if (pattern[j - 1] == '*')
-				lookup[i][j] = lookup[i][j - 1] ||
-							   lookup[i - 1][j];
+			{
+				lookup[i][j] = lookup[i][j - 1] || lookup[i - 1][j];
 
-			// Current characters are considered as
-			// matching in two cases
+			// Current characters are considered matching in two cases:
 			// (a) current character of pattern is '?'
-			// (b) characters actually match
-			else if (pattern[j - 1] == '?' ||
-					 src[i - 1] == pattern[j - 1])
+			// (b) characters actually match (case insensitive)
+			} else if (pattern[j - 1] == '?' ||
+				 (src[i - 1] == pattern[j - 1]) ||
+				 (tolower(src[i - 1]) == tolower(pattern[j - 1])))
+			{
 				lookup[i][j] = lookup[i - 1][j - 1];
-
+			}
 			// If characters don't match
 			else
 				lookup[i][j] = false;
