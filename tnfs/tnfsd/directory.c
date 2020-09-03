@@ -34,6 +34,7 @@
 #include <stdbool.h>
 
 #include "tnfs.h"
+#include "log.h"
 #include "config.h"
 #include "directory.h"
 #include "tnfs_file.h"
@@ -329,6 +330,7 @@ void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 #ifdef DEBUG
 	fprintf(stderr, "tnfs_seekdir to pos %u\n", pos);
 #endif
+
 	// We handle this differently depending on whether we've pre-loaded the directory or not
 	if (s->dhandles[*databuf].entry_list == NULL)
 	{
@@ -338,6 +340,12 @@ void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	{
 		s->dhandles[*databuf].current_entry = dirlist_get_node_at_index(s->dhandles[*databuf].entry_list, pos);
 	}
+#ifdef USAGELOG
+	if (pos == 0) {
+	        USGLOG(hdr, "Path changed to: %s", s->dhandles[*databuf].path);
+	}
+#endif
+
 
 	hdr->status = TNFS_SUCCESS;
 	tnfs_send(s, hdr, NULL, 0);

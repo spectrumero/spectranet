@@ -25,6 +25,7 @@
  * */
 
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/types.h>
@@ -56,6 +57,31 @@ void TNFSMSGLOG(Header *hdr, const char *msg, ...)
 #endif
 }
 
+void USGLOG(Header *hdr, const char *msg, ...)
+{
+	unsigned char *ip = (unsigned char *)&hdr->ipaddr;
+	char buff[128];
+	char sdate[20];
+	struct tm *sTm;
+
+	time_t now = time (0);
+	sTm = gmtime (&now);
+
+	strftime (sdate, sizeof(sdate), "%Y-%m-%d %H:%M:%S", sTm);
+
+	va_list vargs;
+	va_start(vargs, msg);
+
+	vsnprintf(buff, sizeof(buff), msg, vargs);
+	va_end(vargs);
+
+	fprintf(stderr, "%s|%d.%d.%d.%d|SID=%02x|%s\n", sdate, ip[0], ip[1], ip[2], ip[3], hdr->sid, buff);
+
+#ifdef WIN32
+	fflush(stderr);
+#endif
+}
+
 void MSGLOG(in_addr_t ipaddr, const char *msg, ...)
 {
 	unsigned char *ip = (unsigned char *)&ipaddr;
@@ -67,7 +93,7 @@ void MSGLOG(in_addr_t ipaddr, const char *msg, ...)
 	vsnprintf(buff, sizeof(buff), msg, vargs);
 	va_end(vargs);
 
-	fprintf(stderr, "%d.%d.%d.%d | %s\n", ip[0], ip[1], ip[2], ip[3], buff);
+	fprintf(stdout, "%d.%d.%d.%d | %s\n", ip[0], ip[1], ip[2], ip[3], buff);
 
 #ifdef WIN32
 	fflush(stderr);
