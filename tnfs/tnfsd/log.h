@@ -33,7 +33,7 @@
 void die(const char *msg);
 
 void TNFSMSGLOG(Header *hdr, const char *msg, ...);
-void LOG_USAGE(Header *hdr, const char *msg, ...);
+void USGLOG(Header *hdr, const char *msg, ...);
 void MSGLOG(in_addr_t ipaddr, const char *msg, ...);
 void LOG(const char *msg, ...);
 

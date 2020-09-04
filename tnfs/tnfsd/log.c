@@ -93,7 +93,7 @@ void MSGLOG(in_addr_t ipaddr, const char *msg, ...)
 	vsnprintf(buff, sizeof(buff), msg, vargs);
 	va_end(vargs);
 
-	fprintf(stdout, "%d.%d.%d.%d | %s\n", ip[0], ip[1], ip[2], ip[3], buff);
+	fprintf(stderr, "%d.%d.%d.%d | %s\n", ip[0], ip[1], ip[2], ip[3], buff);
 
 #ifdef WIN32
 	fflush(stderr);
