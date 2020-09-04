@@ -26,8 +26,12 @@ endif
 ifdef DEBUG
     EXFLAGS = -g -DDEBUG
 endif
+
+ifdef USAGELOG
+    LOGFLAGS = -DUSAGELOG
+endif
     
-CFLAGS=$(FLAGS) $(EXFLAGS)
+CFLAGS=$(FLAGS) $(EXFLAGS) $(LOGFLAGS)
 OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o chroot.o fileinfo.o $(EXOBJS)
 
 all:	$(OBJS)

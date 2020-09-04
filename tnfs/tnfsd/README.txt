@@ -16,3 +16,6 @@ since I'm not sure chrooting is supported under Cygwin.
 To make a debug version, use 'make OS=osname DEBUG=yes'. This will add
 some extra debugging messages and add the -g flag to the compilation 
 options.
+
+To output basic usage log on stdout, use 'make OS=osname USAGELOG=yes'.
+

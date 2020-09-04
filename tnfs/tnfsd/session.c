@@ -138,6 +138,9 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 #ifdef DEBUG
 		TNFSMSGLOG(hdr, "Mounted %s OK, SID=%x", s->root, s->sid);
 #endif
+#ifdef USAGELOG
+		USGLOG(hdr, "Session started at: %s", s->root);
+#endif
 	}
 	else
 	{
@@ -162,6 +165,9 @@ void tnfs_umount(Header *hdr, Session *s, int sindex)
 {
 #ifdef DEBUG
 	TNFSMSGLOG(hdr, "Unmounting");
+#endif
+#ifdef USAGELOG
+	USGLOG(hdr, "Unmounting session");
 #endif
 	/* the response must be sent before we deallocate the
 	 * session */

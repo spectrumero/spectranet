@@ -112,6 +112,10 @@ void tnfs_open(Header *hdr, Session *s, unsigned char *buf, int bufsz)
 			fprintf(stderr, "mode: %o\n", mode);
 			fprintf(stderr, "open: fd=%d\n", fd);
 #endif
+#ifdef USAGELOG
+	                USGLOG(hdr, "File mounted: %s", (char *)buf + 4);
+#endif
+
 			if (fd <= 0)
 			{
 				hdr->status = tnfs_error(errno);
