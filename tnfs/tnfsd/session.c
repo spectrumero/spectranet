@@ -140,6 +140,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 #endif
 #ifdef USAGELOG
 		USGLOG(hdr, "Session started at: %s", s->root);
+		s->lastpath[0] = 0;
 #endif
 	}
 	else

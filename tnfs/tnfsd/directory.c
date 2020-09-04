@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -342,7 +343,10 @@ void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	}
 #ifdef USAGELOG
 	if (pos == 0) {
-	        USGLOG(hdr, "Path changed to: %s", s->dhandles[*databuf].path);
+		if (strcmp(s->lastpath, s->dhandles[*databuf].path) != 0) {
+		        USGLOG(hdr, "Path changed to: %s", s->dhandles[*databuf].path);
+		};
+		strcpy(s->lastpath, s->dhandles[*databuf].path);
 	}
 #endif
 

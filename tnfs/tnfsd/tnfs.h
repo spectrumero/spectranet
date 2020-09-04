@@ -129,6 +129,9 @@ typedef struct _session
 	dir_handle dhandles[MAX_DHND_PER_CONN];
 	char *root;			/* requested root dir */
 	unsigned char lastmsg[MAXMSGSZ];/* last message sent */
+#ifdef USAGELOG
+	char lastpath[MAX_TNFSPATH];    /* last path visited */
+#endif
 	int lastmsgsz;			/* last message's size inc. hdr */
 	uint8_t lastseqno;		/* last sequence number */
 	uint8_t isTCP;			/* uses the TCP transport */

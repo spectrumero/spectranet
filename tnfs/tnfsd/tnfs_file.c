@@ -49,6 +49,7 @@
 #include "errortable.h"
 #include "endian.h"
 #include "bsdcompat.h"
+#include "log.h"
 
 char fnbuf[MAX_FILEPATH];
 unsigned char iobuf[MAX_IOSZ + 2]; /* 2 bytes added for the size param */
