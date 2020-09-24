@@ -48,10 +48,12 @@ F_FlashIdentify:
 	out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; unlock code 2
 	ld (0xAAA), a	; unlock addr 2
+    ld a,5
+	out (c),a	; flash A12-A15 bits to 2
+    ld a, 0x90	; ID code
+	ld (0x555), a	; ID
 	ld a,0
 	out (c),a	; flash A12-A15 bits to 0
-	ld a, 0x90	; ID code
-	ld (0x555), a	; ID
     ld a, (0x0001)	; read device ID
     ld (v_flashid),a	; store device ID in SRAM
     ld (0x401F),a ; DEBUG
