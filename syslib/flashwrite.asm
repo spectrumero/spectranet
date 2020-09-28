@@ -32,12 +32,8 @@
 ; Attempt to identify the flash ROM IC present on the spectranet
 ; sets a system variable in SRAM containing the device ID which should be
 ; 0x20 for an Am29F010, or 0xB5 for an SST39SF010
-; Only probe chip when sysvar is zero.
 .globl F_FlashIdentify
 F_FlashIdentify:
-	ld a,(v_flashid)
-	cp 0
-	jr nz, .skipIdentify ; skip identification if sysvar is non zero
 	push bc
 	ld bc, PAGEB
 	ld a,5
@@ -64,7 +60,6 @@ F_FlashIdentify:
     ld a,(v_pgb)
     out (c),a	; restore page B
 	pop bc
-.skipIdentify:
 	ret
 
 ;---------------------------------------------------------------------------
