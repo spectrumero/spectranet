@@ -31,7 +31,7 @@
 ; F_FlashIdentify
 ; Attempt to identify the flash ROM IC present on the spectranet
 ; sets a system variable in SRAM containing the device ID which should be
-; 0x20 for an Am29F010, or 0xB5 for an SST39SF010
+; 0x20 for an Am29F010, or 0xB5/B6/B7 for an SST39SF010A/020A/040
 .globl F_FlashIdentify
 F_FlashIdentify:
 	push bc
@@ -64,7 +64,7 @@ F_FlashIdentify:
 
 ;---------------------------------------------------------------------------
 ; F_FlashEraseSector
-; Simple flash writer for the Am29F010 and SST39SF010
+; Simple flash writer for the Am29F010 and SST39SF010/020/040
 ; Erases one 16k sector or four 4k sectors based on detected device
 ;
 ; Parameters: A = page to erase (based on 4k Spectranet pages, but
@@ -79,14 +79,20 @@ F_FlashEraseSector:
 
 	ld a,(v_flashid)	; load flash type
 	ld b,4 ; erase four 4k sectors
+	
+	; this could potentially give a false positive if a ROM contains these values in the second byte
+	; a more robust check would be to also test the manufacturer ID is 0xBF (SST)
 	cp 0xB5	; SST39SF010A
-    ; this could potentially give a false positive if a ROM contained OR L in the second byte
-    ; a more robust check would be to also test the manufacturer ID is 0xBF (SST)
 	jr z, .eraseLoop
-	ld b,1 ; erase one 16k sector
+	cp 0xB6	; SST39SF020A
+	jr z, .eraseLoop
+	cp 0xB7	; SST39SF040
+	jr z, .eraseLoop
+
+	ld b,1 ; else erase one 16k sector
 .eraseLoop:
 	call F_doErase
-    inc c
+	inc c
 	djnz .eraseLoop
 	ret
 
