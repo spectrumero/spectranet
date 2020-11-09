@@ -1,6 +1,6 @@
-OBJS = flashid.o
-OUT = flashid.bin
-LDFLAGS = -T flashid.ld -L ../lib
+OBJS = ramtest.o
+OUT = ramtest.bin
+LDFLAGS = -T ramtest.ld -L ../lib
 LIBS = -lmemutil
 MAPFILE = -Map $(OUT).map
 ASFLAGS = -I../../include
@@ -9,12 +9,12 @@ LD = z80-unknown-coff-ld
 BIN2TAPE = ../../utils/bin2tape
 TAP = $(OUT).tap
 
-all:	flashid tape
+all:	ramtest tape
 
-flashid:	$(OBJS)
+ramtest:	$(OBJS)
 	$(LD) -o $(OUT) $(OBJS) $(LDFLAGS) $(LIBS) $(MAPFILE)
 
-tape:	flashid $(TAP)
+tape:	ramtest $(TAP)
 
 $(TAP):
 	$(BIN2TAPE) tap $(OUT) $(TAP)
