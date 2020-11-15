@@ -120,6 +120,7 @@ int tnfs_mount(Header *hdr, unsigned char *buf, int bufsz)
 		return -1;
 	}
 
+	s->last_contact = time(NULL);
 	s->ipaddr = hdr->ipaddr;
 
 	/* set up the proto version/timeout in the reply buffer */
@@ -267,6 +268,7 @@ Session *tnfs_findsession_ipaddr(in_addr_t ipaddr, int *sindex)
 {
 	int i;
 	Session *s;
+	time_t currenttime;
 
 	Session *first_match_sess;
 	int first_match_idx;
@@ -278,11 +280,22 @@ Session *tnfs_findsession_ipaddr(in_addr_t ipaddr, int *sindex)
 	LOG("Looking for existing sessions with IP %d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 #endif
 
+	currenttime = time(NULL);
+
 	for (i = 0; i < MAX_CLIENTS; i++)
 	{
 		if (slist[i])
 		{
 			s = slist[i];
+
+			/* Remove expired sessions while we're looking at them all */
+			if(SESSION_TIMEOUT > 0 && (currenttime - s->last_contact >= SESSION_TIMEOUT))
+			{
+				LOG("Deleting expired session 0x%02x\n", s->sid);
+				tnfs_freesession(s, i);
+				continue;
+			}
+			
 			if (s->ipaddr == ipaddr)
 			{
 				// If we've reached the max for this IP, return the first match

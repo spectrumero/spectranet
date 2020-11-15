@@ -321,6 +321,8 @@ void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
 			TNFSMSGLOG(&hdr, "Session and IP do not match");
 			return;
 		}
+		/* Update session timestamp */
+		sess->last_contact = time(NULL);
 	}
 	else
 	{

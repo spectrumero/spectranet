@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 #include <dirent.h>
+#include <time.h>
 
 #ifdef UNIX
 #include <arpa/inet.h>
@@ -120,6 +121,7 @@ typedef struct _dir_handle
 
 typedef struct _session
 {
+	time_t last_contact; /* timestamp of last received request */
 	uint16_t sid;			/* session ID */
 	in_addr_t ipaddr;		/* client addr */
 	uint8_t seqno;			/* last sequence number */
