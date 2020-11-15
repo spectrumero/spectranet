@@ -167,6 +167,39 @@ F_tbas_aload:
 	jp EXIT_SUCCESS
 
 ;----------------------------------------------------------------------------
+; F_tbas_asave: Saves an arbitrary file to the TNFS filesystem.
+; The syntax is %asave "filename" CODE address,length. This allows the user
+; to 'raw save' a block of RAM to a filesystem with no headers.
+.globl F_tbas_asave
+F_tbas_asave:
+	rst CALLBAS
+	defw ZX_EXPT_EXP		; expect a string expression
+	cp TOKEN_CODE			; expect CODE
+	jp nz, PARSE_ERROR
+	rst CALLBAS
+	defw ZX_NEXT2_NUM		; check for 2 numbers
+	call STATEMENT_END		; then end of command.
+	
+	;------- Runtime -------
+	rst CALLBAS
+	defw ZX_FIND_INT2		; Get the length
+	push bc				; into BC and save it
+	rst CALLBAS
+	defw ZX_FIND_INT2		; and the start
+	push bc				; and save that, too
+	rst CALLBAS
+	defw ZX_STK_FETCH		; get the filename
+	ld hl, INTERPWKSPC		; copy it to workspace
+	call F_basstrcpy
+
+	pop de				; start address
+	pop bc				; length
+	ld hl, INTERPWKSPC
+	call F_tbas_writerawfile
+	jp c, J_tbas_error
+	jp EXIT_SUCCESS
+
+;----------------------------------------------------------------------------
 ; F_tbas_load: Loads a ZX file (BASIC, CODE etc.)
 ; The syntax is as for ZX BASIC LOAD, except %load.
 ; TODO: CODE et al.

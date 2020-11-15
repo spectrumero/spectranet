@@ -64,6 +64,33 @@ F_tbas_readrawfile:
 	scf			; precedence over any errors that close throws
 	ret			; up.
 
+;------------------------------------------------------------------------
+; Writes raw data to a filesystem, without headers.
+; Parameters: HL = pointer to filename
+;	      DE = memory location for start of data
+;	      BC = length
+; Returns with carry set and A=error number on error.
+.globl F_tbas_writerawfile
+F_tbas_writerawfile:
+	push de			; save pointer
+	push bc			; and length
+	
+	ld de, O_WRONLY | O_CREAT | O_TRUNC
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH	; mode 0666 -rw-rw-rw-
+	call OPEN		; Open the file.
+	
+	pop bc			; length into bc
+	pop hl			; start into hl
+	ret c			; failed to open?
+
+	ld (v_vfs_curfd), a	; store the file descriptor
+	call WRITE		; write the block
+	push af			; ensure flags are saved
+	ld a, (v_vfs_curfd)	; close the file
+	call VCLOSE
+	pop af			; return any flags set by WRITE
+	ret
+
 ;--------------------------------------------------------------------------
 ; F_tbas_loader
 ; The BASIC LOAD command. Opens the named file, reads the header, then
