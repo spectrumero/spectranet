@@ -216,6 +216,7 @@ Session *tnfs_allocsession(int *sindex, uint16_t withSid)
 /* Free a session */
 void tnfs_freesession(Session *s, int sindex)
 {
+	LOG("Freeing session ID index %d\n", sindex);	
 	int i;
 	if (s->root)
 		free(s->root);
