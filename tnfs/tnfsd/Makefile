@@ -1,7 +1,7 @@
 CC=gcc
 
 ifndef OS
-    $(error Must specify an OS with make OS=... where OS is LINUX, BSD or WINDOWS. Use BSD for MacOSX)
+    $(error Must specify an OS with make OS=... where OS is LINUX, BSD or Windows_NT. Use BSD for macOS)
 endif
 
 ifeq ($(OS),LINUX)
@@ -26,13 +26,17 @@ endif
 ifdef DEBUG
     EXFLAGS = -g -DDEBUG
 endif
+
+ifdef USAGELOG
+    LOGFLAGS = -DUSAGELOG
+endif
     
-CFLAGS=$(FLAGS) $(EXFLAGS)
-OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o chroot.o $(EXOBJS)
+CFLAGS=$(FLAGS) $(EXFLAGS) $(LOGFLAGS)
+OBJS=main.o datagram.o log.o session.o endian.o directory.o errortable.o tnfs_file.o chroot.o fileinfo.o $(EXOBJS)
 
 all:	$(OBJS)
-	$(CC) -o $(EXEC) $(OBJS) $(LIBS)
+	$(CC) -o bin/$(EXEC) $(OBJS) $(LIBS)
 
 clean:
-	$(RM) -f $(OBJS) $(EXEC)
+	$(RM) -f $(OBJS) bin/$(EXEC)
 

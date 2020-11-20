@@ -1,5 +1,6 @@
-#ifndef _DIRECTORY_H
-#define _DIRECTORY_h
+#ifndef _TNFS_DIRECTORY_H
+#define _TNFS_DIRECTORY_H
+
 /* The MIT License
  *
  * Copyright (c) 2010 Dylan Smith
@@ -28,6 +29,19 @@
 
 #include "tnfs.h"
 
+#define TNFS_DIROPT_NO_FOLDERSFIRST 0x01 
+#define TNFS_DIROPT_NO_SKIPHIDDEN 0x02
+#define TNFS_DIROPT_NO_SKIPSPECIAL 0x04
+#define TNFS_DIROPT_DIR_PATTERN 0x08
+
+#define TNFS_DIRSORT_NONE 0x01
+#define TNFS_DIRSORT_CASE 0x02
+#define TNFS_DIRSORT_DESCENDING 0x04
+#define TNFS_DIRSORT_MODIFIED 0x08
+#define TNFS_DIRSORT_SIZE 0x10
+
+#define TNFS_DIRSTATUS_EOF 0x01
+
 /* initialize and set the root dir */
 int tnfs_setroot(char *rootdir);
 
@@ -38,6 +52,13 @@ void normalize_path(char *dst, char *src, int pathsz);
 /* get the root directory for the given session */
 void get_root(Session *s, char *buf, int bufsz);
 
+/* handle list of directory entries */
+void dirlist_free(directory_entry_list dlist);
+void dirlist_push(directory_entry_list *dlist, directory_entry_list_node *node);
+directory_entry_list_node * dirlist_get_node_at_index(directory_entry_list dlist, uint32_t index);
+uint32_t dirlist_get_index_for_node(directory_entry_list dlist, directory_entry_list_node *node);
+void dirlist_sort(directory_entry_list *dlist, uint8_t sortopts);
+
 /* open, read, close directories */
 void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
@@ -45,7 +66,12 @@ void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 void tnfs_telldir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 
+void tnfs_opendirx(Header *hdr, Session *s, unsigned char *databuf, int datasz);
+void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz);
+
 /* create and remove directories */
 void tnfs_mkdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
 void tnfs_rmdir(Header *hdr, Session *s, unsigned char *databuf, int datasz);
-#endif
+
+#endif // _TNFS_DIRECTORY_H
+

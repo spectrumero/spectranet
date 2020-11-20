@@ -47,7 +47,11 @@ umount - Disconnect from a TNFS filesystem *
 Directories
 -----------
 opendir - Opens a directory for reading *
+opendirx - Opens a directory for reading with additional options
 readdir - Reads a directory entry *
+readdirx - Reads a directory entry and returns extended results
+telldir - Returns position of current reddir for use with seekdir
+seekdir - Sets position of next readdir as provided by telldir
 closedir - Closes the directory *
 rmdir - Removes a directory
 mkdir - Creates a directory
@@ -228,6 +232,59 @@ Example:
 0xBEEF 0x00 0x10 0x00 0x04 - Successful, handle is 0x04
 0xBEEF 0x00 0x10 0x1F - Failed with code 0x1F
 
+OPENDIRX - Open a directory for reading with additional options - Command ID 0x17
+---------------------------------------------------------------------------------
+
+Format:
+Standard header followed by:
+
+1 byte  - directory options TNFS_DIROPT_* (see below)
+1 byte  - sorting options TNFS_DIRSORT_* (see below)
+2 bytes - max results to return or 0 for unlimited (16-bit unsigned little-endian)
+1+ bytes - zero-terminated search pattern in POSIX glob() format (no pattern used if empty)
+2+ bytes - zero-terminated absolute directory path
+
+The path delimiter is always a "/". Servers whose underlying 
+file system uses other delimiters, such as Acorn ADFS, should 
+translate. Note that any recent version of Windows understands "/" 
+to be a path delimiter, so a Windows server does not need
+to translate a "/" to a "\".
+
+Example:
+This uses default TNFS_DIROPT options, TNFS_DIROSRT_NONE sorting option, 16 results
+maximum, the pattern "*.ATR" to match, and the absolute directory path "/hom/tnfs"
+0xBEEF 0x00 0x17 0x00 0x01 0x1000 *.ATR 0x00 /home/tnfs 0x00
+
+The server responds with the standard header, with byte 4 set to the
+return code which is 0x00 for success, and if successful, byte 5 
+is set to the directory handle. Bytes 6-7 are an unsigned 16-bit little-ending
+value containing the number of matching directory entries found.
+
+Example:
+0xBEEF 0x00 0x10 0x00 0x04 0x16030000 - Successful, handle is 0x04, 790 entries found
+0xBEEF 0x00 0x10 0x1F - Failed with code 0x1F
+
+The default searching and sorting behavior is:
+* Do not show hidden files
+* Do not show special files (e.g. "." and ".." on Windows)
+* Sort by name in ascending order (A-Z)
+* Directories sorted before regular files
+* Case-insensitve sort order
+* Pattern does not apply to directories
+
+The following flags are provided to override these defaults:
+
+TNFS_DIROPT_NO_FOLDERSFIRST - Disable sorting directories before reuglar files
+TNFS_DIROPT_NO_SKIPHIDDEN - Disable ignoring hidden files
+TNFS_DIROPT_NO_SKIPSPECIAL - Disable ignoring special flies
+TNFS_DIROPT_DIR_PATTERN - Match pattern applies to directories also
+
+TNFS_DIRSORT_NONE - Disable all sorting
+TNFS_DIRSORT_CASE - Sorting is case-sensitive
+TNFS_DIRSORT_DESCENDING - Sorting is descendnig, not ascending
+TNFS_DIRSORT_MODIFIED - Sort by file's modified timestamp instead of name
+TNFS_DIRSORT_SIZE - Sort by the file's size instead of name
+
 READDIR - Reads a directory entry - Command ID 0x11
 ---------------------------------------------------
 
@@ -248,6 +305,60 @@ If the end of directory is reached, or another error occurs, then the
 status byte is set to the error number as for other commands.
 0xBEEF 0x1A 0x11 0x21 - EOF
 0xBEEF 0x1B 0x11 0x1F - Error code 0x1F
+
+READDIRX - Reads a directory entry and provides additional details - Command ID 0x18
+------------------------------------------------------------------------------------
+
+Format:
+Standard header plus directory handle.
+
+Example:
+0xBEEF 0x00 0x18 0x04 - Read an entry with directory handle 0x04
+
+The server replies with the standard header followed by the return code.
+On success, the file information follows this in the following order:
+
+flags - 1 byte: Flags providing additional information about the file (see below)
+size  - 4 bytes: Unsigned 32 bit little endian size of file in bytes
+mtime - 4 bytes: Modification time in seconds since the epoch, little endian
+ctime - 4 bytes: Creation time in seconds since the epoch, little endian
+entry - X bytes: Zero-terminated string providing directory entry path
+
+Current TNFS_DIRENTRY_ flags:
+TNFS_DIRENTRY_DIR  - entry denotes a directory
+
+If the end of directory is reached or another error occurs, then the
+status byte is set to the error number as for other commands.
+0xBEEF 0x1A 0x18 0x21 - EOF
+0xBEEF 0x1B 0x18 0x1F - Error code 0x1F
+
+TELLDIR - Returns position within current directory stream - Command ID 0x15
+----------------------------------------------------------------------------
+
+Format:
+Standard header plus directory handle.
+
+Example:
+0xBEEF 0x00 0x15 0x06 - Request position of directory with handle 6
+
+The server responds with the standard header plus the return code and the
+directory position as a 4-bytes unsigned 32 bit little endian value
+
+0xBEEF 0x00 0x15 0x00 0x01 0x00 0x00 0x00 - Directory position is 1
+0xBEEF 0x00 0x15 0x00 0x01 0x00 0x02 0x00 - Directory position is 513
+
+SEEKDIR - Moves current directory stream position to new value (provided by telldir) - Command ID 0x16
+------------------------------------------------------------------------------------------------------
+
+Format:
+Standard header plus directory handle and unsigned 32 bit little endian position (4 bytes)
+
+Example:
+0xBEEF 0x00 0x16 0x06 0x01 0x00 0x02 0x00 - Set position of directory stream with handle 6 to 513
+
+The server responds with the standard header plus the return code
+
+0xBEEF 0x00 0x16 0x00 - SEEKDIR succeeded
 
 CLOSEDIR - Close a directory handle - Command ID 0x12
 -----------------------------------------------------
@@ -486,6 +597,10 @@ followed by the seek type (SEEK_SET, SEEK_CUR or SEEK_END), followed
 by the position to seek to. The seek position is a signed 32 bit integer,
 little endian. (2GB file sizes should be more than enough for 8 bit
 systems!)
+
+On servers supporting TNFS protocol versions greater than 0x0100,
+the reponse includes the current file position after the header
+and status byte. This is an unsigned 32-bit little endian value.
 
 The seek types are defined as follows:
 0x00		SEEK_SET - Go to an absolute position in the file
