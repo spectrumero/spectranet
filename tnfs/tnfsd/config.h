@@ -26,13 +26,16 @@
 #define MAXMSGSZ	532	/* maximum size of a TNFS message */
 #define MAX_FD_PER_CONN	16	/* maximum open file descriptors per client */
 #define MAX_DHND_PER_CONN 8	/* max open directories per client */
-#define MAX_CLIENTS	256	/* maximum number of UDP clients */
+#define MAX_CLIENTS	4096	/* maximum number of UDP clients */
+#define MAX_CLIENTS_PER_IP 4096 /* maximum number of UDP clients from single IP */
 #define MAX_TCP_CONN	256	/* Maximum number of TCP clients */
+#define SESSION_TIMEOUT 21600 /* Sessions are thrown out after no contact for this many seconds. 0 = no timeout */
 #define TNFS_HEADERSZ	4	/* minimum header size */
+#define TNFS_MAX_PAYLOAD (MAXMSGSZ - TNFS_HEADERSZ - 1) /* Maximum usuable payload in a UDP datagram (-1 for status byte) */
 #define MAX_TNFSPATH	256	/* maximum path length */
 #define MAX_FILEPATH	384	/* Maximum path + filename */
 #define MAX_ROOT	128	/* maximum root dir length */
-#define PROTOVERSION_LSB 0x00	/* Protocol version, LSB */
+#define PROTOVERSION_LSB 0x02	/* Protocol version, LSB */
 #define PROTOVERSION_MSB 0x01	/* Protocol version, MSB */
 #define TIMEOUT_LSB	0xE8	/* Timeout LSB (1 sec) */
 #define TIMEOUT_MSB	0x03	/* Timeout MSB (1 sec) */

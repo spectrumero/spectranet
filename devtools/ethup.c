@@ -157,6 +157,8 @@ WSADATA wsaData;
 		{
 			bytes-=sent;
 		}
+		/* spectranet is a bit too slow */
+		usleep(50000);
 	}
 	printf("\n");
 
