@@ -314,7 +314,7 @@ F_tbas_writefile:
 
 	push bc
 	ld hl, INTERPWKSPC+21	; Open the file for write (the full C string
-	ld de, O_WRONLY | O_CREAT 		; for the filename is in mem after the header)
+	ld de, O_WRONLY | O_CREAT | O_TRUNC 		; for the filename is in mem after the header)
 	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH	; mode 0644 -rw-r--r--
 	call OPEN		; Open the file.
 	pop bc
