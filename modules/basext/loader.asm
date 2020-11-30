@@ -76,7 +76,7 @@ F_tbas_writerawfile:
 	push bc			; and length
 	
 	ld de, O_WRONLY | O_CREAT | O_TRUNC
-	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH	; mode 0666 -rw-rw-rw-
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH 	; mode 0644 -rw-r--r--
 	call OPEN		; Open the file.
 	
 	pop bc			; length into bc
@@ -315,7 +315,7 @@ F_tbas_writefile:
 	push bc
 	ld hl, INTERPWKSPC+21	; Open the file for write (the full C string
 	ld de, O_WRONLY | O_CREAT 		; for the filename is in mem after the header)
-	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH	; mode 0666 -rw-rw-rw-
+	ld bc, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH	; mode 0644 -rw-r--r--
 	call OPEN		; Open the file.
 	pop bc
 	ret c

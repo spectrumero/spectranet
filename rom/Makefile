@@ -70,7 +70,7 @@ $(DATEFILE):
 
 ver:	$(VERFILE) $(VERWORDFILE)
 $(VERFILE):
-	echo "bldstr: defb \"`cat VERSION`\",0x0a,0" > $(VERFILE)
+	echo "bldstr: defb \"`whoami`@`hostname` R`cat VERSION`\",0x0a,0" > $(VERFILE)
 $(VERWORDFILE):
 	echo "bldver equ `cat VERWORD`" > $(VERWORDFILE)
 
