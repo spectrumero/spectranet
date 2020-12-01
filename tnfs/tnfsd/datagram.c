@@ -117,7 +117,7 @@ const char *get_cmd_name(uint8_t cmd)
 	return "UNKNOWN_CMD";
 }
 
-void tnfs_sockinit()
+void tnfs_sockinit(int port)
 {
 	struct sockaddr_in servaddr;
 
@@ -136,7 +136,7 @@ void tnfs_sockinit()
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htons(INADDR_ANY);
-	servaddr.sin_port = htons(TNFSD_PORT);
+	servaddr.sin_port = htons(port);
 
 	if (bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
 		die("Unable to bind");
@@ -151,7 +151,7 @@ void tnfs_sockinit()
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htons(INADDR_ANY);
-	servaddr.sin_port = htons(TNFSD_PORT);
+	servaddr.sin_port = htons(port);
 	if (bind(tcplistenfd, (struct sockaddr *)&servaddr,
 			 sizeof(servaddr)) < 0)
 	{
