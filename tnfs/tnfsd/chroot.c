@@ -30,19 +30,27 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include "chroot.h"
 
-void chroot_tnfs(const char *user, const char *newroot)
+void chroot_tnfs(const char *user, const char *group, const char *newroot)
 {
-	struct passwd *entry;
+	struct passwd *pwd;
+	struct group *grp;
 
-	/* Get the passed user's UID and change this process's UID
-	 * to this user */
-	entry=getpwnam(user);
-	if(entry == NULL)
+	/* Get the UID and GID of passed user and group */
+	pwd=getpwnam(user);
+	if(pwd == NULL)
 	{
 		perror("getpwnam");
+		exit(-1);
+	}
+
+	grp=getgrnam(group);
+	if(grp == NULL)
+	{
+		perror("getgrnam");
 		exit(-1);
 	}
 
@@ -53,13 +61,25 @@ void chroot_tnfs(const char *user, const char *newroot)
 		exit(-1);
 	}
 
-	/* Finally drop privileges */
-	if(setuid(entry->pw_uid) == -1)
+	/* drop the group privileges first */
+	if(setgid(grp->gr_gid) == -1)
+	{
+		perror("setgid");
+		exit(-1);
+	}
+
+	/* Finally drop user privileges */
+	if(setuid(pwd->pw_uid) == -1)
 	{
 		perror("setuid");
 		exit(-1);
 	}
 }
 
+void warn_if_root(void)
+{
+	if((getuid() == 0) | (getgid() == 0))
+		fprintf(stderr, "WARNING: running as root.\nConsider running tnfsd jailed with -u user -g group\n");
+}
 #endif
 

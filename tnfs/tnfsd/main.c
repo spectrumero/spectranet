@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "datagram.h"
 #include "session.h"
@@ -40,44 +41,105 @@ int main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
-	if(argc < 2)
-	{
-#ifdef ENABLE_CHROOT
-		LOG("Usage: tnfsd <root dir> [-c <username>]\n");
-#else
-		LOG("Usage: tnfsd <root dir>\n");
-#endif
-		exit(-1);
-	}
+    int opt;
+    char *uvalue = NULL;
+    char *gvalue = NULL;
+    char *pvalue = NULL;
+    
+    if(argc >= 2)
+    {
+        #ifdef ENABLE_CHROOT
+        while((opt = getopt(argc, argv, "u:g:p:")) != -1)
+        #else
+        while((opt = getopt(argc, argv, "p:")) != -1)
+        #endif
+        {
+            switch(opt)
+            {
 
-#ifdef ENABLE_CHROOT
-	if(argc == 4)
-	{
-		/* chroot into the specified directory and drop privs */
-		chroot_tnfs(argv[3], argv[1]);
-		if(tnfs_setroot("/") < 0)
-		{
-			LOG("Unable to chdir to /...\n");
-			exit(-1);
-		}
-	}
-	else if(tnfs_setroot(argv[1]) < 0)
-	{
-#else
-	if(tnfs_setroot(argv[1]) < 0)
-	{
-#endif
+                case 'p':
+                    pvalue = optarg;
+                    break;
+                #ifdef ENABLE_CHROOT
+                case 'u':
+                    uvalue = optarg;
+                    break;
+                case 'g':
+                    gvalue = optarg;
+                    break;
+                #endif
+                case ':':
+                    LOG("option needs a value\n");
+                    break;
+                case '?':
+                    LOG("unknown option: %c\n", optopt); 
+                    break;
+            }
+        }
+    }
+    else
+    {
+    #ifdef ENABLE_CHROOT
+    LOG("Usage: tnfsd <root dir> [-u <username> -g <group> -p <port>]\n");
+    #else
+    LOG("Usage: tnfsd <root dir> [-p <port>]\n");
+    #endif
+    exit(-1);
+    }
+    
+    #ifdef ENABLE_CHROOT
+    if (uvalue || gvalue)
+    {
+        /* chroot into the specified directory and drop privs */
+        if (uvalue == NULL)
+        {
+            LOG("chroot username required\n");
+            exit(-1);
+        } else if (gvalue == NULL)
+        {
+            LOG("chroot group required\n");
+            exit(-1);
+        }
+        chroot_tnfs(uvalue, gvalue, argv[optind]);
+        if (tnfs_setroot("/") < 0)
+        {
+            LOG("Unable to chdir to /...\n");
+            exit(-1);
+        }
+    }
+    else if (tnfs_setroot(argv[optind]) < 0)
+    {
+    #else
+    if(tnfs_setroot(argv[optind]) < 0)
+    {
+    #endif
 		LOG("Invalid root directory\n");
 		exit(-1);
 	}
+    
+    #ifdef ENABLE_CHROOT
+    warn_if_root();
+    #endif
+    
+    int port = TNFSD_PORT;
+    
+    if (pvalue)
+    {
+        port = atoi(pvalue);
+        if (port < 1 || port > 65535)
+        {
+            LOG("Invalid port\n");
+            exit(-1);
+        }
+    }
 
 	const char *version = "20.1115.2";
 
-	LOG("Starting tnfsd version %s using root directory \"%s\"\n", version, argv[1]);
+	LOG("Starting tnfsd version %s on port %d using root directory \"%s\"\n", version, port, argv[optind]);
 
 	tnfs_init();		/* initialize structures etc. */
 	tnfs_init_errtable();	/* initialize error lookup table */
-	tnfs_sockinit();	/* initialize communications */
+	tnfs_sockinit(port);	/* initialize communications */
 	tnfs_mainloop();	/* run */
 
 	return 0;
