@@ -125,7 +125,7 @@ char *getHeaders(int sockfd, int *remainsz, int *result)
 	}
 
 	*hdrptr=0;
-	hdrptr+=2;	/* advance past the \n\r */
+	hdrptr+=2;	/* advance past the \r\n */
 
 	/* iterate through all the headers we have */
 	while(hdrptr=getSingleHeader(hdrptr, result))
