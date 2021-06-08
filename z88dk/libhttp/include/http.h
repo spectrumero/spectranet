@@ -65,21 +65,22 @@
 #define EHTTP_TIMEOUT 	-17
 #define HDR_END		1
 
-#define USER_AGENT	"User-Agent: ZXSpectrumHTTP/1.0\n\r"
-#define ACCEPT_HDR	"Accept: */*\n\r"
+#define USER_AGENT	"User-Agent: ZXSpectrumHTTP/1.0\x0D\x0A"
+#define ACCEPT_HDR	"Accept: */*\x0D\x0A"
 #define AUTH_HDR	"Authorization: Basic "
-#define CONTENT_HDR	"Content-Type: application/x-www-form-urlencoded\n\r"
+#define CONTENT_HDR	"Content-Type: application/x-www-form-urlencoded\x0D\x0A"
 #define CONTLEN_HDR	"Content-Length"
 #define XFERENC_HDR	"Transfer-Encoding"
 #define XFER_CHUNKED	"chunked"
-#define HDR_SEP		"\n\r\n\r"
-#define LINE_END		"\n\r"
+#define HDR_SEP		"\x0D\x0A\x0D\x0A"
+#define LINE_END		"\x0D\x0A"
 #define HDR_KEYVALSEP	": "
 
 typedef struct _uri
 {
 	int proto;
 	char *host;
+	int port;
 	char *location;
 	char *user;
 	char *passwd;

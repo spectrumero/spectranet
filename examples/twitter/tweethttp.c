@@ -43,6 +43,7 @@ int dotweet(char *user, char *passwd, char *tweet)
 
 	tweetUri.proto=PROTO_HTTP;
 	tweetUri.host=host;
+    tweetUri.port=80;
 	tweetUri.location="/1/statuses/update.json?source=twitterandroid";
 	tweetUri.user=user;
 	tweetUri.passwd=passwd;
