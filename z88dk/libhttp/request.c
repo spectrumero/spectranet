@@ -57,7 +57,7 @@ int request(int type, URI *uri)
 	if(sockfd < 0) return EHTTP_SOCKFAIL;
 
 	/* TODO: implement arbitrary ports for http */
-	remoteaddr.sin_port=htons(80);
+	remoteaddr.sin_port=htons(uri->port);
 	remoteaddr.sin_addr.s_addr=he->h_addr;
 	if(connect(sockfd, &remoteaddr, sizeof(struct sockaddr_in)) < 0)
 	{
@@ -67,7 +67,7 @@ int request(int type, URI *uri)
 
 	if(type == GET)
 	{
-		sprintf(hdrbuf, "GET %s HTTP/1.1\n\r", uri->location);
+		sprintf(hdrbuf, "GET %s HTTP/1.1\x0D\x0A", uri->location);
 		addStdHeaders(hdrbuf, uri, HDRBUFSZ);
 		strlcat(hdrbuf, LINE_END, HDRBUFSZ);
 		bytes=send(sockfd, hdrbuf, strlen(hdrbuf), 0);
@@ -76,7 +76,7 @@ int request(int type, URI *uri)
 	}
 	else
 	{
-		sprintf(hdrbuf, "POST %s HTTP/1.1\n\r", uri->location);
+		sprintf(hdrbuf, "POST %s HTTP/1.1\x0D\x0A", uri->location);
 		addStdHeaders(hdrbuf, uri, HDRBUFSZ);
 
 		/* make up the Content-Length header */
@@ -84,7 +84,7 @@ int request(int type, URI *uri)
 		 * function */
 		strlcat(hdrbuf, CONTLEN_HDR, HDRBUFSZ);
 		strlcat(hdrbuf, ": ", HDRBUFSZ);
-		sprintf(csizebuf, "%d\n\r", postsize());
+		sprintf(csizebuf, "%d\x0D\x0A", postsize());
 		strlcat(hdrbuf, csizebuf, HDRBUFSZ);
 
 		strlcat(hdrbuf, CONTENT_HDR, HDRBUFSZ);
@@ -101,7 +101,7 @@ int request(int type, URI *uri)
 		while(fptr)
 		{
 			/*
-			sprintf(hdrbuf, "%s=%s\n\r", 
+			sprintf(hdrbuf, "%s=%s\x0D\x0A",
 					fptr->param,
 					fptr->data);
 			printf("SENDING: %s", hdrbuf);
@@ -116,7 +116,7 @@ int request(int type, URI *uri)
 			}
 			else
 			{
-				sprintf(tmpbuf, "%s=%s\n\r",
+				sprintf(tmpbuf, "%s=%s\x0D\x0A",
 					fptr->param,
 					fptr->data);
 			}
