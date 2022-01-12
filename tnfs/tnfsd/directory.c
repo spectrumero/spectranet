@@ -46,6 +46,65 @@
 #include "log.h"
 #include "fileinfo.h"
 
+#ifdef TNFS_DIR_EXT
+#include <stdint.h>
+#include <string.h>
+struct tnfs_opendir_ext {
+	struct dirent **namelist;
+	int at, start, inc, total, visited;
+	uint64_t seed;
+	int do_reverse_list;        /* ;r reverse list order; default: forward list */
+	int do_shuffle_list;        /* ;s shuffle list order; default: forward list. note: seed at [s+1] */
+	int do_exclude_sysnames;    /* ;x hide system names like .git or .gitignore; default: show system files and dirs */
+	int do_exclude_files;       // ;f hide file names; default: show files
+	int do_exclude_dirs;        // ;d hide dir names; default: show dirs
+	int do_uppercase;           // ;u "UPPER CASE" names; default: as-is
+	int do_lowercase;           // ;l "lower case" names; default: as-is
+	int do_camelcase;           // ;c "Camel Case" names; default: as-is
+	char *wildcard;
+};
+static int alphacase_sort(const struct dirent **a, const struct dirent **b) {
+	return strcasecmp((*a)->d_name, (*b)->d_name);
+}
+static int wildcard( const char *pattern, const char *str ) {
+	if( *pattern=='\0' ) return !*str;
+	if( *pattern=='*' )  return wildcard(pattern+1, str) || (*str && wildcard(pattern, str+1));
+	if( *pattern=='?' )  return *str && (*str != '.') && wildcard(pattern+1, str+1);
+	return ((*str|32) == (*pattern|32)) && wildcard(pattern+1, str+1);
+}
+static double rng(uint64_t *seed) { // returns [0,1)
+	uint64_t z = (*seed += UINT64_C(0x9e3779b97f4a7c15));
+	z = (z ^ (z >> 30)) *  UINT64_C(0xbf58476d1ce4e5b9);
+	z = (z ^ (z >> 27)) *  UINT64_C(0x94d049bb133111eb);
+	z = z ^ (z >> 31);
+	return z / (double)0x100000000ULL;
+}
+static int is_prime(unsigned candidate) {
+	/* GPL: https://github.com/kushaldas/elfutils/blob/master/lib/next_prime.c */
+	/* No even number and none less than 10 will be passed here. */
+	unsigned divn = 3;
+	unsigned sq = divn * divn, old_sq;
+
+	while (sq < candidate && candidate % divn != 0)
+	{
+		old_sq = sq;
+		++divn;
+		sq += 4 * divn;
+		if (sq < old_sq)
+			return 1;
+		++divn;
+	}
+
+	return candidate % divn != 0;
+}
+static unsigned next_prime(unsigned seed) {
+	/* GPL: https://github.com/kushaldas/elfutils/blob/master/lib/next_prime.c */
+	seed |= 1; /* Make it odd */
+	while (!is_prime(seed)) seed += 2;
+	return seed;
+}
+#endif
+
 directory_entry_list dirlist_concat(directory_entry_list list1, directory_entry_list list2);
 
 char root[MAX_ROOT]; /* root for all operations */
@@ -105,12 +164,15 @@ void get_root(Session *s, char *buf, int bufsz)
 	}
 }
 
-/* normalize paths, remove multiple delimiters 
+/* normalize paths, remove multiple delimiters
  * the new path at most will be exactly the same as the old
  * one, and if the path is modified it will be shorter so
  * doing "normalize_path(buf, buf, sizeof(buf)) is fine */
 void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 {
+	/* save newbuf; post-processed at end of function (TNFS_DIR_EXT only) */
+	char *bakbuf = newbuf; (void)bakbuf;
+
 	/* normalize the directory delimiters. Windows of course
 	 * has problems with multiple delimiters... */
 	int count = 0;
@@ -149,6 +211,33 @@ void normalize_path(char *newbuf, char *oldbuf, int bufsz)
 	if (*(newbuf - 1) == '/' && strlen(nbstart) > 3)
 		*(newbuf - 1) = 0;
 #endif
+
+#ifdef TNFS_DIR_EXT
+	/* truncate wildcards and options from result. 'games/B?/snapshot.sna;xsi' => 'games/snapshot.sna' */
+	if(strchr(bakbuf,'*') || strchr(bakbuf,'?') || strchr(bakbuf,';'))
+	{
+		char *output = strdup(bakbuf); output[0] = '\0';
+		for(char *saveptr = 0, *foo = strtok_r(bakbuf,"/",&saveptr); foo; foo = strtok_r(NULL,"/",&saveptr))
+		{
+			if( !strchr(foo,'*') && !strchr(foo,'?') )
+			{
+				strcat(output, "/");
+				strcat(output, foo);
+
+				char *options = strchr(output, ';');
+				if( options ) *options = '\0';
+
+				if( options && options[-1]=='/' ) options[-1] = '\0';
+			}
+		}
+
+		strcpy(bakbuf, output);
+		free(output);
+
+		char *options = strchr(bakbuf,';');
+		if(options) *options = '\0';
+	}
+#endif
 }
 
 /* Open a directory */
@@ -179,13 +268,57 @@ void tnfs_opendir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	{
 		if (s->dhandles[i].handle == NULL)
 		{
+#ifdef TNFS_DIR_EXT
+			/* extract options from databuf if present at eos; truncates databuf */
+			char *options = (char*)strrchr((const char *)databuf,';');
+			if(options) *options++ = '\0';
+
+			/* extract wildcard mask from path; extra work needed if /enclosed/ in a path; truncates databuf */
+			char *mask = 0;
+			if(strchr((const char *)databuf,'*') || strchr((const char*)databuf,'?')) {
+				mask = strrchr((const char*)databuf,'/');
+				if(mask) *mask = '\0', mask = strdup(mask+1);
+				else mask = strdup((const char *)databuf), databuf[0] = 0;
+			}
+
+			/* build & normalize path */
 			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
 					 root, s->root, databuf);
 			normalize_path(s->dhandles[i].path, path, MAX_TNFSPATH);
+
+			/* scan directory */
+			struct dirent **namelist;
+			int n = scandir(s->dhandles[i].path, &namelist, NULL, alphacase_sort);
+			if(n>=0)
+			{
+				/* allocate iteration structure and options */
+				struct tnfs_opendir_ext *handle = calloc(1, sizeof(struct tnfs_opendir_ext));
+				handle->do_uppercase = options ? !!strchr(options,'u') : 0;
+				handle->do_lowercase = options ? !!strchr(options,'l') : 0;
+				handle->do_camelcase = options ? !!strchr(options,'c') : 0;
+				handle->do_exclude_dirs = options ? !!strchr(options,'d') : 0;
+				handle->do_exclude_files = options ? !!strchr(options,'f') : 0;
+				handle->do_exclude_sysnames = options ? !!strchr(options,'x') : 0;
+				handle->do_reverse_list = options ? !!strchr(options,'r') : 0;
+				handle->do_shuffle_list = options ? !!strchr(options,'s') : 0;
+				handle->seed = handle->do_shuffle_list ? strchr(options,'s')[1] : 123u;
+				handle->at = handle->do_shuffle_list ? ((unsigned)rng(&handle->seed) * 100000) % (n-1) : (handle->do_reverse_list ? n - 1 : 0);
+				handle->inc = handle->do_shuffle_list ? next_prime(n+(handle->seed&0xff)*7) : (handle->do_reverse_list ? -1 : 1);
+				handle->visited = 0;
+				handle->total = n;
+				handle->namelist = namelist;
+				handle->wildcard = mask;
+
+				s->dhandles[i].handle = (void*)handle;
+#else
+			snprintf(path, MAX_TNFSPATH, "%s/%s/%s",
+					 root, s->root, databuf);
+			normalize_path(s->dhandles[i].path, path, MAX_TNFSPATH);
+
 			if ((dptr = opendir(s->dhandles[i].path)) != NULL)
 			{
 				s->dhandles[i].handle = dptr;
-
+#endif
 				/* send OK response */
 				hdr->status = TNFS_SUCCESS;
 				reply[0] = (unsigned char)i;
@@ -222,9 +355,30 @@ void tnfs_readdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		return;
 	}
 
+#ifdef TNFS_DIR_EXT
+	/* visit entry */
+	struct tnfs_opendir_ext *handle = (struct tnfs_opendir_ext*) s->dhandles[*databuf].handle; repeat:;
+	if(handle->visited++ < handle->total)
+	{
+		/* handle forward, reverse and shuffle iterators */
+		entry = handle->namelist[handle->at];
+		handle->at = (handle->at + handle->inc) % handle->total;
+		/* repeat if options and conditions do not match */
+		if(handle->do_exclude_sysnames) if(entry->d_name[0] == '.') goto repeat;
+		if(handle->wildcard) if(!wildcard(handle->wildcard, entry->d_name)) goto repeat;
+		/* stat here for 'd' and 'f' flags. bypass if needed */
+		if( handle->do_exclude_dirs ) if(entry->d_type == DT_DIR) goto repeat;
+		if( handle->do_exclude_files ) if(entry->d_type != DT_DIR) goto repeat;
+		/* convert to 'l'owercase/'u'ppercase/'c'amelcase here as needed */
+                char *p = entry->d_name;
+                /**/ if( handle->do_lowercase ) while(*p) *p++ = tolower(*p); //= *s | 32;
+	        else if( handle->do_uppercase ) while(*p) *p++ = toupper(*p); //= *s & ~32;
+	        else if( handle->do_camelcase ) while(*p) *p++ = (p == entry->d_name || p[-1] <= 32 ? toupper(*p) : tolower(*p));
+#else
 	entry = readdir(s->dhandles[*databuf].handle);
 	if (entry)
 	{
+#endif
 		strlcpy(reply, entry->d_name, MAX_FILENAME_LEN);
 		hdr->status = TNFS_SUCCESS;
 		tnfs_send(s, hdr, (unsigned char *)reply, strlen(reply) + 1);
@@ -248,7 +402,19 @@ void tnfs_closedir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 		return;
 	}
 
+#ifdef TNFS_DIR_EXT
+	/* deallocate ext iterator */
+	struct tnfs_opendir_ext *handle = (struct tnfs_opendir_ext*) s->dhandles[*databuf].handle;
+	for(int i = 0; i < handle->total; ++i)
+	{
+		free(handle->namelist[i]);
+	}
+	if(handle->namelist) free(handle->namelist);
+	if(handle->wildcard) free(handle->wildcard);
+	free(handle);
+#else
 	closedir(s->dhandles[*databuf].handle);
+#endif
 
 	s->dhandles[*databuf].handle = NULL;
 	s->dhandles[*databuf].path[0] = '\0';
@@ -344,7 +510,7 @@ void tnfs_seekdir(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 #ifdef USAGELOG
 	if (pos == 0) {
 		if (strcmp(s->lastpath, s->dhandles[*databuf].path) != 0) {
-		        USGLOG(hdr, "Path changed to: %s", s->dhandles[*databuf].path);
+				USGLOG(hdr, "Path changed to: %s", s->dhandles[*databuf].path);
 		};
 		strcpy(s->lastpath, s->dhandles[*databuf].path);
 	}
@@ -427,22 +593,22 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	for(int w=0; w < 1000000000LL; w++)
 		wl = wl + w * w;
 	LOG("PAUSE = %lu\n", wl);
-*/	
+*/
 #endif
 
 	// Return EOF if we're already at the end of the list
 	if (dh->current_entry == NULL)
 	{
-#ifdef DEBUG	
+#ifdef DEBUG
 		TNFSMSGLOG(hdr, "readdirx no more entries - returning EOF");
-#endif	
+#endif
 		hdr->status = TNFS_EOF;
 		tnfs_send(s, hdr, NULL, 0);
 	}
 
-#ifdef DEBUG	
+#ifdef DEBUG
 	TNFSMSGLOG(hdr, "readdirx request for %hu entries", req_count);
-#endif	
+#endif
 
 /* The number of bytes required by the response 'header'
  response_count (1) + dir_status (1) + dirpos (2) = 4 bytes
@@ -515,7 +681,7 @@ void tnfs_readdirx(Header *hdr, Session *s, unsigned char *databuf, int datasz)
 	hdr->status = TNFS_SUCCESS;
 #ifdef DEBUG
 	TNFSMSGLOG(hdr, "readdirx responding with %hu entries, status_flags=0x%x", reply[0], reply[1]);
-#endif	
+#endif
 	tnfs_send(s, hdr, reply, total_size);
 }
 
