@@ -97,6 +97,10 @@ J_reset:
 	ld a, v_fd1hwsock % 256
 	ld (v_lastpolled), a
 
+	; Utility ROM is the default page for handing nmi vector
+	ld a, 0x02
+	ld (v_nmipage), a
+
 	; Set an initial local port number for connect()
 	call F_rand16
 	set 6, h		; make sure we start with a highish number

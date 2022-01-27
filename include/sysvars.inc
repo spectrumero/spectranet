@@ -126,4 +126,5 @@ v_configptr: equ 0x00003FF3
 
 ; flags: bit 0 - IP set (either static or via DHCP)
 v_ethflags: equ 0x3FF5
+v_nmipage: equ 0x3FF6
 

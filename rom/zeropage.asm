@@ -113,7 +113,7 @@ NMI2:
 	jp (hl)			; jump to it
 	
 .nmimenu0:
-	ld a, 0x02		; Utility ROM
+	ld a, (v_nmipage)   ; Utility ROM
 	call F_setpageB
 	ld hl, (NMI_VECTOR)	; Test NMI_VECTOR
 	ld a, 0xFF
