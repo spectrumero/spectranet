@@ -51,6 +51,7 @@ do_callbas:
 .globl do_rst8
 do_rst8:
 	ld (v_hlsave), hl	; save hl without disturbing stack
+	ld (v_desave), de	; save de
 	pop hl			; get stack value - entry code
 	push hl
 	push af
@@ -80,5 +81,6 @@ do_rst8:
 	pop af			; restore af
 	pop hl			; fix stack
 	ld hl, (v_hlsave)	; restore hl
+	ld de, (v_desave)	; restore de
 	ret			; go back to the calling routine.
 
