@@ -97,6 +97,12 @@ NMI2:
 	in a, (c)
 	and MASK_PROGTRAP_EN
 	jr z, .nmimenu0		; not enabled
+	ld a, (v_trapcomefrom)
+	ld b, a
+	ld a, (v_trapcomefrom+1)
+	or b
+	jr z, NMI3          ; v_trapcomefrom is zero, accept any address
+
 	ld a, (v_trapcomefrom)	; get comefrom address LSB
 	cp (hl)			; equal to low order?
 	jr nz, .nmimenu0		; no
@@ -105,6 +111,7 @@ NMI2:
 	cp (hl)			; equal to high order?
 	jr nz, .nmimenu0		; no
 
+NMI3:
 	; Set up the environment ready to handle the trap.
 	ld a, (v_trappage)	; get the page to page in
 	and a			; if it's zero though, ignore it.
