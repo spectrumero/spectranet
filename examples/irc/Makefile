@@ -2,7 +2,7 @@
 CC = zcc
 RM = rm -f
 OUT = irc.bin
-CFLAGS = +zx -vn -O2 -preserve -no-cleanup -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
+CFLAGS = +zx -vn -O2 -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
 OBJS = irc.o inputline.o statusline.o output.o ircsvrmsg.o usercmd.o 
 LIBS = -lndos -llibsocket
 
