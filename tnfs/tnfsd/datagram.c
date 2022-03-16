@@ -279,7 +279,10 @@ void tnfs_handle_tcpmsg(int cli_fd)
 	int sz;
 
 	sz = read(cli_fd, buf, sizeof(buf));
-	printf("DEBUG: rx of tcpmsg: %d bytes: %s\n", sz, buf);
+#ifdef DEBUG
+  printf("DEBUG: rx of tcpmsg: %d bytes: %s\n", sz, buf);
+#endif
+
 }
 
 void tnfs_decode(struct sockaddr_in *cliaddr, int rxbytes, unsigned char *rxbuf)
