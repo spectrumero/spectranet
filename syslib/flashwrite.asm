@@ -39,15 +39,15 @@ F_FlashIdentify:
 	ld a,5
 	out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xAA	; unlock code 1
-	ld (0x555), a	; unlock addr 1
+	ld (0x2555), a	; unlock addr 1
 	ld a,2
 	out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; unlock code 2
-	ld (0xAAA), a	; unlock addr 2
+	ld (0x2AAA), a	; unlock addr 2
     ld a,5
 	out (c),a	; flash A12-A15 bits to 2
     ld a, 0x90	; ID code
-	ld (0x555), a	; ID
+	ld (0x2555), a	; ID
 	ld a,0
 	out (c),a	; flash A12-A15 bits to 0
     ld a, (0x0001)	; read device ID
@@ -103,21 +103,21 @@ F_doErase:
 	ld a,5
 	out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xAA	; unlock code 1
-	ld (0x555), a	; unlock addr 1
+	ld (0x2555), a	; unlock addr 1
 	ld a,2
 	out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; unlock code 2
-	ld (0xAAA), a	; unlock addr 2
+	ld (0x2AAA), a	; unlock addr 2
 	ld a,5
 	out (c),a	; flash A12-A15 bits to 5
 	ld a, 0x80	; erase cmd 1
-	ld (0x555), a	; erase cmd addr 1
+	ld (0x2555), a	; erase cmd addr 1
 	ld a, 0xAA	; erase cmd 2
-	ld (0x555), a	; erase cmd addr 2
+	ld (0x2555), a	; erase cmd addr 2
 	ld a,2
 	out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; erase cmd 3
-	ld (0xAAA), a	; erase cmd addr 3
+	ld (0x2AAA), a	; erase cmd addr 3
 	ld a,l
 	out (c),a	; flash A12-A15 bits to 4k page number
 	ld (v_pgb), a ; update pageB sysvar
@@ -181,17 +181,17 @@ F_FlashWriteByte:
     ld a, 5
     out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xAA	; unlock 1
-	ld (0x555), a	; unlock address 1
+	ld (0x2555), a	; unlock address 1
     
     ld a, 2
     out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; unlock 2
-	ld (0xAAA), a	; unlock address 2
+	ld (0x2AAA), a	; unlock address 2
     
     ld a, 5
     out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xA0	; Program
-	ld (0x555), a	; Program address
+	ld (0x2555), a	; Program address
     
     ld a, (v_pgb)
     out (c),a	; restore page B
