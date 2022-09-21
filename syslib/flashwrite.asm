@@ -52,9 +52,9 @@ F_FlashIdentify:
 	out (c),a	; flash A12-A15 bits to 0
     ld a, (0x0001)	; read device ID
     ld (v_flashid),a	; store device ID in SRAM
-    ld (0x401F),a ; DEBUG
-    ld a,0x55 ; DEBUG
-    ld (0x411F),a ; DEBUG
+    ;ld (0x401F),a ; DEBUG
+    ;ld a,0x55 ; DEBUG
+    ;ld (0x411F),a ; DEBUG
     ld a, 0xF0	; reset code
 	ld (0x0000),a	; reset flash
     ld a,(v_pgb)
