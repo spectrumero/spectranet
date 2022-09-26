@@ -24,36 +24,106 @@
 ; Note that these routines can't actually be run from flash! They should
 ; be assembled to RAM instead.
 .include	"sysdefs.inc"
+.include	"sysvars.inc"
 .text
 
 ;---------------------------------------------------------------------------
+; F_FlashIdentify
+; Attempt to identify the flash ROM IC present on the spectranet
+; sets a system variable in SRAM containing the device ID which should be
+; 0x20 for an Am29F010, or 0xB5/B6/B7 for an SST39SF010A/020A/040
+.globl F_FlashIdentify
+F_FlashIdentify:
+	push bc
+	ld bc, PAGEB
+	ld a,5
+	out (c),a	; flash A12-A15 bits to 5
+	ld a, 0xAA	; unlock code 1
+	ld (0x2555), a	; unlock addr 1
+	ld a,2
+	out (c),a	; flash A12-A15 bits to 2
+	ld a, 0x55	; unlock code 2
+	ld (0x2AAA), a	; unlock addr 2
+    ld a,5
+	out (c),a	; flash A12-A15 bits to 2
+    ld a, 0x90	; ID code
+	ld (0x2555), a	; ID
+	ld a,0
+	out (c),a	; flash A12-A15 bits to 0
+    ld a, (0x0001)	; read device ID
+    ld (v_flashid),a	; store device ID in SRAM
+    ;ld (0x401F),a ; DEBUG
+    ;ld a,0x55 ; DEBUG
+    ;ld (0x411F),a ; DEBUG
+    ld a, 0xF0	; reset code
+	ld (0x0000),a	; reset flash
+    ld a,(v_pgb)
+    out (c),a	; restore page B
+	pop bc
+	ret
+
+;---------------------------------------------------------------------------
 ; F_FlashEraseSector
-; Simple flash writer for the Am29F010 (and probably any 1 megabit flash
-; with 16kbyte sectors)
+; Simple flash writer for the Am29F010 and SST39SF010/020/040
+; Erases one 16k sector or four 4k sectors based on detected device
 ;
 ; Parameters: A = page to erase (based on 4k Spectranet pages, but
 ; erases a 16k sector)
 ; Carry flag is set if an error occurs.
 .globl F_FlashEraseSector
-F_FlashEraseSector: 
+F_FlashEraseSector:
+	; preserve page to start the erase from in C
+	ld c,a
 
-	; Page in the appropriate sector first 4k into page area B.
-	; Page to start the erase from is in A.
-	call F_setpageB	; page into page area B
+	call F_FlashIdentify
 
+	ld a,(v_flashid)	; load flash type
+	ld b,4 ; erase four 4k sectors
+	
+	; this could potentially give a false positive if a ROM contains these values in the second byte
+	; a more robust check would be to also test the manufacturer ID is 0xBF (SST)
+	cp 0xB5	; SST39SF010A
+	jr z, .eraseLoop
+	cp 0xB6	; SST39SF020A
+	jr z, .eraseLoop
+	cp 0xB7	; SST39SF040
+	jr z, .eraseLoop
+
+	ld b,1 ; else erase one 16k sector
+.eraseLoop:
+	call F_doErase
+	inc c
+	djnz .eraseLoop
+	ret
+
+F_doErase:
+	push bc
+	ld l,c
+	ld bc, PAGEB
+	ld a,5
+	out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xAA	; unlock code 1
-	ld (0x555), a	; unlock addr 1
+	ld (0x2555), a	; unlock addr 1
+	ld a,2
+	out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; unlock code 2
-	ld (0x2AA), a	; unlock addr 2
+	ld (0x2AAA), a	; unlock addr 2
+	ld a,5
+	out (c),a	; flash A12-A15 bits to 5
 	ld a, 0x80	; erase cmd 1
-	ld (0x555), a	; erase cmd addr 1
+	ld (0x2555), a	; erase cmd addr 1
 	ld a, 0xAA	; erase cmd 2
-	ld (0x555), a	; erase cmd addr 2
+	ld (0x2555), a	; erase cmd addr 2
+	ld a,2
+	out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; erase cmd 3
-	ld (0x2AA), a	; erase cmd addr 3
+	ld (0x2AAA), a	; erase cmd addr 3
+	ld a,l
+	out (c),a	; flash A12-A15 bits to 4k page number
+	ld (v_pgb), a ; update pageB sysvar
 	ld a, 0x30	; erase cmd 4
 	ld (0x2000), a	; erase sector address
-
+	pop bc
 	ld hl, 0x2000
 .wait1: 
 	bit 7, (hl)	; test DQ7 - should be 1 when complete
@@ -102,22 +172,37 @@ F_FlashWriteBlock:
 ; it, and the address should be in that address space.
 .globl F_FlashWriteByte
 F_FlashWriteByte: 
+	push hl
 	push bc
-	ld c, a		; save A
-
+	ld l, a		; save A
+    
+	ld bc, PAGEB
+    
+    ld a, 5
+    out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xAA	; unlock 1
-	ld (0x555), a	; unlock address 1
+	ld (0x2555), a	; unlock address 1
+    
+    ld a, 2
+    out (c),a	; flash A12-A15 bits to 2
 	ld a, 0x55	; unlock 2
-	ld (0x2AA), a	; unlock address 2
+	ld (0x2AAA), a	; unlock address 2
+    
+    ld a, 5
+    out (c),a	; flash A12-A15 bits to 5
 	ld a, 0xA0	; Program
-	ld (0x555), a	; Program address
-	ld a, c		; retrieve A
+	ld (0x2555), a	; Program address
+    
+    ld a, (v_pgb)
+    out (c),a	; restore page B
+    
+	ld a, l		; retrieve A
 	ld (de), a	; program it
 
 .wait3: 
 	ld a, (de)	; read programmed address
 	ld b, a		; save status
-	xor c		
+	xor l		
 	bit 7, a	; If bit 7 = 0 then bit 7 = data	
 	jr z,  .byteComplete3
 
@@ -125,17 +210,19 @@ F_FlashWriteByte:
 	jr z,  .wait3
 
 	ld a, (de)	; read programmed address
-	xor c		
+	xor l		
 	bit 7, a	; Does DQ7 = programmed data? 0 if true
 	jr nz,  .borked3
 
-.byteComplete3: 
+.byteComplete3:
 	pop bc
+	pop hl
 	or 0		; clear carry flag
 	ret
 
 .borked3: 
 	pop bc
+	pop hl
 	scf		; error = set carry flag
 	ret
 

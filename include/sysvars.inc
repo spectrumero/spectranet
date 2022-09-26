@@ -128,3 +128,4 @@ v_configptr: equ 0x00003FF3
 v_ethflags: equ 0x3FF5
 v_nmipage: equ 0x3FF6
 
+v_flashid: equ 0x3FF6
