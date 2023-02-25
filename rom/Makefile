@@ -26,7 +26,7 @@ MODMANLIBS = -lromui -lflashwrite
 
 JPTABLEOBJS = jumptable.o
 JPTABLEOUT = jumptable.bin
-JPTABLELDFLAGS = -Ttext 0x0000 
+JPTABLELDFLAGS = -T jumptable.ld
 
 DATEFILE = date.xinc
 VERFILE = ver.xinc
