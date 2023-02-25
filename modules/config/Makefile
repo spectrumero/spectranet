@@ -31,9 +31,3 @@ dumpcfg:	$(DUMPOBJS)
 standalone:	$(SAOBJS)
 	$(LD) -o $(SAOUT) $(SAOBJS) $(SALDFLAGS) $(SALIBS)
 
-test:	$(TESTOBJS)
-	$(LD) -o $(TESTOUT) $(TESTOBJS) -Ttext=0x8000 -Tdata=0x8400
-
-create:	$(CREATEOBJS)
-	$(LD) -o $(CREATEOUT) $(CREATEOBJS) -Ttext=0x8000
-
