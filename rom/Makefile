@@ -72,7 +72,7 @@ ver:	$(VERFILE) $(VERWORDFILE)
 $(VERFILE):
 	echo "bldstr: defb \"`whoami`@`hostname` R`cat VERSION`\",0x0a,0" > $(VERFILE)
 $(VERWORDFILE):
-	echo "bldver equ `cat VERWORD`" > $(VERWORDFILE)
+	echo "bldver equ `cat VERSION`" > $(VERWORDFILE)
 
 p0syms: page0 $(P0SYMS)
 $(P0SYMS):
