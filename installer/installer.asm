@@ -175,7 +175,7 @@ F_writepages:
 	call F_print
 	ld a, 0x0B
 	call F_setpageB
-	ld a, 0xDE
+	ld a, 0xDF
 	call F_setpageA
 	call F_writepageAtopageB
 	ret nc
