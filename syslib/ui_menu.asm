@@ -21,7 +21,6 @@
 ;THE SOFTWARE.
 .include	"spectranet.inc"
 .include	"ctrlchars.inc"
-.include	"sysvars.inc"
 
 ; Simple menu system routines.
 .text

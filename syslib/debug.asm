@@ -1,6 +1,5 @@
 .include	"spectranet.inc"
 .include	"ctrlchars.inc"
-.include	"sysvars.inc"
 
 ; Some simple debug functions.
 ; hl = start address, b = byte count

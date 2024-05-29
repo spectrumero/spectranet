@@ -5,7 +5,7 @@ ARFLAGS = -cr
 RANLIB = z80-unknown-coff-ranlib
 ASFLAGS = -I../include
 
-UIOBJS = ui_menu.o ui_output.o ui_charset.o ui_lookup.o
+UIOBJS = ui_menu.o ui_output.o ui_charset.o ui_lookup.o sysvars.o
 UIOUT  = libromui.a
 
 FWOBJS = pager.o flashwrite.o 
