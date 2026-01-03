@@ -26,43 +26,50 @@
 ; the last 16k sector, then copy back the updated configuration plus the
 ; existing content in the remainder of the last sector of flash).
 .include	"spectranet.inc"
+.include	"sysdefs.inc"
+
+PAGEINSECTOR equ CONFIG_PAGE&3
+SECTORSTART equ CONFIG_PAGE&0xFC
+
 .text
 .globl F_copyconfig
 F_copyconfig: 
-	
         ld hl, .copier1  ; first, copy to RAM workspace
         ld de, 0x3000   ; fixed workspace page at 0x3000
         ld bc, copiersz
         ldir
         jp 0x3000
 .copier1: 
-        ld a, 0xDC      ; chip 3 page 0x1C - RAM
+        ; copy flash erase sector to SRAM, ensuring that CONFIG_PAGE gets
+        ; copied last, even if CONFIG_PAGE has been changed from the last
+        ; page of an erase sector.
+        ld a, FLASH_COPY_PAGES+(PAGEINSECTOR-3)&3
         call SETPAGEA   ; page it into page area A
-        ld a, 0x1C      ; chip 0 page 0x1C - flash
+        ld a, SECTORSTART+(PAGEINSECTOR-3)&3
         call PUSHPAGEB  ; and mapped into area B
         ld hl, 0x2000   ; and copy
         ld de, 0x1000
         ld bc, 0x1000
         ldir
-        ld a, 0xDD      ; chip 3 page 0x1D - RAM
+        ld a, FLASH_COPY_PAGES+(PAGEINSECTOR-2)&3
         call SETPAGEA   ; page it into page area A
-        ld a, 0x1D      ; chip 0 page 0x1D - flash
+        ld a, SECTORSTART+(PAGEINSECTOR-2)&3
         call SETPAGEB   ; page it into page area B
         ld hl, 0x2000   ; and copy
         ld de, 0x1000
         ld bc, 0x1000
         ldir
-        ld a, 0xDE      ; chip 3 page 0x1E - RAM
+        ld a, FLASH_COPY_PAGES+(PAGEINSECTOR-1)&3
         call SETPAGEA   ; page it into page area A
-        ld a, 0x1E      ; chip 0 page 0x1E - flash
+        ld a, SECTORSTART+(PAGEINSECTOR-1)&3
         call SETPAGEB   ; page it into page area B
         ld hl, 0x2000   ; and copy
         ld de, 0x1000
         ld bc, 0x1000
         ldir
-        ld a, 0xDF      ; chip 3 page 0x1F - RAM
+        ld a, FLASH_COPY_PAGES+PAGEINSECTOR ; location of config data mirror
         call SETPAGEA   ; page it into page area A
-        ld a, 0x1F      ; chip 0 page 0x1F - flash
+        ld a, CONFIG_PAGE   ; location of non volatile config data in flash
         call SETPAGEB   ; page it into page area B
         ld hl, 0x2000   ; and copy
         ld de, 0x1000

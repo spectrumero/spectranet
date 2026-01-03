@@ -24,6 +24,7 @@
 .include	"spectranet.inc"
 .include	"ctrlchars.inc"
 .include	"sysvars.inc"
+.include	"sysdefs.inc"
 .include	"sockdefs.inc"
 
 ;--------------------------------------------------------------------------
@@ -39,7 +40,7 @@ F_romconfigmain:
 	jr z, F_romconfigmain
 	
 	; page back in caller
-	ld a, 0x02		; utility ROM
+	ld a, UTILROM		; utility ROM
 	call SETPAGEB
 	ret
 .text
@@ -47,7 +48,7 @@ F_romconfigmain:
 ; F_showroms - Shows the current available ROMs.
 .globl F_showroms
 F_showroms:
-	ld a, 0x02		; first valid ROM slot
+	ld a, UTILROM		; first valid ROM slot
 .disploop2:
 	call SETPAGEB
 	push af
@@ -96,11 +97,11 @@ F_showroms:
 ;-------------------------------------------------------------------------
 ; F_findfirstfreepage
 ; Finds the first free ROM page, returning it in A.
-; Search starts from the first user page, page 0x04. Returns with the
+; Search starts from the first user page. Returns with the
 ; carry flag set if no free pages are available.
 .globl F_findfirstfreepage
 F_findfirstfreepage:
-	ld a, 0x04
+	ld a, LOWEST_MODULE ; first available user page
 .loop3:
 	call SETPAGEB
 	ex af, af'
@@ -108,7 +109,7 @@ F_findfirstfreepage:
 	cp 0xFF			; FF = free page
 	jr z, .found3
 	ex af, af'
-	cp 0x1F			; Last page?
+	cp HIGHEST_MODULE+1	; Last page?
 	jr z, .nospace3
 	inc a
 	jr .loop3
@@ -282,7 +283,7 @@ F_repmodule:
 	call F_copysectortoram		; copy the flash sector
 	ld a, (v_workspace)		; calculate the RAM page to use
 	and 0x03			; get position in the sector
-	add a, 0xDC			; add RAM page number
+	add a, FLASH_COPY_PAGES	; add RAM page number
 	call F_loader			; get the new data over the net
 	ld a, (v_workspace + 1)		; retrieve sector page
 	di
@@ -311,7 +312,7 @@ J_eraseborked:
 F_removepage:
 	ld b, 3				; 3 pages to copy to RAM
 	ex af, af'
-	ld a, 0xDC			; RAM page to start with
+	ld a, FLASH_COPY_PAGES	; RAM page to start with
 .loop9:
 	push bc
 	call F_setpageB			; page in RAM destination
@@ -401,7 +402,7 @@ F_remmodule:
 	call PRINT42
 	ld a, (v_workspace+2)		; page in the relevant page
 	call F_setpageA			; to page area A
-	ld a, 0xDC
+	ld a, FLASH_COPY_PAGES
 	call F_setpageB			; RAM in B
 	ld hl, 0x1000			; copy
 	ld de, 0x2000
@@ -484,7 +485,7 @@ F_getromnum:
 .globl F_copysectortoram
 F_copysectortoram:
 	ex af, af'			; save ROM page
-	ld a, 0xDC			; first RAM page
+	ld a, FLASH_COPY_PAGES	; first RAM page
 	ld b, 4				; pages to copy
 .copyloop14:
 	push bc

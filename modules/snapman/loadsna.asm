@@ -26,6 +26,7 @@
 .include	"fcntl.inc"
 .include	"spectranet.inc"
 .include	"sysvars.inc"
+.include	"sysdefs.inc"
 
 .text
 ;------------------------------------------------------------------------
@@ -163,14 +164,14 @@ J_snapdie:
 ; F_readscreen: Read the screen memory into Spectranet RAM
 .globl F_readscreen
 F_readscreen: 
-	ld a, 0xDA		; first page
+	ld a, FRAME_COPY_PAGES	; first page
 	call PUSHPAGEA		; switch and store page number
 	ld de, 0x1000
 	ld bc, 0x1000
 	ld a, (v_snapfd)
 	call READ
 	jr c,  .restoreerr4
-	ld a, 0xDB
+	ld a, FRAME_COPY_PAGES+1
 	call SETPAGEA
 	ld de, 0x1000
 	ld bc, 0xB00

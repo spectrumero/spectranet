@@ -23,6 +23,7 @@
 .include	"sysvars.inc"
 .include	"ctrlchars.inc"
 .include	"sockdefs.inc"
+.include	"sysdefs.inc"
 
 ; Utility ROM - NMI handler
 .text
@@ -86,13 +87,13 @@ F_savescreen:
 	and 7
 	ld (v_border), a
 
-	ld a, 0xDA		; Use pages 0xDA, 0xDB of RAM
+	ld a, FRAME_COPY_PAGES	; Use pages 0xDA, 0xDB of RAM
 	call SETPAGEA
 	ld hl, 0x4000		; Spectrum screen buffer
 	ld de, 0x1000		; Page area A
 	ld bc, 0x1000		; 4K
 	ldir
-	ld a, 0xDB
+	ld a, FRAME_COPY_PAGES+1
 	call SETPAGEA
 	ld hl, 0x5000
 	ld de, 0x1000
@@ -105,13 +106,13 @@ F_savescreen:
 ; Restore the Spectrum framebuffer.
 .globl F_restorescreen
 F_restorescreen:
-	ld a, 0xDA
+	ld a, FRAME_COPY_PAGES
 	call SETPAGEA
 	ld hl, 0x1000
 	ld de, 0x4000
 	ld bc, 0x1000
 	ldir
-	ld a, 0xDB
+	ld a, FRAME_COPY_PAGES+1
 	call SETPAGEA
 	ld hl, 0x1000
 	ld de, 0x5000

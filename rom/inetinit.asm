@@ -27,6 +27,7 @@
 .include	"flashconf.inc"
 .include	"ctrlchars.inc"
 .include	"sysvars.inc"
+.include	"sysdefs.inc"
 ;---------------------------------------------------------------------------
 ; F_inetinit
 ; Initializes IPv4 settings.
@@ -37,7 +38,7 @@
 .globl F_inetinit
 F_inetinit:
 	call F_iface_wait
-	ld a, 0x1F		; flash page containing configuration
+	ld a, CONFIG_PAGE	; flash page containing configuration
 	call SETPAGEA
 	ld hl, 0x1F00		; last 256 bytes of config
 	ld de, 0x3000		; RAM workspace

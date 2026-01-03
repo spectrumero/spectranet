@@ -35,7 +35,7 @@ F_main:
 
    call F_pagein     ; page in Spectranet, disable interrupts
    
-   ld a, 0xC0        ; first page of RAM
+   ld a, FIXED_PAGE  ; first page of RAM
 .writeloop:
    call F_setpageA
    ld (0x1000), a    ; store page id in first byte of page
@@ -43,7 +43,7 @@ F_main:
    cp 0xE0           ; finished?
    jr nz, .writeloop
 
-   ld a, 0xC0        ; back to first page to prepare for read back
+   ld a, FIXED_PAGE  ; back to first page to prepare for read back
    ld hl, v_readback ; place to copy bytes read back
 .readloop:
    call F_setpageA

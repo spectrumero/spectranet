@@ -27,6 +27,7 @@
 .include	"snapman.inc"
 .include	"spectranet.inc"
 .include	"sysvars.inc"
+.include	"sysdefs.inc"
 
 .text 
 ;--------------------------------------------------------------------------
@@ -273,14 +274,14 @@ F_savesna:
 ; Save the screen that was copied to 0xDA:000 to 0xDB:AFF
 .globl F_savesavedscreen
 F_savesavedscreen: 
-	ld a, 0xDA			; first page
+	ld a, FRAME_COPY_PAGES	; first page
 	call PUSHPAGEA			; set it and save current page
 	ld hl, 0x1000
 	ld bc, 0x1000
 	ld a, (v_snapfd)
 	call WRITE
 	jr c,  .restoreerr3
-	ld a, 0xDB
+	ld a, FRAME_COPY_PAGES+1
 	call SETPAGEA
 	ld hl, 0x1000
 	ld bc, 0xB00
@@ -292,13 +293,13 @@ F_savesavedscreen:
 
 .globl F_restorescreen
 F_restorescreen: 
-	ld a, 0xDA
+	ld a, FRAME_COPY_PAGES
 	call PUSHPAGEA
 	ld hl, 0x1000
 	ld de, 0x4000
         ld bc, 0x1000
         ldir
-        ld a, 0xDB
+        ld a, FRAME_COPY_PAGES+1
         call SETPAGEA
         ld hl, 0x1000
         ld de, 0x5000
