@@ -1,4 +1,4 @@
-SUBDIRS = libspectranet socklib libhttp
+SUBDIRS = libspectranet socklib libhttp libspdos
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 
 .PHONY:	subdirs $(SUBDIRS)
