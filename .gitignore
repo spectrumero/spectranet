@@ -1,0 +1,14 @@
+*.o
+*_np.asm
+*_p.asm
+*.lib
+.idea
+*.module
+*.bin
+*.map
+*.tap
+*.tzx
+*.xinc
+*.a
+/utils/bin2tape
+/utils/configserv
