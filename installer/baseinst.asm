@@ -21,6 +21,7 @@
 ;THE SOFTWARE.
 .include	"ctrlchars.inc"
 .include	"spectranet.inc"
+.include	"sysdefs.inc"
 
 ; Spectranet firmware installer.
 .section main
@@ -52,7 +53,7 @@ F_erase:
 F_writepages:
 	ld hl, STR_page0
 	call F_print
-	ld a, 0x00
+	ld a, BOOTROM
 	call F_setpageB
 	ld hl, PAGE0
 	ld de, 0x2000
@@ -62,7 +63,7 @@ F_writepages:
 
 	ld hl, STR_page1
 	call F_print
-	ld a, 0x01
+	ld a, DATAROM
 	call F_setpageB
 	ld hl, PAGE1
 	ld de, 0x2000
@@ -72,7 +73,7 @@ F_writepages:
 
 	ld hl, STR_page2
 	call F_print
-	ld a, 0x02
+	ld a, UTILROM
 	call F_setpageB
 	ld hl, PAGE2
 	ld de, 0x2000
@@ -82,7 +83,7 @@ F_writepages:
 
 	ld hl, STR_page3
 	call F_print
-	ld a, 0x03
+	ld a, TNFSROM
 	call F_setpageB
 	ld hl, PAGE3
 	ld de, 0x2000

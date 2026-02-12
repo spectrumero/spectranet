@@ -43,7 +43,7 @@
 .text
 .globl F_reservepage
 F_reservepage:
-	ld b, 25		; number of RAM pages that can be reserved
+	ld b, HIGHEST_PAGE-LOWEST_PAGE+1	; number of RAM pages that can be reserved
 	ld hl, pagealloc	; search the page allocation table for a page 
 	ex af, af'		; save A
 .searchloop1:

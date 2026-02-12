@@ -25,6 +25,7 @@
 .include "spectranet.inc"
 .include "flashconf.inc"
 .include "sysvars.inc"
+.include "sysdefs.inc"
 .include "ctrlchars.inc"
 .include "sockdefs.inc"
 
@@ -61,7 +62,7 @@ F_config:
         ld a, v_fd1hwsock % 256
         ld (v_lastpolled), a
 
-        ld a, 0x03              ; ROM page where jumptable lives
+        ld a, TNFSROM           ; ROM page where jumptable lives
         call F_setpageA         ; and page into paging area A.
 
 	; copy the jump table which should be programmed by now
@@ -165,13 +166,13 @@ F_config:
 	; Erase the flash
 	ld hl, STR_erasing
 	call PRINT42
-	ld a, 0x1c			; Beginning page of sector
+	ld a, CONFIG_PAGE&0xFC	; Beginning page of sector
 	call F_FlashEraseSector
 	jr c, F_fail
 
 	ld hl, STR_writing
 	call PRINT42
-	ld a, 0x1f			; Configuration page
+	ld a, CONFIG_PAGE	; Configuration flash page
 	call SETPAGEB
 	ld hl, BUF_makeconfig
 	ld de, 0x2F00

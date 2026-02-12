@@ -55,8 +55,19 @@ BASSTART_VECTOR	equ 0x200A
 RESRVD4_VECTOR	equ 0x200C
 RESRVD5_VECTOR	equ 0x200E
 
-; Page definitions
-LOWEST_PAGE	equ 0xC1
+; SRAM page definitions
+FIXED_PAGE			equ 0xC0	; The first page of SRAM, mapped at 0x3000
+LOWEST_PAGE			equ 0xC1	; First SRAM page available for allocation
+HIGHEST_PAGE		equ 0xD9	; Last SRAM page available for allocation
+FRAME_COPY_PAGES	equ 0xDA	; Two pages used for framebuffer storage (0xDA and 0xDB)
+FLASH_COPY_PAGES	equ 0xDC	; Four pages used for flash erase sector storage (0xDC to 0xDF)
 
-DATAROM		equ 0x01
-UTILROM		equ 0x02
+; Flash page definitions
+BOOTROM			equ 0x00	; Contains boot code, socket library, utility functions
+DATAROM			equ 0x01	; Contains UI functions
+UTILROM			equ 0x02	; Contains utility functions and nmi menu
+TNFSROM			equ 0x03	; Contains tnfs, dhcp client, and jumptable
+LOWEST_MODULE	equ 0x04	; The first available user ROM page
+HIGHEST_MODULE		equ 0x1e	; The last available user ROM page
+; user ROM pages are allocated from FIRST_MODULE to LAST_MODULE
+CONFIG_PAGE		equ 0x1f	; Last page of flash ROM, contains non volatile configuration

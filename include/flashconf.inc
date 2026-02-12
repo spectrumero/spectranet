@@ -33,7 +33,6 @@
 ;
 ; These values are all offsets from the bottom of the paged in page.
 
-CONFIGPAGE	equ 0x001F	; chip 0 page 0x1F (the last page)
 CONF_RAM	equ 0x1F00	; config area, when copied to RAM
 FS_CONF_RAM	equ 0x1D00	; config area for FS in RAM
 
